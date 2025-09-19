@@ -29,8 +29,7 @@ defmodule AshDiscord.Dsl.Consumer do
         debug_logging false
         
         # Advanced configuration options
-        callback_config :production
-        
+
         # Selective callback enabling
         enable_callbacks [
           :message_events,
@@ -107,11 +106,6 @@ defmodule AshDiscord.Dsl.Consumer do
         type: :boolean,
         default: false,
         doc: "Enable debug logging for Discord events"
-      ],
-      callback_config: [
-        type: {:one_of, [:development, :production, :minimal, :full, :custom]},
-        default: :full,
-        doc: "Predefined callback configuration profile. :development enables all callbacks with enhanced logging, :production optimizes for performance, :minimal enables only core callbacks, :full enables all callbacks, :custom allows manual configuration"
       ],
       enable_callbacks: [
         type: {:list, {:one_of, [

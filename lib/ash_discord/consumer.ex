@@ -31,47 +31,17 @@ defmodule AshDiscord.Consumer do
   selective callback processing, and environment-specific profiles:
 
       defmodule MyApp.ProductionConsumer do
-        use AshDiscord.Consumer,
-          domains: [MyApp.Chat, MyApp.Discord],
-          callback_config: :production,
-          enable_callbacks: [:message_events, :guild_events],
-          disable_callbacks: [:typing_start, :voice_state_update],
-          debug_logging: false,
-          auto_create_users: true,
-          store_bot_messages: false
+        use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          domains [MyApp.Chat, MyApp.Discord]
+          enable_callbacks [:message_events, :guild_events]
+          disable_callbacks [:typing_start, :voice_state_update]
+          debug_logging false
+          auto_create_users true
+          store_bot_messages false
+        end
       end
-
-  ## Configuration Profiles
-
-  ### `:minimal` Profile
-  - **Purpose**: Minimal resource usage, only essential functionality
-  - **Callbacks**: Core callbacks only (ready, interaction_create, application_command)
-  - **Performance**: Optimized for minimal CPU and memory usage
-  - **Use Case**: Lightweight bots, resource-constrained environments
-
-  ### `:production` Profile  
-  - **Purpose**: Production-ready with essential business functionality
-  - **Callbacks**: Core callbacks + message_events + guild_events + interaction_events
-  - **Performance**: Optimized for performance with essential features
-  - **Use Case**: Production Discord bots with standard functionality
-
-  ### `:development` Profile
-  - **Purpose**: Full functionality with enhanced debugging
-  - **Callbacks**: All callbacks enabled
-  - **Performance**: Enhanced logging, not optimized for performance
-  - **Use Case**: Development and debugging
-
-  ### `:full` Profile
-  - **Purpose**: Complete functionality without debugging overhead
-  - **Callbacks**: All callbacks enabled
-  - **Performance**: Not optimized for performance
-  - **Use Case**: Feature-complete bots where performance is not critical
-
-  ### `:custom` Profile
-  - **Purpose**: Manual configuration with explicit callback control
-  - **Callbacks**: Only those explicitly enabled
-  - **Performance**: Depends on configuration
-  - **Use Case**: Specialized bots with specific requirements
 
   ## Callback Categories
 
@@ -96,23 +66,24 @@ defmodule AshDiscord.Consumer do
   any processing, logging, or function calls.
 
       # Only process message and guild events - everything else is filtered out
-      use AshDiscord.Consumer,
-        callback_config: :custom,
-        enable_callbacks: [:message_events, :guild_events]
+      defmodule MyApp.CustomConsumer do
+        use AshDiscord.Consumer
 
-      # Enable most callbacks but disable noisy ones for performance  
-      use AshDiscord.Consumer,
-        callback_config: :production,
-        disable_callbacks: [:typing_start, :voice_state_update]
+        ash_discord_consumer do
+          domains [MyApp.Discord]
+          enable_callbacks [:message_events, :guild_events]
+        end
+      end
 
-  ## Environment-Aware Defaults
+      # Enable most callbacks but disable noisy ones for performance
+      defmodule MyApp.OptimizedConsumer do
+        use AshDiscord.Consumer
 
-  When no `callback_config` is specified, defaults are chosen based on `Mix.env()`:
-
-  - **`:prod`** environment → `:production` profile
-  - **`:dev`** environment → `:development` profile
-  - **`:test`** environment → `:minimal` profile
-  - **Other** environments → `:full` profile
+        ash_discord_consumer do
+          domains [MyApp.Discord]
+          disable_callbacks [:typing_start, :voice_state_update]
+        end
+      end
 
   ## Available Callbacks
 
@@ -177,33 +148,44 @@ defmodule AshDiscord.Consumer do
   ## Configuration Examples
 
       # Minimal bot for slash commands only
-      use AshDiscord.Consumer,
-        callback_config: :minimal
+      defmodule MyApp.MinimalConsumer do
+        use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          domains [MyApp.Discord]
+          enable_callbacks [:interaction_events]
+        end
+      end
 
       # Production bot with message and guild management
-      use AshDiscord.Consumer,
-        callback_config: :production,
-        disable_callbacks: [:voice_events, :typing_events]
+      defmodule MyApp.ProductionConsumer do
+        use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          domains [MyApp.Discord]
+          enable_callbacks [:message_events, :guild_events, :interaction_events]
+          disable_callbacks [:voice_events, :typing_events]
+        end
+      end
 
       # Custom bot for moderation (messages + members + roles)
-      use AshDiscord.Consumer,
-        callback_config: :custom,
-        enable_callbacks: [:message_events, :member_events, :role_events]
+      defmodule MyApp.ModerationConsumer do
+        use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          domains [MyApp.Discord]
+          enable_callbacks [:message_events, :member_events, :role_events]
+        end
+      end
 
       # Development with full logging
-      use AshDiscord.Consumer,
-        callback_config: :development,
-        debug_logging: true
-
-  ## Migration from Previous Versions
-
-  Existing consumers will continue to work without changes - they will use
-  the `:full` profile by default, enabling all callbacks as before.
-
-      # This works exactly as before
-      defmodule MyApp.DiscordConsumer do
+      defmodule MyApp.DevelopmentConsumer do
         use AshDiscord.Consumer
-        # All callbacks enabled, same behavior as previous versions
+
+        ash_discord_consumer do
+          domains [MyApp.Discord]
+          debug_logging true
+        end
       end
   """
 

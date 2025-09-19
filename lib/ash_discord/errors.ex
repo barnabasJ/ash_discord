@@ -184,29 +184,6 @@ defmodule AshDiscord.Errors do
   end
 
   @doc """
-  Creates a configuration error for callback configuration issues.
-  """
-  def invalid_callback_config_error(config_name, available_configs) do
-    ConfigurationError.exception(
-      message: "Invalid callback configuration '#{config_name}'",
-      context: %{
-        provided: config_name,
-        available: available_configs
-      },
-      suggestions: [
-        "Use one of the predefined configuration profiles",
-        "Use :custom for manual callback selection",
-        "Check the spelling of the configuration name"
-      ],
-      examples: [
-        "callback_config: :production",
-        "callback_config: :development", 
-        "callback_config: :custom, enable_callbacks: [:message_events]"
-      ]
-    )
-  end
-
-  @doc """
   Creates an interaction error with recovery guidance.
   """
   def interaction_error(message, opts \\ []) do

@@ -20,7 +20,6 @@ defmodule AshDiscord.Consumer.Info do
   - `ash_discord_consumer_auto_create_users/1` - Returns auto_create_users setting
   - `ash_discord_consumer_store_bot_messages/1` - Returns store_bot_messages setting
   - `ash_discord_consumer_debug_logging/1` - Returns debug_logging setting
-  - `ash_discord_consumer_callback_config/1` - Returns callback config
   - `ash_discord_consumer_enable_callbacks/1` - Returns enabled callbacks
   - `ash_discord_consumer_disable_callbacks/1` - Returns disabled callbacks
   - `ash_discord_consumer_options/1` - Returns all configuration options as a map

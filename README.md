@@ -25,15 +25,17 @@ defmodule MyBot.Discord do
   end
 end
 
-# 3. Create your consumer  
+# 3. Create your consumer
 defmodule MyBot.DiscordConsumer do
-  use AshDiscord.Consumer, domains: [MyBot.Discord]
+  use AshDiscord.Consumer
+
+  ash_discord_consumer do
+    domains [MyBot.Discord]
+  end
 end
 
 # 4. Start building! 🎉
 ```
-
-**[👉 Complete Quick Start Guide](docs/quick-start-guide.md)** - Get your bot running in under 30 minutes
 
 ## ✨ Key Features
 
@@ -66,15 +68,6 @@ end
 - **Built-in authorization** using Ash policies
 - **Rich error handling** with user-friendly Discord responses
 - **Background job support** via AshOban integration
-
-## 📖 Complete Documentation
-
-| Document | Purpose | Time to Complete |
-|----------|---------|------------------|
-| **[Quick Start Guide](docs/quick-start-guide.md)** | Get your first bot running | 30 minutes |
-| **[API Reference](docs/api-reference.md)** | Complete API documentation | Reference |
-| **[Migration Guide](docs/migration-guide.md)** | Migrate from raw Nostrum | 1-2 hours |
-| **[Troubleshooting Guide](docs/troubleshooting-guide.md)** | Solve common issues | As needed |
 
 ## 🎮 Live Example
 
@@ -119,9 +112,11 @@ end
 
 # Consumer that handles everything automatically
 defmodule GameBot.DiscordConsumer do
-  use AshDiscord.Consumer, 
-    domains: [GameBot.Discord],
-    callback_config: :production  # Optimized for performance
+  use AshDiscord.Consumer
+
+  ash_discord_consumer do
+    domains [GameBot.Discord]
+  end
 end
 ```
 

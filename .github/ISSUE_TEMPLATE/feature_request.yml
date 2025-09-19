@@ -1,0 +1,150 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement for AshDiscord
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new feature! We love hearing ideas for making AshDiscord better.
+        
+        Please provide as much detail as possible to help us understand your request.
+
+  - type: checkboxes
+    id: search-existing
+    attributes:
+      label: Search for Existing Requests
+      description: Have you searched for similar feature requests?
+      options:
+        - label: I have searched existing issues and this appears to be a new feature request
+          required: true
+
+  - type: dropdown
+    id: feature-type
+    attributes:
+      label: Feature Type
+      description: What type of feature are you requesting?
+      options:
+        - "New Discord command type"
+        - "Consumer enhancement"
+        - "DSL extension"
+        - "Documentation improvement"
+        - "Developer experience improvement"
+        - "Performance optimization"
+        - "Integration with other libraries"
+        - "Other"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to your use case?
+      options:
+        - "Critical - Blocking my project"
+        - "High - Important for my project"
+        - "Medium - Would be helpful"
+        - "Low - Nice to have"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem-statement
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve?
+      placeholder: "Currently, when I want to do X, I have to Y, which is problematic because..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: How would you like this feature to work?
+      placeholder: |
+        I would like to be able to...
+        
+        For example:
+        ```elixir
+        discord do
+          command :my_new_feature do
+            # ... proposed syntax
+          end
+        end
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives-considered
+    attributes:
+      label: Alternatives Considered
+      description: What alternatives have you considered?
+      placeholder: "I considered using X, but it doesn't work because..."
+
+  - type: textarea
+    id: use-cases
+    attributes:
+      label: Use Cases
+      description: Describe specific use cases where this feature would be helpful
+      placeholder: |
+        1. Gaming bot that needs to...
+        2. Moderation bot that should...
+        3. Utility bot for...
+
+  - type: textarea
+    id: example-implementation
+    attributes:
+      label: Example Implementation
+      description: If you have ideas for how this could be implemented, share them here
+      render: elixir
+      placeholder: |
+        # Example of how this might work
+        defmodule MyBot.Discord do
+          use Ash.Domain, extensions: [AshDiscord]
+          
+          discord do
+            # New feature example
+            command :example do
+              # ...
+            end
+          end
+        end
+
+  - type: textarea
+    id: discord-context
+    attributes:
+      label: Discord API Context
+      description: If this relates to Discord functionality, which Discord features are involved?
+      placeholder: "This would use Discord's slash commands, buttons, modals, etc..."
+
+  - type: dropdown
+    id: breaking-change
+    attributes:
+      label: Breaking Change
+      description: Would this feature require breaking changes?
+      options:
+        - "No - This can be added without breaking existing code"
+        - "Yes - This would require breaking changes"
+        - "Unsure - Needs investigation"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contribution-willingness
+    attributes:
+      label: Contribution
+      description: Would you be willing to help implement this feature?
+      options:
+        - label: I would be willing to submit a PR to implement this feature
+        - label: I would be willing to help design the API for this feature
+        - label: I would be willing to help test this feature once implemented
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other context, screenshots, or references
+      placeholder: "Links to Discord documentation, similar implementations in other libraries, etc."

@@ -1,0 +1,124 @@
+name: ❓ Question
+description: Ask a question about using AshDiscord
+title: "[Question]: "
+labels: ["question", "needs-response"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about AshDiscord? We're here to help!
+        
+        Please check our [documentation](https://hexdocs.pm/ash_discord/) first, but don't hesitate to ask if you need clarification.
+
+  - type: checkboxes
+    id: documentation-check
+    attributes:
+      label: Documentation Search
+      description: Have you checked our documentation?
+      options:
+        - label: I have searched the documentation and couldn't find the answer
+          required: true
+
+  - type: dropdown
+    id: question-category
+    attributes:
+      label: Question Category
+      description: What category best describes your question?
+      options:
+        - "Getting Started"
+        - "Command Configuration"
+        - "Consumer Setup"
+        - "Discord Integration"
+        - "Ash Resource Integration" 
+        - "Performance & Optimization"
+        - "Testing"
+        - "Deployment"
+        - "Troubleshooting"
+        - "Best Practices"
+        - "Migration from Nostrum"
+        - "Other"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: experience-level
+    attributes:
+      label: Experience Level
+      description: How would you describe your experience with these technologies?
+      options:
+        - "New to Elixir and Ash"
+        - "Familiar with Elixir, new to Ash"
+        - "Experienced with Ash, new to Discord bots"
+        - "Experienced with all technologies"
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know?
+      placeholder: "I'm trying to understand how to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What are you trying to accomplish?
+      placeholder: "I'm building a Discord bot that needs to..."
+
+  - type: textarea
+    id: attempted-solutions
+    attributes:
+      label: What Have You Tried?
+      description: What approaches have you attempted?
+      placeholder: |
+        I tried:
+        1. Following the quick start guide...
+        2. Looking at the examples...
+        3. Searching for similar questions...
+
+  - type: textarea
+    id: code-sample
+    attributes:
+      label: Code Sample (if applicable)
+      description: Share relevant code that's not working as expected
+      render: elixir
+      placeholder: |
+        defmodule MyBot.Discord do
+          # Your code here
+        end
+
+  - type: textarea
+    id: error-message
+    attributes:
+      label: Error Messages (if any)
+      description: Include any error messages you're seeing
+      render: elixir
+      placeholder: |
+        ** (RuntimeError) Error message here
+            stacktrace...
+
+  - type: textarea
+    id: environment-info
+    attributes:
+      label: Environment (if relevant)
+      description: Your development environment details
+      render: yaml
+      placeholder: |
+        ash_discord_version: "0.1.0"
+        ash_version: "3.4.0"
+        elixir_version: "1.17"
+        otp_version: "27"
+
+  - type: checkboxes
+    id: help-others
+    attributes:
+      label: Contributing Back
+      description: How would you like to help others?
+      options:
+        - label: I'd like to help improve the documentation based on the answer
+        - label: I'd be willing to create an example showing the solution
+        - label: I'd like to answer similar questions from other users

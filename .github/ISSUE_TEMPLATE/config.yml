@@ -1,0 +1,17 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Documentation
+    url: https://hexdocs.pm/ash_discord/
+    about: Check our comprehensive documentation first
+  - name: 💬 Ash Framework Discord
+    url: https://discord.gg/ash-hq
+    about: Join the Ash Framework community for real-time discussions
+  - name: 🚀 Quick Start Guide
+    url: https://hexdocs.pm/ash_discord/quick-start-guide.html
+    about: 30-minute guide to get your first bot running
+  - name: 🔄 Migration Guide
+    url: https://hexdocs.pm/ash_discord/migration-guide.html
+    about: Migrate from raw Nostrum to AshDiscord
+  - name: 🛠️ Troubleshooting Guide
+    url: https://hexdocs.pm/ash_discord/troubleshooting-guide.html
+    about: Common issues and solutions

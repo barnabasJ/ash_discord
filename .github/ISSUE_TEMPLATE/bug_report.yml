@@ -1,0 +1,143 @@
+name: 🐛 Bug Report
+description: Report a bug to help us improve AshDiscord
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug! This helps make AshDiscord better for everyone.
+        
+        Please fill out this template to help us understand and reproduce the issue.
+
+  - type: checkboxes
+    id: search-existing
+    attributes:
+      label: Search for Existing Issues
+      description: Have you searched for similar issues?
+      options:
+        - label: I have searched existing issues and this appears to be a new bug
+          required: true
+
+  - type: dropdown
+    id: ash-discord-version
+    attributes:
+      label: AshDiscord Version
+      description: Which version of AshDiscord are you using?
+      options:
+        - "0.1.0"
+        - "0.2.0" 
+        - "main branch"
+        - "Other (please specify in description)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: Where is this bug occurring?
+      options:
+        - "Development"
+        - "Production"
+        - "Test"
+        - "All environments"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: Clear and concise description of what the bug is
+      placeholder: "When I run `/my_command` with parameter X, I expect Y to happen, but instead Z happens."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the behavior
+      placeholder: |
+        1. Create a resource with...
+        2. Define a Discord command...
+        3. Run the command with...
+        4. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: "The command should respond with..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: "Instead, I got this error..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-logs
+    attributes:
+      label: Error Logs/Stack Traces
+      description: Please include any relevant error messages or stack traces
+      render: elixir
+      placeholder: |
+        ** (RuntimeError) Something went wrong
+            (ash_discord 0.1.0) lib/ash_discord/consumer.ex:123: AshDiscord.Consumer.handle_event/1
+            ...
+
+  - type: textarea
+    id: code-sample
+    attributes:
+      label: Minimal Code Sample
+      description: Please provide a minimal code sample that demonstrates the issue
+      render: elixir
+      placeholder: |
+        defmodule MyBot.Discord do
+          use Ash.Domain, extensions: [AshDiscord]
+          
+          discord do
+            command :test, MyResource, :my_action do
+              description "Test command"
+            end
+          end
+        end
+
+  - type: textarea
+    id: system-info
+    attributes:
+      label: System Information
+      description: Your system details
+      render: yaml
+      placeholder: |
+        elixir_version: "1.17"
+        otp_version: "27"
+        ash_version: "3.4.0"
+        nostrum_version: "0.10.0"
+        operating_system: "macOS 14"
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other context about the problem
+      placeholder: "This started happening after upgrading from version..."
+
+  - type: checkboxes
+    id: contribution-willingness
+    attributes:
+      label: Contribution
+      description: Would you be willing to help?
+      options:
+        - label: I would be willing to submit a PR to fix this issue
+        - label: I would be willing to help test a fix for this issue

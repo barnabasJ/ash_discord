@@ -1,0 +1,44 @@
+defmodule AshDiscord.ConsumerExtension do
+  @moduledoc """
+  AshDiscord consumer extension for configuring Discord consumer behavior.
+
+  This extension provides a DSL for configuring AshDiscord consumers with
+  granular resource and behavior settings.
+
+  ## Usage
+
+  Add the extension to your consumer:
+
+      defmodule MyApp.DiscordConsumer do
+        use AshDiscord.Consumer
+        use AshDiscord.ConsumerExtension
+        
+        ash_discord_consumer do
+          domains [MyApp.Chat, MyApp.Discord]
+          guild_resource MyApp.Discord.Guild
+          message_resource MyApp.Discord.Message
+          user_resource MyApp.Accounts.User
+          auto_create_users true
+        end
+      end
+
+  Configuration defined in the DSL is used to:
+  - Specify which domains contain Discord commands
+  - Map Discord entities to Ash resources
+  - Control consumer behavior and features
+  """
+
+  use Spark.Dsl.Extension,
+    sections: [AshDiscord.Dsl.Consumer.ash_discord_consumer()]
+
+  defmacro __using__(_opts) do
+    quote do
+      use Spark.Dsl
+    end
+  end
+
+  @doc """
+  Returns the version of AshDiscord.ConsumerExtension.
+  """
+  def version, do: Mix.Project.config()[:version]
+end

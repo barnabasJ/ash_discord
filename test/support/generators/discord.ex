@@ -267,19 +267,25 @@ defmodule AshDiscord.Test.Generators.Discord do
 
     result = merge_attrs(defaults, attrs)
 
-    # Add edited timestamp 25% of the time
+    # Add edited timestamp 25% of the time, but only if not explicitly set
     final_result =
-      if Faker.Util.pick([true, false, false, false]) do
-        edited_time =
-          result.timestamp
-          |> DateTime.from_iso8601()
-          |> elem(1)
-          |> DateTime.add(Faker.random_between(60, 7200), :second)
-          |> DateTime.to_iso8601()
-
-        Map.put(result, :edited_timestamp, edited_time)
-      else
+      if Map.has_key?(attrs, :edited_timestamp) do
+        # If edited_timestamp was explicitly provided in attrs, respect it
         result
+      else
+        # Only add random edited_timestamp if not explicitly set
+        if Faker.Util.pick([true, false, false, false]) do
+          edited_time =
+            result.timestamp
+            |> DateTime.from_iso8601()
+            |> elem(1)
+            |> DateTime.add(Faker.random_between(60, 7200), :second)
+            |> DateTime.to_iso8601()
+
+          Map.put(result, :edited_timestamp, edited_time)
+        else
+          result
+        end
       end
 
     struct(Nostrum.Struct.Message, final_result)

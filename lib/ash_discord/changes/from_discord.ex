@@ -201,8 +201,13 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> Ash.Changeset.force_change_attribute(:user_id, discord_data.user_id)
     |> maybe_set_attribute(:nick, discord_data.nick)
     |> maybe_set_attribute(:roles, discord_data.roles || [])
+    |> maybe_set_attribute(:avatar, discord_data.avatar)
     |> Transformations.set_datetime_field(:joined_at, discord_data.joined_at)
     |> Transformations.set_datetime_field(:premium_since, discord_data.premium_since)
+    |> Transformations.set_datetime_field(
+      :communication_disabled_until,
+      discord_data.communication_disabled_until
+    )
     |> maybe_set_member_boolean_attributes(discord_data)
   end
 

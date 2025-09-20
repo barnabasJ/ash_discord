@@ -15,6 +15,12 @@ defmodule TestApp.Discord.GuildMember do
     attribute(:nick, :string, public?: true)
     attribute(:roles, {:array, :integer}, public?: true, default: [])
     attribute(:joined_at, :utc_datetime, public?: true)
+    attribute(:premium_since, :utc_datetime, public?: true)
+    attribute(:deaf, :boolean, public?: true, default: false)
+    attribute(:mute, :boolean, public?: true, default: false)
+    attribute(:pending, :boolean, public?: true, default: false)
+    attribute(:avatar, :string, public?: true)
+    attribute(:communication_disabled_until, :utc_datetime, public?: true)
 
     timestamps()
   end
@@ -32,10 +38,34 @@ defmodule TestApp.Discord.GuildMember do
     end
 
     create :from_discord do
-      accept([:guild_id, :user_id, :nick, :roles, :joined_at])
+      accept([
+        :guild_id,
+        :user_id,
+        :nick,
+        :roles,
+        :joined_at,
+        :premium_since,
+        :deaf,
+        :mute,
+        :pending,
+        :avatar,
+        :communication_disabled_until
+      ])
+
       upsert?(true)
       upsert_identity(:unique_member)
-      upsert_fields([:nick, :roles, :joined_at])
+
+      upsert_fields([
+        :nick,
+        :roles,
+        :joined_at,
+        :premium_since,
+        :deaf,
+        :mute,
+        :pending,
+        :avatar,
+        :communication_disabled_until
+      ])
 
       argument(:discord_struct, :struct, description: "Discord guild member data to transform")
       argument(:guild_id, :integer, description: "Guild ID this member belongs to")

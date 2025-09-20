@@ -8,29 +8,30 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
 
-
-
   describe "struct-first pattern" do
     test "creates guild member from discord struct with all attributes" do
       member_struct =
         guild_member(%{
-          user: user(%{id: 123_456_789, username: "test_user"}),
+          user_id: 123_456_789,
           nick: "TestNick",
           joined_at: "2023-01-15T10:30:00Z",
           deaf: false,
-          mute: false,
+          mute: false
+        })
+
+      result =
+        TestApp.Discord.guild_member_from_discord(%{
+          discord_struct: member_struct,
           guild_id: 555_666_777
         })
 
-      result = TestApp.Discord.guild_member_from_discord(%{discord_struct: member_struct})
-
       assert {:ok, created_member} = result
-      assert created_member.user_id == member_struct.user.id
+      assert created_member.user_id == member_struct.user_id
       assert created_member.nick == member_struct.nick
       assert created_member.joined_at == ~U[2023-01-15 10:30:00Z]
       assert created_member.deaf == false
       assert created_member.mute == false
-      assert created_member.guild_id == member_struct.guild_id
+      assert created_member.guild_id == 555_666_777
     end
 
     test "handles member without nickname" do
@@ -43,10 +44,14 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
           mute: false
         })
 
-      result = TestApp.Discord.guild_member_from_discord(%{discord_struct: member_struct})
+      result =
+        TestApp.Discord.guild_member_from_discord(%{
+          discord_struct: member_struct,
+          guild_id: 555_666_777
+        })
 
       assert {:ok, created_member} = result
-      assert created_member.user_id == member_struct.user.id
+      assert created_member.user_id == member_struct.user_id
       assert created_member.nick == nil
       assert created_member.joined_at == ~U[2023-02-20 15:45:00Z]
     end
@@ -61,10 +66,14 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
           mute: false
         })
 
-      result = TestApp.Discord.guild_member_from_discord(%{discord_struct: member_struct})
+      result =
+        TestApp.Discord.guild_member_from_discord(%{
+          discord_struct: member_struct,
+          guild_id: 555_666_777
+        })
 
       assert {:ok, created_member} = result
-      assert created_member.user_id == member_struct.user.id
+      assert created_member.user_id == member_struct.user_id
       assert created_member.deaf == true
       assert created_member.mute == false
     end
@@ -79,10 +88,14 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
           mute: true
         })
 
-      result = TestApp.Discord.guild_member_from_discord(%{discord_struct: member_struct})
+      result =
+        TestApp.Discord.guild_member_from_discord(%{
+          discord_struct: member_struct,
+          guild_id: 555_666_777
+        })
 
       assert {:ok, created_member} = result
-      assert created_member.user_id == member_struct.user.id
+      assert created_member.user_id == member_struct.user_id
       assert created_member.deaf == false
       assert created_member.mute == true
     end
@@ -97,17 +110,20 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
           mute: true
         })
 
-      result = TestApp.Discord.guild_member_from_discord(%{discord_struct: member_struct})
+      result =
+        TestApp.Discord.guild_member_from_discord(%{
+          discord_struct: member_struct,
+          guild_id: 555_666_777
+        })
 
       assert {:ok, created_member} = result
-      assert created_member.user_id == member_struct.user.id
+      assert created_member.user_id == member_struct.user_id
       assert created_member.deaf == true
       assert created_member.mute == true
     end
   end
 
   describe "API fallback pattern" do
-
     test "guild member API fallback is not supported" do
       # Guild members don't support direct API fetching in our implementation
       discord_id = 999_888_777
@@ -172,7 +188,6 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       assert updated_member.nick == "UpdatedNick"
       assert updated_member.deaf == true
       assert updated_member.mute == true
-
     end
 
     test "upsert works with nickname changes" do
@@ -214,7 +229,6 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
       # But with removed nickname
       assert updated_member.nick == nil
-
     end
   end
 
@@ -249,14 +263,18 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
           mute: false
         })
 
-      result = TestApp.Discord.guild_member_from_discord(%{discord_struct: member_struct})
+      result =
+        TestApp.Discord.guild_member_from_discord(%{
+          discord_struct: member_struct,
+          guild_id: 555_666_777
+        })
 
       # This might succeed with nil joined_at or fail with validation error
       # Either is acceptable behavior
       case result do
         {:ok, created_member} ->
           # If it succeeds, joined_at should be handled gracefully
-          assert created_member.user_id == member_struct.user.id
+          assert created_member.user_id == member_struct.user_id
 
         {:error, error} ->
           # If it fails, should be a validation error

@@ -241,6 +241,13 @@ defmodule AshDiscord.Changes.FromDiscord do
     Ash.Changeset.force_change_attribute(changeset, field, value)
   end
 
+  defp maybe_set_from_argument(changeset, field) do
+    case Ash.Changeset.get_argument(changeset, field) do
+      nil -> changeset
+      value -> Ash.Changeset.force_change_attribute(changeset, field, value)
+    end
+  end
+
   defp transform_channel(changeset, discord_data) do
     changeset
     |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
@@ -260,10 +267,13 @@ defmodule AshDiscord.Changes.FromDiscord do
   defp transform_message(changeset, discord_data) do
     changeset
     |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
-    |> Ash.Changeset.force_change_attribute(:content, discord_data.content)
+    |> Ash.Changeset.force_change_attribute(:content, discord_data.content || "")
     |> Ash.Changeset.force_change_attribute(:channel_id, discord_data.channel_id)
     |> Ash.Changeset.force_change_attribute(:author_id, discord_data.author.id)
     |> maybe_set_attribute(:guild_id, discord_data.guild_id)
+    |> maybe_set_attribute(:tts, discord_data.tts)
+    |> maybe_set_attribute(:mention_everyone, discord_data.mention_everyone)
+    |> maybe_set_attribute(:pinned, discord_data.pinned)
     |> Transformations.set_datetime_field(:timestamp, discord_data.timestamp)
     |> Transformations.set_datetime_field(:edited_timestamp, discord_data.edited_timestamp)
   end
@@ -320,7 +330,7 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> maybe_set_attribute(:max_uses, discord_data.max_uses)
     |> maybe_set_attribute(:max_age, discord_data.max_age)
     |> maybe_set_attribute(:temporary, discord_data.temporary)
-    |> maybe_set_attribute(:created_at, discord_data.created_at)
+    |> Transformations.set_datetime_field(:created_at, discord_data.created_at)
   end
 
   defp transform_message_attachment(changeset, discord_data) do
@@ -341,6 +351,11 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> maybe_set_attribute(:emoji_animated, discord_data.emoji && discord_data.emoji.animated)
     |> Ash.Changeset.force_change_attribute(:count, discord_data.count || 1)
     |> maybe_set_attribute(:me, discord_data.me || false)
+    # Context fields come from arguments, not from discord_data
+    |> maybe_set_from_argument(:user_id)
+    |> maybe_set_from_argument(:message_id)
+    |> maybe_set_from_argument(:channel_id)
+    |> maybe_set_from_argument(:guild_id)
   end
 
   defp transform_typing_indicator(changeset, discord_data) do

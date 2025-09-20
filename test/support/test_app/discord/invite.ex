@@ -74,7 +74,7 @@ defmodule TestApp.Discord.Invite do
       public?: true
     )
 
-    attribute(:created_at, :string,
+    attribute(:created_at, :utc_datetime,
       allow_nil?: true,
       public?: true
     )

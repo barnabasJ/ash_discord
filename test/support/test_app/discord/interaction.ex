@@ -89,8 +89,13 @@ defmodule TestApp.Discord.Interaction do
       primary?(true)
 
       argument(:discord_struct, :struct,
-        allow_nil?: false,
+        allow_nil?: true,
         description: "Discord interaction struct to transform"
+      )
+
+      argument(:discord_id, :integer,
+        allow_nil?: true,
+        description: "Discord interaction ID for API fallback"
       )
 
       change({AshDiscord.Changes.FromDiscord, type: :interaction})

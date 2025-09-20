@@ -11,12 +11,15 @@ defmodule TestApp.Discord.Message do
     uuid_primary_key(:id)
 
     attribute(:discord_id, :integer, allow_nil?: false, public?: true)
-    attribute(:content, :string, allow_nil?: false, public?: true)
+    attribute(:content, :string, allow_nil?: true, public?: true)
     attribute(:channel_id, :integer, public?: true)
     attribute(:author_id, :integer, public?: true)
     attribute(:guild_id, :integer, public?: true)
     attribute(:timestamp, :utc_datetime, public?: true)
     attribute(:edited_timestamp, :utc_datetime, public?: true)
+    attribute(:tts, :boolean, public?: true, default: false)
+    attribute(:mention_everyone, :boolean, public?: true, default: false)
+    attribute(:pinned, :boolean, public?: true, default: false)
 
     timestamps()
   end
@@ -61,12 +64,26 @@ defmodule TestApp.Discord.Message do
         :author_id,
         :guild_id,
         :timestamp,
-        :edited_timestamp
+        :edited_timestamp,
+        :tts,
+        :mention_everyone,
+        :pinned
       ])
 
       upsert?(true)
       upsert_identity(:unique_discord_id)
-      upsert_fields([:content, :channel_id, :author_id, :guild_id, :timestamp, :edited_timestamp])
+
+      upsert_fields([
+        :content,
+        :channel_id,
+        :author_id,
+        :guild_id,
+        :timestamp,
+        :edited_timestamp,
+        :tts,
+        :mention_everyone,
+        :pinned
+      ])
 
       argument(:discord_struct, :struct, description: "Discord message data to transform")
 

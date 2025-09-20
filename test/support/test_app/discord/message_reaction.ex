@@ -41,6 +41,27 @@ defmodule TestApp.Discord.MessageReaction do
       public?: true,
       default: false
     )
+
+    # Foreign key attributes for relationships
+    attribute(:user_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:message_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:channel_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:guild_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
   end
 
   relationships do
@@ -70,7 +91,7 @@ defmodule TestApp.Discord.MessageReaction do
   end
 
   identities do
-    identity :reaction_identity, [:emoji_id, :emoji_name] do
+    identity :reaction_identity, [:message_id, :emoji_name] do
       pre_check_with(TestApp.Discord)
     end
   end
@@ -87,17 +108,52 @@ defmodule TestApp.Discord.MessageReaction do
         description: "Discord message reaction struct to transform"
       )
 
+      argument(:discord_id, :integer,
+        allow_nil?: true,
+        description: "Discord message reaction ID for API fallback"
+      )
+
+      argument(:user_id, :integer,
+        allow_nil?: true,
+        description: "ID of user who reacted"
+      )
+
+      argument(:message_id, :integer,
+        allow_nil?: true,
+        description: "ID of message that was reacted to"
+      )
+
+      argument(:channel_id, :integer,
+        allow_nil?: true,
+        description: "ID of channel containing the message"
+      )
+
+      argument(:guild_id, :integer,
+        allow_nil?: true,
+        description: "ID of guild (null for DM reactions)"
+      )
+
       change({AshDiscord.Changes.FromDiscord, type: :message_reaction})
 
       upsert?(true)
       upsert_identity(:reaction_identity)
-      upsert_fields([:count, :me, :emoji_animated])
+      upsert_fields([:count, :me, :emoji_animated, :user_id, :message_id, :channel_id, :guild_id])
     end
 
     update :update do
       primary?(true)
 
-      accept([:emoji_id, :emoji_name, :count, :me, :emoji_animated])
+      accept([
+        :emoji_id,
+        :emoji_name,
+        :count,
+        :me,
+        :emoji_animated,
+        :user_id,
+        :message_id,
+        :channel_id,
+        :guild_id
+      ])
     end
   end
 end

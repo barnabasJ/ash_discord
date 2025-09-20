@@ -64,8 +64,13 @@ defmodule TestApp.Discord.MessageAttachment do
       primary?(true)
 
       argument(:discord_struct, :struct,
-        allow_nil?: false,
+        allow_nil?: true,
         description: "Discord message attachment struct to transform"
+      )
+
+      argument(:discord_id, :integer,
+        allow_nil?: true,
+        description: "Discord message attachment ID for API fallback"
       )
 
       change({AshDiscord.Changes.FromDiscord, type: :message_attachment})

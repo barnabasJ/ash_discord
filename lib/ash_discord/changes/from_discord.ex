@@ -120,7 +120,7 @@ defmodule AshDiscord.Changes.FromDiscord do
         {:ok, discord_struct}
 
       invalid ->
-        {:error, "Invalid discord_struct format: expected map, got #{inspect(invalid)}"}
+        {:error, "Invalid value provided for discord_struct: #{inspect(invalid)}"}
     end
   end
 
@@ -189,8 +189,8 @@ defmodule AshDiscord.Changes.FromDiscord do
     changeset
     |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
     |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
-    |> Ash.Changeset.force_change_attribute(:description, discord_data.description)
-    |> Ash.Changeset.force_change_attribute(:icon, discord_data.icon)
+    |> maybe_set_attribute(:description, discord_data.description)
+    |> maybe_set_attribute(:icon, discord_data.icon)
   end
 
   defp transform_guild_member(changeset, discord_data) do

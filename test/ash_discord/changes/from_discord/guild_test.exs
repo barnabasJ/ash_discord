@@ -151,7 +151,6 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
       assert updated_guild.name == "Updated Guild"
       assert updated_guild.description == "Updated description"
       assert updated_guild.icon == "new_icon_hash"
-
     end
 
     test "upsert works with API fallback" do
@@ -186,7 +185,6 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
       assert updated_guild.discord_id == discord_id
       assert updated_guild.name == "API Updated Guild"
       assert updated_guild.description == "Updated via API"
-
     end
   end
 
@@ -201,7 +199,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
 
     test "handles missing required fields in discord_struct" do
       # Missing required fields
-      invalid_struct = %{}
+      invalid_struct = guild(%{id: nil, name: nil})
 
       result = TestApp.Discord.guild_from_discord(%{discord_struct: invalid_struct})
 
@@ -211,11 +209,12 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
     end
 
     test "handles malformed guild data" do
-      malformed_struct = %{
-        id: "not_an_integer",
-        # Required field as nil
-        name: nil
-      }
+      malformed_struct =
+        guild(%{
+          id: "not_an_integer",
+          # Required field as nil
+          name: nil
+        })
 
       result = TestApp.Discord.guild_from_discord(%{discord_struct: malformed_struct})
 

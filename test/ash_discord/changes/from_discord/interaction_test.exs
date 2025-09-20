@@ -255,7 +255,6 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
       assert {:error, error} = result
       error_message = Exception.message(error)
       assert error_message =~ "Failed to fetch interaction with ID #{discord_id}"
-      error_message = Exception.message(error)
       assert error_message =~ ":unsupported_type"
     end
 

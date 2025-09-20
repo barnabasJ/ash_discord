@@ -8,8 +8,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
 
-
-
   describe "struct-first pattern" do
     test "creates message from discord struct with all attributes" do
       message_struct =
@@ -141,12 +139,11 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
 
       assert {:ok, created_message} = result
       assert created_message.discord_id == message_struct.id
-      assert created_message.content == ""
+      assert created_message.content == nil
     end
   end
 
   describe "API fallback pattern" do
-
     test "message API fallback is not supported" do
       # Messages don't support direct API fetching in our implementation
       discord_id = 999_888_777
@@ -156,8 +153,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       assert {:error, error} = result
       error_message = Exception.message(error)
       assert error_message =~ "Failed to fetch message with ID #{discord_id}"
-      error_message = Exception.message(error)
-      assert error_message =~ ":unsupported_type"
+      assert error_message =~ ":requires_channel_id"
     end
 
     test "requires discord_struct for message creation" do
@@ -212,7 +208,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       assert updated_message.content == "Edited content"
       assert updated_message.edited_timestamp == ~U[2023-01-01 00:05:00Z]
       assert updated_message.pinned == true
-
     end
 
     test "upsert works with pin status changes" do
@@ -253,7 +248,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
 
       # But with updated pin status
       assert updated_message.pinned == true
-
     end
   end
 

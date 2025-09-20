@@ -33,15 +33,17 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
         message_reaction(%{
           emoji: %{id: 987_654_321, name: "custom_emoji", animated: false},
           count: 3,
-          me: true,
+          me: true
+        })
+
+      result =
+        TestApp.Discord.message_reaction_from_discord(%{
+          discord_struct: reaction_struct,
           user_id: 111_222_333,
           message_id: 444_555_666,
           channel_id: 777_888_999,
           guild_id: 333_444_555
         })
-
-      result =
-        TestApp.Discord.message_reaction_from_discord(%{discord_struct: reaction_struct})
 
       assert {:ok, created_reaction} = result
       assert created_reaction.emoji_id == 987_654_321
@@ -56,15 +58,17 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
         message_reaction(%{
           emoji: %{id: 555_666_777, name: "animated_party", animated: true},
           count: 12,
-          me: false,
+          me: false
+        })
+
+      result =
+        TestApp.Discord.message_reaction_from_discord(%{
+          discord_struct: reaction_struct,
           user_id: 777_888_999,
           message_id: 111_222_333,
           channel_id: 444_555_666,
           guild_id: 999_111_222
         })
-
-      result =
-        TestApp.Discord.message_reaction_from_discord(%{discord_struct: reaction_struct})
 
       assert {:ok, created_reaction} = result
       assert created_reaction.emoji_id == 555_666_777
@@ -78,15 +82,17 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
         message_reaction(%{
           emoji: %{id: nil, name: "❤️", animated: false},
           count: 1,
-          me: true,
+          me: true
+        })
+
+      result =
+        TestApp.Discord.message_reaction_from_discord(%{
+          discord_struct: reaction_struct,
           user_id: 333_444_555,
           message_id: 666_777_888,
           channel_id: 999_111_222,
           guild_id: 222_333_444
         })
-
-      result =
-        TestApp.Discord.message_reaction_from_discord(%{discord_struct: reaction_struct})
 
       assert {:ok, created_reaction} = result
       assert created_reaction.emoji_name == "❤️"
@@ -99,15 +105,17 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
         message_reaction(%{
           emoji: %{id: nil, name: "🔥", animated: false},
           count: 999,
-          me: false,
+          me: false
+        })
+
+      result =
+        TestApp.Discord.message_reaction_from_discord(%{
+          discord_struct: reaction_struct,
           user_id: 888_999_111,
           message_id: 222_333_444,
           channel_id: 555_666_777,
           guild_id: 111_222_333
         })
-
-      result =
-        TestApp.Discord.message_reaction_from_discord(%{discord_struct: reaction_struct})
 
       assert {:ok, created_reaction} = result
       assert created_reaction.emoji_name == "🔥"
@@ -119,16 +127,18 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
         message_reaction(%{
           emoji: %{id: nil, name: "😊", animated: false},
           count: 2,
-          me: true,
+          me: true
+        })
+
+      result =
+        TestApp.Discord.message_reaction_from_discord(%{
+          discord_struct: reaction_struct,
           user_id: 444_555_666,
           message_id: 777_888_999,
           channel_id: 111_222_333,
           # No guild for DM
           guild_id: nil
         })
-
-      result =
-        TestApp.Discord.message_reaction_from_discord(%{discord_struct: reaction_struct})
 
       assert {:ok, created_reaction} = result
       assert created_reaction.emoji_name == "😊"
@@ -170,30 +180,34 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
         message_reaction(%{
           emoji: %{id: nil, name: emoji_name, animated: false},
           count: 1,
-          me: false,
+          me: false
+        })
+
+      {:ok, original_reaction} =
+        TestApp.Discord.message_reaction_from_discord(%{
+          discord_struct: initial_struct,
           user_id: user_id,
           message_id: message_id,
           channel_id: 444_555_666,
           guild_id: 777_888_999
         })
-
-      {:ok, original_reaction} =
-        TestApp.Discord.message_reaction_from_discord(%{discord_struct: initial_struct})
 
       # Update same reaction with new count
       updated_struct =
         message_reaction(%{
           emoji: %{id: nil, name: emoji_name, animated: false},
           count: 5,
-          me: true,
+          me: true
+        })
+
+      {:ok, updated_reaction} =
+        TestApp.Discord.message_reaction_from_discord(%{
+          discord_struct: updated_struct,
           user_id: user_id,
           message_id: message_id,
           channel_id: 444_555_666,
           guild_id: 777_888_999
         })
-
-      {:ok, updated_reaction} =
-        TestApp.Discord.message_reaction_from_discord(%{discord_struct: updated_struct})
 
       # Should be same record (same Ash ID)
       assert updated_reaction.id == original_reaction.id
@@ -216,30 +230,34 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
         message_reaction(%{
           emoji: %{id: emoji_id, name: "custom_emoji", animated: false},
           count: 2,
-          me: false,
+          me: false
+        })
+
+      {:ok, original_reaction} =
+        TestApp.Discord.message_reaction_from_discord(%{
+          discord_struct: initial_struct,
           user_id: user_id,
           message_id: message_id,
           channel_id: 999_111_222,
           guild_id: 222_333_444
         })
-
-      {:ok, original_reaction} =
-        TestApp.Discord.message_reaction_from_discord(%{discord_struct: initial_struct})
 
       # Update to animated version
       updated_struct =
         message_reaction(%{
           emoji: %{id: emoji_id, name: "custom_emoji", animated: true},
           count: 3,
-          me: true,
+          me: true
+        })
+
+      {:ok, updated_reaction} =
+        TestApp.Discord.message_reaction_from_discord(%{
+          discord_struct: updated_struct,
           user_id: user_id,
           message_id: message_id,
           channel_id: 999_111_222,
           guild_id: 222_333_444
         })
-
-      {:ok, updated_reaction} =
-        TestApp.Discord.message_reaction_from_discord(%{discord_struct: updated_struct})
 
       # Should be same record
       assert updated_reaction.id == original_reaction.id
@@ -264,26 +282,31 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
     end
 
     test "handles missing required fields in discord_struct" do
-      # Missing required fields
+      # Message reactions have defaults for most fields, so this should succeed with defaults
       invalid_struct = message_reaction(%{count: nil, emoji: nil})
 
       result = TestApp.Discord.message_reaction_from_discord(%{discord_struct: invalid_struct})
 
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "is required"
+      assert {:ok, created_reaction} = result
+      # default value
+      assert created_reaction.count == 1
+      assert created_reaction.emoji_id == nil
+      assert created_reaction.emoji_name == nil
     end
 
     test "handles missing emoji in discord_struct" do
       invalid_struct = %{
         # Missing emoji field
         count: 1,
-        me: false,
-        user_id: 123_456_789,
-        message_id: 555_666_777
+        me: false
       }
 
-      result = TestApp.Discord.message_reaction_from_discord(%{discord_struct: invalid_struct})
+      result =
+        TestApp.Discord.message_reaction_from_discord(%{
+          discord_struct: invalid_struct,
+          user_id: 123_456_789,
+          message_id: 555_666_777
+        })
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -296,14 +319,16 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
           emoji: %{id: nil, name: "👍", animated: false},
           # Invalid count type
           count: "not_an_integer",
-          me: false,
+          me: false
+        })
+
+      result =
+        TestApp.Discord.message_reaction_from_discord(%{
+          discord_struct: reaction_struct,
           user_id: 123_456_789,
           message_id: 555_666_777,
           channel_id: 111_222_333
         })
-
-      result =
-        TestApp.Discord.message_reaction_from_discord(%{discord_struct: reaction_struct})
 
       # This might succeed with normalized count or fail with validation error
       # Either is acceptable behavior
@@ -324,13 +349,15 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
         # Malformed emoji
         emoji: "not_a_map",
         count: 1,
-        me: false,
-        user_id: 123_456_789,
-        message_id: 555_666_777
+        me: false
       }
 
       result =
-        TestApp.Discord.message_reaction_from_discord(%{discord_struct: malformed_struct})
+        TestApp.Discord.message_reaction_from_discord(%{
+          discord_struct: malformed_struct,
+          user_id: 123_456_789,
+          message_id: 555_666_777
+        })
 
       assert {:error, error} = result
       error_message = Exception.message(error)

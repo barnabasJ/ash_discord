@@ -57,6 +57,8 @@ defmodule AshDiscord.Changes.FromDiscord do
   """
   use Ash.Resource.Change
 
+  alias AshDiscord.Changes.FromDiscord.Transformations
+
   @supported_types [
     :user,
     :guild,
@@ -175,24 +177,54 @@ defmodule AshDiscord.Changes.FromDiscord do
   # Transformation functions (to be implemented in subsequent tasks)
   # These are placeholders that will be implemented following the breakdown
 
-  defp transform_user(changeset, _discord_data) do
-    # TODO: Implement user transformation following steward patterns
+  defp transform_user(changeset, discord_data) do
     changeset
+    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
+    |> Ash.Changeset.force_change_attribute(:discord_username, discord_data.username)
+    |> Ash.Changeset.force_change_attribute(:discord_avatar, discord_data.avatar)
+    |> Transformations.set_discord_email(discord_data.id)
   end
 
-  defp transform_guild(changeset, _discord_data) do
-    # TODO: Implement guild transformation following steward patterns
+  defp transform_guild(changeset, discord_data) do
     changeset
+    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
+    |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
+    |> Ash.Changeset.force_change_attribute(:description, discord_data.description)
+    |> Ash.Changeset.force_change_attribute(:icon, discord_data.icon)
   end
 
-  defp transform_guild_member(changeset, _discord_data) do
-    # TODO: Implement guild member transformation with datetime parsing
+  defp transform_guild_member(changeset, discord_data) do
+    guild_id = Ash.Changeset.get_argument(changeset, :guild_id)
+
     changeset
+    |> Ash.Changeset.force_change_attribute(:guild_id, guild_id)
+    |> Ash.Changeset.force_change_attribute(:user_id, discord_data.user_id)
+    |> maybe_set_attribute(:nick, discord_data.nick)
+    |> maybe_set_attribute(:roles, discord_data.roles || [])
+    |> Transformations.set_datetime_field(:joined_at, discord_data.joined_at)
   end
 
-  defp transform_role(changeset, _discord_data) do
-    # TODO: Implement role transformation with permissions handling
+  defp transform_role(changeset, discord_data) do
     changeset
+    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
+    |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
+    |> Ash.Changeset.force_change_attribute(:color, discord_data.color)
+    |> Ash.Changeset.force_change_attribute(:permissions, to_string(discord_data.permissions))
+    |> maybe_set_role_attributes(discord_data)
+  end
+
+  defp maybe_set_role_attributes(changeset, discord_data) do
+    changeset
+    |> maybe_set_attribute(:hoist, discord_data.hoist)
+    |> maybe_set_attribute(:position, discord_data.position)
+    |> maybe_set_attribute(:managed, discord_data.managed)
+    |> maybe_set_attribute(:mentionable, discord_data.mentionable)
+  end
+
+  defp maybe_set_attribute(changeset, _field, nil), do: changeset
+
+  defp maybe_set_attribute(changeset, field, value) do
+    Ash.Changeset.force_change_attribute(changeset, field, value)
   end
 
   defp transform_channel(changeset, _discord_data) do
@@ -200,14 +232,24 @@ defmodule AshDiscord.Changes.FromDiscord do
     changeset
   end
 
-  defp transform_message(changeset, _discord_data) do
-    # TODO: Implement message transformation with attachments
+  defp transform_message(changeset, discord_data) do
     changeset
+    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
+    |> Ash.Changeset.force_change_attribute(:content, discord_data.content)
+    |> Ash.Changeset.force_change_attribute(:channel_id, discord_data.channel_id)
+    |> Ash.Changeset.force_change_attribute(:author_id, discord_data.author.id)
+    |> maybe_set_attribute(:guild_id, discord_data.guild_id)
+    |> Transformations.set_datetime_field(:timestamp, discord_data.timestamp)
+    |> Transformations.set_datetime_field(:edited_timestamp, discord_data.edited_timestamp)
   end
 
-  defp transform_emoji(changeset, _discord_data) do
-    # TODO: Implement emoji transformation with guild relationship
+  defp transform_emoji(changeset, discord_data) do
     changeset
+    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
+    |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
+    |> Ash.Changeset.force_change_attribute(:animated, discord_data.animated || false)
+    |> maybe_set_attribute(:managed, discord_data.managed)
+    |> maybe_set_attribute(:require_colons, discord_data.require_colons)
   end
 
   defp transform_voice_state(changeset, _discord_data) do

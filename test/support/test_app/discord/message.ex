@@ -68,6 +68,8 @@ defmodule TestApp.Discord.Message do
       upsert_identity(:unique_discord_id)
       upsert_fields([:content, :channel_id, :author_id, :guild_id, :timestamp, :edited_timestamp])
 
+      argument(:discord_struct, :struct, description: "Discord message data to transform")
+
       change({AshDiscord.Changes.FromDiscord, type: :message})
     end
 

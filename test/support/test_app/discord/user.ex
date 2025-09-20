@@ -36,9 +36,7 @@ defmodule TestApp.Discord.User do
 
       accept([:discord_id])
 
-      argument(:discord_struct, :map,
-        description: "Optional Nostrum.Struct.User to use instead of fetching"
-      )
+      argument(:discord_struct, :map, description: "Discord user data to transform")
 
       upsert?(true)
       upsert_identity(:discord_id)

@@ -117,7 +117,7 @@ defmodule AshDiscord.Test.Generators.Discord do
       public_flags: 0
     }
 
-    merge_attrs(defaults, attrs)
+    struct(Nostrum.Struct.User, merge_attrs(defaults, attrs))
   end
 
   @doc """
@@ -160,7 +160,7 @@ defmodule AshDiscord.Test.Generators.Discord do
       member_count: Faker.random_between(10, 1000)
     }
 
-    merge_attrs(defaults, attrs)
+    struct(Nostrum.Struct.Guild, merge_attrs(defaults, attrs))
   end
 
   @doc """
@@ -203,7 +203,7 @@ defmodule AshDiscord.Test.Generators.Discord do
       rate_limit_per_user: 0
     }
 
-    merge_attrs(defaults, attrs)
+    struct(Nostrum.Struct.Channel, merge_attrs(defaults, attrs))
   end
 
   @doc """
@@ -261,18 +261,21 @@ defmodule AshDiscord.Test.Generators.Discord do
     result = merge_attrs(defaults, attrs)
 
     # Add edited timestamp 25% of the time
-    if Faker.Util.pick([true, false, false, false]) do
-      edited_time =
-        result.timestamp
-        |> DateTime.from_iso8601()
-        |> elem(1)
-        |> DateTime.add(Faker.random_between(60, 7200), :second)
-        |> DateTime.to_iso8601()
+    final_result =
+      if Faker.Util.pick([true, false, false, false]) do
+        edited_time =
+          result.timestamp
+          |> DateTime.from_iso8601()
+          |> elem(1)
+          |> DateTime.add(Faker.random_between(60, 7200), :second)
+          |> DateTime.to_iso8601()
 
-      Map.put(result, :edited_timestamp, edited_time)
-    else
-      result
-    end
+        Map.put(result, :edited_timestamp, edited_time)
+      else
+        result
+      end
+
+    struct(Nostrum.Struct.Message, final_result)
   end
 
   @doc """
@@ -318,7 +321,7 @@ defmodule AshDiscord.Test.Generators.Discord do
       version: 1
     }
 
-    merge_attrs(defaults, attrs)
+    struct(Nostrum.Struct.Interaction, merge_attrs(defaults, attrs))
   end
 
   @doc """
@@ -348,7 +351,6 @@ defmodule AshDiscord.Test.Generators.Discord do
 
     defaults = %{
       user_id: member_user.id,
-      guild_id: generate_snowflake(),
       user: member_user,
       nick: if(Faker.Util.pick([true, false, false]), do: Faker.Person.first_name(), else: nil),
       roles: [],
@@ -359,7 +361,7 @@ defmodule AshDiscord.Test.Generators.Discord do
       pending: false
     }
 
-    merge_attrs(defaults, attrs)
+    struct(Nostrum.Struct.Guild.Member, merge_attrs(defaults, attrs))
   end
 
   @doc """
@@ -403,7 +405,7 @@ defmodule AshDiscord.Test.Generators.Discord do
       mentionable: true
     }
 
-    merge_attrs(defaults, attrs)
+    struct(Nostrum.Struct.Guild.Role, merge_attrs(defaults, attrs))
   end
 
   @doc """
@@ -444,7 +446,7 @@ defmodule AshDiscord.Test.Generators.Discord do
       fields: []
     }
 
-    merge_attrs(defaults, attrs)
+    struct(Nostrum.Struct.Embed, merge_attrs(defaults, attrs))
   end
 
   @doc """
@@ -475,7 +477,7 @@ defmodule AshDiscord.Test.Generators.Discord do
       roles: []
     }
 
-    merge_attrs(defaults, attrs)
+    struct(Nostrum.Struct.Emoji, merge_attrs(defaults, attrs))
   end
 
   @doc """
@@ -510,7 +512,7 @@ defmodule AshDiscord.Test.Generators.Discord do
       token: "#{Faker.UUID.v4()}#{Faker.UUID.v4()}"
     }
 
-    merge_attrs(defaults, attrs)
+    struct(Nostrum.Struct.Webhook, merge_attrs(defaults, attrs))
   end
 
   @doc """
@@ -547,7 +549,7 @@ defmodule AshDiscord.Test.Generators.Discord do
       uses: 0
     }
 
-    merge_attrs(defaults, attrs)
+    struct(Nostrum.Struct.Invite, merge_attrs(defaults, attrs))
   end
 
   @doc """

@@ -67,9 +67,10 @@ defmodule AshDiscord.Changes.FromDiscordTest do
     end
 
     test "handles GuildMember entity creation" do
-      member_struct = member(%{guild_id: 111, user_id: 222})
+      member_struct = member(%{user_id: 222})
 
-      result = TestApp.Discord.guild_member_from_discord(%{discord_struct: member_struct})
+      result =
+        TestApp.Discord.guild_member_from_discord(%{discord_struct: member_struct, guild_id: 111})
 
       assert {:ok, _member} = result
     end
@@ -104,8 +105,8 @@ defmodule AshDiscord.Changes.FromDiscordTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Invalid discord_struct format"
-      assert error_message =~ "expected map"
+      assert error_message =~ "Invalid value provided for discord_struct"
+      assert error_message =~ "is invalid"
     end
   end
 end

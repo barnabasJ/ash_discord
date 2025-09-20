@@ -1,0 +1,250 @@
+defmodule AshDiscord.Changes.FromDiscord.Transformations do
+  @moduledoc """
+  Shared transformation utilities for Discord entity processing.
+
+  This module provides reusable functions for common transformation patterns
+  across Discord entities, including datetime parsing, email generation, and
+  relationship management with auto-creation capabilities.
+
+  ## Usage
+
+  These functions are designed to be used within `AshDiscord.Changes.FromDiscord`
+  transformation functions to handle common patterns consistently across all
+  Discord entity types.
+
+  ## Key Features
+
+  - **Graceful datetime parsing**: Handles nil, empty, and invalid datetime formats
+  - **Discord email generation**: Consistent email format for Discord users
+  - **Relationship management**: Auto-creation patterns for related entities
+  - **Error tolerance**: Robust handling of malformed or missing data
+
+  ## Examples
+
+      # Datetime transformation
+      changeset = set_datetime_field(changeset, :joined_at, discord_data.joined_at)
+
+      # Email generation
+      changeset = set_discord_email(changeset, discord_data.id)
+
+      # Relationship management
+      changeset = manage_guild_relationship(changeset, discord_data.guild_id)
+
+  """
+
+  @doc """
+  Sets a datetime field on the changeset with graceful error handling.
+
+  Handles various datetime formats and provides fallbacks for invalid data:
+  - Valid ISO8601 strings are parsed to DateTime
+  - nil values are preserved as nil
+  - Empty strings are converted to nil
+  - Invalid formats are logged and converted to nil
+
+  ## Parameters
+
+  - `changeset` - The Ash changeset to modify
+  - `field` - The datetime field to set
+  - `datetime_value` - The datetime value to parse (string, DateTime, or nil)
+
+  ## Returns
+
+  Updated changeset with the datetime field set, or unchanged if parsing fails.
+
+  ## Examples
+
+      # Valid datetime string
+      changeset = set_datetime_field(changeset, :joined_at, "2023-01-01T12:00:00Z")
+
+      # Handles nil gracefully
+      changeset = set_datetime_field(changeset, :premium_since, nil)
+
+      # Invalid format logs warning and sets nil
+      changeset = set_datetime_field(changeset, :created_at, "invalid-date")
+
+  """
+  def set_datetime_field(changeset, field, datetime_value) do
+    case parse_datetime(datetime_value) do
+      {:ok, datetime} ->
+        Ash.Changeset.force_change_attribute(changeset, field, datetime)
+
+      {:error, reason} ->
+        require Logger
+        Logger.warning("Failed to parse datetime for field #{field}: #{reason}. Setting to nil.")
+        Ash.Changeset.force_change_attribute(changeset, field, nil)
+
+      nil ->
+        Ash.Changeset.force_change_attribute(changeset, field, nil)
+    end
+  end
+
+  @doc """
+  Generates a Discord email address for a given Discord ID.
+
+  Creates consistent email addresses for Discord users using the pattern:
+  `discord+{discord_id}@{domain}`
+
+  The default domain is "discord.local" but can be customized via application
+  configuration or explicit parameter.
+
+  ## Parameters
+
+  - `discord_id` - The Discord user ID (integer or string)
+  - `domain` - Optional custom domain (defaults to "discord.local")
+
+  ## Returns
+
+  String email address in the format `discord+{discord_id}@{domain}`
+
+  ## Examples
+
+      iex> generate_discord_email(123456789)
+      "discord+123456789@discord.local"
+
+      iex> generate_discord_email("987654321", "custom.domain")
+      "discord+987654321@custom.domain"
+
+  """
+  def generate_discord_email(discord_id, domain \\ "discord.local") do
+    "discord+#{discord_id}@#{domain}"
+  end
+
+  @doc """
+  Sets the Discord email field on a changeset using the Discord ID.
+
+  Convenience function that combines Discord email generation with changeset
+  modification. Extracts the Discord ID from the changeset attributes or
+  provided Discord data and generates the appropriate email address.
+
+  ## Parameters
+
+  - `changeset` - The Ash changeset to modify
+  - `discord_id` - The Discord ID to use for email generation
+
+  ## Returns
+
+  Updated changeset with the email field set to the generated Discord email.
+
+  ## Examples
+
+      changeset = set_discord_email(changeset, 123456789)
+      # Sets email to "discord+123456789@discord.local"
+
+  """
+  def set_discord_email(changeset, discord_id) do
+    email = generate_discord_email(discord_id)
+    Ash.Changeset.force_change_attribute(changeset, :email, email)
+  end
+
+  @doc """
+  Manages guild relationship with auto-creation capabilities.
+
+  Sets up relationship management for guild associations using Ash's
+  relationship management features with auto-creation when the related
+  guild doesn't exist.
+
+  ## Parameters
+
+  - `changeset` - The Ash changeset to modify
+  - `guild_id` - The Discord guild ID to associate
+
+  ## Returns
+
+  Updated changeset with guild relationship managed.
+
+  ## Examples
+
+      changeset = manage_guild_relationship(changeset, discord_data.guild_id)
+
+  """
+  def manage_guild_relationship(changeset, guild_id) when not is_nil(guild_id) do
+    Ash.Changeset.manage_relationship(changeset, :guild, %{discord_id: guild_id},
+      type: :append_and_remove,
+      use_identities: [:discord_id],
+      value_is_key: :discord_id,
+      on_no_match: {:create, :from_discord}
+    )
+  end
+
+  def manage_guild_relationship(changeset, _nil_guild_id), do: changeset
+
+  @doc """
+  Manages user relationship with auto-creation capabilities.
+
+  Sets up relationship management for user associations using Ash's
+  relationship management features with auto-creation when the related
+  user doesn't exist.
+
+  ## Parameters
+
+  - `changeset` - The Ash changeset to modify
+  - `user_id` - The Discord user ID to associate
+
+  ## Returns
+
+  Updated changeset with user relationship managed.
+
+  ## Examples
+
+      changeset = manage_user_relationship(changeset, discord_data.user_id)
+
+  """
+  def manage_user_relationship(changeset, user_id) when not is_nil(user_id) do
+    Ash.Changeset.manage_relationship(changeset, :user, %{discord_id: user_id},
+      type: :append_and_remove,
+      use_identities: [:discord_id],
+      value_is_key: :discord_id,
+      on_no_match: {:create, :from_discord}
+    )
+  end
+
+  def manage_user_relationship(changeset, _nil_user_id), do: changeset
+
+  @doc """
+  Manages channel relationship with auto-creation capabilities.
+
+  Sets up relationship management for channel associations using Ash's
+  relationship management features with auto-creation when the related
+  channel doesn't exist.
+
+  ## Parameters
+
+  - `changeset` - The Ash changeset to modify
+  - `channel_id` - The Discord channel ID to associate
+
+  ## Returns
+
+  Updated changeset with channel relationship managed.
+
+  ## Examples
+
+      changeset = manage_channel_relationship(changeset, discord_data.channel_id)
+
+  """
+  def manage_channel_relationship(changeset, channel_id) when not is_nil(channel_id) do
+    Ash.Changeset.manage_relationship(changeset, :channel, %{discord_id: channel_id},
+      type: :append_and_remove,
+      use_identities: [:discord_id],
+      value_is_key: :discord_id,
+      on_no_match: {:create, :from_discord}
+    )
+  end
+
+  def manage_channel_relationship(changeset, _nil_channel_id), do: changeset
+
+  # Private helper functions
+
+  # Parses datetime values with comprehensive error handling
+  defp parse_datetime(nil), do: nil
+  defp parse_datetime(""), do: nil
+
+  defp parse_datetime(datetime) when is_binary(datetime) do
+    case DateTime.from_iso8601(datetime) do
+      {:ok, parsed_datetime, _offset} -> {:ok, parsed_datetime}
+      {:error, reason} -> {:error, "Invalid datetime format: #{reason}"}
+    end
+  end
+
+  defp parse_datetime(%DateTime{} = datetime), do: {:ok, datetime}
+  defp parse_datetime(other), do: {:error, "Unsupported datetime type: #{inspect(other)}"}
+end

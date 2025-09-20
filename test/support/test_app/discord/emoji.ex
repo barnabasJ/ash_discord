@@ -14,7 +14,7 @@ defmodule TestApp.Discord.Emoji do
   attributes do
     uuid_primary_key(:id)
 
-    attribute(:discord_id, :string,
+    attribute(:discord_id, :integer,
       allow_nil?: false,
       public?: true
     )
@@ -56,7 +56,7 @@ defmodule TestApp.Discord.Emoji do
       description("Create emoji from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :map,
+      argument(:discord_struct, :struct,
         allow_nil?: false,
         description: "Discord emoji struct to transform"
       )

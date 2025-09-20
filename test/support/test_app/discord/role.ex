@@ -14,7 +14,7 @@ defmodule TestApp.Discord.Role do
   attributes do
     uuid_primary_key(:id)
 
-    attribute(:discord_id, :string,
+    attribute(:discord_id, :integer,
       allow_nil?: false,
       public?: true
     )
@@ -71,7 +71,7 @@ defmodule TestApp.Discord.Role do
       description("Create role from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :map,
+      argument(:discord_struct, :struct,
         allow_nil?: false,
         description: "Discord role struct to transform"
       )

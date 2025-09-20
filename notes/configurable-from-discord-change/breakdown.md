@@ -89,27 +89,27 @@ to the next phase.
 📝 **Commit**:
 `feat(changes): add configurable FromDiscord change module with type dispatch`
 
-#### 2. [ ] **Create Shared Transformations Utility Module** [2 hours]
+#### 2. [x] **Create Shared Transformations Utility Module** [2 hours]
 
-2.1. [ ] Create `lib/ash_discord/changes/from_discord/transformations.ex`
+2.1. [x] Create `lib/ash_discord/changes/from_discord/transformations.ex`
 
 - Follow pattern from existing modules in `lib/ash_discord/` for organization
 - Add module documentation following steward patterns
 - 📖 [Ash Changeset Functions](https://hexdocs.pm/ash/Ash.Changeset.html)
 
-  2.2. [ ] Implement shared datetime transformation utilities
+  2.2. [x] Implement shared datetime transformation utilities
 
 - Add `set_datetime_field/3` function with graceful error handling
 - Pattern: Handle nil, empty string, and invalid datetime formats gracefully
 - Follow steward pattern for DateTime.from_iso8601/1 with error tolerance
 
-  2.3. [ ] Implement Discord email generation utility
+  2.3. [x] Implement Discord email generation utility
 
 - Add `generate_discord_email/2` function
 - Pattern: `"discord+#{discord_id}@#{domain}"` format from steward research
 - Default domain: `"discord.local"`
 
-  2.4. [ ] Implement relationship management utilities
+  2.4. [x] Implement relationship management utilities
 
 - Add `manage_guild_relationship/2`, `manage_user_relationship/2`,
   `manage_channel_relationship/2`
@@ -118,74 +118,74 @@ to the next phase.
 - Pattern:
   `type: :append_and_remove, use_identities: [:discord_id], value_is_key: :discord_id`
 
-  2.5. [ ] Create comprehensive test file for transformations
+  2.5. [x] Create comprehensive test file for transformations - SKIPPED
 
-- Create `test/ash_discord/changes/from_discord/transformations_test.exs`
-- Test datetime parsing with valid/invalid/nil values
-- Test email generation with various discord_id formats
-- Test relationship management with mocked changesets
+**DECISION: Skip unit tests, use integration tests only**
+
+- User decided to test only through from_discord actions on test app resources
+- Eliminates duplicate test resources and focuses on real-world usage
+- Maintains coverage through integration testing patterns
 
 📝 **Commit**:
 `feat(transformations): add shared transformation utilities with datetime and relationship handling`
 
-#### 3. [ ] **Implement Primary Entity Transformations** [4 hours]
+#### 3. [x] **Implement Primary Entity Transformations** [4 hours]
 
-3.1. [ ] Implement User entity transformation
+3.1. [x] Implement User entity transformation
 
 - Add `transform_user/2` function in main module
 - Follow exact pattern from `test/support/test_app/discord/user.ex:45-65`
 - Transform: `:discord_id`, `:discord_username`, `:discord_avatar`, `:email`
 - Use `Transformations.generate_discord_email/1` for email field
 
-  3.2. [ ] Write comprehensive User transformation tests
+  3.2. [x] Write comprehensive User transformation tests - SKIPPED
 
-- Test with user generator: `user(%{username: "testuser", avatar: "hash123"})`
-- Verify all attribute transformations match steward patterns
-- Test error handling with invalid user structs
-- Test email generation with various discord_id values
+**DECISION: Skip unit tests, use integration tests only**
 
-  3.3. [ ] Implement Guild entity transformation
+- Testing through TestApp.Discord.User.from_discord action instead
+- Eliminates duplicate test resources and focuses on real-world usage
+
+  3.3. [x] Implement Guild entity transformation
 
 - Add `transform_guild/2` function in main module
 - Follow exact pattern from `test/support/test_app/discord/guild.ex:45-65`
 - Transform: `:discord_id`, `:name`, `:description`, `:icon`, `:owner_id`
 - Handle optional owner_id with nil safety
 
-  3.4. [ ] Write comprehensive Guild transformation tests
+  3.4. [x] Write comprehensive Guild transformation tests - SKIPPED
 
-- Test with guild generator:
-  `guild(%{name: "Test Guild", description: "A test guild"})`
-- Verify all attribute transformations
-- Test with nil and present owner_id values
-- Test error handling scenarios
+**DECISION: Skip unit tests, use integration tests only**
 
-  3.5. [ ] Implement Role entity transformation
+- Testing through TestApp.Discord.Guild.from_discord action instead
+- Eliminates duplicate test resources and focuses on real-world usage
+
+  3.5. [x] Implement Role entity transformation
 
 - Add `transform_role/2` function in main module
 - Transform: `:discord_id`, `:name`, `:color`, `:permissions`
 - Convert permissions to string: `to_string(discord_data.permissions)`
 - Use `Transformations.manage_guild_relationship/2` for guild association
 
-  3.6. [ ] Write comprehensive Role transformation tests
+  3.6. [x] Write comprehensive Role transformation tests - SKIPPED
 
-- Test with role generator with various permissions values
-- Verify permissions conversion to string format
-- Test guild relationship management
-- Test error handling scenarios
+**DECISION: Skip unit tests, use integration tests only**
 
-  3.7. [ ] Implement Emoji entity transformation
+- Testing through TestApp.Discord.Role.from_discord action instead
+- Eliminates duplicate test resources and focuses on real-world usage
+
+  3.7. [x] Implement Emoji entity transformation
 
 - Add `transform_emoji/2` function in main module
 - Transform: `:discord_id`, `:name`, `:animated` (default false)
 - Use `Transformations.manage_guild_relationship/2` for guild association
 - Handle boolean field defaults properly
 
-  3.8. [ ] Write comprehensive Emoji transformation tests
+  3.8. [x] Write comprehensive Emoji transformation tests - SKIPPED
 
-- Test with emoji generator with animated true/false/nil
-- Verify boolean field handling and defaults
-- Test guild relationship management
-- Test error handling scenarios
+**DECISION: Skip unit tests, use integration tests only**
+
+- Testing through TestApp.Discord.Emoji.from_discord action instead
+- Eliminates duplicate test resources and focuses on real-world usage
 
 📝 **Commit**:
 `feat(entities): implement User, Guild, Role, and Emoji transformations with comprehensive tests`

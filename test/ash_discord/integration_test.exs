@@ -44,7 +44,7 @@ defmodule AshDiscord.IntegrationTest do
     @impl true
     def handle_message_create(message) do
       # Create message using from_discord action
-      case TestApp.Discord.Message.from_discord(message) do
+      case TestApp.Discord.Message.from_discord(%{discord_struct: message}) do
         {:ok, created_message} ->
           send(self(), {:message_created, created_message})
           :ok
@@ -75,14 +75,12 @@ defmodule AshDiscord.IntegrationTest do
     end
 
     test "consumer processes message events with from_discord actions" do
-      message_data = %{
-        discord_id: generate_snowflake(),
-        content: "Test message content",
-        channel_id: generate_snowflake(),
-        guild_id: generate_snowflake(),
-        author_id: generate_snowflake(),
-        timestamp: DateTime.utc_now()
-      }
+      message_data =
+        message(%{
+          content: "Test message content",
+          channel_id: generate_snowflake(),
+          guild_id: generate_snowflake()
+        })
 
       result = IntegrationTestConsumer.handle_message_create(message_data)
 
@@ -90,7 +88,7 @@ defmodule AshDiscord.IntegrationTest do
 
       # Should receive message creation confirmation
       assert_receive {:message_created, created_message}, 1000
-      assert created_message.discord_id == message_data.discord_id
+      assert created_message.discord_id == message_data.id
       assert created_message.content == message_data.content
     end
 

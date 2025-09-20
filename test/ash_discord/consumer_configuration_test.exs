@@ -1,7 +1,7 @@
 defmodule AshDiscord.ConsumerConfigurationTest do
   @moduledoc """
   Tests for AshDiscord Consumer configuration system (Tasks 19-20).
-  
+
   Tests the automatic user resolution system and Discord context abstraction
   as outlined in the library extraction breakdown Tasks 19-20.
   """
@@ -16,8 +16,12 @@ defmodule AshDiscord.ConsumerConfigurationTest do
     test "consumer can be configured with user_resource for automatic resolution" do
       # Define a test consumer with user_resource configuration
       defmodule TestUserResolutionConsumer do
-        use AshDiscord.Consumer, domains: [TestApp.Discord]
-        
+        use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          domains([TestApp.Discord])
+        end
+
         # Override the user creation callback
         def create_user_from_discord(discord_user) do
           TestApp.Discord.User.from_discord!(%{
@@ -35,8 +39,12 @@ defmodule AshDiscord.ConsumerConfigurationTest do
 
     test "consumer can specify custom user resolution logic" do
       defmodule CustomUserResolutionConsumer do
-        use AshDiscord.Consumer, domains: [TestApp.Discord]
-        
+        use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          domains([TestApp.Discord])
+        end
+
         # Custom logic for user creation with additional attributes
         def create_user_from_discord(discord_user) do
           TestApp.Discord.User.from_discord!(%{
@@ -54,7 +62,12 @@ defmodule AshDiscord.ConsumerConfigurationTest do
 
     test "consumer works without user_resource configured (fallback mode)" do
       defmodule FallbackConsumer do
-        use AshDiscord.Consumer, domains: [TestApp.Discord]
+        use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          domains([TestApp.Discord])
+        end
+
         # Uses default create_user_from_discord implementation (returns nil)
       end
 
@@ -65,8 +78,12 @@ defmodule AshDiscord.ConsumerConfigurationTest do
 
     test "user resolution handles errors gracefully" do
       defmodule ErrorHandlingConsumer do
-        use AshDiscord.Consumer, domains: [TestApp.Discord]
-        
+        use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          domains([TestApp.Discord])
+        end
+
         def create_user_from_discord(_discord_user) do
           {:error, :test_user_creation_failed}
         end
@@ -81,8 +98,12 @@ defmodule AshDiscord.ConsumerConfigurationTest do
   describe "discord context setting (Task 20)" do
     test "consumer provides minimal Discord context for command execution" do
       defmodule ContextTestConsumer do
-        use AshDiscord.Consumer, domains: [TestApp.Discord]
-        
+        use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          domains([TestApp.Discord])
+        end
+
         def create_user_from_discord(discord_user) do
           TestApp.Discord.User.from_discord!(%{discord_id: discord_user.id})
         end
@@ -91,7 +112,7 @@ defmodule AshDiscord.ConsumerConfigurationTest do
       # Verify consumer is properly configured
       domains = ContextTestConsumer.domains()
       assert TestApp.Discord in domains
-      
+
       # The user creation callback is used internally by the InteractionRouter
       # We tested its functionality in the InteractionRouter tests
     end
@@ -99,8 +120,12 @@ defmodule AshDiscord.ConsumerConfigurationTest do
     test "discord context supports different actor patterns" do
       # Test that different consumer configurations can work
       defmodule FlexibleContextConsumer do
-        use AshDiscord.Consumer, domains: [TestApp.Discord]
-        
+        use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          domains([TestApp.Discord])
+        end
+
         def create_user_from_discord(discord_user) do
           case discord_user do
             %{id: id, username: username} when is_binary(username) ->
@@ -108,6 +133,7 @@ defmodule AshDiscord.ConsumerConfigurationTest do
                 discord_id: id,
                 username: username
               })
+
             %{id: id} ->
               TestApp.Discord.User.from_discord!(%{discord_id: id})
           end
@@ -120,8 +146,12 @@ defmodule AshDiscord.ConsumerConfigurationTest do
 
     test "context management is separated from application-specific logic" do
       defmodule CleanContextConsumer do
-        use AshDiscord.Consumer, domains: [TestApp.Discord]
-        
+        use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          domains([TestApp.Discord])
+        end
+
         def create_user_from_discord(discord_user) do
           # Only Discord command user is set as actor
           # Application logic is separate
@@ -133,7 +163,7 @@ defmodule AshDiscord.ConsumerConfigurationTest do
       domains = CleanContextConsumer.domains()
       assert length(domains) == 1
       assert TestApp.Discord in domains
-      
+
       # Application would add additional context in their action implementations
       # This test verifies the library provides minimal, clean Discord context only
     end
@@ -144,8 +174,12 @@ defmodule AshDiscord.ConsumerConfigurationTest do
       # Consumer creation should be successful at compile time
       # Runtime errors from user creation are handled by InteractionRouter  
       defmodule InvalidUserCreatorConsumer do
-        use AshDiscord.Consumer, domains: [TestApp.Discord]
-        
+        use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          domains([TestApp.Discord])
+        end
+
         # This would cause runtime errors, but compiles fine
         def create_user_from_discord(_discord_user) do
           raise "Intentional error for testing"
@@ -161,6 +195,11 @@ defmodule AshDiscord.ConsumerConfigurationTest do
     test "missing domains configuration uses empty list" do
       defmodule NoDomainConsumer do
         use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          domains([])
+        end
+
         # No domains specified
       end
 

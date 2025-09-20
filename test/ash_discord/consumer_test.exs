@@ -1,9 +1,17 @@
 defmodule AshDiscord.ConsumerTest do
   use TestApp.DataCase, async: false
 
+  import AshDiscord.Test.Generators.Discord
+  import Mimic
+
   alias TestApp.TestConsumer
 
   describe "Consumer using macro" do
+    setup do
+      copy(Nostrum.Api.Interaction)
+      :ok
+    end
+
     test "generates callback functions" do
       callbacks_arity_1 = [
         :handle_message_create,
@@ -45,18 +53,20 @@ defmodule AshDiscord.ConsumerTest do
 
     test "overridden callbacks work correctly" do
       # Test message create override - use proper Nostrum struct
+      test_user = user(%{username: "testuser", discriminator: "0001"})
+
       message = %Nostrum.Struct.Message{
-        id: 123_456_789,
+        id: generate_snowflake(),
         content: "test message",
-        channel_id: 987_654_321,
+        channel_id: generate_snowflake(),
         author: %Nostrum.Struct.User{
-          id: 111_222_333,
-          username: "testuser",
-          discriminator: "0001",
-          avatar: nil,
-          bot: false
+          id: test_user.id,
+          username: test_user.username,
+          discriminator: test_user.discriminator,
+          avatar: test_user.avatar,
+          bot: test_user.bot
         },
-        guild_id: 444_555_666,
+        guild_id: generate_snowflake(),
         timestamp: DateTime.utc_now() |> DateTime.to_iso8601()
       }
 
@@ -66,20 +76,11 @@ defmodule AshDiscord.ConsumerTest do
     end
 
     test "interaction handling works" do
-      interaction = %{
-        # APPLICATION_COMMAND
-        id: "interaction_123456789",
-        type: 2,
-        data: %{
-          name: "hello",
-          options: []
-        },
-        guild_id: 123_456_789,
-        channel_id: 987_654_321,
-        member: %{
-          user: %{id: 111_222_333}
-        }
-      }
+      interaction =
+        interaction(%{
+          data: %{name: "hello", options: []},
+          member: %{user: user()}
+        })
 
       TestConsumer.handle_interaction_create(interaction)
 
@@ -89,37 +90,48 @@ defmodule AshDiscord.ConsumerTest do
     end
 
     test "application command routing works" do
-      command_interaction = %{
-        type: 2,
-        data: %{
-          name: "hello",
-          options: []
-        },
-        guild_id: 123_456_789,
-        channel_id: 987_654_321,
-        member: %{
-          user: %{id: 111_222_333}
-        }
-      }
+      command_interaction =
+        interaction(%{
+          data: %{name: "hello", options: []},
+          member: %{user: user()}
+        })
+
+      # Mock the interaction response to avoid rate limiter issues
+      expect(Nostrum.Api.Interaction, :create_response, fn _interaction_id, _token, _response ->
+        {:ok, %{}}
+      end)
 
       TestConsumer.handle_application_command(command_interaction)
 
       # Verify command was processed
       assert Process.get(:last_command) == command_interaction
-      assert Process.get(:last_command_result) == :ok
+      assert Process.get(:last_command_result) == {:ok, %{}}
     end
   end
 
   describe "Resource integration" do
+    setup do
+      copy(Nostrum.Api.ApplicationCommand)
+
+      stub(Nostrum.Api.ApplicationCommand, :bulk_overwrite_guild_commands, fn _guild_id,
+                                                                              _commands ->
+        {:ok, []}
+      end)
+
+      :ok
+    end
+
     test "from_discord actions work with consumer" do
       # Use proper Nostrum guild struct
+      guild_data = guild(%{name: "Test Guild", member_count: 10})
+
       guild = %Nostrum.Struct.Guild{
-        id: 123_456_789,
-        name: "Test Guild",
-        icon: nil,
-        description: nil,
-        owner_id: 987_654_321,
-        member_count: 10
+        id: guild_data.id,
+        name: guild_data.name,
+        icon: guild_data.icon,
+        description: guild_data.description,
+        owner_id: guild_data.owner_id,
+        member_count: guild_data.member_count
       }
 
       TestConsumer.handle_guild_create(guild)
@@ -128,27 +140,29 @@ defmodule AshDiscord.ConsumerTest do
       guilds = TestApp.Discord.Guild.read!()
       assert length(guilds) == 1
 
-      guild = hd(guilds)
-      assert guild.discord_id == 123_456_789
+      created_guild = hd(guilds)
+      assert created_guild.discord_id == guild_data.id
       # From our mock
-      assert guild.name == "Test Guild 123456789"
+      assert created_guild.name == "Test Guild #{guild_data.id}"
     end
 
     test "message creation works with consumer" do
       # Use proper Nostrum message struct
+      message_data = message(%{content: "Hello world"})
+
       message = %Nostrum.Struct.Message{
-        id: 987_654_321,
-        content: "Hello world",
-        channel_id: 123_456_789,
+        id: message_data.id,
+        content: message_data.content,
+        channel_id: message_data.channel_id,
         author: %Nostrum.Struct.User{
-          id: 111_222_333,
-          username: "testuser",
-          discriminator: "0001",
-          avatar: nil,
-          bot: false
+          id: message_data.author.id,
+          username: message_data.author.username,
+          discriminator: message_data.author.discriminator,
+          avatar: message_data.author.avatar,
+          bot: message_data.author.bot
         },
-        guild_id: 444_555_666,
-        timestamp: DateTime.utc_now() |> DateTime.to_iso8601()
+        guild_id: message_data.guild_id,
+        timestamp: message_data.timestamp
       }
 
       TestConsumer.handle_message_create(message)
@@ -157,10 +171,10 @@ defmodule AshDiscord.ConsumerTest do
       messages = TestApp.Discord.Message.read!()
       assert length(messages) == 1
 
-      message = hd(messages)
-      assert message.discord_id == 987_654_321
-      # From our mock
-      assert message.content == "Test message 987654321"
+      created_message = hd(messages)
+      assert created_message.discord_id == message_data.id
+      # Should use actual content since we're now passing it
+      assert created_message.content == message_data.content
     end
   end
 end

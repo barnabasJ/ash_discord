@@ -13,9 +13,7 @@ defmodule AshDiscord.Consumer.Dsl do
       guild_resource MyApp.Discord.Guild
       message_resource MyApp.Discord.Message  
       user_resource MyApp.Accounts.User
-      auto_create_users true
     end
-
     # Override callbacks as needed
     def handle_message_create(message) do
       # Custom message handling
@@ -61,13 +59,13 @@ defmodule AshDiscord.Consumer.Dsl do
 
       @ash_discord_domains unquote(domains)
       @ash_discord_command_filter unquote(command_filter)
-      
+
       # Commands built from DSL domains at runtime, not compile-time
       defp get_commands do
         domains = AshDiscord.Consumer.Info.ash_discord_consumer_domains!(__MODULE__)
         AshDiscord.Consumer.collect_commands(domains)
       end
-      
+
       # DSL configuration will be accessed at runtime via generated Info functions
 
       @doc "Returns the configured domains for this consumer"

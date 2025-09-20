@@ -17,26 +17,25 @@ defmodule TestApp.DataCase do
   use ExUnit.CaseTemplate
 
   using do
-    quote do
-      alias TestApp.Repo
-
-      import Ecto
-      import Ecto.Changeset
-      import Ecto.Query
-      import TestApp.DataCase
-    end
   end
 
-  setup tags do
-    TestApp.DataCase.setup_sandbox(tags)
+  setup _ do
+    # Clean up ETS tables between tests
+    on_exit(fn ->
+      # Clear all data from test resources
+      TestApp.Discord.Message
+      |> Ash.read!()
+      |> Enum.each(&Ash.destroy!/1)
+
+      TestApp.Discord.Guild
+      |> Ash.read!()
+      |> Enum.each(&Ash.destroy!/1)
+
+      TestApp.Discord.User
+      |> Ash.read!()
+      |> Enum.each(&Ash.destroy!/1)
+    end)
+
     :ok
-  end
-
-  @doc """
-  Sets up the sandbox based on the test tags.
-  """
-  def setup_sandbox(tags) do
-    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(TestApp.Repo, shared: not tags[:async])
-    on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
   end
 end

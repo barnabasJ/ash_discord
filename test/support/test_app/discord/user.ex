@@ -5,120 +5,94 @@ defmodule TestApp.Discord.User do
 
   use Ash.Resource,
     domain: TestApp.Discord,
-    data_layer: AshPostgres.DataLayer
-
-  postgres do
-    table "discord_users"
-    repo(TestApp.Repo)
-  end
+    data_layer: Ash.DataLayer.Ets
 
   attributes do
-    uuid_primary_key :id
+    uuid_primary_key(:id)
 
-    attribute :discord_id, :integer, allow_nil?: false, public?: true
-    attribute :username, :string, allow_nil?: false, public?: true
-    attribute :discriminator, :string, public?: true
-    attribute :avatar, :string, public?: true
-    attribute :email, :string, public?: true
+    attribute(:discord_id, :integer, allow_nil?: false, public?: true)
+    attribute(:discord_username, :string, allow_nil?: false, public?: true)
+    attribute(:discriminator, :string, public?: true)
+    attribute(:discord_avatar, :string, public?: true)
+    attribute(:email, :string, public?: true)
 
     timestamps()
   end
 
   identities do
-    identity :unique_discord_id, [:discord_id]
+    identity(:discord_id, [:discord_id], pre_check_with: TestApp.Domain)
   end
 
   actions do
-    defaults [:read]
+    defaults([:read, :destroy])
 
     create :create do
-      primary? true
-      accept [:discord_id, :username, :discriminator, :avatar, :email]
+      primary?(true)
+      accept([:discord_id, :discord_username, :discriminator, :discord_avatar, :email])
     end
 
     create :from_discord do
-      accept [:discord_id, :username, :discriminator, :avatar, :email]
-      upsert? true
-      upsert_identity :unique_discord_id
-      upsert_fields [:username, :discriminator, :avatar, :email]
+      description("Create or update a user from Discord API data or struct")
 
-      change fn changeset, _context ->
-        case Ash.Changeset.get_attribute(changeset, :discord_id) do
-          nil ->
-            changeset
+      accept([:discord_id])
 
-          discord_id ->
-            # If username is not provided, use mock data
-            changeset =
-              if Ash.Changeset.get_attribute(changeset, :username) do
-                changeset
-              else
-                Ash.Changeset.change_attribute(changeset, :username, "testuser#{discord_id}")
-              end
+      argument(:discord_struct, :map,
+        description: "Optional Nostrum.Struct.User to use instead of fetching"
+      )
 
-            # If discriminator is not provided, use mock data
-            changeset =
-              if Ash.Changeset.get_attribute(changeset, :discriminator) do
-                changeset
-              else
-                Ash.Changeset.change_attribute(changeset, :discriminator, "0001")
-              end
+      upsert?(true)
+      upsert_identity(:discord_id)
+      upsert_fields([:discord_username, :discord_avatar])
 
-            changeset
-        end
-      end
+      change(fn changeset, _context ->
+        user_data = Ash.Changeset.get_argument(changeset, :discord_struct)
+        # Generate placeholder email for Discord bot users
+        email = "discord+#{user_data.id}@steward.local"
+
+        changeset
+        |> Ash.Changeset.force_change_attribute(:discord_id, user_data.id)
+        |> Ash.Changeset.force_change_attribute(:discord_username, user_data.username)
+        |> Ash.Changeset.force_change_attribute(:discord_avatar, user_data.avatar)
+        |> Ash.Changeset.force_change_attribute(:email, email)
+      end)
     end
 
     update :update do
-      primary? true
-      accept [:username, :discriminator, :avatar, :email]
+      primary?(true)
+      accept([:discord_username, :discriminator, :discord_avatar, :email])
     end
 
     update :ban do
-      require_atomic? false
-      
-      argument :user, :string, allow_nil?: false
-      argument :reason, :string, allow_nil?: true
+      require_atomic?(false)
 
-      change fn changeset, _context ->
+      argument(:user, :string, allow_nil?: false)
+      argument(:reason, :string, allow_nil?: true)
+
+      change(fn changeset, _context ->
         # Mock implementation for testing - in reality would involve Discord API calls
         user = Ash.Changeset.get_argument(changeset, :user)
         reason = Ash.Changeset.get_argument(changeset, :reason) || "No reason provided"
-        
+
         # Log the ban action for testing
         Process.put(:ban_executed, %{user: user, reason: reason})
-        
+
         changeset
-      end
+      end)
     end
   end
 
   relationships do
-    has_many :messages, TestApp.Discord.Message,
+    has_many(:messages, TestApp.Discord.Message,
       destination_attribute: :author_id,
       source_attribute: :discord_id
+    )
   end
 
   code_interface do
-    define :create
-    define :from_discord
-    define :update
-    define :ban
-    define :read
-  end
-
-  @doc """
-  Helper to create Discord-formatted struct for testing.
-  """
-  def discord_struct(attrs) do
-    %{
-      id: Map.get(attrs, :discord_id),
-      username: Map.get(attrs, :username),
-      discriminator: Map.get(attrs, :discriminator),
-      avatar: Map.get(attrs, :avatar),
-      email: Map.get(attrs, :email),
-      bot: Map.get(attrs, :bot, false),
-      global_name: Map.get(attrs, :display_name)
-    }
+    define(:create)
+    define(:from_discord)
+    define(:update)
+    define(:ban)
+    define(:read)
   end
 end

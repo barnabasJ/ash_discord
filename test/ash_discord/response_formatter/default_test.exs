@@ -17,12 +17,12 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
       response = Default.format_success(result, context)
 
       assert %{
-        type: 4,
-        data: %{
-          content: "create completed successfully!",
-          flags: 64
-        }
-      } = response
+               type: 4,
+               data: %{
+                 content: "create completed successfully!",
+                 flags: 64
+               }
+             } = response
     end
 
     test "formats list results" do
@@ -32,12 +32,12 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
       response = Default.format_success(result, context)
 
       assert %{
-        type: 4,
-        data: %{
-          content: "Found 3 items",
-          flags: 64
-        }
-      } = response
+               type: 4,
+               data: %{
+                 content: "Found 3 items",
+                 flags: 64
+               }
+             } = response
     end
 
     test "formats binary results" do
@@ -47,16 +47,17 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
       response = Default.format_success(result, context)
 
       assert %{
-        type: 4,
-        data: %{
-          content: "Custom response message",
-          flags: 64
-        }
-      } = response
+               type: 4,
+               data: %{
+                 content: "Custom response message",
+                 flags: 64
+               }
+             } = response
     end
 
     test "formats message move results" do
       context = %{command: %Command{action: :analyze_messages}}
+
       result = %{
         total_found: 5,
         related_messages: [
@@ -81,12 +82,12 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
       response = Default.format_success(result, context)
 
       assert %{
-        type: 4,
-        data: %{
-          content: content,
-          flags: 64
-        }
-      } = response
+               type: 4,
+               data: %{
+                 content: content,
+                 flags: 64
+               }
+             } = response
 
       assert content =~ "Found 5 messages in conversation thread"
       assert content =~ "**user1**: This is a test message"
@@ -96,6 +97,7 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
 
     test "formats message move results for single message" do
       context = %{command: %Command{action: :analyze_messages}}
+
       result = %{
         total_found: 1,
         related_messages: [
@@ -113,12 +115,12 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
       response = Default.format_success(result, context)
 
       assert %{
-        type: 4,
-        data: %{
-          content: content,
-          flags: 64
-        }
-      } = response
+               type: 4,
+               data: %{
+                 content: content,
+                 flags: 64
+               }
+             } = response
 
       assert content =~ "Found 1 message in single message"
       refute content =~ "and"
@@ -126,6 +128,7 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
 
     test "formats message move results with missing author" do
       context = %{command: %Command{action: :analyze_messages}}
+
       result = %{
         total_found: 1,
         related_messages: [
@@ -143,12 +146,12 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
       response = Default.format_success(result, context)
 
       assert %{
-        type: 4,
-        data: %{
-          content: content,
-          flags: 64
-        }
-      } = response
+               type: 4,
+               data: %{
+                 content: content,
+                 flags: 64
+               }
+             } = response
 
       assert content =~ "**Unknown**: Message without author"
     end
@@ -156,6 +159,7 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
     test "formats message move results with long content" do
       context = %{command: %Command{action: :analyze_messages}}
       long_content = String.duplicate("a", 150)
+
       result = %{
         total_found: 1,
         related_messages: [
@@ -173,12 +177,12 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
       response = Default.format_success(result, context)
 
       assert %{
-        type: 4,
-        data: %{
-          content: content,
-          flags: 64
-        }
-      } = response
+               type: 4,
+               data: %{
+                 content: content,
+                 flags: 64
+               }
+             } = response
 
       assert content =~ "Preview text..."
     end
@@ -190,12 +194,12 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
       response = Default.format_success(result, context)
 
       assert %{
-        type: 4,
-        data: %{
-          content: "update completed successfully!",
-          flags: 64
-        }
-      } = response
+               type: 4,
+               data: %{
+                 content: "update completed successfully!",
+                 flags: 64
+               }
+             } = response
     end
 
     test "formats other results as generic success" do
@@ -205,12 +209,12 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
       response = Default.format_success(result, context)
 
       assert %{
-        type: 4,
-        data: %{
-          content: "Command completed successfully!",
-          flags: 64
-        }
-      } = response
+               type: 4,
+               data: %{
+                 content: "Command completed successfully!",
+                 flags: 64
+               }
+             } = response
     end
   end
 
@@ -222,12 +226,12 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
       response = Default.format_error(error, context)
 
       assert %{
-        type: 4,
-        data: %{
-          content: "Error: Something went wrong",
-          flags: 64
-        }
-      } = response
+               type: 4,
+               data: %{
+                 content: "Error: Something went wrong",
+                 flags: 64
+               }
+             } = response
     end
 
     test "formats Ash.Error.Invalid" do
@@ -237,12 +241,12 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
       response = Default.format_error(error, context)
 
       assert %{
-        type: 4,
-        data: %{
-          content: "Error: Invalid input provided",
-          flags: 64
-        }
-      } = response
+               type: 4,
+               data: %{
+                 content: "Error: Invalid input provided",
+                 flags: 64
+               }
+             } = response
     end
 
     test "formats Ash.Error.Forbidden" do
@@ -252,12 +256,12 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
       response = Default.format_error(error, context)
 
       assert %{
-        type: 4,
-        data: %{
-          content: "Error: You don't have permission to perform this action",
-          flags: 64
-        }
-      } = response
+               type: 4,
+               data: %{
+                 content: "Error: You don't have permission to perform this action",
+                 flags: 64
+               }
+             } = response
     end
 
     test "formats errors with message field" do
@@ -267,12 +271,12 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
       response = Default.format_error(error, context)
 
       assert %{
-        type: 4,
-        data: %{
-          content: "Error: Custom error message",
-          flags: 64
-        }
-      } = response
+               type: 4,
+               data: %{
+                 content: "Error: Custom error message",
+                 flags: 64
+               }
+             } = response
     end
 
     test "formats unknown errors" do
@@ -282,18 +286,19 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
       response = Default.format_error(error, context)
 
       assert %{
-        type: 4,
-        data: %{
-          content: "Error: Command failed to execute",
-          flags: 64
-        }
-      } = response
+               type: 4,
+               data: %{
+                 content: "Error: Command failed to execute",
+                 flags: 64
+               }
+             } = response
     end
   end
 
   describe "format_validation_errors/2" do
     test "formats validation errors with field and message" do
       context = %{command: %Command{}}
+
       errors = [
         %{field: :name, message: "is required"},
         %{field: :email, message: "must be valid"}
@@ -302,12 +307,12 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
       response = Default.format_validation_errors(errors, context)
 
       assert %{
-        type: 4,
-        data: %{
-          content: content,
-          flags: 64
-        }
-      } = response
+               type: 4,
+               data: %{
+                 content: content,
+                 flags: 64
+               }
+             } = response
 
       assert content =~ "Validation errors:"
       assert content =~ "• name: is required"
@@ -316,6 +321,7 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
 
     test "formats validation errors with only message" do
       context = %{command: %Command{}}
+
       errors = [
         %{message: "General validation error"},
         %{message: "Another error"}
@@ -324,12 +330,12 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
       response = Default.format_validation_errors(errors, context)
 
       assert %{
-        type: 4,
-        data: %{
-          content: content,
-          flags: 64
-        }
-      } = response
+               type: 4,
+               data: %{
+                 content: content,
+                 flags: 64
+               }
+             } = response
 
       assert content =~ "Validation errors:"
       assert content =~ "• General validation error"
@@ -343,12 +349,12 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
       response = Default.format_validation_errors(errors, context)
 
       assert %{
-        type: 4,
-        data: %{
-          content: content,
-          flags: 64
-        }
-      } = response
+               type: 4,
+               data: %{
+                 content: content,
+                 flags: 64
+               }
+             } = response
 
       assert content =~ "Validation errors:"
       assert content =~ "• Error 1"
@@ -362,12 +368,12 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
       response = Default.format_validation_errors(errors, context)
 
       assert %{
-        type: 4,
-        data: %{
-          content: content,
-          flags: 64
-        }
-      } = response
+               type: 4,
+               data: %{
+                 content: content,
+                 flags: 64
+               }
+             } = response
 
       assert content =~ "Validation errors:"
       assert content =~ "• :unknown_error"
@@ -381,13 +387,12 @@ defmodule AshDiscord.ResponseFormatter.DefaultTest do
       response = Default.format_validation_errors(errors, context)
 
       assert %{
-        type: 4,
-        data: %{
-          content: "Validation errors:\nInvalid input provided",
-          flags: 64
-        }
-      } = response
+               type: 4,
+               data: %{
+                 content: "Validation errors:\nInvalid input provided",
+                 flags: 64
+               }
+             } = response
     end
   end
-
 end

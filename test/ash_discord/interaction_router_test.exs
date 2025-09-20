@@ -1,6 +1,8 @@
 defmodule AshDiscord.InteractionRouterTest do
   use TestApp.DataCase
 
+  import AshDiscord.Test.Generators.Discord
+
   alias AshDiscord.InteractionRouter
   alias AshDiscord.Info
   alias TestApp.Discord
@@ -17,26 +19,17 @@ defmodule AshDiscord.InteractionRouterTest do
 
   describe "interaction routing" do
     test "routes hello command to message action" do
-      interaction = %{
-        # APPLICATION_COMMAND
-        id: "interaction_123",
-        token: "interaction_token",
-        type: 2,
-        data: %{
-          name: "hello",
-          options: []
-        },
-        guild_id: "123456789",
-        channel_id: "987654321",
-        member: %{
-          user: %{id: "111222333"}
-        }
-      }
+      interaction =
+        interaction(%{
+          data: %{name: "hello", options: []},
+          member: %{user: user()}
+        })
 
       result =
         InteractionRouter.route_interaction(
           interaction,
-          find_command_for_test(Discord, interaction.data.name)
+          find_command_for_test(Discord, interaction.data.name),
+          consumer: TestApp.TestConsumer
         )
 
       # Should return success tuple
@@ -44,28 +37,23 @@ defmodule AshDiscord.InteractionRouterTest do
     end
 
     test "routes create_message command with options" do
-      interaction = %{
-        id: "interaction_124",
-        token: "interaction_token",
-        type: 2,
-        data: %{
-          name: "create_message",
-          options: [
-            %{name: "message", type: 3, value: "Hello world"},
-            %{name: "channel", type: 3, value: "123456789"}
-          ]
-        },
-        guild_id: "123456789",
-        channel_id: "987654321",
-        member: %{
-          user: %{id: "111222333"}
-        }
-      }
+      interaction =
+        interaction(%{
+          data: %{
+            name: "create_message",
+            options: [
+              option(%{name: "message", type: 3, value: "Hello world"}),
+              option(%{name: "channel", type: 3, value: "#{generate_snowflake()}"})
+            ]
+          },
+          member: %{user: user()}
+        })
 
       result =
         InteractionRouter.route_interaction(
           interaction,
-          find_command_for_test(Discord, interaction.data.name)
+          find_command_for_test(Discord, interaction.data.name),
+          consumer: TestApp.TestConsumer
         )
 
       # Should return success tuple
@@ -73,28 +61,23 @@ defmodule AshDiscord.InteractionRouterTest do
     end
 
     test "routes search command with arguments" do
-      interaction = %{
-        id: "interaction_125",
-        token: "interaction_token",
-        type: 2,
-        data: %{
-          name: "search",
-          options: [
-            %{name: "query", type: 3, value: "test"},
-            %{name: "limit", type: 4, value: 5}
-          ]
-        },
-        guild_id: "123456789",
-        channel_id: "987654321",
-        member: %{
-          user: %{id: "111222333"}
-        }
-      }
+      interaction =
+        interaction(%{
+          data: %{
+            name: "search",
+            options: [
+              option(%{name: "query", type: 3, value: "test"}),
+              option(%{name: "limit", type: 4, value: 5})
+            ]
+          },
+          member: %{user: user()}
+        })
 
       result =
         InteractionRouter.route_interaction(
           interaction,
-          find_command_for_test(Discord, interaction.data.name)
+          find_command_for_test(Discord, interaction.data.name),
+          consumer: TestApp.TestConsumer
         )
 
       # Should return success tuple
@@ -103,39 +86,38 @@ defmodule AshDiscord.InteractionRouterTest do
 
     test "routes configure command with arguments" do
       # First create a guild for the configure command
+      guild_id = generate_snowflake()
+
       guild =
         TestApp.Discord.Guild.create!(%{
-          discord_id: "123456789",
+          discord_id: guild_id,
           name: "Test Guild"
         })
 
-      interaction = %{
-        id: "interaction_126",
-        token: "interaction_token",
-        type: 2,
-        data: %{
-          name: "configure",
-          options: [
-            %{name: "setting", type: 3, value: "moderation"},
-            %{name: "enabled", type: 5, value: true}
-          ]
-        },
-        guild_id: "123456789",
-        channel_id: "987654321",
-        member: %{
-          user: %{id: "111222333"}
-        }
-      }
+      interaction =
+        interaction(%{
+          data: %{
+            name: "configure",
+            options: [
+              option(%{name: "setting", type: 3, value: "moderation"}),
+              option(%{name: "enabled", type: 5, value: true})
+            ]
+          },
+          guild_id: guild_id,
+          member: %{user: user()}
+        })
 
       result =
         InteractionRouter.route_interaction(
           interaction,
-          find_command_for_test(Discord, interaction.data.name)
+          find_command_for_test(Discord, interaction.data.name),
+          consumer: TestApp.TestConsumer
         )
 
       # Update actions are not yet supported - router sends error response to Discord
       assert {:ok, response} = result
-      assert response.type == 4  # CHANNEL_MESSAGE_WITH_SOURCE
+      # CHANNEL_MESSAGE_WITH_SOURCE
+      assert response.type == 4
       assert String.contains?(response.data.content, "Error: An unexpected error occurred")
 
       # Guild should remain unchanged since update failed
@@ -144,25 +126,17 @@ defmodule AshDiscord.InteractionRouterTest do
     end
 
     test "handles unknown command gracefully" do
-      interaction = %{
-        id: "interaction_127",
-        token: "interaction_token",
-        type: 2,
-        data: %{
-          name: "unknown_command",
-          options: []
-        },
-        guild_id: "123456789",
-        channel_id: "987654321",
-        member: %{
-          user: %{id: "111222333"}
-        }
-      }
+      interaction =
+        interaction(%{
+          data: %{name: "unknown_command", options: []},
+          member: %{user: user()}
+        })
 
       result =
         InteractionRouter.route_interaction(
           interaction,
-          find_command_for_test(Discord, interaction.data.name)
+          find_command_for_test(Discord, interaction.data.name),
+          consumer: TestApp.TestConsumer
         )
 
       # Should return error tuple
@@ -173,7 +147,7 @@ defmodule AshDiscord.InteractionRouterTest do
   describe "option parsing" do
     test "correctly parses string options" do
       options = [
-        %{name: "message", type: 3, value: "Hello world"}
+        option(%{name: "message", type: 3, value: "Hello world"})
       ]
 
       parsed = InteractionRouter.parse_options(options)
@@ -182,7 +156,7 @@ defmodule AshDiscord.InteractionRouterTest do
 
     test "correctly parses integer options" do
       options = [
-        %{name: "limit", type: 4, value: 10}
+        option(%{name: "limit", type: 4, value: 10})
       ]
 
       parsed = InteractionRouter.parse_options(options)
@@ -191,7 +165,7 @@ defmodule AshDiscord.InteractionRouterTest do
 
     test "correctly parses boolean options" do
       options = [
-        %{name: "enabled", type: 5, value: true}
+        option(%{name: "enabled", type: 5, value: true})
       ]
 
       parsed = InteractionRouter.parse_options(options)
@@ -207,18 +181,16 @@ defmodule AshDiscord.InteractionRouterTest do
   describe "domain resolution (Task 18)" do
     test "router works with configured domains without hardcoded references" do
       # Verify no hardcoded Steward references exist in the router
-      interaction = %{
-        id: "interaction_128",
-        token: "interaction_token",
-        type: 2,
-        data: %{name: "hello", options: []},
-        guild_id: "123456789",
-        channel_id: "987654321",
-        member: %{user: %{id: "111222333"}}
-      }
+      interaction =
+        interaction(%{
+          data: %{name: "hello", options: []},
+          member: %{user: user()}
+        })
 
       command = find_command_for_test(TestApp.Discord, "hello")
-      result = InteractionRouter.route_interaction(interaction, command)
+
+      result =
+        InteractionRouter.route_interaction(interaction, command, consumer: TestApp.TestConsumer)
 
       # Should work without any Steward domain dependencies
       assert {:ok, _response} = result
@@ -234,111 +206,86 @@ defmodule AshDiscord.InteractionRouterTest do
 
   describe "automatic user resolution system (Task 19)" do
     test "automatic user resolution creates actors from Discord data" do
-      discord_user = %{id: "123456789", username: "testuser"}
-      interaction = %{
-        id: "interaction_129",
-        token: "interaction_token", 
-        type: 2,
-        data: %{name: "hello", options: []},
-        guild_id: "123456789",
-        channel_id: "987654321",
-        user: discord_user
-      }
+      discord_user = user(%{username: "testuser", avatar: "avatarhash"})
 
-      # Create a user creator function that mimics the TestApp pattern
-      user_creator = fn discord_user_data ->
-        TestApp.Discord.User.from_discord!(%{
-          discord_id: discord_user_data.id,
-          username: discord_user_data.username || "testuser#{discord_user_data.id}"
+      interaction =
+        interaction(%{
+          data: %{name: "hello", options: []},
+          user: discord_user
         })
-      end
 
       command = find_command_for_test(TestApp.Discord, "hello")
-      
-      # Route with explicit user_creator
-      result = InteractionRouter.route_interaction(interaction, command, user_creator: user_creator)
+
+      result =
+        InteractionRouter.route_interaction(interaction, command, consumer: TestApp.TestConsumer)
+
       assert {:ok, _response} = result
 
-      # Verify user was created in database
       users = TestApp.Discord.User.read!()
-      assert Enum.any?(users, fn user -> 
-        user.discord_id == String.to_integer(discord_user.id)
-      end)
+
+      assert Enum.any?(users, fn user ->
+               user.discord_id == discord_user.id
+             end)
     end
 
     test "user resolution falls back to basic struct when no user_resource configured" do
-      discord_user = %{id: "987654321", username: "fallbackuser"}
-      interaction = %{
-        id: "interaction_130",
-        token: "interaction_token",
-        type: 2, 
-        data: %{name: "hello", options: []},
-        guild_id: "123456789",
-        channel_id: "987654321",
-        user: discord_user
-      }
+      discord_user = user(%{username: "fallbackuser"})
+
+      interaction =
+        interaction(%{
+          data: %{name: "hello", options: []},
+          user: discord_user
+        })
 
       command = find_command_for_test(TestApp.Discord, "hello")
-      
-      # Route without user_creator - should use fallback
-      result = InteractionRouter.route_interaction(interaction, command, user_creator: nil)
+
+      result =
+        InteractionRouter.route_interaction(interaction, command, consumer: TestApp.TestConsumer)
+
       assert {:ok, _response} = result
     end
-
   end
 
   describe "discord context setting (Task 20)" do
     test "discord context sets actor only" do
-      discord_user = %{id: "555666777", username: "contextuser"}
-      interaction = %{
-        id: "interaction_132",
-        token: "interaction_token",
-        type: 2,
-        data: %{name: "hello", options: []},
-        guild_id: "123456789",
-        channel_id: "987654321",
-        user: discord_user
-      }
+      discord_user = user(%{username: "contextuser"})
 
-      user_creator = fn discord_user_data ->
-        TestApp.Discord.User.from_discord!(%{
-          discord_id: discord_user_data.id,
-          username: discord_user_data.username || "testuser#{discord_user_data.id}"
+      interaction =
+        interaction(%{
+          data: %{name: "hello", options: []},
+          user: discord_user
         })
-      end
 
       command = find_command_for_test(TestApp.Discord, "hello")
-      result = InteractionRouter.route_interaction(interaction, command, user_creator: user_creator)
-      
+
+      result =
+        InteractionRouter.route_interaction(interaction, command, consumer: TestApp.TestConsumer)
+
       # Should succeed with actor set from Discord context
       assert {:ok, _response} = result
 
       # Verify user was resolved and used as actor
       users = TestApp.Discord.User.read!()
+
       assert Enum.any?(users, fn user ->
-        user.discord_id == String.to_integer(discord_user.id)
-      end)
+               user.discord_id == discord_user.id
+             end)
     end
 
-    test "generic Discord context management supports multiple context patterns" do  
+    test "generic Discord context management supports multiple context patterns" do
       # Test that context can be passed in different patterns
-      interaction = %{
-        id: "interaction_133",
-        token: "interaction_token",
-        type: 2,
-        data: %{name: "hello", options: []},
-        guild_id: "123456789",
-        channel_id: "987654321",
-        member: %{user: %{id: "888999000"}}  # Member pattern instead of direct user
-      }
-
-      user_creator = fn discord_user_data ->
-        TestApp.Discord.User.from_discord!(%{discord_id: discord_user_data.id})
-      end
+      interaction =
+        interaction(%{
+          data: %{name: "hello", options: []},
+          # Member pattern instead of direct user
+          member: %{user: user()}
+        })
 
       command = find_command_for_test(TestApp.Discord, "hello")
-      result = InteractionRouter.route_interaction(interaction, command, user_creator: user_creator)
-      
+
+      result =
+        InteractionRouter.route_interaction(interaction, command, consumer: TestApp.TestConsumer)
+
       assert {:ok, _response} = result
     end
   end

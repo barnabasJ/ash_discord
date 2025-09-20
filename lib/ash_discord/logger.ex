@@ -1,7 +1,7 @@
 defmodule AshDiscord.Logger do
   @moduledoc """
   Structured logging for AshDiscord operations with contextual information.
-  
+
   Provides production-ready logging with:
   - Structured metadata for effective debugging
   - Performance metrics for slow operations
@@ -27,7 +27,7 @@ defmodule AshDiscord.Logger do
     }
 
     final_metadata = Map.merge(structured_metadata, metadata)
-    
+
     Logger.log(level, "[AshDiscord.Interaction] #{message}", Map.to_list(final_metadata))
   end
 
@@ -35,7 +35,7 @@ defmodule AshDiscord.Logger do
   Logs Discord command execution with performance timing.
   """
   def log_command_execution(command, interaction, result, execution_time_ms, metadata \\ %{}) do
-    {level, status} = 
+    {level, status} =
       case result do
         {:ok, _} -> {:info, "success"}
         {:error, _} -> {:error, "failed"}
@@ -80,15 +80,23 @@ defmodule AshDiscord.Logger do
 
     case result do
       {:ok, _result} ->
-        Logger.log(level, "[AshDiscord.Ash] #{action_type} #{inspect(resource)}.#{action_name} succeeded", Map.to_list(final_metadata))
+        Logger.log(
+          level,
+          "[AshDiscord.Ash] #{action_type} #{inspect(resource)}.#{action_name} succeeded",
+          Map.to_list(final_metadata)
+        )
 
       {:error, error} ->
-        error_metadata = Map.merge(final_metadata, %{
-          error_type: classify_ash_error(error),
-          error_details: format_error_for_logging(error)
-        })
-        
-        Logger.error("[AshDiscord.Ash] #{action_type} #{inspect(resource)}.#{action_name} failed", Map.to_list(error_metadata))
+        error_metadata =
+          Map.merge(final_metadata, %{
+            error_type: classify_ash_error(error),
+            error_details: format_error_for_logging(error)
+          })
+
+        Logger.error(
+          "[AshDiscord.Ash] #{action_type} #{inspect(resource)}.#{action_name} failed",
+          Map.to_list(error_metadata)
+        )
     end
   end
 
@@ -107,32 +115,37 @@ defmodule AshDiscord.Logger do
 
     case result do
       {:ok, _response} ->
-        message = 
+        message =
           if attempt > 1 do
             "Discord API #{method} #{endpoint} succeeded after #{attempt} attempts"
           else
             "Discord API #{method} #{endpoint} succeeded"
           end
-        
+
         Logger.debug("[AshDiscord.API] #{message}", final_metadata)
 
       {:error, %{status: status, message: message}} when status in [429, 500, 502, 503, 504] ->
         # Transient errors - log as warning with retry context
-        retry_metadata = Map.merge(final_metadata, %{
-          http_status: status,
-          error_message: message,
-          transient_error: true
-        })
-        
-        Logger.warning("[AshDiscord.API] Discord API #{method} #{endpoint} failed (transient)", retry_metadata)
+        retry_metadata =
+          Map.merge(final_metadata, %{
+            http_status: status,
+            error_message: message,
+            transient_error: true
+          })
+
+        Logger.warning(
+          "[AshDiscord.API] Discord API #{method} #{endpoint} failed (transient)",
+          retry_metadata
+        )
 
       {:error, error} ->
         # Permanent errors - log as error
-        error_metadata = Map.merge(final_metadata, %{
-          error_details: format_error_for_logging(error),
-          transient_error: false
-        })
-        
+        error_metadata =
+          Map.merge(final_metadata, %{
+            error_details: format_error_for_logging(error),
+            transient_error: false
+          })
+
         Logger.error("[AshDiscord.API] Discord API #{method} #{endpoint} failed", error_metadata)
     end
   end
@@ -151,20 +164,32 @@ defmodule AshDiscord.Logger do
 
     cond do
       not callback_enabled ->
-        Logger.debug("[AshDiscord.Consumer] Event #{event_type} skipped (callback disabled)", final_metadata)
+        Logger.debug(
+          "[AshDiscord.Consumer] Event #{event_type} skipped (callback disabled)",
+          final_metadata
+        )
 
       is_nil(processing_result) ->
         Logger.debug("[AshDiscord.Consumer] Processing event #{event_type}", final_metadata)
 
       processing_result == :ok ->
-        Logger.debug("[AshDiscord.Consumer] Event #{event_type} processed successfully", final_metadata)
+        Logger.debug(
+          "[AshDiscord.Consumer] Event #{event_type} processed successfully",
+          final_metadata
+        )
 
       match?({:error, _}, processing_result) ->
         {:error, error} = processing_result
-        error_metadata = Map.merge(final_metadata, %{
-          error_details: format_error_for_logging(error)
-        })
-        Logger.error("[AshDiscord.Consumer] Event #{event_type} processing failed", error_metadata)
+
+        error_metadata =
+          Map.merge(final_metadata, %{
+            error_details: format_error_for_logging(error)
+          })
+
+        Logger.error(
+          "[AshDiscord.Consumer] Event #{event_type} processing failed",
+          error_metadata
+        )
     end
   end
 
@@ -182,7 +207,9 @@ defmodule AshDiscord.Logger do
 
     final_metadata = Map.merge(structured_metadata, metadata)
 
-    message = "Configuration resolved: #{profile} profile with #{length(enabled_callbacks)} callbacks enabled"
+    message =
+      "Configuration resolved: #{profile} profile with #{length(enabled_callbacks)} callbacks enabled"
+
     Logger.info("[AshDiscord.Config] #{message}", final_metadata)
   end
 
@@ -200,15 +227,19 @@ defmodule AshDiscord.Logger do
 
     final_metadata = Map.merge(structured_metadata, metadata)
 
-    severity = 
+    severity =
       cond do
         duration_ms > 10_000 -> :error
-        duration_ms > 5_000 -> :warn
+        duration_ms > 5_000 -> :warning
         duration_ms > 1_000 -> :info
         true -> :debug
       end
 
-    Logger.log(severity, "[AshDiscord.Performance] Slow #{operation_type}: #{operation_name} (#{duration_ms}ms)", Map.to_list(final_metadata))
+    Logger.log(
+      severity,
+      "[AshDiscord.Performance] Slow #{operation_type}: #{operation_name} (#{duration_ms}ms)",
+      Map.to_list(final_metadata)
+    )
   end
 
   @doc """
@@ -225,13 +256,21 @@ defmodule AshDiscord.Logger do
 
     case result do
       {:ok, _} ->
-        Logger.info("[AshDiscord.Registration] Successfully registered #{length(commands)} Discord commands", Map.to_list(final_metadata))
+        Logger.info(
+          "[AshDiscord.Registration] Successfully registered #{length(commands)} Discord commands",
+          Map.to_list(final_metadata)
+        )
 
       {:error, error} ->
-        error_metadata = Map.merge(final_metadata, %{
-          error_details: format_error_for_logging(error)
-        })
-        Logger.error("[AshDiscord.Registration] Failed to register Discord commands", Map.to_list(error_metadata))
+        error_metadata =
+          Map.merge(final_metadata, %{
+            error_details: format_error_for_logging(error)
+          })
+
+        Logger.error(
+          "[AshDiscord.Registration] Failed to register Discord commands",
+          Map.to_list(error_metadata)
+        )
     end
   end
 
@@ -262,9 +301,9 @@ defmodule AshDiscord.Logger do
   # Private helper functions
 
   defp get_command_name(interaction) do
-    case interaction.data do
+    case Map.get(interaction, :data) do
       %{name: name} when is_binary(name) -> name
-      %{name: name} -> inspect(name) 
+      %{name: name} -> inspect(name)
       _ -> "unknown"
     end
   end
@@ -284,16 +323,24 @@ defmodule AshDiscord.Logger do
 
   defp classify_ash_error(error) do
     case error do
-      %Ash.Error.Invalid{} -> "validation"
-      %Ash.Error.Forbidden{} -> "authorization"
-      %Ash.Error.Framework{} -> "framework"
+      %Ash.Error.Invalid{} ->
+        "validation"
+
+      %Ash.Error.Forbidden{} ->
+        "authorization"
+
+      %Ash.Error.Framework{} ->
+        "framework"
+
       %{__struct__: struct_name} ->
         if struct_name |> to_string() |> String.contains?("NotFound") do
           "not_found"
         else
           "unknown"
         end
-      _ -> "unknown"
+
+      _ ->
+        "unknown"
     end
   end
 

@@ -35,10 +35,7 @@ defmodule AshDiscord.Consumer do
 
         ash_discord_consumer do
           domains [MyApp.Chat, MyApp.Discord]
-          enable_callbacks [:message_events, :guild_events]
-          disable_callbacks [:typing_start, :voice_state_update]
           debug_logging false
-          auto_create_users true
           store_bot_messages false
         end
       end
@@ -59,68 +56,6 @@ defmodule AshDiscord.Consumer do
   - **`:invite_events`**: invite_create, invite_delete
   - **`:unknown_events`**: unknown_event
 
-  ## Selective Callback Processing
-
-  Disabled callbacks have zero processing overhead - when a Discord event
-  arrives for a disabled callback, it returns `:ok` immediately without
-  any processing, logging, or function calls.
-
-      # Only process message and guild events - everything else is filtered out
-      defmodule MyApp.CustomConsumer do
-        use AshDiscord.Consumer
-
-        ash_discord_consumer do
-          domains [MyApp.Discord]
-          enable_callbacks [:message_events, :guild_events]
-        end
-      end
-
-      # Enable most callbacks but disable noisy ones for performance
-      defmodule MyApp.OptimizedConsumer do
-        use AshDiscord.Consumer
-
-        ash_discord_consumer do
-          domains [MyApp.Discord]
-          disable_callbacks [:typing_start, :voice_state_update]
-        end
-      end
-
-  ## Available Callbacks
-
-  The following callbacks can be overridden to extend behavior:
-
-  ### Core Callbacks (Always Enabled)
-  - `handle_ready(data)` - Called when the bot is ready
-  - `handle_interaction_create(interaction)` - Called for INTERACTION_CREATE events
-  - `handle_application_command(interaction)` - Called for slash commands specifically
-
-  ### Extended Callbacks (Can Be Disabled)
-  - `handle_message_create(message)` - Called for each MESSAGE_CREATE event
-  - `handle_message_update(message)` - Called for MESSAGE_UPDATE events
-  - `handle_message_delete(data)` - Called for MESSAGE_DELETE events
-  - `handle_message_delete_bulk(data)` - Called for MESSAGE_DELETE_BULK events
-  - `handle_message_reaction_add(data)` - Called for MESSAGE_REACTION_ADD events
-  - `handle_message_reaction_remove(data)` - Called for MESSAGE_REACTION_REMOVE events
-  - `handle_message_reaction_remove_all(data)` - Called for MESSAGE_REACTION_REMOVE_ALL events
-  - `handle_guild_create(guild)` - Called for each GUILD_CREATE event
-  - `handle_guild_update(guild)` - Called for GUILD_UPDATE events
-  - `handle_guild_delete(data)` - Called for GUILD_DELETE events
-  - `handle_guild_role_create(role)` - Called when a guild role is created
-  - `handle_guild_role_update(role)` - Called when a guild role is updated
-  - `handle_guild_role_delete(data)` - Called when a guild role is deleted
-  - `handle_guild_member_add(guild_id, member)` - Called when a member joins a guild
-  - `handle_guild_member_update(guild_id, member)` - Called when a guild member is updated
-  - `handle_guild_member_remove(guild_id, member)` - Called when a member leaves a guild
-  - `handle_channel_create(channel)` - Called for CHANNEL_CREATE events
-  - `handle_channel_update(channel)` - Called for CHANNEL_UPDATE events
-  - `handle_channel_delete(channel)` - Called for CHANNEL_DELETE events
-  - `handle_voice_state_update(voice_state)` - Called for VOICE_STATE_UPDATE events
-  - `handle_typing_start(typing_data)` - Called for TYPING_START events
-  - `handle_invite_create(invite)` - Called for INVITE_CREATE events
-  - `handle_invite_delete(invite_data)` - Called for INVITE_DELETE events
-  - `handle_unknown_event(event)` - Called for any other events
-
-  All callbacks should return `:ok` or `{:error, reason}`.
 
   ## Built-in Features
 
@@ -133,18 +68,6 @@ defmodule AshDiscord.Consumer do
   - Error handling and logging (configurable verbosity)
   - Backward compatibility with existing message handling patterns
 
-  ## Performance Optimization
-
-  The selective callback system provides significant performance benefits:
-
-  - **Zero Overhead**: Disabled callbacks return immediately without processing
-  - **Compile-Time Configuration**: Callback enablement is determined at compile time
-  - **Memory Efficiency**: Reduced memory usage for unused event handlers
-  - **CPU Efficiency**: Avoid unnecessary processing of irrelevant events
-
-  Benchmarks show that disabling unused callbacks can reduce event processing
-  overhead by 50-90% depending on the Discord server activity patterns.
-
   ## Configuration Examples
 
       # Minimal bot for slash commands only
@@ -153,38 +76,6 @@ defmodule AshDiscord.Consumer do
 
         ash_discord_consumer do
           domains [MyApp.Discord]
-          enable_callbacks [:interaction_events]
-        end
-      end
-
-      # Production bot with message and guild management
-      defmodule MyApp.ProductionConsumer do
-        use AshDiscord.Consumer
-
-        ash_discord_consumer do
-          domains [MyApp.Discord]
-          enable_callbacks [:message_events, :guild_events, :interaction_events]
-          disable_callbacks [:voice_events, :typing_events]
-        end
-      end
-
-      # Custom bot for moderation (messages + members + roles)
-      defmodule MyApp.ModerationConsumer do
-        use AshDiscord.Consumer
-
-        ash_discord_consumer do
-          domains [MyApp.Discord]
-          enable_callbacks [:message_events, :member_events, :role_events]
-        end
-      end
-
-      # Development with full logging
-      defmodule MyApp.DevelopmentConsumer do
-        use AshDiscord.Consumer
-
-        ash_discord_consumer do
-          domains [MyApp.Discord]
-          debug_logging true
         end
       end
   """
@@ -709,6 +600,14 @@ defmodule AshDiscord.Consumer do
       require Logger
       alias AshDiscord.Logger, as: AshLogger
 
+      defp parse_timestamp(timestamp_string) do
+        case DateTime.from_iso8601(timestamp_string) do
+          {:ok, datetime, _offset} -> datetime
+          {:ok, datetime} -> datetime
+          {:error, _} -> nil
+        end
+      end
+
       # Default callback implementations with automatic resource handling
       def handle_message_create(message) do
         with {:ok, message_resource} <-
@@ -724,9 +623,6 @@ defmodule AshDiscord.Consumer do
           else
             case message_resource
                  |> Ash.Changeset.for_create(:from_discord, %{
-                   discord_id: message.id,
-                   channel_discord_id: message.channel_id,
-                   guild_discord_id: message.guild_id,
                    discord_struct: message
                  })
                  |> Ash.create(actor: %{role: :bot}) do
@@ -752,6 +648,40 @@ defmodule AshDiscord.Consumer do
       def handle_message_delete_bulk(data), do: :ok
 
       def handle_guild_create(guild) do
+        with {:ok, domains} <- AshDiscord.Consumer.Info.ash_discord_consumer_domains(__MODULE__) do
+          commands = AshDiscord.Consumer.collect_commands(domains)
+
+          # Filter by scope and register appropriately
+          global_commands =
+            commands
+            |> Enum.filter(&(&1.scope == :global))
+            |> Enum.map(&AshDiscord.Consumer.to_discord_command/1)
+
+          guild_commands =
+            commands
+            |> Enum.filter(&(&1.scope == :guild))
+            |> Enum.map(&AshDiscord.Consumer.to_discord_command/1)
+
+          case Nostrum.Api.ApplicationCommand.bulk_overwrite_guild_commands(
+                 guild.id,
+                 guild_commands
+               ) do
+            {:ok, _} ->
+              require Logger
+
+              Logger.info(
+                "Registered #{length(guild_commands)} guild command(s) for #{guild.name}"
+              )
+
+            {:error, error} ->
+              require Logger
+
+              Logger.error(
+                "Failed to register guild commands for #{guild.name}: #{inspect(error)}"
+              )
+          end
+        end
+
         with {:ok, guild_resource} <-
                AshDiscord.Consumer.Info.ash_discord_consumer_guild_resource(__MODULE__) do
           case guild_resource
@@ -764,6 +694,7 @@ defmodule AshDiscord.Consumer do
               :ok
 
             {:error, error} ->
+              dbg(error)
               require Logger
               Logger.error("Failed to save guild #{guild.name} (#{guild.id}): #{inspect(error)}")
               # Don't crash the consumer
@@ -808,7 +739,6 @@ defmodule AshDiscord.Consumer do
       def handle_guild_delete(data), do: :ok
 
       def handle_ready(data) do
-        dbg("hello world")
         # Register Discord commands when bot is ready
         with {:ok, domains} <- AshDiscord.Consumer.Info.ash_discord_consumer_domains(__MODULE__) do
           commands = AshDiscord.Consumer.collect_commands(domains)
@@ -836,42 +766,6 @@ defmodule AshDiscord.Consumer do
                 Logger.error("Failed to register global commands: #{inspect(error)}")
             end
           end
-
-          # Register guild commands for each guild 
-          if length(guild_commands) > 0 do
-            # Get all guilds the bot is in
-            case Nostrum.Api.Self.guilds() do
-              {:ok, guilds} ->
-                Enum.each(guilds, fn guild ->
-                  case Nostrum.Api.ApplicationCommand.bulk_overwrite_guild_commands(
-                         guild.id,
-                         guild_commands
-                       ) do
-                    {:ok, _} ->
-                      require Logger
-
-                      Logger.info(
-                        "Registered #{length(guild_commands)} guild command(s) for #{guild.name}"
-                      )
-
-                    {:error, error} ->
-                      require Logger
-
-                      Logger.error(
-                        "Failed to register guild commands for #{guild.name}: #{inspect(error)}"
-                      )
-                  end
-                end)
-
-              {:error, error} ->
-                require Logger
-                Logger.error("Failed to get guilds for command registration: #{inspect(error)}")
-            end
-          end
-        else
-          :error ->
-            # No domains configured
-            :ok
         end
 
         :ok
@@ -888,17 +782,20 @@ defmodule AshDiscord.Consumer do
         command_name = String.to_existing_atom(interaction.data.name)
         require Logger
         Logger.info("Processing slash command: #{command_name} from user #{interaction.user.id}")
-        
+
         case find_command(command_name) do
           nil ->
             Logger.error("Unknown command: #{command_name}")
             respond_with_error(interaction, "Unknown command")
+
           command ->
             # Apply command filtering based on guild context
             if command_allowed_for_interaction?(interaction, command) do
-              AshDiscord.InteractionRouter.route_interaction(interaction, command, consumer_module: __MODULE__)
+              AshDiscord.InteractionRouter.route_interaction(interaction, command,
+                consumer: __MODULE__
+              )
             else
-              Logger.warn("Command #{command_name} filtered for guild #{interaction.guild_id}")
+              Logger.warning("Command #{command_name} filtered for guild #{interaction.guild_id}")
               respond_with_error(interaction, "This command is not available in this server")
             end
         end
@@ -953,11 +850,13 @@ defmodule AshDiscord.Consumer do
       end
 
       def handle_event({:INTERACTION_CREATE, interaction, _ws_state}) do
-       dbg("blub")
         handle_interaction_create(interaction)
+
         case interaction.type do
-          2 -> # Application command
+          # Application command
+          2 ->
             handle_application_command(interaction)
+
           _ ->
             :ok
         end
@@ -1038,22 +937,13 @@ defmodule AshDiscord.Consumer do
       def handle_invite_delete(invite_data), do: :ok
       def handle_unknown_event(event), do: :ok
 
-      # Helper functions for command processing
-      def find_command(command_name) do
-        domains = case AshDiscord.Consumer.Info.ash_discord_consumer_domains(__MODULE__) do
-          {:ok, domains} -> domains
-          :error -> []
-        end
-        commands = AshDiscord.Consumer.collect_commands(domains)
-        Enum.find(commands, fn cmd -> cmd.name == command_name end)
-      end
-
       def command_allowed_for_interaction?(interaction, command) do
         case AshDiscord.Consumer.Info.ash_discord_consumer_command_filter(__MODULE__) do
           {:ok, filter} when not is_nil(filter) ->
             guild = extract_guild_context(interaction)
             # Since the user said there's no chain, just one filter, call it directly
             filter.command_allowed?(command, guild)
+
           _ ->
             true
         end
@@ -1070,16 +960,20 @@ defmodule AshDiscord.Consumer do
 
       defp respond_with_error(interaction, message) do
         response = %{
-          type: 4, # CHANNEL_MESSAGE_WITH_SOURCE
+          # CHANNEL_MESSAGE_WITH_SOURCE
+          type: 4,
           data: %{
             content: message,
-            flags: 64 # EPHEMERAL
+            # EPHEMERAL
+            flags: 64
           }
         }
-        
+
         case Nostrum.Api.create_interaction_response(interaction, response) do
-          {:ok, _} -> :ok
-          {:error, error} -> 
+          {:ok, _} ->
+            :ok
+
+          {:error, error} ->
             require Logger
             Logger.error("Failed to send error response: #{inspect(error)}")
             :ok

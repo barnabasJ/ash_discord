@@ -1,8 +1,17 @@
 defmodule AshDiscord.LoggerTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   import ExUnit.CaptureLog
 
   alias AshDiscord.Logger, as: AshLogger
+
+  setup do
+    log_level = Logger.level()
+    Logger.configure(level: :debug)
+
+    on_exit(fn ->
+      Logger.configure(level: log_level)
+    end)
+  end
 
   describe "log_interaction/4" do
     test "logs interaction with structured metadata" do
@@ -15,9 +24,10 @@ defmodule AshDiscord.LoggerTest do
         data: %{name: "test_command"}
       }
 
-      log = capture_log(fn ->
-        AshLogger.log_interaction(:info, "Test interaction", interaction)
-      end)
+      log =
+        capture_log(fn ->
+          AshLogger.log_interaction(:info, "Test interaction", interaction)
+        end)
 
       assert String.contains?(log, "[AshDiscord.Interaction] Test interaction")
       assert String.contains?(log, "interaction_id=interaction_123")
@@ -29,9 +39,10 @@ defmodule AshDiscord.LoggerTest do
     test "handles missing interaction fields gracefully" do
       interaction = %{id: "interaction_123", type: 1}
 
-      log = capture_log(fn ->
-        AshLogger.log_interaction(:debug, "Minimal interaction", interaction)
-      end)
+      log =
+        capture_log(fn ->
+          AshLogger.log_interaction(:debug, "Minimal interaction", interaction)
+        end)
 
       assert String.contains?(log, "interaction_id=interaction_123")
       assert String.contains?(log, "command_name=unknown")
@@ -42,9 +53,10 @@ defmodule AshDiscord.LoggerTest do
       interaction = %{id: "interaction_123", type: 2}
       metadata = %{custom_field: "custom_value", processing_time: 150}
 
-      log = capture_log(fn ->
-        AshLogger.log_interaction(:info, "Custom metadata", interaction, metadata)
-      end)
+      log =
+        capture_log(fn ->
+          AshLogger.log_interaction(:info, "Custom metadata", interaction, metadata)
+        end)
 
       assert String.contains?(log, "custom_field=custom_value")
       assert String.contains?(log, "processing_time=150")
@@ -56,9 +68,10 @@ defmodule AshDiscord.LoggerTest do
       command = %{name: :test_command, resource: TestResource, action: :create}
       interaction = %{id: "interaction_123", user: %{id: "user_456"}}
 
-      log = capture_log(fn ->
-        AshLogger.log_command_execution(command, interaction, {:ok, "result"}, 250)
-      end)
+      log =
+        capture_log(fn ->
+          AshLogger.log_command_execution(command, interaction, {:ok, "result"}, 250)
+        end)
 
       assert String.contains?(log, "[AshDiscord.Command] Command test_command success in 250ms")
       assert String.contains?(log, "command=test_command")
@@ -71,9 +84,15 @@ defmodule AshDiscord.LoggerTest do
       command = %{name: :failing_command, resource: TestResource, action: :create}
       interaction = %{id: "interaction_123"}
 
-      log = capture_log(fn ->
-        AshLogger.log_command_execution(command, interaction, {:error, "validation failed"}, 100)
-      end)
+      log =
+        capture_log(fn ->
+          AshLogger.log_command_execution(
+            command,
+            interaction,
+            {:error, "validation failed"},
+            100
+          )
+        end)
 
       assert String.contains?(log, "Command failing_command failed in 100ms")
       assert String.contains?(log, "status=failed")
@@ -83,9 +102,10 @@ defmodule AshDiscord.LoggerTest do
       command = %{name: :slow_command, resource: TestResource, action: :read}
       interaction = %{id: "interaction_123"}
 
-      log = capture_log(fn ->
-        AshLogger.log_command_execution(command, interaction, {:ok, "result"}, 1500)
-      end)
+      log =
+        capture_log(fn ->
+          AshLogger.log_command_execution(command, interaction, {:ok, "result"}, 1500)
+        end)
 
       # Should log both normal execution and slow operation
       assert String.contains?(log, "Command slow_command success in 1500ms")
@@ -95,9 +115,10 @@ defmodule AshDiscord.LoggerTest do
 
   describe "log_ash_action/5" do
     test "logs successful Ash action" do
-      log = capture_log(fn ->
-        AshLogger.log_ash_action(:debug, :create, TestResource, :create_user, {:ok, %{}})
-      end)
+      log =
+        capture_log(fn ->
+          AshLogger.log_ash_action(:debug, :create, TestResource, :create_user, {:ok, %{}})
+        end)
 
       assert String.contains?(log, "[AshDiscord.Ash] create TestResource.create_user succeeded")
       assert String.contains?(log, "action_type=create")
@@ -108,9 +129,10 @@ defmodule AshDiscord.LoggerTest do
     test "logs failed Ash action with error details" do
       error = %Ash.Error.Invalid{errors: []}
 
-      log = capture_log(fn ->
-        AshLogger.log_ash_action(:error, :create, TestResource, :create_user, {:error, error})
-      end)
+      log =
+        capture_log(fn ->
+          AshLogger.log_ash_action(:error, :create, TestResource, :create_user, {:error, error})
+        end)
 
       assert String.contains?(log, "create TestResource.create_user failed")
       assert String.contains?(log, "error_type=validation")
@@ -119,28 +141,39 @@ defmodule AshDiscord.LoggerTest do
 
   describe "log_discord_api_call/5" do
     test "logs successful Discord API call" do
-      log = capture_log(fn ->
-        AshLogger.log_discord_api_call("POST", "/interactions/response", {:ok, %{status: 200}})
-      end)
+      log =
+        capture_log(fn ->
+          AshLogger.log_discord_api_call("POST", "/interactions/response", {:ok, %{status: 200}})
+        end)
 
-      assert String.contains?(log, "[AshDiscord.API] Discord API POST /interactions/response succeeded")
+      assert String.contains?(
+               log,
+               "[AshDiscord.API] Discord API POST /interactions/response succeeded"
+             )
+
       assert String.contains?(log, "discord_api_method=POST")
       assert String.contains?(log, "discord_api_endpoint=/interactions/response")
     end
 
     test "logs API call with retry information" do
-      log = capture_log(fn ->
-        AshLogger.log_discord_api_call("POST", "/commands", {:ok, %{status: 200}}, 3)
-      end)
+      log =
+        capture_log(fn ->
+          AshLogger.log_discord_api_call("POST", "/commands", {:ok, %{status: 200}}, 3)
+        end)
 
       assert String.contains?(log, "succeeded after 3 attempts")
       assert String.contains?(log, "attempt_number=3")
     end
 
     test "logs transient API failures as warnings" do
-      log = capture_log(fn ->
-        AshLogger.log_discord_api_call("GET", "/guilds", {:error, %{status: 429, message: "Rate limited"}})
-      end)
+      log =
+        capture_log(fn ->
+          AshLogger.log_discord_api_call(
+            "GET",
+            "/guilds",
+            {:error, %{status: 429, message: "Rate limited"}}
+          )
+        end)
 
       assert String.contains?(log, "[warning]")
       assert String.contains?(log, "failed (transient)")
@@ -149,9 +182,14 @@ defmodule AshDiscord.LoggerTest do
     end
 
     test "logs permanent API failures as errors" do
-      log = capture_log(fn ->
-        AshLogger.log_discord_api_call("DELETE", "/messages", {:error, %{status: 403, message: "Forbidden"}})
-      end)
+      log =
+        capture_log(fn ->
+          AshLogger.log_discord_api_call(
+            "DELETE",
+            "/messages",
+            {:error, %{status: 403, message: "Forbidden"}}
+          )
+        end)
 
       assert String.contains?(log, "[error]")
       assert String.contains?(log, "transient_error=false")
@@ -160,28 +198,35 @@ defmodule AshDiscord.LoggerTest do
 
   describe "log_consumer_event/4" do
     test "logs enabled callback processing" do
-      log = capture_log(fn ->
-        AshLogger.log_consumer_event(:MESSAGE_CREATE, true, :ok, %{message_id: "msg_123"})
-      end)
+      log =
+        capture_log(fn ->
+          AshLogger.log_consumer_event(:MESSAGE_CREATE, true, :ok, %{message_id: "msg_123"})
+        end)
 
-      assert String.contains?(log, "[AshDiscord.Consumer] Event MESSAGE_CREATE processed successfully")
+      assert String.contains?(
+               log,
+               "[AshDiscord.Consumer] Event MESSAGE_CREATE processed successfully"
+             )
+
       assert String.contains?(log, "event_type=MESSAGE_CREATE")
       assert String.contains?(log, "callback_enabled=true")
       assert String.contains?(log, "message_id=msg_123")
     end
 
     test "logs disabled callback skipping" do
-      log = capture_log(fn ->
-        AshLogger.log_consumer_event(:TYPING_START, false)
-      end)
+      log =
+        capture_log(fn ->
+          AshLogger.log_consumer_event(:TYPING_START, false)
+        end)
 
       assert String.contains?(log, "Event TYPING_START skipped (callback disabled)")
     end
 
     test "logs callback processing failures" do
-      log = capture_log(fn ->
-        AshLogger.log_consumer_event(:GUILD_CREATE, true, {:error, "database error"})
-      end)
+      log =
+        capture_log(fn ->
+          AshLogger.log_consumer_event(:GUILD_CREATE, true, {:error, "database error"})
+        end)
 
       assert String.contains?(log, "[error]")
       assert String.contains?(log, "Event GUILD_CREATE processing failed")
@@ -193,11 +238,16 @@ defmodule AshDiscord.LoggerTest do
       enabled_callbacks = [:message_create, :guild_create, :interaction_create]
       config_options = %{enhanced_logging: true, performance_optimized: false}
 
-      log = capture_log(fn ->
-        AshLogger.log_configuration_resolution(:production, enabled_callbacks, config_options)
-      end)
+      log =
+        capture_log(fn ->
+          AshLogger.log_configuration_resolution(:production, enabled_callbacks, config_options)
+        end)
 
-      assert String.contains?(log, "[AshDiscord.Config] Configuration resolved: production profile with 3 callbacks enabled")
+      assert String.contains?(
+               log,
+               "[AshDiscord.Config] Configuration resolved: production profile with 3 callbacks enabled"
+             )
+
       assert String.contains?(log, "callback_profile=production")
       assert String.contains?(log, "enabled_callback_count=3")
     end
@@ -214,12 +264,18 @@ defmodule AshDiscord.LoggerTest do
       ]
 
       for {duration, expected_level} <- test_cases do
-        log = capture_log(fn ->
-          AshLogger.log_slow_operation("database_query", "find_user", duration)
-        end)
+        log =
+          capture_log(fn ->
+            AshLogger.log_slow_operation("database_query", "find_user", duration)
+          end)
 
         assert String.contains?(log, "[#{expected_level}]")
-        assert String.contains?(log, "[AshDiscord.Performance] Slow database_query: find_user (#{duration}ms)")
+
+        assert String.contains?(
+                 log,
+                 "[AshDiscord.Performance] Slow database_query: find_user (#{duration}ms)"
+               )
+
         assert String.contains?(log, "slow_operation=true")
       end
     end
@@ -232,11 +288,16 @@ defmodule AshDiscord.LoggerTest do
         %{name: :history}
       ]
 
-      log = capture_log(fn ->
-        AshLogger.log_command_registration(commands, {:ok, []})
-      end)
+      log =
+        capture_log(fn ->
+          AshLogger.log_command_registration(commands, {:ok, []})
+        end)
 
-      assert String.contains?(log, "[AshDiscord.Registration] Successfully registered 2 Discord commands")
+      assert String.contains?(
+               log,
+               "[AshDiscord.Registration] Successfully registered 2 Discord commands"
+             )
+
       assert String.contains?(log, "command_count=2")
       assert String.contains?(log, "command_names=[:chat, :history]")
     end
@@ -244,9 +305,10 @@ defmodule AshDiscord.LoggerTest do
     test "logs failed command registration" do
       commands = [%{name: :test}]
 
-      log = capture_log(fn ->
-        AshLogger.log_command_registration(commands, {:error, "Invalid token"})
-      end)
+      log =
+        capture_log(fn ->
+          AshLogger.log_command_registration(commands, {:error, "Invalid token"})
+        end)
 
       assert String.contains?(log, "[error]")
       assert String.contains?(log, "Failed to register Discord commands")
@@ -256,24 +318,29 @@ defmodule AshDiscord.LoggerTest do
   describe "timer functionality" do
     test "start_timer and end_timer measure duration" do
       timer = AshLogger.start_timer("test_operation")
-      
-      Process.sleep(50)  # Small delay
-      
-      log = capture_log(fn ->
-        duration = AshLogger.end_timer(timer, 25)  # Low threshold to trigger logging
-        assert duration >= 50
-      end)
+
+      # Small delay
+      Process.sleep(50)
+
+      log =
+        capture_log(fn ->
+          # Low threshold to trigger logging
+          duration = AshLogger.end_timer(timer, 25)
+          assert duration >= 50
+        end)
 
       assert String.contains?(log, "Slow timed_operation: test_operation")
     end
 
     test "end_timer does not log fast operations" do
       timer = AshLogger.start_timer("fast_operation")
-      
-      log = capture_log(fn ->
-        duration = AshLogger.end_timer(timer, 1000)  # High threshold
-        assert duration >= 0
-      end)
+
+      log =
+        capture_log(fn ->
+          # High threshold
+          duration = AshLogger.end_timer(timer, 1000)
+          assert duration >= 0
+        end)
 
       # Should not log anything for fast operations
       refute String.contains?(log, "Slow timed_operation")

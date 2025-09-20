@@ -133,7 +133,8 @@ defmodule AshDiscord.Dsl.Domain do
       ],
       formatter: [
         type: :atom,
-        doc: "Module that implements AshDiscord.ResponseFormatter behavior for custom response formatting. If not specified, AshDiscord.ResponseFormatter.Default is used."
+        doc:
+          "Module that implements AshDiscord.ResponseFormatter behavior for custom response formatting. If not specified, AshDiscord.ResponseFormatter.Default is used."
       ]
     ]
   }

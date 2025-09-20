@@ -1,15 +1,14 @@
 defmodule AshDiscord.IntegrationTest do
   use TestApp.DataCase
 
+  import AshDiscord.Test.Generators.Discord
   import Mimic
 
   setup :verify_on_exit!
 
   setup do
-    # Copy modules for mocking
     copy(Nostrum.Api.Interaction)
 
-    # Mock Discord API calls
     stub(Nostrum.Api.Interaction, :create_response, fn _id, _token, response ->
       {:ok, response}
     end)
@@ -18,14 +17,20 @@ defmodule AshDiscord.IntegrationTest do
   end
 
   defmodule IntegrationTestConsumer do
-    use AshDiscord.Consumer, domains: [TestApp.Discord]
+    use AshDiscord.Consumer
+
+    ash_discord_consumer do
+      domains([TestApp.Discord])
+    end
 
     @impl true
     def handle_interaction_create(interaction) do
       # Override to test integration
       command = find_command(String.to_atom(interaction.data.name))
 
-      case AshDiscord.InteractionRouter.route_interaction(interaction, command) do
+      case AshDiscord.InteractionRouter.route_interaction(interaction, command,
+             consumer: __MODULE__
+           ) do
         {:ok, response} ->
           send(self(), {:interaction_response, response})
           :ok
@@ -39,7 +44,7 @@ defmodule AshDiscord.IntegrationTest do
     @impl true
     def handle_message_create(message) do
       # Create message using from_discord action
-      case TestApp.Discord.Message.from_discord(message) do
+      case TestApp.Discord.Message.from_discord(%{discord_struct: message}) do
         {:ok, created_message} ->
           send(self(), {:message_created, created_message})
           :ok
@@ -53,22 +58,11 @@ defmodule AshDiscord.IntegrationTest do
 
   describe "end-to-end integration" do
     test "complete slash command workflow" do
-      interaction = %{
-        id: "interaction_123",
-        token: "interaction_token_123",
-        # APPLICATION_COMMAND
-        type: 2,
-        data: %{
-          name: "ping",
-          options: []
-        },
-        guild_id: "123456789",
-        channel_id: "987654321",
-        user: %{
-          id: "555666777",
-          username: "testuser"
-        }
-      }
+      interaction =
+        interaction(%{
+          data: %{name: "ping", options: []},
+          user: user(%{username: "testuser"})
+        })
 
       # Process the interaction
       result = IntegrationTestConsumer.handle_interaction_create(interaction)
@@ -81,14 +75,12 @@ defmodule AshDiscord.IntegrationTest do
     end
 
     test "consumer processes message events with from_discord actions" do
-      message_data = %{
-        discord_id: 123_456_789_012_345_678,
-        content: "Test message content",
-        channel_id: 987_654_321_098_765_432,
-        guild_id: 111_222_333_444_555_666,
-        author_id: 777_888_999_000_111_222,
-        timestamp: DateTime.utc_now()
-      }
+      message_data =
+        message(%{
+          content: "Test message content",
+          channel_id: generate_snowflake(),
+          guild_id: generate_snowflake()
+        })
 
       result = IntegrationTestConsumer.handle_message_create(message_data)
 
@@ -96,7 +88,7 @@ defmodule AshDiscord.IntegrationTest do
 
       # Should receive message creation confirmation
       assert_receive {:message_created, created_message}, 1000
-      assert created_message.discord_id == message_data.discord_id
+      assert created_message.discord_id == message_data.id
       assert created_message.content == message_data.content
     end
 
@@ -145,16 +137,10 @@ defmodule AshDiscord.IntegrationTest do
 
   describe "error handling" do
     test "handles invalid interaction gracefully" do
-      invalid_interaction = %{
-        id: "invalid_123",
-        token: "invalid_token",
-        type: 2,
-        data: %{
-          name: "nonexistent_command",
-          options: []
-        },
-        guild_id: "123456789"
-      }
+      invalid_interaction =
+        interaction(%{
+          data: %{name: "nonexistent_command", options: []}
+        })
 
       result = IntegrationTestConsumer.handle_interaction_create(invalid_interaction)
 
@@ -245,13 +231,6 @@ defmodule AshDiscord.IntegrationTest do
 
       assert command != nil
       assert command.name == :ping
-    end
-
-    test "all default callbacks return :ok" do
-      # Test callbacks that weren't overridden
-      assert IntegrationTestConsumer.handle_ready(%{}) == :ok
-      assert IntegrationTestConsumer.handle_guild_create(%{}) == :ok
-      assert IntegrationTestConsumer.handle_typing_start(%{}) == :ok
     end
   end
 end

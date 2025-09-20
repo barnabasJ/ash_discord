@@ -15,64 +15,51 @@ defmodule AshDiscord.InteractionRouter do
   """
   def route_interaction(interaction, command, opts \\ []) do
     timer = AshLogger.start_timer("route_interaction")
-    
+
     if is_nil(command) do
       AshLogger.log_interaction(:error, "Cannot route interaction: command is nil", interaction)
       send_error_response(interaction, "Unknown command")
       {:error, :unknown_command}
     else
-      AshLogger.log_interaction(:debug, "Routing interaction for command: #{command.name}", interaction)
+      AshLogger.log_interaction(
+        :debug,
+        "Routing interaction for command: #{command.name}",
+        interaction
+      )
 
-      consumer_module = Keyword.get(opts, :consumer_module)
-      result = with {:ok, actor} <- resolve_actor_from_discord(interaction, consumer_module),
-                    {:ok, input} <- transform_input(interaction, command),
-                    {:ok, action_result} <- execute_action(command, input, actor, interaction),
-                    {:ok, response} <- format_response(action_result, interaction, command) do
-                 Nostrum.Api.Interaction.create_response(interaction.id, interaction.token, response)
-               else
-                 {:error, reason} ->
-                   AshLogger.log_interaction(:error, "Failed to route interaction", interaction, %{
-                     error: reason,
-                     command: command.name
-                   })
-                   send_error_response(interaction, reason)
-               end
+      consumer_module = Keyword.get(opts, :consumer)
 
-      execution_time = AshLogger.end_timer(timer, 100, %{command: command.name, interaction_id: interaction.id})
+      result =
+        with {:ok, actor} <- resolve_actor_from_discord(interaction, consumer_module),
+             {:ok, input} <- transform_input(interaction, command),
+             {:ok, action_result} <- execute_action(command, input, actor, interaction),
+             {:ok, response} <- format_response(action_result, interaction, command) do
+          Nostrum.Api.Interaction.create_response(interaction.id, interaction.token, response)
+        else
+          {:error, reason} ->
+            AshLogger.log_interaction(:error, "Failed to route interaction", interaction, %{
+              error: reason,
+              command: command.name
+            })
+
+            send_error_response(interaction, reason)
+        end
+
+      execution_time =
+        AshLogger.end_timer(timer, 100, %{command: command.name, interaction_id: interaction.id})
+
       AshLogger.log_command_execution(command, interaction, result, execution_time)
-      
+
       result
-    end
-  end
-
-  defp resolve_actor(interaction, user_creator) do
-    discord_user = extract_discord_user(interaction)
-
-    case find_or_create_user(discord_user, user_creator) do
-      {:ok, user} ->
-        AshLogger.log_interaction(:debug, "Resolved user actor", interaction, %{
-          actor_id: user.id,
-          discord_user_id: discord_user && discord_user.id
-        })
-        {:ok, user}
-
-      {:error, reason} ->
-        AshLogger.log_interaction(:error, "Failed to resolve user actor", interaction, %{
-          error: dbg(reason),
-          discord_user_present: not is_nil(discord_user),
-          user_creator_provided: not is_nil(user_creator)
-        })
-        {:error, :actor_resolution_failed}
     end
   end
 
   defp resolve_actor_from_discord(interaction, consumer_module) do
     discord_user = extract_discord_user(interaction)
-    
+
     if discord_user do
-      case get_user_resource_and_auto_create(consumer_module) do
-        {:ok, user_resource, true} ->
-          # Auto-create is enabled, use from_discord action
+      case AshDiscord.Consumer.Info.ash_discord_consumer_user_resource(consumer_module) do
+        {:ok, user_resource} ->
           case user_resource
                |> Ash.Changeset.for_create(:from_discord, %{
                  discord_id: discord_user.id,
@@ -84,41 +71,41 @@ defmodule AshDiscord.InteractionRouter do
                })
                |> Ash.create() do
             {:ok, user} ->
-              AshLogger.log_interaction(:debug, "Resolved user actor via from_discord", interaction, %{
-                actor_id: user.id,
-                discord_user_id: discord_user.id
-              })
+              AshLogger.log_interaction(
+                :debug,
+                "Resolved user actor via from_discord",
+                interaction,
+                %{
+                  actor_id: user.id,
+                  discord_user_id: discord_user.id
+                }
+              )
+
               {:ok, user}
+
             {:error, reason} ->
-              AshLogger.log_interaction(:error, "Failed to create/find user via from_discord", interaction, %{
-                error: reason,
-                discord_user_id: discord_user.id
-              })
+              dbg(reason)
+
+              AshLogger.log_interaction(
+                :error,
+                "Failed to create/find user via from_discord",
+                interaction,
+                %{
+                  error: reason,
+                  discord_user_id: discord_user.id
+                }
+              )
+
               {:error, :user_creation_failed}
           end
-        {:ok, _user_resource, false} ->
-          # Auto-create disabled, return error
-          {:error, "Auto-create users is disabled"}
-        {:error, reason} ->
-          AshLogger.log_interaction(:error, "Failed to get user resource configuration", interaction, %{
-            error: reason,
-            consumer_module: consumer_module
-          })
-          {:error, :user_resource_config_error}
+
+        # no user resource configured, continue with raw discord user
+        :error ->
+          {:ok, discord_user}
       end
     else
       Logger.debug("No discord user found, cannot proceed without user")
       {:error, "Authentication required - no Discord user found"}
-    end
-  end
-
-  defp get_user_resource_and_auto_create(consumer_module) do
-    with {:ok, user_resource} <- AshDiscord.Consumer.Info.ash_discord_consumer_user_resource(consumer_module),
-         {:ok, auto_create} <- AshDiscord.Consumer.Info.ash_discord_consumer_auto_create_users(consumer_module) do
-      {:ok, user_resource, auto_create}
-    else
-      :error ->
-        {:error, "User resource or auto_create_users not configured"}
     end
   end
 
@@ -132,36 +119,6 @@ defmodule AshDiscord.InteractionRouter do
 
       true ->
         nil
-    end
-  end
-
-  defp find_or_create_user(discord_user, user_creator) do
-    if discord_user do
-      if user_creator do
-        case user_creator.(discord_user) do
-          %{} = user ->
-            # Successful user creation/retrieval
-            {:ok, user}
-          {:ok, user} ->
-            # Already wrapped in tuple
-            {:ok, user}
-          {:error, reason} ->
-            {:error, reason}
-          other ->
-            Logger.error("Unexpected user_creator result: #{inspect(other)}")
-            {:error, :invalid_user_creator_result}
-        end
-      else
-        # For testing or simple cases, create a basic user struct
-        Logger.debug(
-          "No user creator configured, using basic user for Discord ID: #{discord_user.id}"
-        )
-
-        {:ok, %{id: discord_user.id, discord_id: discord_user.id}}
-      end
-    else
-      Logger.debug("No discord user found, cannot proceed without user")
-      {:error, "Authentication required - no Discord user found"}
     end
   end
 
@@ -200,38 +157,40 @@ defmodule AshDiscord.InteractionRouter do
 
     action_timer = AshLogger.start_timer("ash_action_#{action.type}")
 
-    result = case action.type do
-      :create ->
-        changeset =
-          Ash.Changeset.for_create(resource, action.name, input, actor: actor, context: context)
+    result =
+      case action.type do
+        :create ->
+          changeset =
+            Ash.Changeset.for_create(resource, action.name, input, actor: actor, context: context)
 
-        Ash.create(changeset)
+          Ash.create(changeset)
 
-      :read ->
-        query = Ash.Query.for_read(resource, action.name, input, actor: actor, context: context)
-        Ash.read(query)
+        :read ->
+          query = Ash.Query.for_read(resource, action.name, input, actor: actor, context: context)
+          Ash.read(query)
 
-      :update ->
-        {:error, "Update actions not yet supported"}
+        :update ->
+          {:error, "Update actions not yet supported"}
 
-      :destroy ->
-        {:error, "Destroy actions not yet supported"}
+        :destroy ->
+          {:error, "Destroy actions not yet supported"}
 
-      :action ->
-        # Handle generic actions that don't fit into CRUD operations
-        resource
-        |> Ash.ActionInput.for_action(action.name, input, actor: actor, context: context)
-        |> Ash.run_action()
+        :action ->
+          # Handle generic actions that don't fit into CRUD operations
+          resource
+          |> Ash.ActionInput.for_action(action.name, input, actor: actor, context: context)
+          |> Ash.run_action()
 
-      _ ->
-        {:error, "Unsupported action type: #{action.type}"}
-    end
+        _ ->
+          {:error, "Unsupported action type: #{action.type}"}
+      end
 
-    execution_time = AshLogger.end_timer(action_timer, 50, %{
-      resource: resource,
-      action: action.name,
-      interaction_id: interaction.id
-    })
+    execution_time =
+      AshLogger.end_timer(action_timer, 50, %{
+        resource: resource,
+        action: action.name,
+        interaction_id: interaction.id
+      })
 
     case result do
       {:ok, ash_result} ->
@@ -239,15 +198,17 @@ defmodule AshDiscord.InteractionRouter do
           execution_time_ms: execution_time,
           interaction_id: interaction.id
         })
+
         {:ok, ash_result}
 
       {:error, error} ->
-        formatted_error = AshDiscord.Errors.format_ash_error(error, %{
-          resource: resource,
-          action: action.name,
-          interaction_id: interaction.id,
-          execution_time_ms: execution_time
-        })
+        formatted_error =
+          AshDiscord.Errors.format_ash_error(error, %{
+            resource: resource,
+            action: action.name,
+            interaction_id: interaction.id,
+            execution_time_ms: execution_time
+          })
 
         AshLogger.log_ash_action(:error, action.type, resource, action.name, result, %{
           execution_time_ms: execution_time,

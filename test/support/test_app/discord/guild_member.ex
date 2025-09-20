@@ -5,99 +5,114 @@ defmodule TestApp.Discord.GuildMember do
 
   use Ash.Resource,
     domain: TestApp.Discord,
-    data_layer: AshPostgres.DataLayer
-
-  postgres do
-    table "discord_guild_members"
-    repo(TestApp.Repo)
-  end
+    data_layer: Ash.DataLayer.Ets
 
   attributes do
-    uuid_primary_key :id
+    uuid_primary_key(:id)
 
-    attribute :guild_id, :integer, allow_nil?: false, public?: true
-    attribute :user_id, :integer, allow_nil?: false, public?: true
-    attribute :nick, :string, public?: true
-    attribute :roles, {:array, :integer}, public?: true, default: []
-    attribute :joined_at, :utc_datetime, public?: true
+    attribute(:guild_id, :integer, allow_nil?: false, public?: true)
+    attribute(:user_id, :integer, allow_nil?: false, public?: true)
+    attribute(:nick, :string, public?: true)
+    attribute(:roles, {:array, :integer}, public?: true, default: [])
+    attribute(:joined_at, :utc_datetime, public?: true)
+    attribute(:premium_since, :utc_datetime, public?: true)
+    attribute(:deaf, :boolean, public?: true, default: false)
+    attribute(:mute, :boolean, public?: true, default: false)
+    attribute(:pending, :boolean, public?: true, default: false)
+    attribute(:avatar, :string, public?: true)
+    attribute(:communication_disabled_until, :utc_datetime, public?: true)
 
     timestamps()
   end
 
   identities do
-    identity :unique_member, [:guild_id, :user_id]
+    identity(:unique_member, [:guild_id, :user_id], pre_check_with: TestApp.Domain)
   end
 
   actions do
-    defaults [:read]
+    defaults([:read])
 
     create :create do
-      primary? true
-      accept [:guild_id, :user_id, :nick, :roles, :joined_at]
+      primary?(true)
+      accept([:guild_id, :user_id, :nick, :roles, :joined_at])
     end
 
     create :from_discord do
-      accept [:guild_id, :user_id, :nick, :roles, :joined_at]
-      upsert? true
-      upsert_identity :unique_member
-      upsert_fields [:nick, :roles, :joined_at]
+      accept([
+        :guild_id,
+        :user_id,
+        :nick,
+        :roles,
+        :joined_at,
+        :premium_since,
+        :deaf,
+        :mute,
+        :pending,
+        :avatar,
+        :communication_disabled_until
+      ])
 
-      change fn changeset, _context ->
-        # Mock data for testing
-        guild_id = Ash.Changeset.get_attribute(changeset, :guild_id)
-        user_id = Ash.Changeset.get_attribute(changeset, :user_id)
-        
-        changeset = 
-          if is_nil(Ash.Changeset.get_attribute(changeset, :joined_at)) do
-            Ash.Changeset.change_attribute(changeset, :joined_at, DateTime.utc_now())
-          else
-            changeset
+      upsert?(true)
+      upsert_identity(:unique_member)
+
+      upsert_fields([
+        :nick,
+        :roles,
+        :joined_at,
+        :premium_since,
+        :deaf,
+        :mute,
+        :pending,
+        :avatar,
+        :communication_disabled_until
+      ])
+
+      argument(:discord_struct, :struct, description: "Discord guild member data to transform")
+      argument(:discord_id, :integer, description: "Discord guild member ID for API fallback")
+      argument(:guild_id, :integer, description: "Guild ID this member belongs to")
+
+      change(fn changeset, _context ->
+        changeset =
+          case Ash.Changeset.get_argument(changeset, :guild_id) do
+            nil -> changeset
+            guild_id -> Ash.Changeset.force_change_attribute(changeset, :guild_id, guild_id)
           end
 
-        changeset = 
-          if is_nil(Ash.Changeset.get_attribute(changeset, :nick)) do
-            Ash.Changeset.change_attribute(changeset, :nick, "Member #{user_id}")
-          else
-            changeset
-          end
+        # Also set user_id from discord_struct for upsert identity
+        case Ash.Changeset.get_argument(changeset, :discord_struct) do
+          %{user_id: user_id} when not is_nil(user_id) ->
+            Ash.Changeset.force_change_attribute(changeset, :user_id, user_id)
 
-        changeset
-      end
+          _ ->
+            changeset
+        end
+      end)
+
+      change({AshDiscord.Changes.FromDiscord, type: :guild_member})
     end
 
     update :update do
-      primary? true
-      accept [:nick, :roles, :joined_at]
+      primary?(true)
+      accept([:nick, :roles, :joined_at])
     end
   end
 
   relationships do
-    belongs_to :guild, TestApp.Discord.Guild,
+    belongs_to(:guild, TestApp.Discord.Guild,
       destination_attribute: :discord_id,
       source_attribute: :guild_id
-    belongs_to :user, TestApp.Discord.User,
+    )
+
+    belongs_to(:user, TestApp.Discord.User,
       destination_attribute: :discord_id,
       source_attribute: :user_id
+    )
   end
 
   code_interface do
-    define :create
-    define :from_discord
-    define :update
-    define :read
-  end
-
-  @doc """
-  Helper to create Discord-formatted struct for testing.
-  """
-  def discord_struct(attrs) do
-    %{
-      guild_id: Map.get(attrs, :guild_id),
-      user_id: Map.get(attrs, :user_id),
-      user: %{id: Map.get(attrs, :user_id)},
-      nick: Map.get(attrs, :nick),
-      roles: Map.get(attrs, :roles, []),
-      joined_at: Map.get(attrs, :joined_at)
-    }
+    define(:create)
+    define(:from_discord)
+    define(:update)
+    define(:read)
   end
 end

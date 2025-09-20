@@ -17,26 +17,57 @@ defmodule TestApp.DataCase do
   use ExUnit.CaseTemplate
 
   using do
-    quote do
-      alias TestApp.Repo
-
-      import Ecto
-      import Ecto.Changeset
-      import Ecto.Query
-      import TestApp.DataCase
-    end
   end
 
-  setup tags do
-    TestApp.DataCase.setup_sandbox(tags)
+  setup _ do
+    # Clean up ETS tables between tests
+    on_exit(fn ->
+      # Clear all data from test resources that have destroy actions
+      TestApp.Discord.User
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.Guild
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      # GuildMember doesn't have a destroy action - skip it
+
+      TestApp.Discord.Role
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.Channel
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.Message
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.Emoji
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.VoiceState
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.Webhook
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.Invite
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.MessageAttachment
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.MessageReaction
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.TypingIndicator
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.Sticker
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.Interaction
+      |> Ash.bulk_destroy!(:destroy, %{})
+    end)
+
     :ok
-  end
-
-  @doc """
-  Sets up the sandbox based on the test tags.
-  """
-  def setup_sandbox(tags) do
-    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(TestApp.Repo, shared: not tags[:async])
-    on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
   end
 end

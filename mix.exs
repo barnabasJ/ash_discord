@@ -40,15 +40,13 @@ defmodule AshDiscord.MixProject do
       # Core dependencies
       {:ash, "~> 3.0"},
       {:spark, "~> 2.0"},
-      {:nostrum, "~> 0.10", optional: true, runtime: Mix.env() != :test},
-
-      # Test dependencies for database and resources
-      {:ash_postgres, "~> 2.0", only: :test},
-      {:ecto_sql, "~> 3.10", only: :test},
-      {:postgrex, "~> 0.17", only: :test},
-      {:phoenix_pubsub, "~> 2.1", only: :test},
+      {:nostrum, "~> 0.10", runtime: Mix.env() != :test},
 
       # Development and testing
+      {:usage_rules, "~> 0.1", only: [:dev]},
+      {:faker, "~> 0.18", only: [:test]},
+      {:mix_test_watch, "~> 1.0", only: [:dev, :test]},
+      {:igniter, "~> 0.6", only: [:dev, :test]},
       {:sourceror, "~> 1.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
@@ -92,7 +90,7 @@ defmodule AshDiscord.MixProject do
       # Test environment setup aliases  
       "test.setup": &test_setup/1,
       "test.migrate": ["cmd MIX_ENV=test mix ash.migrate"],
-      "test.rollback": ["cmd MIX_ENV=test mix ash.rollback"], 
+      "test.rollback": ["cmd MIX_ENV=test mix ash.rollback"],
       "test.reset": &test_reset/1,
       "test.tear_down": ["cmd MIX_ENV=test mix ash.tear_down"],
 

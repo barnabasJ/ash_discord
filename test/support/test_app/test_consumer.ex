@@ -4,35 +4,13 @@ defmodule TestApp.TestConsumer do
   """
 
   use AshDiscord.Consumer
-  
-  # Note: The DSL configuration needs to be set up differently
-  # For now, using default configuration
 
-  @doc """
-  Override message create handling for testing.
-  """
-  @impl true
-  def handle_message_create(message) do
-    # Create message using from_discord pattern
-    TestApp.Discord.Message.from_discord!(%{
-      discord_id: message.id
-    })
-
-    # Call parent implementation for any additional processing
-    super(message)
-  end
-
-  @doc """
-  Override guild create handling for testing.
-  """
-  @impl true
-  def handle_guild_create(guild) do
-    # Create guild using from_discord pattern
-    TestApp.Discord.Guild.from_discord!(%{
-      discord_id: guild.id
-    })
-
-    super(guild)
+  ash_discord_consumer do
+    domains([TestApp.Discord])
+    user_resource(TestApp.Discord.User)
+    guild_resource(TestApp.Discord.Guild)
+    guild_member_resource(TestApp.Discord.Guild)
+    message_resource(TestApp.Discord.Message)
   end
 
   @doc """

@@ -39,16 +39,12 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
         message_attachment(%{
           id: 987_654_321,
           filename: "data.txt",
-          description: nil,
-          content_type: "text/plain",
           size: 2048,
           url: "https://cdn.discordapp.com/attachments/789/012/data.txt",
           proxy_url: "https://media.discordapp.net/attachments/789/012/data.txt",
           # No dimensions for text file
           height: nil,
-          width: nil,
-          ephemeral: false,
-          message_id: 111_222_333
+          width: nil
         })
 
       result =
@@ -57,7 +53,9 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
       assert {:ok, created_attachment} = result
       assert created_attachment.discord_id == attachment_struct.id
       assert created_attachment.filename == attachment_struct.filename
-      assert created_attachment.content_type == "text/plain"
+      assert created_attachment.size == attachment_struct.size
+      assert created_attachment.url == attachment_struct.url
+      assert created_attachment.proxy_url == attachment_struct.proxy_url
       assert created_attachment.height == nil
       assert created_attachment.width == nil
     end

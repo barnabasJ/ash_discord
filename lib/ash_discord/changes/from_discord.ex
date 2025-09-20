@@ -361,9 +361,10 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> Ash.Changeset.force_change_attribute(:type, discord_data.type)
     |> maybe_set_attribute(:guild_id, discord_data.guild_id)
     |> Ash.Changeset.force_change_attribute(:channel_id, discord_data.channel_id)
-    |> Ash.Changeset.force_change_attribute(:user_id, discord_data.user.id)
+    |> Ash.Changeset.force_change_attribute(:user_id, get_nested_id(discord_data.user))
     |> Ash.Changeset.force_change_attribute(:token, discord_data.token)
     |> maybe_set_attribute(:data, discord_data.data)
+    |> maybe_set_attribute(:locale, discord_data.locale)
   end
 
   # Helper function to safely extract ID from nested structs

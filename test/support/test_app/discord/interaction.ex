@@ -48,6 +48,11 @@ defmodule TestApp.Discord.Interaction do
       allow_nil?: true,
       public?: true
     )
+
+    attribute(:locale, :string,
+      allow_nil?: true,
+      public?: true
+    )
   end
 
   identities do
@@ -72,12 +77,12 @@ defmodule TestApp.Discord.Interaction do
 
       upsert?(true)
       upsert_identity(:discord_id)
-      upsert_fields([:type, :guild_id, :channel_id, :user_id, :token, :data])
+      upsert_fields([:type, :guild_id, :channel_id, :user_id, :token, :data, :locale])
     end
 
     update :update do
       primary?(true)
-      accept([:type, :guild_id, :channel_id, :user_id, :token, :data])
+      accept([:type, :guild_id, :channel_id, :user_id, :token, :data, :locale])
     end
   end
 end

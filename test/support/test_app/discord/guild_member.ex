@@ -68,7 +68,25 @@ defmodule TestApp.Discord.GuildMember do
       ])
 
       argument(:discord_struct, :struct, description: "Discord guild member data to transform")
+      argument(:discord_id, :integer, description: "Discord guild member ID for API fallback")
       argument(:guild_id, :integer, description: "Guild ID this member belongs to")
+
+      change(fn changeset, _context ->
+        changeset =
+          case Ash.Changeset.get_argument(changeset, :guild_id) do
+            nil -> changeset
+            guild_id -> Ash.Changeset.force_change_attribute(changeset, :guild_id, guild_id)
+          end
+
+        # Also set user_id from discord_struct for upsert identity
+        case Ash.Changeset.get_argument(changeset, :discord_struct) do
+          %{user_id: user_id} when not is_nil(user_id) ->
+            Ash.Changeset.force_change_attribute(changeset, :user_id, user_id)
+
+          _ ->
+            changeset
+        end
+      end)
 
       change({AshDiscord.Changes.FromDiscord, type: :guild_member})
     end

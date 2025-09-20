@@ -158,12 +158,14 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
           nick: "OriginalNick",
           joined_at: "2023-01-01T00:00:00Z",
           deaf: false,
-          mute: false,
-          guild_id: guild_id
+          mute: false
         })
 
       {:ok, original_member} =
-        TestApp.Discord.guild_member_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.guild_member_from_discord(%{
+          discord_struct: initial_struct,
+          guild_id: guild_id
+        })
 
       # Update same member with new data
       updated_struct =
@@ -172,12 +174,14 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
           nick: "UpdatedNick",
           joined_at: "2023-01-01T00:00:00Z",
           deaf: true,
-          mute: true,
-          guild_id: guild_id
+          mute: true
         })
 
       {:ok, updated_member} =
-        TestApp.Discord.guild_member_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.guild_member_from_discord(%{
+          discord_struct: updated_struct,
+          guild_id: guild_id
+        })
 
       # Should be same record (same Ash ID)
       assert updated_member.id == original_member.id
@@ -201,12 +205,14 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
           nick: "OldNick",
           joined_at: "2023-06-01T12:00:00Z",
           deaf: false,
-          mute: false,
-          guild_id: guild_id
+          mute: false
         })
 
       {:ok, original_member} =
-        TestApp.Discord.guild_member_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.guild_member_from_discord(%{
+          discord_struct: initial_struct,
+          guild_id: guild_id
+        })
 
       # Remove nickname
       updated_struct =
@@ -215,12 +221,14 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
           nick: nil,
           joined_at: "2023-06-01T12:00:00Z",
           deaf: false,
-          mute: false,
-          guild_id: guild_id
+          mute: false
         })
 
       {:ok, updated_member} =
-        TestApp.Discord.guild_member_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.guild_member_from_discord(%{
+          discord_struct: updated_struct,
+          guild_id: guild_id
+        })
 
       # Should be same record
       assert updated_member.id == original_member.id
@@ -242,10 +250,14 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
     end
 
     test "handles missing required fields in discord_struct" do
-      # Missing required fields
-      invalid_struct = guild_member(%{id: nil, name: nil})
+      # Missing required fields - user_id is required for guild members
+      invalid_struct = guild_member(%{user_id: nil, user: nil})
 
-      result = TestApp.Discord.guild_member_from_discord(%{discord_struct: invalid_struct})
+      result =
+        TestApp.Discord.guild_member_from_discord(%{
+          discord_struct: invalid_struct,
+          guild_id: 555_666_777
+        })
 
       assert {:error, error} = result
       error_message = Exception.message(error)

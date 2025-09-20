@@ -368,7 +368,16 @@ defmodule AshDiscord.Test.Generators.Discord do
       pending: false
     }
 
-    struct(Nostrum.Struct.Guild.Member, merge_attrs(defaults, attrs))
+    merged = merge_attrs(defaults, attrs)
+
+    # Sync user_id with user.id if user is provided
+    merged =
+      case merged.user do
+        %{id: id} -> Map.put(merged, :user_id, id)
+        _ -> merged
+      end
+
+    struct(Nostrum.Struct.Guild.Member, merged)
   end
 
   @doc """

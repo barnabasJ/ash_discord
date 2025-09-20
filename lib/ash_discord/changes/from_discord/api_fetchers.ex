@@ -67,23 +67,47 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
   def fetch_from_nostrum_api(type, discord_id) do
     case type do
       :user ->
-        Nostrum.Api.User.get(discord_id)
+        try do
+          Nostrum.Api.User.get(discord_id)
+        rescue
+          ArgumentError -> {:error, :api_unavailable}
+        end
 
       :guild ->
-        Nostrum.Api.Guild.get(discord_id)
+        try do
+          Nostrum.Api.Guild.get(discord_id)
+        rescue
+          ArgumentError -> {:error, :api_unavailable}
+        end
 
       :channel ->
-        Nostrum.Api.Channel.get(discord_id)
+        try do
+          Nostrum.Api.Channel.get(discord_id)
+        rescue
+          ArgumentError -> {:error, :api_unavailable}
+        end
 
       :webhook ->
-        Nostrum.Api.Webhook.get(discord_id)
+        try do
+          Nostrum.Api.Webhook.get(discord_id)
+        rescue
+          ArgumentError -> {:error, :api_unavailable}
+        end
 
       :invite ->
         # Invite uses code instead of ID
-        Nostrum.Api.Invite.get(discord_id)
+        try do
+          Nostrum.Api.Invite.get(discord_id)
+        rescue
+          ArgumentError -> {:error, :api_unavailable}
+        end
 
       :sticker ->
-        Nostrum.Api.Sticker.get(discord_id)
+        try do
+          Nostrum.Api.Sticker.get(discord_id)
+        rescue
+          ArgumentError -> {:error, :api_unavailable}
+        end
 
       :message ->
         # Message requires channel_id and message_id, can't fetch with just ID

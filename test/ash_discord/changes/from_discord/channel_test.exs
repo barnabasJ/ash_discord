@@ -9,8 +9,6 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
 
-
-
   describe "struct-first pattern" do
     test "creates channel from discord struct with all attributes" do
       channel_struct =
@@ -133,9 +131,8 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
   end
 
   describe "API fallback pattern" do
-
-    test "channel API fallback is not supported" do
-      # Channels don't support direct API fetching in our implementation
+    test "channel API fallback fails when API is unavailable" do
+      # Channel API fetching is supported but may fail in test environment
       discord_id = 999_888_777
 
       result = TestApp.Discord.channel_from_discord(%{discord_id: discord_id})
@@ -143,8 +140,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       assert {:error, error} = result
       error_message = Exception.message(error)
       assert error_message =~ "Failed to fetch channel with ID #{discord_id}"
-      error_message = Exception.message(error)
-      assert error_message =~ ":unsupported_type"
+      assert error_message =~ ":api_unavailable"
     end
 
     test "requires discord_struct for channel creation" do
@@ -196,7 +192,6 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       assert updated_channel.topic == "Updated topic"
       assert updated_channel.position == 5
       assert updated_channel.nsfw == true
-
     end
 
     test "upsert works with permission overwrites changes" do
@@ -251,7 +246,6 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       member_overwrite = Enum.find(overwrites, &(&1["id"] == "456"))
       assert member_overwrite["type"] == 1
       assert member_overwrite["allow"] == "8"
-
     end
   end
 

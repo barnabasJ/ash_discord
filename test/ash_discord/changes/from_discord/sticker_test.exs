@@ -8,8 +8,6 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
 
-
-
   describe "struct-first pattern" do
     test "creates sticker from discord struct with all attributes" do
       sticker_struct =
@@ -186,9 +184,8 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
   end
 
   describe "API fallback pattern" do
-
-    test "sticker API fallback is not supported" do
-      # Stickers don't support direct API fetching in our implementation
+    test "sticker API fallback fails when API is unavailable" do
+      # Sticker API fetching is supported but may fail in test environment
       discord_id = 999_888_777
 
       result = TestApp.Discord.sticker_from_discord(%{discord_id: discord_id})
@@ -196,8 +193,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
       assert {:error, error} = result
       error_message = Exception.message(error)
       assert error_message =~ "Failed to fetch sticker with ID #{discord_id}"
-      error_message = Exception.message(error)
-      assert error_message =~ ":unsupported_type"
+      assert error_message =~ ":api_unavailable"
     end
 
     test "requires discord_struct for sticker creation" do
@@ -256,7 +252,6 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
       assert updated_sticker.tags == "updated,tags,new"
       assert updated_sticker.format_type == 2
       assert updated_sticker.available == false
-
     end
 
     test "upsert works with availability changes" do
@@ -301,7 +296,6 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
 
       # But with updated availability
       assert updated_sticker.available == false
-
     end
   end
 

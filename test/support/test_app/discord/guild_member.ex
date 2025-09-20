@@ -37,27 +37,7 @@ defmodule TestApp.Discord.GuildMember do
       upsert_identity(:unique_member)
       upsert_fields([:nick, :roles, :joined_at])
 
-      change(fn changeset, _context ->
-        # Mock data for testing
-        guild_id = Ash.Changeset.get_attribute(changeset, :guild_id)
-        user_id = Ash.Changeset.get_attribute(changeset, :user_id)
-
-        changeset =
-          if is_nil(Ash.Changeset.get_attribute(changeset, :joined_at)) do
-            Ash.Changeset.change_attribute(changeset, :joined_at, DateTime.utc_now())
-          else
-            changeset
-          end
-
-        changeset =
-          if is_nil(Ash.Changeset.get_attribute(changeset, :nick)) do
-            Ash.Changeset.change_attribute(changeset, :nick, "Member #{user_id}")
-          else
-            changeset
-          end
-
-        changeset
-      end)
+      change({AshDiscord.Changes.FromDiscord, type: :guild_member})
     end
 
     update :update do

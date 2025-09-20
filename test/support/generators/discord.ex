@@ -534,7 +534,7 @@ defmodule AshDiscord.Test.Generators.Discord do
       "abc123"
   """
   def invite(attrs \\ %{}) do
-    code = Faker.Lorem.characters(6..10) |> String.replace(~r/[^a-zA-Z0-9]/, "")
+    code = Faker.Lorem.characters(6..10) |> to_string() |> String.replace(~r/[^a-zA-Z0-9]/, "")
 
     defaults = %{
       code: code,

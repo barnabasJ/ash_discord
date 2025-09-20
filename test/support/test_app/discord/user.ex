@@ -44,17 +44,7 @@ defmodule TestApp.Discord.User do
       upsert_identity(:discord_id)
       upsert_fields([:discord_username, :discord_avatar])
 
-      change(fn changeset, _context ->
-        user_data = Ash.Changeset.get_argument(changeset, :discord_struct)
-        # Generate placeholder email for Discord bot users
-        email = "discord+#{user_data.id}@steward.local"
-
-        changeset
-        |> Ash.Changeset.force_change_attribute(:discord_id, user_data.id)
-        |> Ash.Changeset.force_change_attribute(:discord_username, user_data.username)
-        |> Ash.Changeset.force_change_attribute(:discord_avatar, user_data.avatar)
-        |> Ash.Changeset.force_change_attribute(:email, email)
-      end)
+      change({AshDiscord.Changes.FromDiscord, type: :user})
     end
 
     update :update do

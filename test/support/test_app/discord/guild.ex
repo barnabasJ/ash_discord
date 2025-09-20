@@ -38,31 +38,7 @@ defmodule TestApp.Discord.Guild do
 
       argument(:discord_struct, :struct)
 
-      change(fn changeset, _context ->
-        case Ash.Changeset.get_attribute(changeset, :discord_id) do
-          nil ->
-            changeset
-
-          discord_id ->
-            # If name is not provided, use mock data
-            changeset =
-              if Ash.Changeset.get_attribute(changeset, :name) do
-                changeset
-              else
-                Ash.Changeset.change_attribute(changeset, :name, "Test Guild #{discord_id}")
-              end
-
-            # If description is not provided, use mock data
-            changeset =
-              if Ash.Changeset.get_attribute(changeset, :description) do
-                changeset
-              else
-                Ash.Changeset.change_attribute(changeset, :description, "A test guild")
-              end
-
-            changeset
-        end
-      end)
+      change({AshDiscord.Changes.FromDiscord, type: :guild})
     end
 
     update :update do

@@ -68,38 +68,7 @@ defmodule TestApp.Discord.Message do
       upsert_identity(:unique_discord_id)
       upsert_fields([:content, :channel_id, :author_id, :guild_id, :timestamp, :edited_timestamp])
 
-      change(fn changeset, _context ->
-        # If discord_id is provided but other fields are not, mock them
-        case Ash.Changeset.get_attribute(changeset, :discord_id) do
-          nil ->
-            changeset
-
-          discord_id ->
-            # Only set mock data if the fields aren't already provided
-            changeset =
-              if Ash.Changeset.get_attribute(changeset, :content) do
-                changeset
-              else
-                Ash.Changeset.change_attribute(changeset, :content, "Test message #{discord_id}")
-              end
-
-            changeset =
-              if Ash.Changeset.get_attribute(changeset, :channel_id) do
-                changeset
-              else
-                Ash.Changeset.change_attribute(changeset, :channel_id, 123_456_789)
-              end
-
-            changeset =
-              if Ash.Changeset.get_attribute(changeset, :author_id) do
-                changeset
-              else
-                Ash.Changeset.change_attribute(changeset, :author_id, 987_654_321)
-              end
-
-            changeset
-        end
-      end)
+      change({AshDiscord.Changes.FromDiscord, type: :message})
     end
 
     read :search do

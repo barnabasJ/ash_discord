@@ -34,9 +34,20 @@ defmodule TestApp.Discord.Sticker do
       public?: true
     )
 
+    attribute(:type, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
     attribute(:format_type, :integer,
       allow_nil?: true,
       public?: true
+    )
+
+    attribute(:available, :boolean,
+      allow_nil?: true,
+      public?: true,
+      default: true
     )
 
     attribute(:guild_id, :integer,
@@ -72,12 +83,12 @@ defmodule TestApp.Discord.Sticker do
 
       upsert?(true)
       upsert_identity(:discord_id)
-      upsert_fields([:name, :description, :tags, :format_type, :guild_id])
+      upsert_fields([:name, :description, :tags, :type, :format_type, :available, :guild_id])
     end
 
     update :update do
       primary?(true)
-      accept([:name, :description, :tags, :format_type, :guild_id])
+      accept([:name, :description, :tags, :type, :format_type, :available, :guild_id])
     end
   end
 end

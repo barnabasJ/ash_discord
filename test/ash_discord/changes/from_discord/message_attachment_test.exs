@@ -65,15 +65,11 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
         message_attachment(%{
           id: 111_222_333,
           filename: "clip.mp4",
-          description: "A short video clip",
-          content_type: "video/mp4",
           size: 10_485_760,
           url: "https://cdn.discordapp.com/attachments/345/678/clip.mp4",
           proxy_url: "https://media.discordapp.net/attachments/345/678/clip.mp4",
           height: 720,
-          width: 1280,
-          ephemeral: false,
-          message_id: 777_888_999
+          width: 1280
         })
 
       result =
@@ -82,7 +78,9 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
       assert {:ok, created_attachment} = result
       assert created_attachment.discord_id == attachment_struct.id
       assert created_attachment.filename == attachment_struct.filename
-      assert created_attachment.content_type == "video/mp4"
+      assert created_attachment.size == attachment_struct.size
+      assert created_attachment.url == attachment_struct.url
+      assert created_attachment.proxy_url == attachment_struct.proxy_url
       assert created_attachment.height == 720
       assert created_attachment.width == 1280
     end

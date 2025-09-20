@@ -861,8 +861,7 @@ defmodule AshDiscord.Test.Generators.Discord do
       guild_id: generate_snowflake()
     }
 
-    # Note: Nostrum doesn't have a specific Sticker struct, so we return a map
-    merge_attrs(defaults, attrs)
+    struct(Nostrum.Struct.Sticker, merge_attrs(defaults, attrs))
   end
 
   @doc """

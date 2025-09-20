@@ -352,7 +352,10 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
     |> maybe_set_attribute(:description, discord_data.description)
     |> maybe_set_attribute(:tags, discord_data.tags)
+    |> maybe_set_attribute(:type, discord_data.type)
     |> maybe_set_attribute(:format_type, discord_data.format_type)
+    |> maybe_set_attribute(:available, discord_data.available)
+    |> maybe_set_attribute(:guild_id, discord_data.guild_id)
   end
 
   defp transform_interaction(changeset, discord_data) do

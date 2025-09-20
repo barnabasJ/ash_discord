@@ -316,7 +316,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
 
     test "handles missing required fields in discord_struct" do
       # Missing required fields
-      invalid_struct = %{}
+      invalid_struct = sticker(%{id: nil, name: nil})
 
       result = TestApp.Discord.sticker_from_discord(%{discord_struct: invalid_struct})
 

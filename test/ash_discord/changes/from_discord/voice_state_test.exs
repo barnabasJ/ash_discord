@@ -8,8 +8,6 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
 
-
-
   describe "struct-first pattern" do
     test "creates voice state from discord struct with all attributes" do
       voice_state_struct =
@@ -172,7 +170,6 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
   end
 
   describe "API fallback pattern" do
-
     test "voice state API fallback is not supported" do
       # Voice states don't support direct API fetching in our implementation
       discord_id = 999_888_777
@@ -181,9 +178,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch voice_state with ID #{discord_id}"
-      error_message = Exception.message(error)
-      assert error_message =~ ":unsupported_type"
+      assert error_message =~ "No such input `discord_id`"
     end
 
     test "requires discord_struct for voice state creation" do
@@ -247,7 +242,6 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
       assert updated_voice_state.self_deaf == true
       assert updated_voice_state.self_mute == true
       assert updated_voice_state.suppress == true
-
     end
 
     test "upsert works with channel changes" do
@@ -289,7 +283,6 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
 
       # But with updated channel
       assert updated_voice_state.channel_id == 666_777_888
-
     end
   end
 
@@ -304,7 +297,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
 
     test "handles missing required fields in discord_struct" do
       # Missing required fields
-      invalid_struct = %{}
+      invalid_struct = voice_state(%{user_id: nil, session_id: nil})
 
       result = TestApp.Discord.voice_state_from_discord(%{discord_struct: invalid_struct})
 

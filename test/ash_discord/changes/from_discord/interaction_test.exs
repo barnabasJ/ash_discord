@@ -408,7 +408,7 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
 
     test "handles missing required fields in discord_struct" do
       # Missing required fields
-      invalid_struct = %{}
+      invalid_struct = interaction(%{id: nil, name: nil})
 
       result = TestApp.Discord.interaction_from_discord(%{discord_struct: invalid_struct})
 

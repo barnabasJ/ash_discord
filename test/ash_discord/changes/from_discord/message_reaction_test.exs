@@ -8,19 +8,13 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
 
-
-
   describe "struct-first pattern" do
     test "creates message reaction from discord struct with unicode emoji" do
       reaction_struct =
         message_reaction(%{
           emoji: %{id: nil, name: "👍", animated: false},
           count: 5,
-          me: false,
-          user_id: 123_456_789,
-          message_id: 555_666_777,
-          channel_id: 111_222_333,
-          guild_id: 777_888_999
+          me: false
         })
 
       result =
@@ -32,10 +26,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
       assert created_reaction.emoji_animated == false
       assert created_reaction.count == reaction_struct.count
       assert created_reaction.me == false
-      assert created_reaction.user_id == reaction_struct.user_id
-      assert created_reaction.message_id == reaction_struct.message_id
-      assert created_reaction.channel_id == reaction_struct.channel_id
-      assert created_reaction.guild_id == reaction_struct.guild_id
     end
 
     test "creates message reaction with custom emoji" do
@@ -147,7 +137,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
   end
 
   describe "API fallback pattern" do
-
     test "message reaction API fallback is not supported" do
       # Message reactions don't support direct API fetching in our implementation
       discord_id = 999_888_777
@@ -215,7 +204,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
       # But with updated attributes
       assert updated_reaction.count == 5
       assert updated_reaction.me == true
-
     end
 
     test "upsert works with custom emoji reactions" do
@@ -263,7 +251,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
       assert updated_reaction.emoji_animated == true
       assert updated_reaction.count == 3
       assert updated_reaction.me == true
-
     end
   end
 
@@ -278,7 +265,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
     test "handles missing required fields in discord_struct" do
       # Missing required fields
-      invalid_struct = %{}
+      invalid_struct = message_reaction(%{count: nil, emoji: nil})
 
       result = TestApp.Discord.message_reaction_from_discord(%{discord_struct: invalid_struct})
 

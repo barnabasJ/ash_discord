@@ -34,19 +34,47 @@ defmodule TestApp.Discord.Invite do
       public?: true
     )
 
+    attribute(:target_user_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:target_user_type, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:approximate_presence_count, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:approximate_member_count, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
     attribute(:uses, :integer,
       allow_nil?: true,
-      public?: true,
-      default: 0
+      public?: true
     )
 
     attribute(:max_uses, :integer,
       allow_nil?: true,
-      public?: true,
-      default: 0
+      public?: true
     )
 
-    attribute(:expires_at, :utc_datetime,
+    attribute(:max_age, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:temporary, :boolean,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:created_at, :string,
       allow_nil?: true,
       public?: true
     )
@@ -79,12 +107,40 @@ defmodule TestApp.Discord.Invite do
 
       upsert?(true)
       upsert_identity(:code)
-      upsert_fields([:guild_id, :channel_id, :inviter_id, :uses, :max_uses, :expires_at])
+
+      upsert_fields([
+        :guild_id,
+        :channel_id,
+        :inviter_id,
+        :target_user_id,
+        :target_user_type,
+        :approximate_presence_count,
+        :approximate_member_count,
+        :uses,
+        :max_uses,
+        :max_age,
+        :temporary,
+        :created_at
+      ])
     end
 
     update :update do
       primary?(true)
-      accept([:guild_id, :channel_id, :inviter_id, :uses, :max_uses, :expires_at])
+
+      accept([
+        :guild_id,
+        :channel_id,
+        :inviter_id,
+        :target_user_id,
+        :target_user_type,
+        :approximate_presence_count,
+        :approximate_member_count,
+        :uses,
+        :max_uses,
+        :max_age,
+        :temporary,
+        :created_at
+      ])
     end
   end
 end

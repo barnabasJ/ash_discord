@@ -268,7 +268,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
 
     test "handles missing required fields in discord_struct" do
       # Missing required fields
-      invalid_struct = %{}
+      invalid_struct = message(%{id: nil, name: nil})
 
       result = TestApp.Discord.message_from_discord(%{discord_struct: invalid_struct})
 

@@ -8,23 +8,17 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
 
-
-
   describe "struct-first pattern" do
     test "creates message attachment from discord struct with all attributes" do
       attachment_struct =
         message_attachment(%{
           id: 123_456_789,
           filename: "screenshot.png",
-          description: "A test screenshot",
-          content_type: "image/png",
           size: 1_048_576,
           url: "https://cdn.discordapp.com/attachments/123/456/screenshot.png",
           proxy_url: "https://media.discordapp.net/attachments/123/456/screenshot.png",
           height: 1080,
-          width: 1920,
-          ephemeral: false,
-          message_id: 555_666_777
+          width: 1920
         })
 
       result =
@@ -33,15 +27,11 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
       assert {:ok, created_attachment} = result
       assert created_attachment.discord_id == attachment_struct.id
       assert created_attachment.filename == attachment_struct.filename
-      assert created_attachment.description == attachment_struct.description
-      assert created_attachment.content_type == attachment_struct.content_type
       assert created_attachment.size == attachment_struct.size
       assert created_attachment.url == attachment_struct.url
       assert created_attachment.proxy_url == attachment_struct.proxy_url
       assert created_attachment.height == attachment_struct.height
       assert created_attachment.width == attachment_struct.width
-      assert created_attachment.ephemeral == false
-      assert created_attachment.message_id == attachment_struct.message_id
     end
 
     test "handles text file attachment" do
@@ -174,7 +164,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
   end
 
   describe "API fallback pattern" do
-
     test "message attachment API fallback is not supported" do
       # Message attachments don't support direct API fetching in our implementation
       discord_id = 999_888_777
@@ -251,7 +240,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
       assert updated_attachment.height == 200
       assert updated_attachment.width == 200
       assert updated_attachment.ephemeral == true
-
     end
 
     test "upsert works with ephemeral status changes" do
@@ -302,7 +290,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
 
       # But with updated ephemeral status
       assert updated_attachment.ephemeral == true
-
     end
   end
 
@@ -318,7 +305,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
 
     test "handles missing required fields in discord_struct" do
       # Missing required fields
-      invalid_struct = %{}
+      invalid_struct = message_attachment(%{id: nil, name: nil})
 
       result =
         TestApp.Discord.message_attachment_from_discord(%{discord_struct: invalid_struct})

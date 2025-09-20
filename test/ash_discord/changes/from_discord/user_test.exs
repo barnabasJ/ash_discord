@@ -183,7 +183,7 @@ defmodule AshDiscord.Changes.FromDiscord.UserTest do
 
     test "handles missing required fields in discord_struct" do
       # Missing required fields
-      invalid_struct = %{}
+      invalid_struct = user(%{id: nil, name: nil})
 
       # This should either return an error or raise an exception
       result =

@@ -229,7 +229,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
     test "handles missing required fields in discord_struct" do
       # Missing required fields
-      invalid_struct = %{}
+      invalid_struct = guild_member(%{id: nil, name: nil})
 
       result = TestApp.Discord.guild_member_from_discord(%{discord_struct: invalid_struct})
 

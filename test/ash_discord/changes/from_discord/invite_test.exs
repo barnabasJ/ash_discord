@@ -8,18 +8,16 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
 
-
-
   describe "struct-first pattern" do
     test "creates invite from discord struct with all attributes" do
       invite_struct =
         invite(%{
           code: "abc123def",
-          guild_id: 555_666_777,
-          channel_id: 111_222_333,
-          inviter_id: 987_654_321,
-          target_type: nil,
-          target_user_id: nil,
+          guild: guild(%{id: 555_666_777}),
+          channel: channel(%{id: 111_222_333}),
+          inviter: user(%{id: 987_654_321}),
+          target_user_type: nil,
+          target_user: nil,
           uses: 5,
           max_uses: 10,
           max_age: 3600,
@@ -31,10 +29,10 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
 
       assert {:ok, created_invite} = result
       assert created_invite.code == invite_struct.code
-      assert created_invite.guild_id == invite_struct.guild_id
-      assert created_invite.channel_id == invite_struct.channel_id
-      assert created_invite.inviter_id == invite_struct.inviter_id
-      assert created_invite.target_type == nil
+      assert created_invite.guild_id == invite_struct.guild.id
+      assert created_invite.channel_id == invite_struct.channel.id
+      assert created_invite.inviter_id == invite_struct.inviter.id
+      assert created_invite.target_user_type == nil
       assert created_invite.target_user_id == nil
       assert created_invite.uses == invite_struct.uses
       assert created_invite.max_uses == invite_struct.max_uses
@@ -50,7 +48,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
           guild_id: 777_888_999,
           channel_id: 333_444_555,
           inviter_id: 111_222_333,
-          target_type: nil,
+          target_user_type: nil,
           target_user_id: nil,
           uses: 0,
           # No max uses (permanent)
@@ -77,7 +75,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
           guild_id: 999_111_222,
           channel_id: 444_555_666,
           inviter_id: 777_888_999,
-          target_type: nil,
+          target_user_type: nil,
           target_user_id: nil,
           uses: 1,
           max_uses: 1,
@@ -103,7 +101,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
           channel_id: 666_777_888,
           inviter_id: 999_111_222,
           # Stream target type
-          target_type: 1,
+          target_user_type: 1,
           target_user_id: 123_456_789,
           uses: 0,
           max_uses: 5,
@@ -116,7 +114,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
 
       assert {:ok, created_invite} = result
       assert created_invite.code == invite_struct.code
-      assert created_invite.target_type == 1
+      assert created_invite.target_user_type == 1
       assert created_invite.target_user_id == invite_struct.target_user_id
     end
 
@@ -128,7 +126,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
           channel_id: 111_222_333,
           inviter_id: 444_555_666,
           # Embedded application target type
-          target_type: 2,
+          target_user_type: 2,
           target_user_id: nil,
           uses: 3,
           max_uses: 10,
@@ -141,7 +139,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
 
       assert {:ok, created_invite} = result
       assert created_invite.code == invite_struct.code
-      assert created_invite.target_type == 2
+      assert created_invite.target_user_type == 2
       assert created_invite.target_user_id == nil
     end
 
@@ -153,7 +151,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
           channel_id: 888_999_111,
           # No inviter (vanity URL or widget)
           inviter_id: nil,
-          target_type: nil,
+          target_user_type: nil,
           target_user_id: nil,
           uses: 50,
           max_uses: 0,
@@ -171,7 +169,6 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
   end
 
   describe "API fallback pattern" do
-
     test "invite API fallback is not supported" do
       # Invites don't support direct API fetching in our implementation
       discord_id = "abc123def"
@@ -239,7 +236,6 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
 
       # But with updated attributes
       assert updated_invite.uses == 3
-
     end
 
     test "upsert works with usage limit changes" do
@@ -288,7 +284,6 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
       assert updated_invite.max_uses == 0
       assert updated_invite.max_age == 0
       assert updated_invite.temporary == false
-
     end
   end
 
@@ -303,7 +298,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
 
     test "handles missing required fields in discord_struct" do
       # Missing required fields
-      invalid_struct = %{}
+      invalid_struct = invite(%{id: nil, name: nil})
 
       result = TestApp.Discord.invite_from_discord(%{discord_struct: invalid_struct})
 

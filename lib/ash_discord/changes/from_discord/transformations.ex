@@ -271,9 +271,11 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
     Enum.map(overwrites, &transform_single_overwrite/1)
   end
 
-  def transform_permission_overwrites(single_overwrite) do
+  def transform_permission_overwrites(single_overwrite) when is_map(single_overwrite) do
     [transform_single_overwrite(single_overwrite)]
   end
+
+  def transform_permission_overwrites(_invalid), do: []
 
   # Private helper functions
 
@@ -299,5 +301,13 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
   end
 
   defp parse_datetime(%DateTime{} = datetime), do: {:ok, datetime}
+
+  defp parse_datetime(timestamp) when is_integer(timestamp) do
+    case DateTime.from_unix(timestamp, :second) do
+      {:ok, datetime} -> {:ok, datetime}
+      {:error, reason} -> {:error, "Invalid Unix timestamp: #{reason}"}
+    end
+  end
+
   defp parse_datetime(other), do: {:error, "Unsupported datetime type: #{inspect(other)}"}
 end

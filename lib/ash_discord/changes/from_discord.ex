@@ -245,6 +245,7 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> maybe_set_attribute(:topic, discord_data.topic)
     |> maybe_set_attribute(:nsfw, discord_data.nsfw)
     |> maybe_set_attribute(:parent_id, discord_data.parent_id)
+    |> maybe_set_attribute(:guild_id, discord_data.guild_id)
     |> maybe_set_attribute(
       :permission_overwrites,
       Transformations.transform_permission_overwrites(discord_data.permission_overwrites)
@@ -274,13 +275,16 @@ defmodule AshDiscord.Changes.FromDiscord do
   defp transform_voice_state(changeset, discord_data) do
     changeset
     |> Ash.Changeset.force_change_attribute(:user_id, discord_data.user_id)
-    |> Ash.Changeset.force_change_attribute(:channel_id, discord_data.channel_id)
+    |> maybe_set_attribute(:channel_id, discord_data.channel_id)
+    |> maybe_set_attribute(:guild_id, discord_data.guild_id)
     |> Ash.Changeset.force_change_attribute(:session_id, discord_data.session_id)
-    |> maybe_set_attribute(:deaf, discord_data.deaf || false)
-    |> maybe_set_attribute(:mute, discord_data.mute || false)
-    |> maybe_set_attribute(:self_deaf, discord_data.self_deaf || false)
-    |> maybe_set_attribute(:self_mute, discord_data.self_mute || false)
-    |> maybe_set_attribute(:suppress, discord_data.suppress || false)
+    |> maybe_set_attribute(:deaf, discord_data.deaf)
+    |> maybe_set_attribute(:mute, discord_data.mute)
+    |> maybe_set_attribute(:self_deaf, discord_data.self_deaf)
+    |> maybe_set_attribute(:self_mute, discord_data.self_mute)
+    |> maybe_set_attribute(:self_stream, discord_data.self_stream)
+    |> maybe_set_attribute(:self_video, discord_data.self_video)
+    |> maybe_set_attribute(:suppress, discord_data.suppress)
     |> Transformations.set_datetime_field(
       :request_to_speak_timestamp,
       discord_data.request_to_speak_timestamp
@@ -300,12 +304,18 @@ defmodule AshDiscord.Changes.FromDiscord do
   defp transform_invite(changeset, discord_data) do
     changeset
     |> Ash.Changeset.force_change_attribute(:code, discord_data.code)
-    |> maybe_set_attribute(:guild_id, discord_data.guild_id)
-    |> Ash.Changeset.force_change_attribute(:channel_id, discord_data.channel_id)
-    |> maybe_set_attribute(:inviter_id, discord_data.inviter_id)
-    |> maybe_set_attribute(:uses, discord_data.uses || 0)
-    |> maybe_set_attribute(:max_uses, discord_data.max_uses || 0)
-    |> Transformations.set_datetime_field(:expires_at, discord_data.expires_at)
+    |> maybe_set_attribute(:guild_id, get_nested_id(discord_data.guild))
+    |> Ash.Changeset.force_change_attribute(:channel_id, discord_data.channel.id)
+    |> maybe_set_attribute(:inviter_id, get_nested_id(discord_data.inviter))
+    |> maybe_set_attribute(:target_user_id, get_nested_id(discord_data.target_user))
+    |> maybe_set_attribute(:target_user_type, discord_data.target_user_type)
+    |> maybe_set_attribute(:approximate_presence_count, discord_data.approximate_presence_count)
+    |> maybe_set_attribute(:approximate_member_count, discord_data.approximate_member_count)
+    |> maybe_set_attribute(:uses, discord_data.uses)
+    |> maybe_set_attribute(:max_uses, discord_data.max_uses)
+    |> maybe_set_attribute(:max_age, discord_data.max_age)
+    |> maybe_set_attribute(:temporary, discord_data.temporary)
+    |> maybe_set_attribute(:created_at, discord_data.created_at)
   end
 
   defp transform_message_attachment(changeset, discord_data) do
@@ -317,13 +327,13 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> maybe_set_attribute(:proxy_url, discord_data.proxy_url)
     |> maybe_set_attribute(:height, discord_data.height)
     |> maybe_set_attribute(:width, discord_data.width)
-    |> maybe_set_attribute(:content_type, discord_data.content_type)
   end
 
   defp transform_message_reaction(changeset, discord_data) do
     changeset
-    |> maybe_set_attribute(:emoji_id, discord_data.emoji_id)
-    |> maybe_set_attribute(:emoji_name, discord_data.emoji_name)
+    |> maybe_set_attribute(:emoji_id, get_nested_id(discord_data.emoji))
+    |> maybe_set_attribute(:emoji_name, discord_data.emoji && discord_data.emoji.name)
+    |> maybe_set_attribute(:emoji_animated, discord_data.emoji && discord_data.emoji.animated)
     |> Ash.Changeset.force_change_attribute(:count, discord_data.count || 1)
     |> maybe_set_attribute(:me, discord_data.me || false)
   end
@@ -355,4 +365,9 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> Ash.Changeset.force_change_attribute(:token, discord_data.token)
     |> maybe_set_attribute(:data, discord_data.data)
   end
+
+  # Helper function to safely extract ID from nested structs
+  defp get_nested_id(nil), do: nil
+  defp get_nested_id(%{id: id}), do: id
+  defp get_nested_id(_), do: nil
 end

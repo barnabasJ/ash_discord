@@ -48,11 +48,6 @@ defmodule TestApp.Discord.MessageAttachment do
       allow_nil?: true,
       public?: true
     )
-
-    attribute(:content_type, :string,
-      allow_nil?: true,
-      public?: true
-    )
   end
 
   identities do
@@ -77,12 +72,12 @@ defmodule TestApp.Discord.MessageAttachment do
 
       upsert?(true)
       upsert_identity(:discord_id)
-      upsert_fields([:filename, :size, :url, :proxy_url, :height, :width, :content_type])
+      upsert_fields([:filename, :size, :url, :proxy_url, :height, :width])
     end
 
     update :update do
       primary?(true)
-      accept([:filename, :size, :url, :proxy_url, :height, :width, :content_type])
+      accept([:filename, :size, :url, :proxy_url, :height, :width])
     end
   end
 end

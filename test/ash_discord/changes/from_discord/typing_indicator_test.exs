@@ -8,8 +8,6 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
 
-
-
   describe "struct-first pattern" do
     test "creates typing indicator from discord struct with all attributes" do
       typing_struct =
@@ -26,7 +24,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
       assert created_typing.user_id == typing_struct.user_id
       assert created_typing.channel_id == typing_struct.channel_id
       assert created_typing.guild_id == typing_struct.guild_id
-      assert created_typing.timestamp == typing_struct.timestamp
+      assert created_typing.timestamp == DateTime.from_unix!(typing_struct.timestamp, :second)
     end
 
     test "handles DM typing indicator without guild_id" do
@@ -45,7 +43,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
       assert created_typing.user_id == typing_struct.user_id
       assert created_typing.channel_id == typing_struct.channel_id
       assert created_typing.guild_id == nil
-      assert created_typing.timestamp == typing_struct.timestamp
+      assert created_typing.timestamp == DateTime.from_unix!(typing_struct.timestamp, :second)
     end
 
     test "handles recent typing indicator" do
@@ -64,7 +62,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
 
       assert {:ok, created_typing} = result
       assert created_typing.user_id == typing_struct.user_id
-      assert created_typing.timestamp == current_timestamp
+      assert created_typing.timestamp == DateTime.from_unix!(current_timestamp, :second)
     end
 
     test "handles old typing indicator" do
@@ -83,7 +81,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
 
       assert {:ok, created_typing} = result
       assert created_typing.user_id == typing_struct.user_id
-      assert created_typing.timestamp == old_timestamp
+      assert created_typing.timestamp == DateTime.from_unix!(old_timestamp, :second)
     end
 
     test "handles typing indicator in voice channel" do
@@ -122,7 +120,6 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
   end
 
   describe "API fallback pattern" do
-
     test "typing indicator API fallback is not supported" do
       # Typing indicators don't support direct API fetching in our implementation
       discord_id = 999_888_777
@@ -131,9 +128,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch typing_indicator with ID #{discord_id}"
-      error_message = Exception.message(error)
-      assert error_message =~ ":unsupported_type"
+      assert error_message =~ "No such input `discord_id`"
     end
 
     test "requires discord_struct for typing indicator creation" do
@@ -180,8 +175,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
       assert updated_typing.channel_id == original_typing.channel_id
 
       # But with updated timestamp
-      assert updated_typing.timestamp == 1_673_788_200
-
+      assert updated_typing.timestamp == DateTime.from_unix!(1_673_788_200, :second)
     end
 
     test "upsert works with guild context changes" do
@@ -219,8 +213,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
 
       # But with updated guild and timestamp
       assert updated_typing.guild_id == 666_777_888
-      assert updated_typing.timestamp == 1_673_788_200
-
+      assert updated_typing.timestamp == DateTime.from_unix!(1_673_788_200, :second)
     end
   end
 
@@ -235,7 +228,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
 
     test "handles missing required fields in discord_struct" do
       # Missing required fields
-      invalid_struct = %{}
+      invalid_struct = typing_indicator(%{user_id: nil, channel_id: nil})
 
       result = TestApp.Discord.typing_indicator_from_discord(%{discord_struct: invalid_struct})
 

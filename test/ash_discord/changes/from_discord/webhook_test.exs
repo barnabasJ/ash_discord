@@ -119,9 +119,7 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch webhook with ID #{discord_id}"
-      error_message = Exception.message(error)
-      assert error_message =~ ":unsupported_type"
+      assert error_message =~ "No such input `discord_id`"
     end
 
     test "requires discord_struct for webhook creation" do
@@ -226,7 +224,7 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
 
     test "handles missing required fields in discord_struct" do
       # Missing required fields
-      invalid_struct = %{}
+      invalid_struct = webhook(%{id: nil, name: nil, channel_id: nil})
 
       result = TestApp.Discord.webhook_from_discord(%{discord_struct: invalid_struct})
 

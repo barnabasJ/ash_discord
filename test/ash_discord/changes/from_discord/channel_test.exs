@@ -266,7 +266,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
 
     test "handles missing required fields in discord_struct" do
       # Missing required fields
-      invalid_struct = %{}
+      invalid_struct = channel(%{id: nil, name: nil})
 
       result = TestApp.Discord.channel_from_discord(%{discord_struct: invalid_struct})
 

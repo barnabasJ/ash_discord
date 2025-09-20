@@ -733,7 +733,7 @@ defmodule AshDiscord.Test.Generators.Discord do
       suppress: false
     }
 
-    struct(Nostrum.Struct.VoiceState, merge_attrs(defaults, attrs))
+    struct(Nostrum.Struct.Event.VoiceState, merge_attrs(defaults, attrs))
   end
 
   @doc """
@@ -771,16 +771,7 @@ defmodule AshDiscord.Test.Generators.Discord do
       height:
         if(extension in ["png", "jpg", "gif"], do: Faker.random_between(100, 1080), else: nil),
       width:
-        if(extension in ["png", "jpg", "gif"], do: Faker.random_between(100, 1920), else: nil),
-      content_type:
-        case extension do
-          "png" -> "image/png"
-          "jpg" -> "image/jpeg"
-          "gif" -> "image/gif"
-          "pdf" -> "application/pdf"
-          "txt" -> "text/plain"
-          _ -> nil
-        end
+        if(extension in ["png", "jpg", "gif"], do: Faker.random_between(100, 1920), else: nil)
     }
 
     struct(Nostrum.Struct.Message.Attachment, merge_attrs(defaults, attrs))
@@ -823,15 +814,10 @@ defmodule AshDiscord.Test.Generators.Discord do
     defaults = %{
       emoji: emoji_data,
       count: Faker.random_between(1, 10),
-      me: Faker.Util.pick([true, false]),
-      user_id: generate_snowflake(),
-      message_id: generate_snowflake(),
-      channel_id: generate_snowflake(),
-      guild_id: generate_snowflake()
+      me: Faker.Util.pick([true, false])
     }
 
-    # Note: Nostrum doesn't have a specific Reaction struct, so we return a map
-    merge_attrs(defaults, attrs)
+    struct(Nostrum.Struct.Message.Reaction, merge_attrs(defaults, attrs))
   end
 
   @doc """
@@ -900,11 +886,11 @@ defmodule AshDiscord.Test.Generators.Discord do
       user_id: generate_snowflake(),
       channel_id: generate_snowflake(),
       guild_id: generate_snowflake(),
-      timestamp: System.system_time(:second)
+      timestamp: DateTime.utc_now(),
+      member: nil
     }
 
-    # Note: Nostrum doesn't have a specific TypingIndicator struct, so we return a map
-    merge_attrs(defaults, attrs)
+    struct(Nostrum.Struct.Event.TypingStart, merge_attrs(defaults, attrs))
   end
 
   # Private helper functions

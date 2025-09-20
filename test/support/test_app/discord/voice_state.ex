@@ -20,7 +20,12 @@ defmodule TestApp.Discord.VoiceState do
     )
 
     attribute(:channel_id, :integer,
-      allow_nil?: false,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:guild_id, :integer,
+      allow_nil?: true,
       public?: true
     )
 
@@ -53,6 +58,18 @@ defmodule TestApp.Discord.VoiceState do
       default: false
     )
 
+    attribute(:self_stream, :boolean,
+      allow_nil?: true,
+      public?: true,
+      default: false
+    )
+
+    attribute(:self_video, :boolean,
+      allow_nil?: true,
+      public?: true,
+      default: false
+    )
+
     attribute(:suppress, :boolean,
       allow_nil?: true,
       public?: true,
@@ -66,7 +83,7 @@ defmodule TestApp.Discord.VoiceState do
   end
 
   identities do
-    identity :user_channel, [:user_id, :channel_id] do
+    identity :user_guild, [:user_id, :guild_id] do
       pre_check_with(TestApp.Discord)
     end
   end
@@ -86,13 +103,18 @@ defmodule TestApp.Discord.VoiceState do
       change({AshDiscord.Changes.FromDiscord, type: :voice_state})
 
       upsert?(true)
-      upsert_identity(:user_channel)
+      upsert_identity(:user_guild)
 
       upsert_fields([
+        :channel_id,
+        :guild_id,
+        :session_id,
         :deaf,
         :mute,
         :self_deaf,
         :self_mute,
+        :self_stream,
+        :self_video,
         :suppress,
         :request_to_speak_timestamp
       ])
@@ -100,7 +122,20 @@ defmodule TestApp.Discord.VoiceState do
 
     update :update do
       primary?(true)
-      accept([:deaf, :mute, :self_deaf, :self_mute, :suppress, :request_to_speak_timestamp])
+
+      accept([
+        :channel_id,
+        :guild_id,
+        :session_id,
+        :deaf,
+        :mute,
+        :self_deaf,
+        :self_mute,
+        :self_stream,
+        :self_video,
+        :suppress,
+        :request_to_speak_timestamp
+      ])
     end
   end
 end

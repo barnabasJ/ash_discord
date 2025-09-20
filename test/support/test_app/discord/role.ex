@@ -19,6 +19,11 @@ defmodule TestApp.Discord.Role do
       public?: true
     )
 
+    attribute(:guild_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
     attribute(:name, :string,
       allow_nil?: false,
       public?: true
@@ -80,12 +85,22 @@ defmodule TestApp.Discord.Role do
 
       upsert?(true)
       upsert_identity(:discord_id)
-      upsert_fields([:name, :color, :permissions, :hoist, :position, :managed, :mentionable])
+
+      upsert_fields([
+        :guild_id,
+        :name,
+        :color,
+        :permissions,
+        :hoist,
+        :position,
+        :managed,
+        :mentionable
+      ])
     end
 
     update :update do
       primary?(true)
-      accept([:name, :color, :permissions, :hoist, :position, :managed, :mentionable])
+      accept([:guild_id, :name, :color, :permissions, :hoist, :position, :managed, :mentionable])
     end
   end
 end

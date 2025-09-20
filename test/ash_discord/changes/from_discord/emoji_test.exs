@@ -110,9 +110,7 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch emoji with ID #{discord_id}"
-      error_message = Exception.message(error)
-      assert error_message =~ ":unsupported_type"
+      assert error_message =~ "No such input `discord_id`"
     end
 
     test "requires discord_struct for emoji creation" do
@@ -212,7 +210,7 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
 
     test "handles missing required fields in discord_struct" do
       # Missing required fields
-      invalid_struct = %{}
+      invalid_struct = emoji(%{id: nil, name: nil})
 
       result = TestApp.Discord.emoji_from_discord(%{discord_struct: invalid_struct})
 

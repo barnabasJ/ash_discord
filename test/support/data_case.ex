@@ -24,16 +24,13 @@ defmodule TestApp.DataCase do
     on_exit(fn ->
       # Clear all data from test resources
       TestApp.Discord.Message
-      |> Ash.read!()
-      |> Enum.each(&Ash.destroy!/1)
+      |> Ash.bulk_destroy!(:destroy, %{})
 
       TestApp.Discord.Guild
-      |> Ash.read!()
-      |> Enum.each(&Ash.destroy!/1)
+      |> Ash.bulk_destroy!(:destroy, %{})
 
       TestApp.Discord.User
-      |> Ash.read!()
-      |> Enum.each(&Ash.destroy!/1)
+      |> Ash.bulk_destroy!(:destroy, %{})
     end)
 
     :ok

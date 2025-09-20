@@ -30,6 +30,42 @@ defmodule TestApp.Discord do
     resource TestApp.Discord.Emoji do
       define(:emoji_from_discord, action: :from_discord)
     end
+
+    resource TestApp.Discord.Channel do
+      define(:channel_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.VoiceState do
+      define(:voice_state_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.Webhook do
+      define(:webhook_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.Invite do
+      define(:invite_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.MessageAttachment do
+      define(:message_attachment_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.MessageReaction do
+      define(:message_reaction_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.TypingIndicator do
+      define(:typing_indicator_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.Sticker do
+      define(:sticker_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.Interaction do
+      define(:interaction_from_discord, action: :from_discord)
+    end
   end
 
   discord do

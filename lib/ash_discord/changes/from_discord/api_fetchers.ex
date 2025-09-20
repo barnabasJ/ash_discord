@@ -3,29 +3,30 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
   API fallback functionality for Discord entity fetching.
 
   This module provides fallback capabilities when Discord data is not provided
-  via the struct-first pattern. Currently implements placeholder functionality
-  that encourages the struct-first approach, with structure prepared for future
-  Nostrum API integration.
+  via the struct-first pattern. It uses Nostrum API calls to fetch Discord
+  entities when only a Discord ID is available.
 
   ## Usage
 
   This module is used internally by `AshDiscord.Changes.FromDiscord` when no
   `:discord_struct` argument is provided. It attempts to extract Discord ID
-  from changeset attributes and logs the attempt for monitoring.
+  from changeset attributes and fetch the entity from Discord's API.
 
-  ## Future Implementation
+  ## Supported Entities
 
-  This module is structured to support future integration with Nostrum's API
-  client for direct Discord data fetching when struct data is unavailable.
+  Currently supports fetching:
+  - Users via `Nostrum.Api.get_user/1`
+  - Guilds via `Nostrum.Api.get_guild/1`
   """
 
   require Logger
 
   @doc """
-  Attempts to fetch Discord entity data from API based on changeset and type.
+  Attempts to fetch Discord entity data from Nostrum cache based on changeset and type.
 
-  Currently returns an informative error encouraging struct-first pattern.
-  Future implementation will integrate with Nostrum API client.
+  Leverages Nostrum's built-in caching system to provide fallback data when
+  `:discord_struct` is not provided. Falls back gracefully with informative
+  errors encouraging struct-first pattern for best performance.
 
   ## Parameters
 
@@ -34,7 +35,8 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
 
   ## Returns
 
-  - `{:error, reason}` - Currently always returns error encouraging struct pattern
+  - `{:ok, discord_data}` - Successfully fetched from Nostrum cache
+  - `{:error, reason}` - Cache miss or fetching disabled
   """
   def fetch_from_api(changeset, type) do
     discord_id = extract_discord_id(changeset)
@@ -44,16 +46,35 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
     Consider using struct-first pattern with :discord_struct argument for better performance.
     """)
 
-    {:error,
-     """
-     No Discord struct provided and API fetching not yet implemented.
-     Please provide Discord data via :discord_struct argument.
+    case discord_id do
+      nil ->
+        {:error, "No Discord ID found for #{type} entity"}
 
-     Example:
-       MyResource.from_discord(%{
-         discord_struct: your_discord_#{type}_struct
-       })
-     """}
+      id ->
+        case fetch_from_nostrum_api(type, id) do
+          {:ok, entity} ->
+            {:ok, entity}
+
+          {:error, reason} ->
+            {:error, "Failed to fetch #{type} with ID #{id}: #{reason}"}
+        end
+    end
+  end
+
+  @doc """
+  Fetches Discord entity from Nostrum API based on type and ID.
+  """
+  def fetch_from_nostrum_api(type, discord_id) do
+    case type do
+      :user ->
+        Nostrum.Api.get_user(discord_id)
+
+      :guild ->
+        Nostrum.Api.get_guild(discord_id)
+
+      _ ->
+        {:error, :unsupported_type}
+    end
   end
 
   # Extract Discord ID from changeset attributes for API fetch

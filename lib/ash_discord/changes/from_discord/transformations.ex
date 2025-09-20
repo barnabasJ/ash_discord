@@ -232,7 +232,60 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
 
   def manage_channel_relationship(changeset, _nil_channel_id), do: changeset
 
+  @doc """
+  Transforms Discord permission overwrites to a standardized map format.
+
+  Converts Discord permission overwrite data structures into a consistent
+  format suitable for storage and processing. Handles both individual
+  overwrites and lists of overwrites.
+
+  ## Parameters
+
+  - `permission_overwrites` - Discord permission overwrites data (list or single overwrite)
+
+  ## Returns
+
+  List of maps with standardized permission overwrite format:
+  ```
+  %{
+    "id" => string,          # Target ID (user or role)
+    "type" => integer,       # 0 = role, 1 = member
+    "allow" => string,       # Allowed permissions bitfield as string
+    "deny" => string         # Denied permissions bitfield as string
+  }
+  ```
+
+  ## Examples
+
+      iex> transform_permission_overwrites([%{id: 123, type: 0, allow: 1024, deny: 0}])
+      [%{"id" => "123", "type" => 0, "allow" => "1024", "deny" => "0"}]
+
+      iex> transform_permission_overwrites(nil)
+      []
+
+  """
+  def transform_permission_overwrites(nil), do: []
+  def transform_permission_overwrites([]), do: []
+
+  def transform_permission_overwrites(overwrites) when is_list(overwrites) do
+    Enum.map(overwrites, &transform_single_overwrite/1)
+  end
+
+  def transform_permission_overwrites(single_overwrite) do
+    [transform_single_overwrite(single_overwrite)]
+  end
+
   # Private helper functions
+
+  # Transforms a single permission overwrite to standardized format
+  defp transform_single_overwrite(overwrite) do
+    %{
+      "id" => to_string(overwrite.id || overwrite["id"]),
+      "type" => overwrite.type || overwrite["type"] || 0,
+      "allow" => to_string(overwrite.allow || overwrite["allow"] || 0),
+      "deny" => to_string(overwrite.deny || overwrite["deny"] || 0)
+    }
+  end
 
   # Parses datetime values with comprehensive error handling
   defp parse_datetime(nil), do: nil

@@ -202,6 +202,15 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> maybe_set_attribute(:nick, discord_data.nick)
     |> maybe_set_attribute(:roles, discord_data.roles || [])
     |> Transformations.set_datetime_field(:joined_at, discord_data.joined_at)
+    |> Transformations.set_datetime_field(:premium_since, discord_data.premium_since)
+    |> maybe_set_member_boolean_attributes(discord_data)
+  end
+
+  defp maybe_set_member_boolean_attributes(changeset, discord_data) do
+    changeset
+    |> maybe_set_attribute(:deaf, discord_data.deaf)
+    |> maybe_set_attribute(:mute, discord_data.mute)
+    |> maybe_set_attribute(:pending, discord_data.pending)
   end
 
   defp transform_role(changeset, discord_data) do
@@ -227,9 +236,20 @@ defmodule AshDiscord.Changes.FromDiscord do
     Ash.Changeset.force_change_attribute(changeset, field, value)
   end
 
-  defp transform_channel(changeset, _discord_data) do
-    # TODO: Implement channel transformation with permission overwrites
+  defp transform_channel(changeset, discord_data) do
     changeset
+    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
+    |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
+    |> Ash.Changeset.force_change_attribute(:type, discord_data.type)
+    |> maybe_set_attribute(:position, discord_data.position)
+    |> maybe_set_attribute(:topic, discord_data.topic)
+    |> maybe_set_attribute(:nsfw, discord_data.nsfw)
+    |> maybe_set_attribute(:parent_id, discord_data.parent_id)
+    |> maybe_set_attribute(
+      :permission_overwrites,
+      Transformations.transform_permission_overwrites(discord_data.permission_overwrites)
+    )
+    |> Transformations.manage_guild_relationship(discord_data.guild_id)
   end
 
   defp transform_message(changeset, discord_data) do
@@ -252,43 +272,92 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> maybe_set_attribute(:require_colons, discord_data.require_colons)
   end
 
-  defp transform_voice_state(changeset, _discord_data) do
-    # TODO: Implement voice state transformation with boolean fields
+  defp transform_voice_state(changeset, discord_data) do
     changeset
+    |> Ash.Changeset.force_change_attribute(:user_id, discord_data.user_id)
+    |> Ash.Changeset.force_change_attribute(:channel_id, discord_data.channel_id)
+    |> Ash.Changeset.force_change_attribute(:session_id, discord_data.session_id)
+    |> maybe_set_attribute(:deaf, discord_data.deaf || false)
+    |> maybe_set_attribute(:mute, discord_data.mute || false)
+    |> maybe_set_attribute(:self_deaf, discord_data.self_deaf || false)
+    |> maybe_set_attribute(:self_mute, discord_data.self_mute || false)
+    |> maybe_set_attribute(:suppress, discord_data.suppress || false)
+    |> Transformations.set_datetime_field(
+      :request_to_speak_timestamp,
+      discord_data.request_to_speak_timestamp
+    )
   end
 
-  defp transform_webhook(changeset, _discord_data) do
-    # TODO: Implement webhook transformation
+  defp transform_webhook(changeset, discord_data) do
     changeset
+    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
+    |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
+    |> maybe_set_attribute(:avatar, discord_data.avatar)
+    |> Ash.Changeset.force_change_attribute(:channel_id, discord_data.channel_id)
+    |> maybe_set_attribute(:token, discord_data.token)
+    |> Transformations.manage_channel_relationship(discord_data.channel_id)
   end
 
-  defp transform_invite(changeset, _discord_data) do
-    # TODO: Implement invite transformation with relationships
+  defp transform_invite(changeset, discord_data) do
     changeset
+    |> Ash.Changeset.force_change_attribute(:code, discord_data.code)
+    |> maybe_set_attribute(:guild_id, discord_data.guild_id)
+    |> Ash.Changeset.force_change_attribute(:channel_id, discord_data.channel_id)
+    |> maybe_set_attribute(:inviter_id, discord_data.inviter_id)
+    |> maybe_set_attribute(:uses, discord_data.uses || 0)
+    |> maybe_set_attribute(:max_uses, discord_data.max_uses || 0)
+    |> Transformations.set_datetime_field(:expires_at, discord_data.expires_at)
+    |> Transformations.manage_guild_relationship(discord_data.guild_id)
+    |> Transformations.manage_channel_relationship(discord_data.channel_id)
   end
 
-  defp transform_message_attachment(changeset, _discord_data) do
-    # TODO: Implement attachment transformation
+  defp transform_message_attachment(changeset, discord_data) do
     changeset
+    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
+    |> Ash.Changeset.force_change_attribute(:filename, discord_data.filename)
+    |> Ash.Changeset.force_change_attribute(:size, discord_data.size)
+    |> Ash.Changeset.force_change_attribute(:url, discord_data.url)
+    |> maybe_set_attribute(:proxy_url, discord_data.proxy_url)
+    |> maybe_set_attribute(:height, discord_data.height)
+    |> maybe_set_attribute(:width, discord_data.width)
+    |> maybe_set_attribute(:content_type, discord_data.content_type)
   end
 
-  defp transform_message_reaction(changeset, _discord_data) do
-    # TODO: Implement reaction transformation
+  defp transform_message_reaction(changeset, discord_data) do
     changeset
+    |> maybe_set_attribute(:emoji_id, discord_data.emoji_id)
+    |> maybe_set_attribute(:emoji_name, discord_data.emoji_name)
+    |> Ash.Changeset.force_change_attribute(:count, discord_data.count || 1)
+    |> maybe_set_attribute(:me, discord_data.me || false)
   end
 
-  defp transform_typing_indicator(changeset, _discord_data) do
-    # TODO: Implement typing indicator transformation
+  defp transform_typing_indicator(changeset, discord_data) do
     changeset
+    |> Ash.Changeset.force_change_attribute(:user_id, discord_data.user_id)
+    |> Ash.Changeset.force_change_attribute(:channel_id, discord_data.channel_id)
+    |> maybe_set_attribute(:guild_id, discord_data.guild_id)
+    |> Transformations.set_datetime_field(:timestamp, discord_data.timestamp)
   end
 
-  defp transform_sticker(changeset, _discord_data) do
-    # TODO: Implement sticker transformation
+  defp transform_sticker(changeset, discord_data) do
     changeset
+    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
+    |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
+    |> maybe_set_attribute(:description, discord_data.description)
+    |> maybe_set_attribute(:tags, discord_data.tags)
+    |> maybe_set_attribute(:format_type, discord_data.format_type)
+    |> Transformations.manage_guild_relationship(discord_data.guild_id)
   end
 
-  defp transform_interaction(changeset, _discord_data) do
-    # TODO: Implement interaction transformation
+  defp transform_interaction(changeset, discord_data) do
     changeset
+    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
+    |> Ash.Changeset.force_change_attribute(:type, discord_data.type)
+    |> maybe_set_attribute(:guild_id, discord_data.guild_id)
+    |> Ash.Changeset.force_change_attribute(:channel_id, discord_data.channel_id)
+    |> Ash.Changeset.force_change_attribute(:user_id, discord_data.user.id)
+    |> Ash.Changeset.force_change_attribute(:token, discord_data.token)
+    |> maybe_set_attribute(:data, discord_data.data)
+    |> Transformations.manage_guild_relationship(discord_data.guild_id)
   end
 end

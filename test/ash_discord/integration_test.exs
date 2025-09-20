@@ -18,7 +18,11 @@ defmodule AshDiscord.IntegrationTest do
   end
 
   defmodule IntegrationTestConsumer do
-    use AshDiscord.Consumer, domains: [TestApp.Discord]
+    use AshDiscord.Consumer
+
+    ash_discord_consumer do
+      domains([TestApp.Discord])
+    end
 
     @impl true
     def handle_interaction_create(interaction) do

@@ -4,7 +4,7 @@ defmodule TestApp.TestConsumer do
   """
 
   use AshDiscord.Consumer
-  
+
   # Note: The DSL configuration needs to be set up differently
   # For now, using default configuration
 

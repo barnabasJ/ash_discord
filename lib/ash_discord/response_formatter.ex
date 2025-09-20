@@ -178,5 +178,4 @@ defmodule AshDiscord.ResponseFormatter do
         nil
     end
   end
-
 end

@@ -67,7 +67,8 @@ defmodule AshDiscord.ResponseFormatter.Default do
         result
 
       # Handle message move results
-      %{total_found: _total_found, related_messages: _messages, search_parameters: _params} = result ->
+      %{total_found: _total_found, related_messages: _messages, search_parameters: _params} =
+          result ->
         format_message_move_result(result)
 
       result when is_map(result) ->
@@ -104,7 +105,8 @@ defmodule AshDiscord.ResponseFormatter.Default do
 
   defp format_validation_errors_content(_), do: "Invalid input provided"
 
-  defp format_single_validation_error(%{field: field, message: message}) when is_binary(message) do
+  defp format_single_validation_error(%{field: field, message: message})
+       when is_binary(message) do
     "• #{field}: #{message}"
   end
 
@@ -128,6 +130,7 @@ defmodule AshDiscord.ResponseFormatter.Default do
        }) do
     # Create a summary of the messages found
     messages_to_show = Enum.take(messages, 3)
+
     message_summaries =
       messages_to_show
       |> Enum.map_join("\n", fn %{message: msg, content_preview: preview} ->

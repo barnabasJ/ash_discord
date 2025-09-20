@@ -76,7 +76,7 @@ defmodule TestApp.Discord.User do
 
     update :ban do
       require_atomic? false
-      
+
       argument :user, :string, allow_nil?: false
       argument :reason, :string, allow_nil?: true
 
@@ -84,10 +84,10 @@ defmodule TestApp.Discord.User do
         # Mock implementation for testing - in reality would involve Discord API calls
         user = Ash.Changeset.get_argument(changeset, :user)
         reason = Ash.Changeset.get_argument(changeset, :reason) || "No reason provided"
-        
+
         # Log the ban action for testing
         Process.put(:ban_executed, %{user: user, reason: reason})
-        
+
         changeset
       end
     end

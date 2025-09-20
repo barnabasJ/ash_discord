@@ -46,15 +46,15 @@ defmodule TestApp.Discord.GuildMember do
         # Mock data for testing
         guild_id = Ash.Changeset.get_attribute(changeset, :guild_id)
         user_id = Ash.Changeset.get_attribute(changeset, :user_id)
-        
-        changeset = 
+
+        changeset =
           if is_nil(Ash.Changeset.get_attribute(changeset, :joined_at)) do
             Ash.Changeset.change_attribute(changeset, :joined_at, DateTime.utc_now())
           else
             changeset
           end
 
-        changeset = 
+        changeset =
           if is_nil(Ash.Changeset.get_attribute(changeset, :nick)) do
             Ash.Changeset.change_attribute(changeset, :nick, "Member #{user_id}")
           else
@@ -75,6 +75,7 @@ defmodule TestApp.Discord.GuildMember do
     belongs_to :guild, TestApp.Discord.Guild,
       destination_attribute: :discord_id,
       source_attribute: :guild_id
+
     belongs_to :user, TestApp.Discord.User,
       destination_attribute: :discord_id,
       source_attribute: :user_id

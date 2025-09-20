@@ -35,10 +35,7 @@ defmodule AshDiscord.Consumer do
 
         ash_discord_consumer do
           domains [MyApp.Chat, MyApp.Discord]
-          enable_callbacks [:message_events, :guild_events]
-          disable_callbacks [:typing_start, :voice_state_update]
           debug_logging false
-          auto_create_users true
           store_bot_messages false
         end
       end
@@ -808,7 +805,6 @@ defmodule AshDiscord.Consumer do
       def handle_guild_delete(data), do: :ok
 
       def handle_ready(data) do
-        dbg("hello world")
         # Register Discord commands when bot is ready
         with {:ok, domains} <- AshDiscord.Consumer.Info.ash_discord_consumer_domains(__MODULE__) do
           commands = AshDiscord.Consumer.collect_commands(domains)
@@ -888,17 +884,20 @@ defmodule AshDiscord.Consumer do
         command_name = String.to_existing_atom(interaction.data.name)
         require Logger
         Logger.info("Processing slash command: #{command_name} from user #{interaction.user.id}")
-        
+
         case find_command(command_name) do
           nil ->
             Logger.error("Unknown command: #{command_name}")
             respond_with_error(interaction, "Unknown command")
+
           command ->
             # Apply command filtering based on guild context
             if command_allowed_for_interaction?(interaction, command) do
-              AshDiscord.InteractionRouter.route_interaction(interaction, command, consumer_module: __MODULE__)
+              AshDiscord.InteractionRouter.route_interaction(interaction, command,
+                consumer_module: __MODULE__
+              )
             else
-              Logger.warn("Command #{command_name} filtered for guild #{interaction.guild_id}")
+              Logger.warning("Command #{command_name} filtered for guild #{interaction.guild_id}")
               respond_with_error(interaction, "This command is not available in this server")
             end
         end
@@ -953,11 +952,13 @@ defmodule AshDiscord.Consumer do
       end
 
       def handle_event({:INTERACTION_CREATE, interaction, _ws_state}) do
-       dbg("blub")
         handle_interaction_create(interaction)
+
         case interaction.type do
-          2 -> # Application command
+          # Application command
+          2 ->
             handle_application_command(interaction)
+
           _ ->
             :ok
         end
@@ -1040,10 +1041,12 @@ defmodule AshDiscord.Consumer do
 
       # Helper functions for command processing
       def find_command(command_name) do
-        domains = case AshDiscord.Consumer.Info.ash_discord_consumer_domains(__MODULE__) do
-          {:ok, domains} -> domains
-          :error -> []
-        end
+        domains =
+          case AshDiscord.Consumer.Info.ash_discord_consumer_domains(__MODULE__) do
+            {:ok, domains} -> domains
+            :error -> []
+          end
+
         commands = AshDiscord.Consumer.collect_commands(domains)
         Enum.find(commands, fn cmd -> cmd.name == command_name end)
       end
@@ -1054,6 +1057,7 @@ defmodule AshDiscord.Consumer do
             guild = extract_guild_context(interaction)
             # Since the user said there's no chain, just one filter, call it directly
             filter.command_allowed?(command, guild)
+
           _ ->
             true
         end
@@ -1070,16 +1074,20 @@ defmodule AshDiscord.Consumer do
 
       defp respond_with_error(interaction, message) do
         response = %{
-          type: 4, # CHANNEL_MESSAGE_WITH_SOURCE
+          # CHANNEL_MESSAGE_WITH_SOURCE
+          type: 4,
           data: %{
             content: message,
-            flags: 64 # EPHEMERAL
+            # EPHEMERAL
+            flags: 64
           }
         }
-        
+
         case Nostrum.Api.create_interaction_response(interaction, response) do
-          {:ok, _} -> :ok
-          {:error, error} -> 
+          {:ok, _} ->
+            :ok
+
+          {:error, error} ->
             require Logger
             Logger.error("Failed to send error response: #{inspect(error)}")
             :ok

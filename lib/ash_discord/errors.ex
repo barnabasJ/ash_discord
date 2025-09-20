@@ -1,7 +1,7 @@
 defmodule AshDiscord.Errors do
   @moduledoc """
   Enhanced error handling and reporting for AshDiscord library.
-  
+
   Provides production-ready error messages with clear guidance for developers,
   structured error reporting, and context-aware error formatting.
   """
@@ -9,7 +9,7 @@ defmodule AshDiscord.Errors do
   defmodule ConfigurationError do
     @moduledoc """
     Raised when there's a configuration issue that prevents proper operation.
-    
+
     Includes detailed guidance on how to fix the issue and examples of correct configuration.
     """
     defexception [:message, :context, :suggestions, :examples]
@@ -54,10 +54,10 @@ defmodule AshDiscord.Errors do
         |> Enum.join("\n")
 
       """
-      
+
       📍 Context:
       #{context_info}
-      
+
       """
     end
 
@@ -73,7 +73,7 @@ defmodule AshDiscord.Errors do
       """
       💡 Suggested Fixes:
       #{formatted_suggestions}
-      
+
       """
     end
 
@@ -96,7 +96,7 @@ defmodule AshDiscord.Errors do
   defmodule InteractionError do
     @moduledoc """
     Errors related to Discord interaction processing.
-    
+
     Includes context about the interaction and suggested recovery actions.
     """
     defexception [:message, :interaction_id, :command, :reason, :recovery_actions]
@@ -187,9 +187,7 @@ defmodule AshDiscord.Errors do
   Creates an interaction error with recovery guidance.
   """
   def interaction_error(message, opts \\ []) do
-    InteractionError.exception(
-      Keyword.put(opts, :message, message)
-    )
+    InteractionError.exception(Keyword.put(opts, :message, message))
   end
 
   @doc """
@@ -211,7 +209,7 @@ defmodule AshDiscord.Errors do
       %{__struct__: struct_name} ->
         if struct_name |> to_string() |> String.contains?("NotFound") do
           %{
-            user_message: "The requested resource was not found", 
+            user_message: "The requested resource was not found",
             developer_message: "Resource lookup failed",
             error_type: :not_found,
             context: context

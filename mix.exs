@@ -37,6 +37,7 @@ defmodule AshDiscord.MixProject do
 
   defp deps do
     [
+      {:mix_test_watch, "~> 1.0", only: [:dev, :test]},
       # Core dependencies
       {:ash, "~> 3.0"},
       {:spark, "~> 2.0"},
@@ -49,6 +50,7 @@ defmodule AshDiscord.MixProject do
       {:phoenix_pubsub, "~> 2.1", only: :test},
 
       # Development and testing
+      {:igniter, "~> 0.6", only: [:dev, :test]},
       {:sourceror, "~> 1.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
@@ -92,7 +94,7 @@ defmodule AshDiscord.MixProject do
       # Test environment setup aliases  
       "test.setup": &test_setup/1,
       "test.migrate": ["cmd MIX_ENV=test mix ash.migrate"],
-      "test.rollback": ["cmd MIX_ENV=test mix ash.rollback"], 
+      "test.rollback": ["cmd MIX_ENV=test mix ash.rollback"],
       "test.reset": &test_reset/1,
       "test.tear_down": ["cmd MIX_ENV=test mix ash.tear_down"],
 

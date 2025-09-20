@@ -172,7 +172,11 @@ defmodule AshDiscord.CommandFilter do
     rescue
       error ->
         require Logger
-        Logger.warning("Filter #{inspect(filter_module)}.#{function_name} failed: #{inspect(error)}")
+
+        Logger.warning(
+          "Filter #{inspect(filter_module)}.#{function_name} failed: #{inspect(error)}"
+        )
+
         default
     end
   end

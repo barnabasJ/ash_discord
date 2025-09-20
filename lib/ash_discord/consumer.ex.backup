@@ -903,7 +903,7 @@ defmodule AshDiscord.Consumer do
                 user_creator: user_creator
               )
             else
-              Logger.warn("Command #{command_name} filtered for guild #{interaction.guild_id}")
+              Logger.warning("Command #{command_name} filtered for guild #{interaction.guild_id}")
               respond_with_error(interaction, "This command is not available in this server")
             end
         end

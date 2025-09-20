@@ -7,7 +7,7 @@ defmodule AshDiscord.Transformers.ValidateCommands do
   - Referenced resources and actions exist
   - Option types are valid
   - Command descriptions meet Discord requirements
-  
+
   Enhanced with production-ready error messages that provide clear guidance
   on how to fix configuration issues.
   """
@@ -45,13 +45,13 @@ defmodule AshDiscord.Transformers.ValidateCommands do
   defp validate_command(command, module, index) do
     issues = []
 
-    issues = 
+    issues =
       case validate_command_name_enhanced(command.name) do
         :ok -> issues
         {:error, issue} -> [issue | issues]
       end
 
-    issues = 
+    issues =
       if command.type in [:user, :message] do
         issues
       else
@@ -61,7 +61,7 @@ defmodule AshDiscord.Transformers.ValidateCommands do
         end
       end
 
-    issues = 
+    issues =
       if command.type in [:user, :message] do
         issues
       else
@@ -72,7 +72,7 @@ defmodule AshDiscord.Transformers.ValidateCommands do
         end
       end
 
-    issues = 
+    issues =
       case validate_command_resource_exists(command, module) do
         :ok -> issues
         {:error, issue} -> [issue | issues]
@@ -82,7 +82,13 @@ defmodule AshDiscord.Transformers.ValidateCommands do
       :ok
     else
       error = Errors.invalid_command_error(command.name, module, Enum.reverse(issues))
-      {:error, DslError.exception(message: Exception.message(error), path: [:discord, :command, index], module: module)}
+
+      {:error,
+       DslError.exception(
+         message: Exception.message(error),
+         path: [:discord, :command, index],
+         module: module
+       )}
     end
   end
 
@@ -130,7 +136,7 @@ defmodule AshDiscord.Transformers.ValidateCommands do
   end
 
   defp validate_each_option_enhanced(options) do
-    issues = 
+    issues =
       options
       |> Enum.flat_map(&validate_option_enhanced/1)
 
@@ -144,13 +150,13 @@ defmodule AshDiscord.Transformers.ValidateCommands do
   defp validate_option_enhanced(option) do
     issues = []
 
-    issues = 
+    issues =
       case validate_option_name_enhanced(option.name) do
         :ok -> issues
         {:error, issue} -> [issue | issues]
       end
 
-    issues = 
+    issues =
       case validate_option_description_enhanced(option.description) do
         :ok -> issues
         {:error, issue} -> [issue | issues]

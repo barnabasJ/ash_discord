@@ -1,6 +1,6 @@
 defmodule AshDiscord.ConsumerFilterTest do
   use ExUnit.Case
-  
+
   # Skip Nostrum-dependent tests in CI or when Discord token is not available
   @moduletag :skip_on_ci
 
@@ -132,7 +132,8 @@ defmodule AshDiscord.ConsumerFilterTest do
           # Extract guild info from interaction for filtering
           %{
             id: Map.get(interaction, :guild_id, 0),
-            admin_permissions: false  # Would be determined by actual guild permissions
+            # Would be determined by actual guild permissions
+            admin_permissions: false
           }
         end
       end

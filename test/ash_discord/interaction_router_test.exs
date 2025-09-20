@@ -135,7 +135,8 @@ defmodule AshDiscord.InteractionRouterTest do
 
       # Update actions are not yet supported - router sends error response to Discord
       assert {:ok, response} = result
-      assert response.type == 4  # CHANNEL_MESSAGE_WITH_SOURCE
+      # CHANNEL_MESSAGE_WITH_SOURCE
+      assert response.type == 4
       assert String.contains?(response.data.content, "Error: An unexpected error occurred")
 
       # Guild should remain unchanged since update failed
@@ -235,9 +236,10 @@ defmodule AshDiscord.InteractionRouterTest do
   describe "automatic user resolution system (Task 19)" do
     test "automatic user resolution creates actors from Discord data" do
       discord_user = %{id: "123456789", username: "testuser"}
+
       interaction = %{
         id: "interaction_129",
-        token: "interaction_token", 
+        token: "interaction_token",
         type: 2,
         data: %{name: "hello", options: []},
         guild_id: "123456789",
@@ -254,24 +256,28 @@ defmodule AshDiscord.InteractionRouterTest do
       end
 
       command = find_command_for_test(TestApp.Discord, "hello")
-      
+
       # Route with explicit user_creator
-      result = InteractionRouter.route_interaction(interaction, command, user_creator: user_creator)
+      result =
+        InteractionRouter.route_interaction(interaction, command, user_creator: user_creator)
+
       assert {:ok, _response} = result
 
       # Verify user was created in database
       users = TestApp.Discord.User.read!()
-      assert Enum.any?(users, fn user -> 
-        user.discord_id == String.to_integer(discord_user.id)
-      end)
+
+      assert Enum.any?(users, fn user ->
+               user.discord_id == String.to_integer(discord_user.id)
+             end)
     end
 
     test "user resolution falls back to basic struct when no user_resource configured" do
       discord_user = %{id: "987654321", username: "fallbackuser"}
+
       interaction = %{
         id: "interaction_130",
         token: "interaction_token",
-        type: 2, 
+        type: 2,
         data: %{name: "hello", options: []},
         guild_id: "123456789",
         channel_id: "987654321",
@@ -279,17 +285,17 @@ defmodule AshDiscord.InteractionRouterTest do
       }
 
       command = find_command_for_test(TestApp.Discord, "hello")
-      
+
       # Route without user_creator - should use fallback
       result = InteractionRouter.route_interaction(interaction, command, user_creator: nil)
       assert {:ok, _response} = result
     end
-
   end
 
   describe "discord context setting (Task 20)" do
     test "discord context sets actor only" do
       discord_user = %{id: "555666777", username: "contextuser"}
+
       interaction = %{
         id: "interaction_132",
         token: "interaction_token",
@@ -308,19 +314,22 @@ defmodule AshDiscord.InteractionRouterTest do
       end
 
       command = find_command_for_test(TestApp.Discord, "hello")
-      result = InteractionRouter.route_interaction(interaction, command, user_creator: user_creator)
-      
+
+      result =
+        InteractionRouter.route_interaction(interaction, command, user_creator: user_creator)
+
       # Should succeed with actor set from Discord context
       assert {:ok, _response} = result
 
       # Verify user was resolved and used as actor
       users = TestApp.Discord.User.read!()
+
       assert Enum.any?(users, fn user ->
-        user.discord_id == String.to_integer(discord_user.id)
-      end)
+               user.discord_id == String.to_integer(discord_user.id)
+             end)
     end
 
-    test "generic Discord context management supports multiple context patterns" do  
+    test "generic Discord context management supports multiple context patterns" do
       # Test that context can be passed in different patterns
       interaction = %{
         id: "interaction_133",
@@ -329,7 +338,8 @@ defmodule AshDiscord.InteractionRouterTest do
         data: %{name: "hello", options: []},
         guild_id: "123456789",
         channel_id: "987654321",
-        member: %{user: %{id: "888999000"}}  # Member pattern instead of direct user
+        # Member pattern instead of direct user
+        member: %{user: %{id: "888999000"}}
       }
 
       user_creator = fn discord_user_data ->
@@ -337,8 +347,10 @@ defmodule AshDiscord.InteractionRouterTest do
       end
 
       command = find_command_for_test(TestApp.Discord, "hello")
-      result = InteractionRouter.route_interaction(interaction, command, user_creator: user_creator)
-      
+
+      result =
+        InteractionRouter.route_interaction(interaction, command, user_creator: user_creator)
+
       assert {:ok, _response} = result
     end
   end

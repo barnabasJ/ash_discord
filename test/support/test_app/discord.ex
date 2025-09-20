@@ -64,7 +64,7 @@ defmodule TestApp.Discord do
 
   # Domain interface methods for testing
   def from_discord_guild(attrs), do: TestApp.Discord.Guild.from_discord(attrs)
-  def from_discord_message(attrs), do: TestApp.Discord.Message.from_discord(attrs) 
+  def from_discord_message(attrs), do: TestApp.Discord.Message.from_discord(attrs)
   def from_discord_user(attrs), do: TestApp.Discord.User.from_discord(attrs)
 
   # Generic create method with resource and action

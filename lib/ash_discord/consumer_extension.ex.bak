@@ -18,7 +18,6 @@ defmodule AshDiscord.ConsumerExtension do
           guild_resource MyApp.Discord.Guild
           message_resource MyApp.Discord.Message
           user_resource MyApp.Accounts.User
-          auto_create_users true
         end
       end
 

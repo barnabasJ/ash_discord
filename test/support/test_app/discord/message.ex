@@ -59,7 +59,16 @@ defmodule TestApp.Discord.Message do
     end
 
     create :from_discord do
-      accept [:discord_id, :content, :channel_id, :author_id, :guild_id, :timestamp, :edited_timestamp]
+      accept [
+        :discord_id,
+        :content,
+        :channel_id,
+        :author_id,
+        :guild_id,
+        :timestamp,
+        :edited_timestamp
+      ]
+
       upsert? true
       upsert_identity :unique_discord_id
       upsert_fields [:content, :channel_id, :author_id, :guild_id, :timestamp, :edited_timestamp]

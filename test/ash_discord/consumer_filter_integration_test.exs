@@ -148,7 +148,8 @@ defmodule AshDiscord.ConsumerFilterIntegrationTest do
       end
 
       command = %{name: :admin_ban, description: "Ban a user"}
-      guild = %{id: 123, admin_permissions: true}  # Admin permissions
+      # Admin permissions
+      guild = %{id: 123, admin_permissions: true}
       filters = [TestFilter, RestrictiveFilter]
 
       # Even with admin permissions, RestrictiveFilter blocks ban commands
@@ -162,8 +163,8 @@ defmodule AshDiscord.ConsumerFilterIntegrationTest do
     test "guild context extraction pattern" do
       # Test the expected guild context structure
       interaction = %{
-        guild_id: 123456789,
-        user: %{id: 987654321}
+        guild_id: 123_456_789,
+        user: %{id: 987_654_321}
       }
 
       guild_context = %{
@@ -171,7 +172,7 @@ defmodule AshDiscord.ConsumerFilterIntegrationTest do
         interaction: interaction
       }
 
-      assert guild_context.id == 123456789
+      assert guild_context.id == 123_456_789
       assert guild_context.interaction == interaction
     end
 
@@ -185,7 +186,9 @@ defmodule AshDiscord.ConsumerFilterIntegrationTest do
       assert single_as_list == [TestFilter]
 
       # Multiple filters (already list)
-      multiple_as_list = if is_list(multiple_filters), do: multiple_filters, else: [multiple_filters]
+      multiple_as_list =
+        if is_list(multiple_filters), do: multiple_filters, else: [multiple_filters]
+
       assert multiple_as_list == [TestFilter, TestFilter]
 
       # Nil filter

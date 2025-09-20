@@ -16,7 +16,16 @@ defmodule AshDiscord.DslTest do
       assert length(commands) == 7
 
       command_names = commands |> Enum.map(& &1.name) |> Enum.sort()
-      assert command_names == [:admin_ban, :configure, :create_message, :echo, :hello, :ping, :search]
+
+      assert command_names == [
+               :admin_ban,
+               :configure,
+               :create_message,
+               :echo,
+               :hello,
+               :ping,
+               :search
+             ]
     end
 
     test "hello command has correct structure" do

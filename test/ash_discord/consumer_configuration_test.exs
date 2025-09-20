@@ -1,7 +1,7 @@
 defmodule AshDiscord.ConsumerConfigurationTest do
   @moduledoc """
   Tests for AshDiscord Consumer configuration system (Tasks 19-20).
-  
+
   Tests the automatic user resolution system and Discord context abstraction
   as outlined in the library extraction breakdown Tasks 19-20.
   """
@@ -17,7 +17,7 @@ defmodule AshDiscord.ConsumerConfigurationTest do
       # Define a test consumer with user_resource configuration
       defmodule TestUserResolutionConsumer do
         use AshDiscord.Consumer, domains: [TestApp.Discord]
-        
+
         # Override the user creation callback
         def create_user_from_discord(discord_user) do
           TestApp.Discord.User.from_discord!(%{
@@ -36,7 +36,7 @@ defmodule AshDiscord.ConsumerConfigurationTest do
     test "consumer can specify custom user resolution logic" do
       defmodule CustomUserResolutionConsumer do
         use AshDiscord.Consumer, domains: [TestApp.Discord]
-        
+
         # Custom logic for user creation with additional attributes
         def create_user_from_discord(discord_user) do
           TestApp.Discord.User.from_discord!(%{
@@ -66,7 +66,7 @@ defmodule AshDiscord.ConsumerConfigurationTest do
     test "user resolution handles errors gracefully" do
       defmodule ErrorHandlingConsumer do
         use AshDiscord.Consumer, domains: [TestApp.Discord]
-        
+
         def create_user_from_discord(_discord_user) do
           {:error, :test_user_creation_failed}
         end
@@ -82,7 +82,7 @@ defmodule AshDiscord.ConsumerConfigurationTest do
     test "consumer provides minimal Discord context for command execution" do
       defmodule ContextTestConsumer do
         use AshDiscord.Consumer, domains: [TestApp.Discord]
-        
+
         def create_user_from_discord(discord_user) do
           TestApp.Discord.User.from_discord!(%{discord_id: discord_user.id})
         end
@@ -91,7 +91,7 @@ defmodule AshDiscord.ConsumerConfigurationTest do
       # Verify consumer is properly configured
       domains = ContextTestConsumer.domains()
       assert TestApp.Discord in domains
-      
+
       # The user creation callback is used internally by the InteractionRouter
       # We tested its functionality in the InteractionRouter tests
     end
@@ -100,7 +100,7 @@ defmodule AshDiscord.ConsumerConfigurationTest do
       # Test that different consumer configurations can work
       defmodule FlexibleContextConsumer do
         use AshDiscord.Consumer, domains: [TestApp.Discord]
-        
+
         def create_user_from_discord(discord_user) do
           case discord_user do
             %{id: id, username: username} when is_binary(username) ->
@@ -108,6 +108,7 @@ defmodule AshDiscord.ConsumerConfigurationTest do
                 discord_id: id,
                 username: username
               })
+
             %{id: id} ->
               TestApp.Discord.User.from_discord!(%{discord_id: id})
           end
@@ -121,7 +122,7 @@ defmodule AshDiscord.ConsumerConfigurationTest do
     test "context management is separated from application-specific logic" do
       defmodule CleanContextConsumer do
         use AshDiscord.Consumer, domains: [TestApp.Discord]
-        
+
         def create_user_from_discord(discord_user) do
           # Only Discord command user is set as actor
           # Application logic is separate
@@ -133,7 +134,7 @@ defmodule AshDiscord.ConsumerConfigurationTest do
       domains = CleanContextConsumer.domains()
       assert length(domains) == 1
       assert TestApp.Discord in domains
-      
+
       # Application would add additional context in their action implementations
       # This test verifies the library provides minimal, clean Discord context only
     end
@@ -145,7 +146,7 @@ defmodule AshDiscord.ConsumerConfigurationTest do
       # Runtime errors from user creation are handled by InteractionRouter  
       defmodule InvalidUserCreatorConsumer do
         use AshDiscord.Consumer, domains: [TestApp.Discord]
-        
+
         # This would cause runtime errors, but compiles fine
         def create_user_from_discord(_discord_user) do
           raise "Intentional error for testing"

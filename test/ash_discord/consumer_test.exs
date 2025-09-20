@@ -142,8 +142,8 @@ defmodule AshDiscord.ConsumerTest do
 
       created_guild = hd(guilds)
       assert created_guild.discord_id == guild_data.id
-      # From our mock
-      assert created_guild.name == "Test Guild #{guild_data.id}"
+      # Should match the Discord struct name directly
+      assert created_guild.name == guild_data.name
     end
 
     test "message creation works with consumer" do

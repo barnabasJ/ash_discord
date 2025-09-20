@@ -49,6 +49,9 @@ defmodule AshDiscord.Test.Generators.Discord do
   - `application_command/1` - Command definitions
   - `interaction_data/1` - Interaction command data
   - `option/1` - Command options
+  - `permission_overwrite/1` - Channel permission overwrites
+  - `voice_state/1` - Voice channel connection states
+  - `message_attachment/1` - Message file attachments
 
   ## Utilities
 
@@ -660,6 +663,124 @@ defmodule AshDiscord.Test.Generators.Discord do
     }
 
     merge_attrs(defaults, attrs)
+  end
+
+  @doc """
+  Generates a Discord permission overwrite struct.
+
+  ## Options
+
+  - `:id` - Target ID (user or role ID) (defaults to generated snowflake)
+  - `:type` - Overwrite type (0=role, 1=member) (defaults to 0)
+  - `:allow` - Allowed permissions bitfield (defaults to 0)
+  - `:deny` - Denied permissions bitfield (defaults to 0)
+
+  ## Examples
+
+      iex> overwrite = permission_overwrite(%{type: 1, allow: 1024})
+      iex> overwrite.type
+      1
+      iex> overwrite.allow
+      1024
+  """
+  def permission_overwrite(attrs \\ %{}) do
+    defaults = %{
+      id: generate_snowflake(),
+      type: Faker.Util.pick([0, 1]),
+      allow: Faker.random_between(0, 2_147_483_647),
+      deny: Faker.random_between(0, 2_147_483_647)
+    }
+
+    struct(Nostrum.Struct.Overwrite, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
+  Generates a Discord voice state struct.
+
+  ## Options
+
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+  - `:channel_id` - Voice channel ID (defaults to generated snowflake)
+  - `:user_id` - User ID (defaults to generated snowflake)
+  - `:session_id` - Voice session ID (defaults to generated UUID)
+  - `:deaf` - Whether user is deafened (defaults to false)
+  - `:mute` - Whether user is muted (defaults to false)
+  - `:self_deaf` - Whether user is self-deafened (defaults to false)
+  - `:self_mute` - Whether user is self-muted (defaults to false)
+  - `:suppress` - Whether user is suppressed (defaults to false)
+
+  ## Examples
+
+      iex> voice_state = voice_state(%{deaf: true})
+      iex> voice_state.deaf
+      true
+  """
+  def voice_state(attrs \\ %{}) do
+    defaults = %{
+      guild_id: generate_snowflake(),
+      channel_id: generate_snowflake(),
+      user_id: generate_snowflake(),
+      session_id: Faker.UUID.v4(),
+      deaf: false,
+      mute: false,
+      self_deaf: false,
+      self_mute: false,
+      self_stream: false,
+      self_video: false,
+      suppress: false
+    }
+
+    struct(Nostrum.Struct.VoiceState, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
+  Generates a Discord message attachment struct.
+
+  ## Options
+
+  - `:id` - Attachment ID (defaults to generated snowflake)
+  - `:filename` - File name (defaults to generated filename)
+  - `:size` - File size in bytes (defaults to random size)
+  - `:url` - Attachment URL (defaults to generated URL)
+  - `:proxy_url` - Proxy URL (defaults to generated URL)
+  - `:height` - Image height in pixels (defaults to random for images)
+  - `:width` - Image width in pixels (defaults to random for images)
+  - `:content_type` - MIME type (defaults to based on filename)
+
+  ## Examples
+
+      iex> attachment = message_attachment(%{filename: "image.png"})
+      iex> attachment.filename
+      "image.png"
+  """
+  def message_attachment(attrs \\ %{}) do
+    extension = Faker.Util.pick(["png", "jpg", "gif", "pdf", "txt"])
+    filename = "#{Faker.Lorem.word()}.#{extension}"
+
+    defaults = %{
+      id: generate_snowflake(),
+      filename: filename,
+      size: Faker.random_between(1024, 8_388_608),
+      url:
+        "https://cdn.discordapp.com/attachments/#{generate_snowflake()}/#{generate_snowflake()}/#{filename}",
+      proxy_url:
+        "https://media.discordapp.net/attachments/#{generate_snowflake()}/#{generate_snowflake()}/#{filename}",
+      height:
+        if(extension in ["png", "jpg", "gif"], do: Faker.random_between(100, 1080), else: nil),
+      width:
+        if(extension in ["png", "jpg", "gif"], do: Faker.random_between(100, 1920), else: nil),
+      content_type:
+        case extension do
+          "png" -> "image/png"
+          "jpg" -> "image/jpeg"
+          "gif" -> "image/gif"
+          "pdf" -> "application/pdf"
+          "txt" -> "text/plain"
+          _ -> nil
+        end
+    }
+
+    struct(Nostrum.Struct.Message.Attachment, merge_attrs(defaults, attrs))
   end
 
   # Private helper functions

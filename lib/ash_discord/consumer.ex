@@ -623,14 +623,7 @@ defmodule AshDiscord.Consumer do
           else
             case message_resource
                  |> Ash.Changeset.for_create(:from_discord, %{
-                   discord_id: message.id,
-                   channel_id: message.channel_id,
-                   guild_id: message.guild_id,
-                   content: message.content,
-                   author_id: message.author.id,
-                   timestamp: message.timestamp && parse_timestamp(message.timestamp),
-                   edited_timestamp:
-                     message.edited_timestamp && parse_timestamp(message.edited_timestamp)
+                   discord_struct: message
                  })
                  |> Ash.create(actor: %{role: :bot}) do
               {:ok, _message_record} ->

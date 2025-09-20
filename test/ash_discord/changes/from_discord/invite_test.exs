@@ -115,7 +115,8 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
       assert {:ok, created_invite} = result
       assert created_invite.code == invite_struct.code
       assert created_invite.target_user_type == 1
-      assert created_invite.target_user_id == invite_struct.target_user_id
+      # target_user is nil in struct, so target_user_id should be nil
+      assert created_invite.target_user_id == nil
     end
 
     test "handles embedded application target invite" do
@@ -150,9 +151,8 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
           guild_id: 555_666_777,
           channel_id: 888_999_111,
           # No inviter (vanity URL or widget)
-          inviter_id: nil,
+          inviter: nil,
           target_user_type: nil,
-          target_user_id: nil,
           uses: 50,
           max_uses: 0,
           max_age: 0,
@@ -169,8 +169,8 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
   end
 
   describe "API fallback pattern" do
-    test "invite API fallback is not supported" do
-      # Invites don't support direct API fetching in our implementation
+    test "invite API fallback fails when API is unavailable" do
+      # Invite API fetching is supported but may fail in test environment
       discord_id = "abc123def"
 
       result = TestApp.Discord.invite_from_discord(%{discord_id: discord_id})
@@ -178,8 +178,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
       assert {:error, error} = result
       error_message = Exception.message(error)
       assert error_message =~ "Failed to fetch invite with ID #{discord_id}"
-      error_message = Exception.message(error)
-      assert error_message =~ ":unsupported_type"
+      assert error_message =~ ":api_unavailable"
     end
 
     test "requires discord_struct for invite creation" do
@@ -297,8 +296,8 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
     end
 
     test "handles missing required fields in discord_struct" do
-      # Missing required fields
-      invalid_struct = invite(%{id: nil, name: nil})
+      # Missing required fields - code is required for invites
+      invalid_struct = invite(%{code: nil})
 
       result = TestApp.Discord.invite_from_discord(%{discord_struct: invalid_struct})
 

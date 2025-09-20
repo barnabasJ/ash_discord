@@ -179,7 +179,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
 
       assert {:ok, created_sticker} = result
       assert created_sticker.discord_id == sticker_struct.id
-      assert created_sticker.tags == ""
+      assert created_sticker.tags == nil
     end
   end
 

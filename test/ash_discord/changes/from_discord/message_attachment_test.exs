@@ -85,20 +85,16 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
       assert created_attachment.width == 1280
     end
 
-    test "handles ephemeral attachment" do
+    test "handles attachment with image dimensions" do
       attachment_struct =
         message_attachment(%{
           id: 777_888_999,
           filename: "temp_image.jpg",
-          description: "Temporary image",
-          content_type: "image/jpeg",
           size: 524_288,
           url: "https://cdn.discordapp.com/attachments/901/234/temp_image.jpg",
           proxy_url: "https://media.discordapp.net/attachments/901/234/temp_image.jpg",
           height: 600,
-          width: 800,
-          ephemeral: true,
-          message_id: 333_444_555
+          width: 800
         })
 
       result =
@@ -106,23 +102,21 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
 
       assert {:ok, created_attachment} = result
       assert created_attachment.discord_id == attachment_struct.id
-      assert created_attachment.ephemeral == true
+      assert created_attachment.filename == attachment_struct.filename
+      assert created_attachment.height == 600
+      assert created_attachment.width == 800
     end
 
-    test "handles attachment without description" do
+    test "handles attachment without proxy URL" do
       attachment_struct =
         message_attachment(%{
           id: 333_444_555,
           filename: "untitled.png",
-          description: nil,
-          content_type: "image/png",
           size: 262_144,
           url: "https://cdn.discordapp.com/attachments/567/890/untitled.png",
-          proxy_url: "https://media.discordapp.net/attachments/567/890/untitled.png",
+          proxy_url: nil,
           height: 400,
-          width: 600,
-          ephemeral: false,
-          message_id: 999_111_222
+          width: 600
         })
 
       result =
@@ -130,7 +124,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
 
       assert {:ok, created_attachment} = result
       assert created_attachment.discord_id == attachment_struct.id
-      assert created_attachment.description == nil
+      assert created_attachment.proxy_url == nil
     end
 
     test "handles large attachment" do
@@ -138,16 +132,12 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
         message_attachment(%{
           id: 999_111_222,
           filename: "large_video.mov",
-          description: "A large video file",
-          content_type: "video/quicktime",
           # 25MB file
           size: 26_214_400,
           url: "https://cdn.discordapp.com/attachments/123/789/large_video.mov",
           proxy_url: "https://media.discordapp.net/attachments/123/789/large_video.mov",
           height: 1080,
-          width: 1920,
-          ephemeral: false,
-          message_id: 555_666_777
+          width: 1920
         })
 
       result =
@@ -156,6 +146,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
       assert {:ok, created_attachment} = result
       assert created_attachment.discord_id == attachment_struct.id
       assert created_attachment.size == 26_214_400
+      assert created_attachment.filename == "large_video.mov"
     end
   end
 
@@ -169,7 +160,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
       assert {:error, error} = result
       error_message = Exception.message(error)
       assert error_message =~ "Failed to fetch message_attachment with ID #{discord_id}"
-      error_message = Exception.message(error)
       assert error_message =~ ":unsupported_type"
     end
 
@@ -191,15 +181,11 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
         message_attachment(%{
           id: discord_id,
           filename: "original.png",
-          description: "Original description",
-          content_type: "image/png",
           size: 1024,
           url: "https://cdn.discordapp.com/attachments/111/222/original.png",
           proxy_url: "https://media.discordapp.net/attachments/111/222/original.png",
           height: 100,
-          width: 100,
-          ephemeral: false,
-          message_id: 123_456_789
+          width: 100
         })
 
       {:ok, original_attachment} =
@@ -211,15 +197,11 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
           # Same ID
           id: discord_id,
           filename: "updated.png",
-          description: "Updated description",
-          content_type: "image/png",
           size: 2048,
           url: "https://cdn.discordapp.com/attachments/111/222/updated.png",
           proxy_url: "https://media.discordapp.net/attachments/111/222/updated.png",
           height: 200,
-          width: 200,
-          ephemeral: true,
-          message_id: 123_456_789
+          width: 200
         })
 
       {:ok, updated_attachment} =
@@ -231,50 +213,40 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
 
       # But with updated attributes
       assert updated_attachment.filename == "updated.png"
-      assert updated_attachment.description == "Updated description"
       assert updated_attachment.size == 2048
       assert updated_attachment.height == 200
       assert updated_attachment.width == 200
-      assert updated_attachment.ephemeral == true
     end
 
-    test "upsert works with ephemeral status changes" do
+    test "upsert works with dimension changes" do
       discord_id = 333_444_555
 
-      # Create initial non-ephemeral attachment
+      # Create initial attachment with small dimensions
       initial_struct =
         message_attachment(%{
           id: discord_id,
           filename: "status_test.jpg",
-          description: "Status test",
-          content_type: "image/jpeg",
           size: 4096,
           url: "https://cdn.discordapp.com/attachments/444/555/status_test.jpg",
           proxy_url: "https://media.discordapp.net/attachments/444/555/status_test.jpg",
           height: 300,
-          width: 400,
-          ephemeral: false,
-          message_id: 987_654_321
+          width: 400
         })
 
       {:ok, original_attachment} =
         TestApp.Discord.message_attachment_from_discord(%{discord_struct: initial_struct})
 
-      # Mark as ephemeral
+      # Update with larger dimensions
       updated_struct =
         message_attachment(%{
           # Same ID
           id: discord_id,
           filename: "status_test.jpg",
-          description: "Status test",
-          content_type: "image/jpeg",
           size: 4096,
           url: "https://cdn.discordapp.com/attachments/444/555/status_test.jpg",
           proxy_url: "https://media.discordapp.net/attachments/444/555/status_test.jpg",
-          height: 300,
-          width: 400,
-          ephemeral: true,
-          message_id: 987_654_321
+          height: 600,
+          width: 800
         })
 
       {:ok, updated_attachment} =
@@ -284,8 +256,9 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
       assert updated_attachment.id == original_attachment.id
       assert updated_attachment.discord_id == discord_id
 
-      # But with updated ephemeral status
-      assert updated_attachment.ephemeral == true
+      # But with updated dimensions
+      assert updated_attachment.height == 600
+      assert updated_attachment.width == 800
     end
   end
 

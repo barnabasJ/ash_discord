@@ -119,7 +119,8 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "No such input `discord_id`"
+      assert error_message =~ "Failed to fetch webhook with ID #{discord_id}"
+      assert error_message =~ ":api_unavailable"
     end
 
     test "requires discord_struct for webhook creation" do

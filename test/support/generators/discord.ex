@@ -510,7 +510,6 @@ defmodule AshDiscord.Test.Generators.Discord do
   def webhook(attrs \\ %{}) do
     defaults = %{
       id: generate_snowflake(),
-      type: 1,
       guild_id: generate_snowflake(),
       channel_id: generate_snowflake(),
       user: user(),

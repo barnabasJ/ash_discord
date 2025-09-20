@@ -66,8 +66,13 @@ defmodule TestApp.Discord.Invite do
       primary?(true)
 
       argument(:discord_struct, :struct,
-        allow_nil?: false,
+        allow_nil?: true,
         description: "Discord invite struct to transform"
+      )
+
+      argument(:discord_id, :string,
+        allow_nil?: true,
+        description: "Discord invite code for API fallback"
       )
 
       change({AshDiscord.Changes.FromDiscord, type: :invite})

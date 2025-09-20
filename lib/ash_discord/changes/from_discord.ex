@@ -249,7 +249,6 @@ defmodule AshDiscord.Changes.FromDiscord do
       :permission_overwrites,
       Transformations.transform_permission_overwrites(discord_data.permission_overwrites)
     )
-    |> Transformations.manage_guild_relationship(discord_data.guild_id)
   end
 
   defp transform_message(changeset, discord_data) do
@@ -294,8 +293,8 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
     |> maybe_set_attribute(:avatar, discord_data.avatar)
     |> Ash.Changeset.force_change_attribute(:channel_id, discord_data.channel_id)
+    |> maybe_set_attribute(:guild_id, discord_data.guild_id)
     |> maybe_set_attribute(:token, discord_data.token)
-    |> Transformations.manage_channel_relationship(discord_data.channel_id)
   end
 
   defp transform_invite(changeset, discord_data) do
@@ -307,8 +306,6 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> maybe_set_attribute(:uses, discord_data.uses || 0)
     |> maybe_set_attribute(:max_uses, discord_data.max_uses || 0)
     |> Transformations.set_datetime_field(:expires_at, discord_data.expires_at)
-    |> Transformations.manage_guild_relationship(discord_data.guild_id)
-    |> Transformations.manage_channel_relationship(discord_data.channel_id)
   end
 
   defp transform_message_attachment(changeset, discord_data) do
@@ -346,7 +343,6 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> maybe_set_attribute(:description, discord_data.description)
     |> maybe_set_attribute(:tags, discord_data.tags)
     |> maybe_set_attribute(:format_type, discord_data.format_type)
-    |> Transformations.manage_guild_relationship(discord_data.guild_id)
   end
 
   defp transform_interaction(changeset, discord_data) do
@@ -358,6 +354,5 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> Ash.Changeset.force_change_attribute(:user_id, discord_data.user.id)
     |> Ash.Changeset.force_change_attribute(:token, discord_data.token)
     |> maybe_set_attribute(:data, discord_data.data)
-    |> Transformations.manage_guild_relationship(discord_data.guild_id)
   end
 end

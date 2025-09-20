@@ -76,8 +76,13 @@ defmodule TestApp.Discord.Channel do
       primary?(true)
 
       argument(:discord_struct, :struct,
-        allow_nil?: false,
+        allow_nil?: true,
         description: "Discord channel struct to transform"
+      )
+
+      argument(:discord_id, :integer,
+        allow_nil?: true,
+        description: "Discord channel ID for API fallback"
       )
 
       change({AshDiscord.Changes.FromDiscord, type: :channel})

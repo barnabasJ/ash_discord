@@ -59,8 +59,13 @@ defmodule TestApp.Discord.Sticker do
       primary?(true)
 
       argument(:discord_struct, :struct,
-        allow_nil?: false,
+        allow_nil?: true,
         description: "Discord sticker struct to transform"
+      )
+
+      argument(:discord_id, :integer,
+        allow_nil?: true,
+        description: "Discord sticker ID for API fallback"
       )
 
       change({AshDiscord.Changes.FromDiscord, type: :sticker})

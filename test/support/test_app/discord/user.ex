@@ -36,7 +36,15 @@ defmodule TestApp.Discord.User do
 
       accept([:discord_id])
 
-      argument(:discord_struct, :map, description: "Discord user data to transform")
+      argument(:discord_struct, :map,
+        allow_nil?: true,
+        description: "Discord user data to transform"
+      )
+
+      argument(:discord_id, :integer,
+        allow_nil?: true,
+        description: "Discord user ID for API fallback"
+      )
 
       upsert?(true)
       upsert_identity(:discord_id)

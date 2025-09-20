@@ -38,6 +38,11 @@ defmodule TestApp.Discord.Webhook do
       allow_nil?: true,
       public?: true
     )
+
+    attribute(:guild_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
   end
 
   identities do
@@ -54,20 +59,25 @@ defmodule TestApp.Discord.Webhook do
       primary?(true)
 
       argument(:discord_struct, :struct,
-        allow_nil?: false,
+        allow_nil?: true,
         description: "Discord webhook struct to transform"
+      )
+
+      argument(:discord_id, :integer,
+        allow_nil?: true,
+        description: "Discord webhook ID for API fallback"
       )
 
       change({AshDiscord.Changes.FromDiscord, type: :webhook})
 
       upsert?(true)
       upsert_identity(:discord_id)
-      upsert_fields([:name, :avatar, :channel_id, :token])
+      upsert_fields([:name, :avatar, :channel_id, :guild_id, :token])
     end
 
     update :update do
       primary?(true)
-      accept([:name, :avatar, :channel_id, :token])
+      accept([:name, :avatar, :channel_id, :guild_id, :token])
     end
   end
 end

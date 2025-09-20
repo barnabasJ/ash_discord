@@ -8,8 +8,6 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
 
-
-
   describe "struct-first pattern" do
     test "creates role from discord struct with all attributes" do
       role_struct =
@@ -108,12 +106,11 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
       assert {:ok, created_role} = result
       assert created_role.discord_id == role_struct.id
       assert created_role.name == role_struct.name
-      assert created_role.permissions == 8
+      assert created_role.permissions == "8"
     end
   end
 
   describe "API fallback pattern" do
-
     test "role API fallback is not supported" do
       # Roles don't support direct API fetching in our implementation
       discord_id = 999_888_777
@@ -177,9 +174,8 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
       assert updated_role.color == 65_280
       assert updated_role.hoist == true
       assert updated_role.position == 5
-      assert updated_role.permissions == 2048
+      assert updated_role.permissions == "2048"
       assert updated_role.mentionable == true
-
     end
 
     test "upsert works with permission changes" do
@@ -214,8 +210,7 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
       assert updated_role.discord_id == discord_id
 
       # But with updated permissions
-      assert updated_role.permissions == 8
-
+      assert updated_role.permissions == "8"
     end
   end
 

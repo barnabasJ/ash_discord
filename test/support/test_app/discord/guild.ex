@@ -36,7 +36,15 @@ defmodule TestApp.Discord.Guild do
       upsert_identity(:unique_discord_id)
       upsert_fields([:name, :description, :icon])
 
-      argument(:discord_struct, :map, description: "Discord guild data to transform")
+      argument(:discord_struct, :map,
+        allow_nil?: true,
+        description: "Discord guild data to transform"
+      )
+
+      argument(:discord_id, :integer,
+        allow_nil?: true,
+        description: "Discord guild ID for API fallback"
+      )
 
       change({AshDiscord.Changes.FromDiscord, type: :guild})
     end

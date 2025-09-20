@@ -8,15 +8,12 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
 
-
-
   describe "struct-first pattern" do
     test "creates webhook from discord struct with all attributes" do
       webhook_struct =
         webhook(%{
           id: 123_456_789,
           name: "Test Webhook",
-          type: 1,
           channel_id: 555_666_777,
           guild_id: 111_222_333,
           avatar: "webhook_avatar_hash",
@@ -28,7 +25,6 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
       assert {:ok, created_webhook} = result
       assert created_webhook.discord_id == webhook_struct.id
       assert created_webhook.name == webhook_struct.name
-      assert created_webhook.type == webhook_struct.type
       assert created_webhook.channel_id == webhook_struct.channel_id
       assert created_webhook.guild_id == webhook_struct.guild_id
       assert created_webhook.avatar == webhook_struct.avatar
@@ -40,7 +36,6 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
         webhook(%{
           id: 987_654_321,
           name: "No Avatar Webhook",
-          type: 1,
           channel_id: 777_888_999,
           guild_id: 333_444_555,
           avatar: nil,
@@ -61,7 +56,6 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
           id: 111_222_333,
           name: "Application Webhook",
           # Application webhook type
-          type: 3,
           channel_id: 444_555_666,
           guild_id: 777_888_999,
           avatar: "app_webhook_avatar",
@@ -73,7 +67,6 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
       assert {:ok, created_webhook} = result
       assert created_webhook.discord_id == webhook_struct.id
       assert created_webhook.name == webhook_struct.name
-      assert created_webhook.type == 3
       assert created_webhook.token == nil
     end
 
@@ -83,7 +76,6 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
           id: 777_888_999,
           name: "Channel Follower",
           # Channel follower webhook type
-          type: 2,
           channel_id: 999_111_222,
           guild_id: 333_444_555,
           avatar: "follower_avatar",
@@ -95,7 +87,6 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
       assert {:ok, created_webhook} = result
       assert created_webhook.discord_id == webhook_struct.id
       assert created_webhook.name == webhook_struct.name
-      assert created_webhook.type == 2
     end
 
     test "handles webhook without guild (DM webhook)" do
@@ -103,7 +94,6 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
         webhook(%{
           id: 333_444_555,
           name: "DM Webhook",
-          type: 1,
           channel_id: 666_777_888,
           # No guild for DM webhook
           guild_id: nil,
@@ -121,7 +111,6 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
   end
 
   describe "API fallback pattern" do
-
     test "webhook API fallback is not supported" do
       # Webhooks don't support direct API fetching in our implementation
       discord_id = 999_888_777
@@ -153,7 +142,6 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
         webhook(%{
           id: discord_id,
           name: "Original Webhook",
-          type: 1,
           channel_id: 111_222_333,
           guild_id: 444_555_666,
           avatar: "original_avatar",
@@ -169,7 +157,6 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
           # Same ID
           id: discord_id,
           name: "Updated Webhook",
-          type: 1,
           channel_id: 111_222_333,
           guild_id: 444_555_666,
           avatar: "updated_avatar",
@@ -187,7 +174,6 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
       assert updated_webhook.name == "Updated Webhook"
       assert updated_webhook.avatar == "updated_avatar"
       assert updated_webhook.token == "updated_token"
-
     end
 
     test "upsert works with type changes" do
@@ -198,7 +184,6 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
         webhook(%{
           id: discord_id,
           name: "Type Change Webhook",
-          type: 1,
           channel_id: 777_888_999,
           guild_id: 111_222_333,
           token: "type_token"
@@ -213,7 +198,6 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
           # Same ID
           id: discord_id,
           name: "Type Change Webhook",
-          type: 3,
           channel_id: 777_888_999,
           guild_id: 111_222_333,
           token: nil
@@ -227,9 +211,7 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
       assert updated_webhook.discord_id == discord_id
 
       # But with updated type and token
-      assert updated_webhook.type == 3
       assert updated_webhook.token == nil
-
     end
   end
 
@@ -259,7 +241,6 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
           id: 123_456_789,
           name: "Test Webhook",
           # Invalid type
-          type: 999,
           channel_id: 555_666_777,
           guild_id: 111_222_333
         })
@@ -284,8 +265,7 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
       malformed_struct = %{
         id: "not_an_integer",
         # Required field as nil
-        name: nil,
-        type: "not_an_integer"
+        name: nil
       }
 
       result = TestApp.Discord.webhook_from_discord(%{discord_struct: malformed_struct})

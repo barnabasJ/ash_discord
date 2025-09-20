@@ -72,16 +72,47 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
       :guild ->
         Nostrum.Api.Guild.get(discord_id)
 
+      :channel ->
+        Nostrum.Api.Channel.get(discord_id)
+
+      :webhook ->
+        Nostrum.Api.Webhook.get(discord_id)
+
+      :invite ->
+        # Invite uses code instead of ID
+        Nostrum.Api.Invite.get(discord_id)
+
+      :sticker ->
+        Nostrum.Api.Sticker.get(discord_id)
+
+      :message ->
+        # Message requires channel_id and message_id, can't fetch with just ID
+        {:error, :requires_channel_id}
+
+      :emoji ->
+        # Emoji requires guild_id and emoji_id, can't fetch with just ID
+        {:error, :requires_guild_id}
+
+      :role ->
+        # Role requires guild_id, can't fetch individual role with just ID
+        {:error, :requires_guild_id}
+
       _ ->
         {:error, :unsupported_type}
     end
   end
 
-  # Extract Discord ID from changeset attributes for API fetch
+  # Extract Discord ID from changeset arguments or attributes for API fetch
   defp extract_discord_id(changeset) do
-    case Ash.Changeset.get_attribute(changeset, :discord_id) do
-      nil -> nil
-      discord_id -> discord_id
+    case Ash.Changeset.get_argument(changeset, :discord_id) do
+      nil ->
+        case Ash.Changeset.get_attribute(changeset, :discord_id) do
+          nil -> nil
+          discord_id -> discord_id
+        end
+
+      discord_id ->
+        discord_id
     end
   end
 end

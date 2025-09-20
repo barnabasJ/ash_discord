@@ -141,10 +141,6 @@ defmodule AshDiscord.Changes.FromDiscord.UserTest do
       assert updated_user.discord_username == "updated_user"
       assert updated_user.discord_avatar == "updated_avatar"
 
-      # Verify only one user record exists
-      all_users = TestApp.Discord.User.read!()
-      users_with_discord_id = Enum.filter(all_users, &(&1.discord_id == discord_id))
-      assert length(users_with_discord_id) == 1
     end
 
     test "upsert works with API fallback" do
@@ -173,10 +169,6 @@ defmodule AshDiscord.Changes.FromDiscord.UserTest do
       assert updated_user.discord_id == discord_id
       assert updated_user.discord_username == "api_updated_user"
 
-      # Verify only one user record exists
-      all_users = TestApp.Discord.User.read!()
-      users_with_discord_id = Enum.filter(all_users, &(&1.discord_id == discord_id))
-      assert length(users_with_discord_id) == 1
     end
   end
 

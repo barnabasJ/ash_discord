@@ -5,14 +5,10 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
   Tests both struct-first and API fallback patterns, plus upsert behavior.
   """
 
-  use ExUnit.Case, async: true
+  use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
 
-  setup do
-    # Clear ETS tables before each test
-    :ets.delete_all_objects(TestApp.Discord.VoiceState)
-    :ok
-  end
+
 
   describe "struct-first pattern" do
     test "creates voice state from discord struct with all attributes" do
@@ -176,10 +172,6 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
   end
 
   describe "API fallback pattern" do
-    setup do
-      Mimic.copy(Nostrum.Api)
-      :ok
-    end
 
     test "voice state API fallback is not supported" do
       # Voice states don't support direct API fetching in our implementation

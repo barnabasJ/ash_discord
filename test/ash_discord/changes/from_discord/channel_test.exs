@@ -6,14 +6,10 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
   Special focus on permission overwrites transformation.
   """
 
-  use ExUnit.Case, async: true
+  use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
 
-  setup do
-    # Clear ETS tables before each test
-    :ets.delete_all_objects(TestApp.Discord.Channel)
-    :ok
-  end
+
 
   describe "struct-first pattern" do
     test "creates channel from discord struct with all attributes" do
@@ -137,10 +133,6 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
   end
 
   describe "API fallback pattern" do
-    setup do
-      Mimic.copy(Nostrum.Api)
-      :ok
-    end
 
     test "channel API fallback is not supported" do
       # Channels don't support direct API fetching in our implementation

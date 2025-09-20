@@ -22,14 +22,49 @@ defmodule TestApp.DataCase do
   setup _ do
     # Clean up ETS tables between tests
     on_exit(fn ->
-      # Clear all data from test resources
-      TestApp.Discord.Message
+      # Clear all data from test resources that have destroy actions
+      TestApp.Discord.User
       |> Ash.bulk_destroy!(:destroy, %{})
 
       TestApp.Discord.Guild
       |> Ash.bulk_destroy!(:destroy, %{})
 
-      TestApp.Discord.User
+      # GuildMember doesn't have a destroy action - skip it
+
+      TestApp.Discord.Role
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.Channel
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.Message
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.Emoji
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.VoiceState
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.Webhook
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.Invite
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.MessageAttachment
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.MessageReaction
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.TypingIndicator
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.Sticker
+      |> Ash.bulk_destroy!(:destroy, %{})
+
+      TestApp.Discord.Interaction
       |> Ash.bulk_destroy!(:destroy, %{})
     end)
 

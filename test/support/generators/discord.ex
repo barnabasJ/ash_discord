@@ -52,6 +52,10 @@ defmodule AshDiscord.Test.Generators.Discord do
   - `permission_overwrite/1` - Channel permission overwrites
   - `voice_state/1` - Voice channel connection states
   - `message_attachment/1` - Message file attachments
+  - `message_reaction/1` - Message reactions with emoji data
+  - `guild_member/1` - Guild members (alias for member/1)
+  - `sticker/1` - Discord stickers
+  - `typing_indicator/1` - Typing indicators
 
   ## Utilities
 
@@ -781,6 +785,127 @@ defmodule AshDiscord.Test.Generators.Discord do
     }
 
     struct(Nostrum.Struct.Message.Attachment, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
+  Generates a Discord message reaction struct.
+
+  ## Options
+
+  - `:emoji` - Emoji struct (defaults to generated emoji)
+  - `:count` - Reaction count (defaults to random 1-10)
+  - `:me` - Whether current user reacted (defaults to false)
+  - `:user_id` - User ID who reacted (defaults to generated snowflake)
+  - `:message_id` - Message ID (defaults to generated snowflake)
+  - `:channel_id` - Channel ID (defaults to generated snowflake)
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+
+  ## Examples
+
+      iex> reaction = message_reaction(%{count: 5})
+      iex> reaction.count
+      5
+  """
+  def message_reaction(attrs \\ %{}) do
+    # Generate either unicode or custom emoji
+    emoji_data =
+      if Faker.Util.pick([true, false]) do
+        # Unicode emoji
+        %{id: nil, name: Faker.Util.pick(["👍", "👎", "❤️", "😂", "😢", "🔥"]), animated: false}
+      else
+        # Custom emoji
+        %{
+          id: generate_snowflake(),
+          name: Faker.Lorem.word(),
+          animated: Faker.Util.pick([true, false])
+        }
+      end
+
+    defaults = %{
+      emoji: emoji_data,
+      count: Faker.random_between(1, 10),
+      me: Faker.Util.pick([true, false]),
+      user_id: generate_snowflake(),
+      message_id: generate_snowflake(),
+      channel_id: generate_snowflake(),
+      guild_id: generate_snowflake()
+    }
+
+    # Note: Nostrum doesn't have a specific Reaction struct, so we return a map
+    merge_attrs(defaults, attrs)
+  end
+
+  @doc """
+  Generates a Discord guild member struct (alias for member/1).
+
+  This is an alias for the member/1 function to match the test naming convention.
+  """
+  def guild_member(attrs \\ %{}) do
+    member(attrs)
+  end
+
+  @doc """
+  Generates a Discord sticker struct.
+
+  ## Options
+
+  - `:id` - Sticker ID (defaults to generated snowflake)
+  - `:name` - Sticker name (defaults to generated name)
+  - `:description` - Sticker description (defaults to generated sentence)
+  - `:tags` - Sticker tags (defaults to generated tags)
+  - `:type` - Sticker type (defaults to 1 for guild sticker)
+  - `:format_type` - Format type (1=PNG, 2=APNG, 3=Lottie) (defaults to 1)
+  - `:available` - Whether sticker is available (defaults to true)
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+
+  ## Examples
+
+      iex> sticker = sticker(%{name: "custom_sticker"})
+      iex> sticker.name
+      "custom_sticker"
+  """
+  def sticker(attrs \\ %{}) do
+    defaults = %{
+      id: generate_snowflake(),
+      name: Faker.Lorem.word(),
+      description: Faker.Lorem.sentence(3..10),
+      tags: Enum.join([Faker.Lorem.word(), Faker.Lorem.word()], ","),
+      type: 1,
+      format_type: Faker.Util.pick([1, 2, 3]),
+      available: true,
+      guild_id: generate_snowflake()
+    }
+
+    # Note: Nostrum doesn't have a specific Sticker struct, so we return a map
+    merge_attrs(defaults, attrs)
+  end
+
+  @doc """
+  Generates a Discord typing indicator struct.
+
+  ## Options
+
+  - `:user_id` - User ID (defaults to generated snowflake)
+  - `:channel_id` - Channel ID (defaults to generated snowflake)
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+  - `:timestamp` - Timestamp (defaults to current unix timestamp)
+
+  ## Examples
+
+      iex> typing = typing_indicator(%{user_id: 123456})
+      iex> typing.user_id
+      123456
+  """
+  def typing_indicator(attrs \\ %{}) do
+    defaults = %{
+      user_id: generate_snowflake(),
+      channel_id: generate_snowflake(),
+      guild_id: generate_snowflake(),
+      timestamp: System.system_time(:second)
+    }
+
+    # Note: Nostrum doesn't have a specific TypingIndicator struct, so we return a map
+    merge_attrs(defaults, attrs)
   end
 
   # Private helper functions

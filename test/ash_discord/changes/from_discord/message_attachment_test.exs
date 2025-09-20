@@ -5,14 +5,10 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
   Tests both struct-first and API fallback patterns, plus upsert behavior.
   """
 
-  use ExUnit.Case, async: true
+  use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
 
-  setup do
-    # Clear ETS tables before each test
-    :ets.delete_all_objects(TestApp.Discord.MessageAttachment)
-    :ok
-  end
+
 
   describe "struct-first pattern" do
     test "creates message attachment from discord struct with all attributes" do
@@ -178,10 +174,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
   end
 
   describe "API fallback pattern" do
-    setup do
-      Mimic.copy(Nostrum.Api)
-      :ok
-    end
 
     test "message attachment API fallback is not supported" do
       # Message attachments don't support direct API fetching in our implementation

@@ -5,14 +5,8 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
   Tests both struct-first and API fallback patterns, plus upsert behavior.
   """
 
-  use ExUnit.Case, async: true
+  use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
-
-  setup do
-    # Clear ETS tables before each test
-    :ets.delete_all_objects(TestApp.Discord.Guild)
-    :ok
-  end
 
   describe "struct-first pattern" do
     test "creates guild from discord struct with all attributes" do
@@ -71,14 +65,14 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
 
   describe "API fallback pattern" do
     setup do
-      Mimic.copy(Nostrum.Api)
+      Mimic.copy(Nostrum.Api.Guild)
       :ok
     end
 
     test "fetches guild from API when discord_struct not provided" do
       discord_id = 999_888_777
 
-      Mimic.expect(Nostrum.Api, :get_guild, fn ^discord_id ->
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^discord_id ->
         {:ok,
          guild(%{
            id: discord_id,
@@ -100,7 +94,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
     test "handles API errors gracefully" do
       discord_id = 404_404_404
 
-      Mimic.expect(Nostrum.Api, :get_guild, fn ^discord_id ->
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^discord_id ->
         {:error, %{status_code: 403, message: "Missing Access"}}
       end)
 
@@ -175,9 +169,9 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
         TestApp.Discord.guild_from_discord(%{discord_struct: initial_struct})
 
       # Update via API fallback
-      Mimic.copy(Nostrum.Api)
+      Mimic.copy(Nostrum.Api.Guild)
 
-      Mimic.expect(Nostrum.Api, :get_guild, fn ^discord_id ->
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^discord_id ->
         {:ok,
          guild(%{
            id: discord_id,

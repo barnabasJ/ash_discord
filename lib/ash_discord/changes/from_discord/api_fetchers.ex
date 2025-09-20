@@ -15,8 +15,8 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
   ## Supported Entities
 
   Currently supports fetching:
-  - Users via `Nostrum.Api.get_user/1`
-  - Guilds via `Nostrum.Api.get_guild/1`
+  - Users via `Nostrum.Api.User.get/1`
+  - Guilds via `Nostrum.Api.Guild.get/1`
   """
 
   require Logger
@@ -56,7 +56,7 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
             {:ok, entity}
 
           {:error, reason} ->
-            {:error, "Failed to fetch #{type} with ID #{id}: #{reason}"}
+            {:error, "Failed to fetch #{type} with ID #{id}: #{inspect(reason)}"}
         end
     end
   end
@@ -67,10 +67,10 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
   def fetch_from_nostrum_api(type, discord_id) do
     case type do
       :user ->
-        Nostrum.Api.get_user(discord_id)
+        Nostrum.Api.User.get(discord_id)
 
       :guild ->
-        Nostrum.Api.get_guild(discord_id)
+        Nostrum.Api.Guild.get(discord_id)
 
       _ ->
         {:error, :unsupported_type}

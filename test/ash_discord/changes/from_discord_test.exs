@@ -58,12 +58,13 @@ defmodule AshDiscord.Changes.FromDiscordTest do
     end
 
     test "API fallback handles unsupported entity types" do
-      # Call with entity type that doesn't support API fetching
-      result = TestApp.Discord.voice_state_from_discord(%{user_id: 123, channel_id: 456})
+      # Voice states don't support API fallback since Discord doesn't provide REST endpoints for them
+      # They require discord_struct argument and only work with struct-first pattern
+      result = TestApp.Discord.voice_state_from_discord(%{})
 
       assert {:error, error} = result
-      assert error.message =~ "Failed to fetch voice_state"
-      assert error.message =~ ":unsupported_type"
+      error_message = Exception.message(error)
+      assert error_message =~ "argument discord_struct is required"
     end
 
     test "API fallback requires discord_id for supported types" do
@@ -71,15 +72,16 @@ defmodule AshDiscord.Changes.FromDiscordTest do
       result = TestApp.Discord.user_from_discord(%{})
 
       assert {:error, error} = result
-      assert error.message =~ "No Discord ID found for user entity"
+      error_message = Exception.message(error)
+      assert error_message =~ "No Discord ID found for user entity"
     end
 
     test "API fallback works when no discord_struct provided" do
       # Create a mock that will be called by the API fetcher
-      Mimic.copy(Nostrum.Api)
+      Mimic.copy(Nostrum.Api.User)
 
       # Mock successful API response
-      Mimic.expect(Nostrum.Api, :get_user, fn 999_888_777 ->
+      Mimic.expect(Nostrum.Api.User, :get, fn 999_888_777 ->
         {:ok, user(%{id: 999_888_777, username: "api_fetched_user"})}
       end)
 
@@ -93,10 +95,10 @@ defmodule AshDiscord.Changes.FromDiscordTest do
     end
 
     test "API fallback handles API errors gracefully" do
-      Mimic.copy(Nostrum.Api)
+      Mimic.copy(Nostrum.Api.User)
 
       # Mock API error response
-      Mimic.expect(Nostrum.Api, :get_user, fn 999_888_777 ->
+      Mimic.expect(Nostrum.Api.User, :get, fn 999_888_777 ->
         {:error, %{status_code: 404, message: "User not found"}}
       end)
 
@@ -104,14 +106,15 @@ defmodule AshDiscord.Changes.FromDiscordTest do
       result = TestApp.Discord.user_from_discord(%{discord_id: 999_888_777})
 
       assert {:error, error} = result
-      assert error.message =~ "Failed to fetch user with ID 999888777"
+      error_message = Exception.message(error)
+      assert error_message =~ "Failed to fetch user with ID 999888777"
     end
 
     test "Guild API fallback works correctly" do
-      Mimic.copy(Nostrum.Api)
+      Mimic.copy(Nostrum.Api.Guild)
 
       # Mock successful guild API response
-      Mimic.expect(Nostrum.Api, :get_guild, fn 888_777_666 ->
+      Mimic.expect(Nostrum.Api.Guild, :get, fn 888_777_666 ->
         {:ok, guild(%{id: 888_777_666, name: "API Fetched Guild"})}
       end)
 

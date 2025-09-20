@@ -5,14 +5,10 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
   Tests both struct-first and API fallback patterns, plus upsert behavior.
   """
 
-  use ExUnit.Case, async: true
+  use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
 
-  setup do
-    # Clear ETS tables before each test
-    :ets.delete_all_objects(TestApp.Discord.MessageReaction)
-    :ok
-  end
+
 
   describe "struct-first pattern" do
     test "creates message reaction from discord struct with unicode emoji" do
@@ -151,10 +147,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
   end
 
   describe "API fallback pattern" do
-    setup do
-      Mimic.copy(Nostrum.Api)
-      :ok
-    end
 
     test "message reaction API fallback is not supported" do
       # Message reactions don't support direct API fetching in our implementation

@@ -51,7 +51,7 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
         {:error, "No Discord ID found for #{type} entity"}
 
       id ->
-        case fetch_from_nostrum_api(type, id) do
+        case fetch_from_nostrum_api(type, id, changeset) do
           {:ok, entity} ->
             {:ok, entity}
 
@@ -64,7 +64,7 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
   @doc """
   Fetches Discord entity from Nostrum API based on type and ID.
   """
-  def fetch_from_nostrum_api(type, discord_id) do
+  def fetch_from_nostrum_api(type, discord_id, changeset \\ nil) do
     case type do
       :user ->
         try do
@@ -118,8 +118,18 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
         {:error, :requires_guild_id}
 
       :role ->
-        # Role requires guild_id, can't fetch individual role with just ID
-        {:error, :requires_guild_id}
+        # Role requires guild_id - try to get it from changeset if available
+        if changeset do
+          guild_discord_id = extract_guild_discord_id(changeset)
+
+          if guild_discord_id do
+            fetch_role_from_guild(guild_discord_id, discord_id)
+          else
+            {:error, :requires_guild_id}
+          end
+        else
+          {:error, :requires_guild_id}
+        end
 
       _ ->
         {:error, :unsupported_type}
@@ -137,6 +147,37 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
 
       discord_id ->
         discord_id
+    end
+  end
+
+  # Extract guild Discord ID from changeset arguments or attributes
+  defp extract_guild_discord_id(changeset) do
+    case Ash.Changeset.get_argument(changeset, :guild_discord_id) do
+      nil ->
+        case Ash.Changeset.get_attribute(changeset, :guild_discord_id) do
+          nil -> nil
+          guild_discord_id -> guild_discord_id
+        end
+
+      guild_discord_id ->
+        guild_discord_id
+    end
+  end
+
+  # Fetch role data by getting the guild and finding the specific role
+  defp fetch_role_from_guild(guild_discord_id, role_discord_id) do
+    case Nostrum.Api.Guild.roles(guild_discord_id) do
+      {:ok, roles} ->
+        case Enum.find(roles, fn role -> role.id == role_discord_id end) do
+          nil ->
+            {:error, "Role #{role_discord_id} not found in guild #{guild_discord_id}"}
+
+          role_data ->
+            {:ok, role_data}
+        end
+
+      {:error, reason} ->
+        {:error, "Failed to fetch roles for guild #{guild_discord_id}: #{inspect(reason)}"}
     end
   end
 end

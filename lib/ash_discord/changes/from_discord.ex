@@ -191,6 +191,8 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
     |> maybe_set_attribute(:description, discord_data.description)
     |> maybe_set_attribute(:icon, discord_data.icon)
+    |> maybe_set_attribute(:owner_id, Map.get(discord_data, :owner_id))
+    |> maybe_set_attribute(:member_count, Map.get(discord_data, :member_count))
   end
 
   defp transform_guild_member(changeset, discord_data) do
@@ -219,26 +221,38 @@ defmodule AshDiscord.Changes.FromDiscord do
   end
 
   defp transform_role(changeset, discord_data) do
+    guild_discord_id = Ash.Changeset.get_argument_or_attribute(changeset, :guild_discord_id)
+
     changeset
     |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
     |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
     |> Ash.Changeset.force_change_attribute(:color, discord_data.color)
     |> Ash.Changeset.force_change_attribute(:permissions, to_string(discord_data.permissions))
     |> maybe_set_role_attributes(discord_data)
+    |> Transformations.manage_guild_relationship(guild_discord_id)
   end
 
   defp maybe_set_role_attributes(changeset, discord_data) do
     changeset
     |> maybe_set_attribute(:hoist, discord_data.hoist)
+    |> maybe_set_attribute(:icon, Map.get(discord_data, :icon))
+    |> maybe_set_attribute(:unicode_emoji, Map.get(discord_data, :unicode_emoji))
     |> maybe_set_attribute(:position, discord_data.position)
     |> maybe_set_attribute(:managed, discord_data.managed)
     |> maybe_set_attribute(:mentionable, discord_data.mentionable)
+    |> maybe_set_attribute(:tags, Map.get(discord_data, :tags))
   end
 
   defp maybe_set_attribute(changeset, _field, nil), do: changeset
 
   defp maybe_set_attribute(changeset, field, value) do
-    Ash.Changeset.force_change_attribute(changeset, field, value)
+    resource = changeset.resource
+
+    if Ash.Resource.Info.attribute(resource, field) do
+      Ash.Changeset.force_change_attribute(changeset, field, value)
+    else
+      changeset
+    end
   end
 
   defp maybe_set_from_argument(changeset, field) do

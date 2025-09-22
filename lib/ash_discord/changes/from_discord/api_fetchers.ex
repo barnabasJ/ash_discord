@@ -39,25 +39,54 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
   - `{:error, reason}` - Cache miss or fetching disabled
   """
   def fetch_from_api(changeset, type) do
-    discord_id = extract_discord_id(changeset)
+    # Special handling for guild_member which uses user_discord_id and guild_discord_id
+    if type == :guild_member do
+      fetch_guild_member_from_api(changeset)
+    else
+      discord_id = extract_discord_id(changeset)
+
+      Logger.info("""
+      API fetch attempted for Discord #{type} with ID: #{inspect(discord_id)}
+      Consider using struct-first pattern with :discord_struct argument for better performance.
+      """)
+
+      case discord_id do
+        nil ->
+          {:error, "No Discord ID found for #{type} entity"}
+
+        id ->
+          case fetch_from_nostrum_api(type, id, changeset) do
+            {:ok, entity} ->
+              {:ok, entity}
+
+            {:error, reason} ->
+              {:error, "Failed to fetch #{type} with ID #{id}: #{inspect(reason)}"}
+          end
+      end
+    end
+  end
+
+  # Special handler for guild_member API fetch
+  defp fetch_guild_member_from_api(changeset) do
+    guild_discord_id = extract_guild_discord_id(changeset)
+    user_discord_id = extract_user_discord_id(changeset)
 
     Logger.info("""
-    API fetch attempted for Discord #{type} with ID: #{inspect(discord_id)}
+    API fetch attempted for Discord guild_member with IDs:
+    user: #{inspect(user_discord_id)}, guild: #{inspect(guild_discord_id)}
     Consider using struct-first pattern with :discord_struct argument for better performance.
     """)
 
-    case discord_id do
-      nil ->
-        {:error, "No Discord ID found for #{type} entity"}
+    if guild_discord_id && user_discord_id do
+      case fetch_from_nostrum_api(:guild_member, nil, changeset) do
+        {:ok, entity} ->
+          {:ok, entity}
 
-      id ->
-        case fetch_from_nostrum_api(type, id, changeset) do
-          {:ok, entity} ->
-            {:ok, entity}
-
-          {:error, reason} ->
-            {:error, "Failed to fetch #{type} with ID #{id}: #{inspect(reason)}"}
-        end
+        {:error, reason} ->
+          {:error, "Failed to fetch guild_member: #{inspect(reason)}"}
+      end
+    else
+      {:error, "No Discord ID found for guild_member entity"}
     end
   end
 
@@ -131,6 +160,45 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
           {:error, :requires_guild_id}
         end
 
+      :guild_member ->
+        # GuildMember requires both guild_discord_id and user_discord_id
+        if changeset do
+          guild_discord_id = extract_guild_discord_id(changeset)
+          user_discord_id = extract_user_discord_id(changeset)
+
+          if guild_discord_id && user_discord_id do
+            try do
+              Nostrum.Api.Guild.member(guild_discord_id, user_discord_id)
+            rescue
+              ArgumentError -> {:error, :api_unavailable}
+            end
+          else
+            {:error, :requires_guild_and_user_ids}
+          end
+        else
+          {:error, :requires_guild_and_user_ids}
+        end
+
+      :message ->
+        # Message requires channel_id and message_id, can't fetch with just ID
+        # But we can use channel_discord_id argument if available
+        if changeset do
+          channel_id = extract_channel_discord_id(changeset)
+          message_id = extract_discord_id(changeset)
+
+          if channel_id && message_id do
+            try do
+              Nostrum.Api.Message.get(channel_id, message_id)
+            rescue
+              ArgumentError -> {:error, :api_unavailable}
+            end
+          else
+            {:error, :requires_channel_and_message_ids}
+          end
+        else
+          {:error, :requires_channel_and_message_ids}
+        end
+
       _ ->
         {:error, :unsupported_type}
     end
@@ -161,6 +229,34 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
 
       guild_discord_id ->
         guild_discord_id
+    end
+  end
+
+  # Extract user Discord ID from changeset arguments or attributes
+  defp extract_user_discord_id(changeset) do
+    case Ash.Changeset.get_argument(changeset, :user_discord_id) do
+      nil ->
+        case Ash.Changeset.get_attribute(changeset, :user_discord_id) do
+          nil -> nil
+          user_discord_id -> user_discord_id
+        end
+
+      user_discord_id ->
+        user_discord_id
+    end
+  end
+
+  # Extract channel Discord ID from changeset arguments or attributes
+  defp extract_channel_discord_id(changeset) do
+    case Ash.Changeset.get_argument(changeset, :channel_discord_id) do
+      nil ->
+        case Ash.Changeset.get_attribute(changeset, :channel_discord_id) do
+          nil -> nil
+          channel_discord_id -> channel_discord_id
+        end
+
+      channel_discord_id ->
+        channel_discord_id
     end
   end
 

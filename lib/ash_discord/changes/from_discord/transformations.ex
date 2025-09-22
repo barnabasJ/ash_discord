@@ -186,6 +186,7 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
 
   - `changeset` - The Ash changeset to modify
   - `user_id` - The Discord user ID to associate
+  - `relationship_name` - Optional relationship name (defaults to :user)
 
   ## Returns
 
@@ -194,10 +195,13 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
   ## Examples
 
       changeset = manage_user_relationship(changeset, discord_data.user_id)
+      changeset = manage_user_relationship(changeset, discord_data.author.id, :author)
 
   """
-  def manage_user_relationship(changeset, user_id) when not is_nil(user_id) do
-    Ash.Changeset.manage_relationship(changeset, :user, user_id,
+  def manage_user_relationship(changeset, user_id, relationship_name \\ :user)
+
+  def manage_user_relationship(changeset, user_id, relationship_name) when not is_nil(user_id) do
+    Ash.Changeset.manage_relationship(changeset, relationship_name, user_id,
       type: :append_and_remove,
       use_identities: [:discord_id],
       value_is_key: :discord_id,
@@ -205,7 +209,7 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
     )
   end
 
-  def manage_user_relationship(changeset, _nil_user_id), do: changeset
+  def manage_user_relationship(changeset, _nil_user_id, _relationship_name), do: changeset
 
   @doc """
   Manages channel relationship with auto-creation capabilities.

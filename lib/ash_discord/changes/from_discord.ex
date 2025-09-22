@@ -196,14 +196,18 @@ defmodule AshDiscord.Changes.FromDiscord do
   end
 
   defp transform_guild_member(changeset, discord_data) do
-    guild_id = Ash.Changeset.get_argument(changeset, :guild_id)
+    # Extract the user's Discord ID from the member struct
+    user_discord_id = extract_member_user_id(discord_data)
+
+    # Get the guild_discord_id from arguments
+    guild_discord_id = Ash.Changeset.get_argument(changeset, :guild_discord_id)
 
     changeset
-    |> Ash.Changeset.force_change_attribute(:guild_id, guild_id)
-    |> Ash.Changeset.force_change_attribute(:user_id, discord_data.user_id)
+    # Set user_discord_id from the member's user data
+    |> Ash.Changeset.force_change_attribute(:user_discord_id, user_discord_id)
     |> maybe_set_attribute(:nick, discord_data.nick)
-    |> maybe_set_attribute(:roles, discord_data.roles || [])
     |> maybe_set_attribute(:avatar, discord_data.avatar)
+    |> maybe_set_attribute(:flags, discord_data.flags)
     |> Transformations.set_datetime_field(:joined_at, discord_data.joined_at)
     |> Transformations.set_datetime_field(:premium_since, discord_data.premium_since)
     |> Transformations.set_datetime_field(
@@ -211,6 +215,20 @@ defmodule AshDiscord.Changes.FromDiscord do
       discord_data.communication_disabled_until
     )
     |> maybe_set_member_boolean_attributes(discord_data)
+    |> Transformations.manage_guild_relationship(guild_discord_id)
+    |> maybe_manage_user_relationship(user_discord_id)
+  end
+
+  # Extract user ID from member struct - handles both nested user and direct user_id
+  defp extract_member_user_id(%{user: %{id: user_id}}), do: user_id
+  defp extract_member_user_id(%{user_id: user_id}), do: user_id
+  defp extract_member_user_id(_), do: nil
+
+  # Manage user relationship with auto-creation for guild members
+  defp maybe_manage_user_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_user_relationship(changeset, user_discord_id) do
+    Transformations.manage_user_relationship(changeset, user_discord_id)
   end
 
   defp maybe_set_member_boolean_attributes(changeset, discord_data) do
@@ -298,17 +316,61 @@ defmodule AshDiscord.Changes.FromDiscord do
   end
 
   defp transform_message(changeset, discord_data) do
+    # Get guild_discord_id from arguments or struct
+    guild_discord_id =
+      case discord_data do
+        %{guild_id: guild_id} when not is_nil(guild_id) -> guild_id
+        _ -> Ash.Changeset.get_argument(changeset, :guild_discord_id)
+      end
+
+    # Get channel_discord_id from arguments or struct
+    channel_discord_id =
+      case discord_data do
+        %{channel_id: channel_id} when not is_nil(channel_id) -> channel_id
+        _ -> Ash.Changeset.get_argument(changeset, :channel_discord_id)
+      end
+
+    # Extract author ID from the message struct
+    author_discord_id =
+      case discord_data do
+        %{author: %{id: author_id}} when not is_nil(author_id) -> author_id
+        _ -> nil
+      end
+
     changeset
     |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
     |> Ash.Changeset.force_change_attribute(:content, discord_data.content || "")
-    |> Ash.Changeset.force_change_attribute(:channel_id, discord_data.channel_id)
-    |> Ash.Changeset.force_change_attribute(:author_id, discord_data.author.id)
-    |> maybe_set_attribute(:guild_id, discord_data.guild_id)
-    |> maybe_set_attribute(:tts, discord_data.tts)
-    |> maybe_set_attribute(:mention_everyone, discord_data.mention_everyone)
-    |> maybe_set_attribute(:pinned, discord_data.pinned)
-    |> Transformations.set_datetime_field(:timestamp, discord_data.timestamp)
-    |> Transformations.set_datetime_field(:edited_timestamp, discord_data.edited_timestamp)
+    |> maybe_set_attribute(:embeds, discord_data.embeds || [])
+    # Manage relationships
+    |> maybe_manage_guild_relationship(guild_discord_id)
+    |> maybe_manage_channel_relationship(channel_discord_id)
+    |> maybe_manage_author_relationship(author_discord_id)
+  end
+
+  # Manage guild relationship for messages
+  defp maybe_manage_guild_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_guild_relationship(changeset, guild_discord_id) do
+    Transformations.manage_guild_relationship(changeset, guild_discord_id)
+  end
+
+  # Manage channel relationship for messages
+  defp maybe_manage_channel_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_channel_relationship(changeset, channel_discord_id) do
+    Ash.Changeset.manage_relationship(changeset, :channel, channel_discord_id,
+      type: :append_and_remove,
+      on_no_match: {:create, :from_discord},
+      use_identities: [:discord_id],
+      value_is_key: :discord_id
+    )
+  end
+
+  # Manage author relationship for messages
+  defp maybe_manage_author_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_author_relationship(changeset, author_discord_id) do
+    Transformations.manage_user_relationship(changeset, author_discord_id, :author)
   end
 
   defp transform_emoji(changeset, discord_data) do

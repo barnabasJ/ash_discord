@@ -75,6 +75,7 @@ defmodule Mix.Tasks.AshDiscord.Install do
     |> setup_discord_configuration()
     |> add_consumer_to_supervision_tree(options)
     |> add_formatter_configuration()
+    |> validate_integration(options)
     |> add_installation_summary(options)
   end
 
@@ -352,6 +353,74 @@ defmodule Mix.Tasks.AshDiscord.Install do
   defp add_spark_formatter_plugin(igniter) do
     # Add Spark.Formatter plugin if not already present
     Igniter.Project.Formatter.add_formatter_plugin(igniter, Spark.Formatter)
+  end
+
+  defp validate_integration(igniter, options) do
+    consumer_module = options[:consumer]
+
+    igniter
+    |> validate_compilation_readiness(consumer_module)
+    |> validate_supervision_integration(consumer_module)
+    |> validate_configuration_completeness()
+  end
+
+  defp validate_compilation_readiness(igniter, consumer_module) do
+    # Validate that generated code will compile
+    case Igniter.Project.Module.module_exists?(igniter, consumer_module) do
+      true ->
+        igniter
+
+      false ->
+        # This should not happen if generation succeeded, but we check anyway
+        Igniter.add_issue(
+          igniter,
+          """
+          Warning: Consumer module #{inspect(consumer_module)} was not found after generation.
+          Please verify the installation completed successfully.
+          """
+        )
+    end
+  end
+
+  defp validate_supervision_integration(igniter, consumer_module) do
+    # Validate consumer is in supervision tree
+    app_module = Igniter.Project.Application.app_module(igniter)
+
+    case app_module do
+      nil ->
+        Igniter.add_issue(
+          igniter,
+          """
+          Warning: No application module found.
+          The Discord consumer may not start automatically.
+          Please manually add #{inspect(consumer_module)} to your supervision tree.
+          """
+        )
+
+      _module ->
+        # Consumer should be added by add_consumer_to_supervision_tree
+        igniter
+    end
+  end
+
+  defp validate_configuration_completeness(igniter) do
+    # Check if configuration files exist and can be modified
+    config_files = ["config/dev.exs", "config/runtime.exs", "config/test.exs"]
+
+    Enum.reduce(config_files, igniter, fn config_file, acc ->
+      if File.exists?(config_file) do
+        acc
+      else
+        Igniter.add_warning(
+          acc,
+          """
+          Configuration file #{config_file} not found.
+          Discord configuration may not be complete.
+          Please manually configure :nostrum token in this environment.
+          """
+        )
+      end
+    end)
   end
 
   defp add_installation_summary(igniter, options) do

@@ -173,28 +173,183 @@ defmodule Mix.Tasks.AshDiscord.Install do
     end)
   end
 
+  # Helper functions for installer operations
+
+  @doc false
+  # Adds nostrum and ensures ash_discord runtime dependency
   defp add_dependencies(igniter) do
-    # TODO: Implement dependency management
     igniter
+    |> add_nostrum_dependency()
+    |> ensure_ash_discord_runtime()
   end
 
-  defp generate_consumer_module(igniter, _options) do
-    # TODO: Implement consumer module generation
-    igniter
+  @doc false
+  # Generates the Discord consumer module with DSL configuration
+  defp generate_consumer_module(igniter, options) do
+    consumer_module = options[:consumer]
+    domains = options[:domains]
+
+    generate_consumer_module_content(igniter, consumer_module, domains)
   end
 
+  @doc false
+  # Sets up Discord configuration across environments
   defp setup_discord_configuration(igniter) do
-    # TODO: Implement Discord configuration setup
     igniter
+    |> setup_development_config()
+    |> setup_production_config()
+    |> setup_test_config()
   end
 
-  defp add_consumer_to_supervision_tree(igniter, _options) do
-    # TODO: Implement supervision tree integration
-    igniter
+  @doc false
+  # Integrates consumer into application supervision tree
+  defp add_consumer_to_supervision_tree(igniter, options) do
+    consumer_module = options[:consumer]
+    add_consumer_to_application(igniter, consumer_module)
   end
 
+  @doc false
+  # Adds Spark.Formatter configuration for DSL formatting
   defp add_formatter_configuration(igniter) do
-    # TODO: Implement formatter configuration
     igniter
+    |> Igniter.Project.Formatter.import_dep(:ash_discord)
+    |> add_spark_formatter_plugin()
+  end
+
+  # Implementation helper functions
+
+  defp add_nostrum_dependency(igniter) do
+    Igniter.Project.Deps.add_dep(igniter, {:nostrum, "~> 0.10"})
+  end
+
+  defp ensure_ash_discord_runtime(igniter) do
+    # Ensure ash_discord is available at runtime
+    case Igniter.Project.Deps.get_dependency_declaration(igniter, :ash_discord) do
+      nil ->
+        # ash_discord should already be installed if this installer is running
+        # but we'll add it if somehow it's not present
+        Igniter.Project.Deps.add_dep(igniter, {:ash_discord, "~> 0.1"})
+
+      _dep ->
+        # ash_discord is already present
+        igniter
+    end
+  end
+
+  defp generate_consumer_module_content(igniter, consumer_module, domains) do
+    domains_config =
+      if domains == [] do
+        # Empty list with helpful comment
+        quote do
+          # Add your Ash domains that should handle Discord interactions
+          # Example: domains([MyApp.Discord, MyApp.Chat])
+          domains([])
+        end
+      else
+        # Configured domains list
+        quote do
+          domains(unquote(domains))
+        end
+      end
+
+    module_content =
+      quote do
+        @moduledoc """
+        Discord consumer for handling Discord events and commands.
+
+        This consumer automatically processes Discord interactions and routes them
+        to the appropriate Ash actions based on your domain configuration.
+
+        ## Configuration
+
+        Configure your Discord bot token in your environment configuration:
+
+            # config/dev.exs
+            config :nostrum,
+              token: "your_dev_bot_token_here"
+
+            # config/runtime.exs (for production)
+            config :nostrum,
+              token: System.get_env("DISCORD_TOKEN")
+
+        ## Adding Discord Commands
+
+        To add Discord commands, implement them in your configured Ash domains.
+        Each domain can define Discord interactions that will be automatically
+        registered and handled by this consumer.
+        """
+
+        use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          unquote(domains_config)
+        end
+      end
+
+    Igniter.Project.Module.create_module(igniter, consumer_module, module_content)
+  end
+
+  defp setup_development_config(igniter) do
+    Igniter.Project.Config.configure_new(
+      igniter,
+      "dev.exs",
+      :nostrum,
+      [:token],
+      "your_dev_bot_token_here"
+    )
+  end
+
+  defp setup_production_config(igniter) do
+    runtime_config =
+      quote do
+        System.get_env("DISCORD_TOKEN") ||
+          raise """
+          Missing required environment variable: DISCORD_TOKEN
+
+          Please set the DISCORD_TOKEN environment variable to your Discord bot token.
+          You can get a bot token from https://discord.com/developers/applications
+          """
+      end
+
+    Igniter.Project.Config.configure_runtime_env(
+      igniter,
+      :prod,
+      :nostrum,
+      [:token],
+      {:code, runtime_config}
+    )
+  end
+
+  defp setup_test_config(igniter) do
+    # Test environment should not require a real Discord token
+    Igniter.Project.Config.configure_new(
+      igniter,
+      "test.exs",
+      :nostrum,
+      [:token],
+      "test_token_not_used"
+    )
+  end
+
+  defp add_consumer_to_application(igniter, consumer_module) do
+    # Add the consumer to the application supervision tree
+    # Position it after PubSub if present, otherwise add at the end
+    Igniter.Project.Application.add_new_child(
+      igniter,
+      consumer_module,
+      after: fn children ->
+        # Find PubSub position if it exists
+        Enum.find_index(children, fn
+          {Phoenix.PubSub, _} -> true
+          module when is_atom(module) -> module == Phoenix.PubSub
+          _ -> false
+        end)
+      end
+    )
+  end
+
+  defp add_spark_formatter_plugin(igniter) do
+    # Add Spark.Formatter plugin if not already present
+    Igniter.Project.Formatter.add_formatter_plugin(igniter, Spark.Formatter)
   end
 end

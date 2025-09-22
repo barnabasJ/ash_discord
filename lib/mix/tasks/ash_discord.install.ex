@@ -128,7 +128,10 @@ defmodule Mix.Tasks.AshDiscord.Install do
 
   defp validate_project_compatibility!(igniter) do
     # Check for Phoenix application structure
-    unless Igniter.Project.IgniterConfig.phoenix?(igniter) do
+    # Note: We'll check for Phoenix by looking for Phoenix deps instead
+    phoenix_dep = Igniter.Project.Deps.get_dep(igniter, :phoenix)
+
+    unless phoenix_dep do
       raise """
       AshDiscord requires a Phoenix application.
 
@@ -138,7 +141,7 @@ defmodule Mix.Tasks.AshDiscord.Install do
     end
 
     # Check for Ash framework presence
-    deps = Igniter.Project.Deps.get_dependency_declaration(igniter, :ash)
+    deps = Igniter.Project.Deps.get_dep(igniter, :ash)
 
     unless deps do
       raise """
@@ -155,8 +158,8 @@ defmodule Mix.Tasks.AshDiscord.Install do
   defp validate_domains!(igniter, domains) do
     # For each specified domain, validate it exists and uses Ash.Domain
     Enum.each(domains, fn domain_module ->
-      case Igniter.Project.Module.module_exists?(igniter, domain_module) do
-        false ->
+      case Igniter.Project.Module.module_exists(igniter, domain_module) do
+        {false, _igniter} ->
           raise """
           Domain module #{inspect(domain_module)} does not exist.
 
@@ -167,7 +170,7 @@ defmodule Mix.Tasks.AshDiscord.Install do
           - Run the installer without --domains and configure them manually later
           """
 
-        true ->
+        {true, _igniter} ->
           # Verify it's actually an Ash domain
           # This validation will be enhanced once we can inspect the module content
           :ok
@@ -226,7 +229,7 @@ defmodule Mix.Tasks.AshDiscord.Install do
 
   defp ensure_ash_discord_runtime(igniter) do
     # Ensure ash_discord is available at runtime
-    case Igniter.Project.Deps.get_dependency_declaration(igniter, :ash_discord) do
+    case Igniter.Project.Deps.get_dep(igniter, :ash_discord) do
       nil ->
         # ash_discord should already be installed if this installer is running
         # but we'll add it if somehow it's not present
@@ -241,52 +244,49 @@ defmodule Mix.Tasks.AshDiscord.Install do
   defp generate_consumer_module_content(igniter, consumer_module, domains) do
     domains_config =
       if domains == [] do
-        # Empty list with helpful comment
-        quote do
-          # Add your Ash domains that should handle Discord interactions
-          # Example: domains([MyApp.Discord, MyApp.Chat])
-          domains([])
-        end
+        """
+        # Add your Ash domains that should handle Discord interactions
+        # Example: domains([MyApp.Discord, MyApp.Chat])
+        domains([])
+        """
       else
         # Configured domains list
-        quote do
-          domains(unquote(domains))
-        end
+        domains_list = Enum.map_join(domains, ", ", &inspect/1)
+        "domains([#{domains_list}])"
       end
 
-    module_content =
-      quote do
-        @moduledoc """
-        Discord consumer for handling Discord events and commands.
+    module_content = """
+    @moduledoc \"\"\"
+    Discord consumer for handling Discord events and commands.
 
-        This consumer automatically processes Discord interactions and routes them
-        to the appropriate Ash actions based on your domain configuration.
+    This consumer automatically processes Discord interactions and routes them
+    to the appropriate Ash actions based on your domain configuration.
 
-        ## Configuration
+    ## Configuration
 
-        Configure your Discord bot token in your environment configuration:
+    Configure your Discord bot token in your environment configuration:
 
-            # config/dev.exs
-            config :nostrum,
-              token: "your_dev_bot_token_here"
+        # config/dev.exs
+        config :nostrum,
+          token: "your_dev_bot_token_here"
 
-            # config/runtime.exs (for production)
-            config :nostrum,
-              token: System.get_env("DISCORD_TOKEN")
+        # config/runtime.exs (for production)
+        config :nostrum,
+          token: System.get_env("DISCORD_TOKEN")
 
-        ## Adding Discord Commands
+    ## Adding Discord Commands
 
-        To add Discord commands, implement them in your configured Ash domains.
-        Each domain can define Discord interactions that will be automatically
-        registered and handled by this consumer.
-        """
+    To add Discord commands, implement them in your configured Ash domains.
+    Each domain can define Discord interactions that will be automatically
+    registered and handled by this consumer.
+    \"\"\"
 
-        use AshDiscord.Consumer
+    use AshDiscord.Consumer
 
-        ash_discord_consumer do
-          unquote(domains_config)
-        end
-      end
+    ash_discord_consumer do
+      #{domains_config}
+    end
+    """
 
     Igniter.Project.Module.create_module(igniter, consumer_module, module_content)
   end
@@ -302,23 +302,22 @@ defmodule Mix.Tasks.AshDiscord.Install do
   end
 
   defp setup_production_config(igniter) do
-    runtime_config =
-      quote do
-        System.get_env("DISCORD_TOKEN") ||
-          raise """
-          Missing required environment variable: DISCORD_TOKEN
+    runtime_config = """
+    System.get_env("DISCORD_TOKEN") ||
+      raise \"\"\"
+      Missing required environment variable: DISCORD_TOKEN
 
-          Please set the DISCORD_TOKEN environment variable to your Discord bot token.
-          You can get a bot token from https://discord.com/developers/applications
-          """
-      end
+      Please set the DISCORD_TOKEN environment variable to your Discord bot token.
+      You can get a bot token from https://discord.com/developers/applications
+      \"\"\"
+    """
 
     Igniter.Project.Config.configure_runtime_env(
       igniter,
       :prod,
       :nostrum,
       [:token],
-      {:code, runtime_config}
+      runtime_config
     )
   end
 
@@ -366,14 +365,14 @@ defmodule Mix.Tasks.AshDiscord.Install do
 
   defp validate_compilation_readiness(igniter, consumer_module) do
     # Validate that generated code will compile
-    case Igniter.Project.Module.module_exists?(igniter, consumer_module) do
-      true ->
-        igniter
+    case Igniter.Project.Module.module_exists(igniter, consumer_module) do
+      {true, updated_igniter} ->
+        updated_igniter
 
-      false ->
+      {false, updated_igniter} ->
         # This should not happen if generation succeeded, but we check anyway
         Igniter.add_issue(
-          igniter,
+          updated_igniter,
           """
           Warning: Consumer module #{inspect(consumer_module)} was not found after generation.
           Please verify the installation completed successfully.

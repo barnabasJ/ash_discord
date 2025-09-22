@@ -85,18 +85,18 @@ for invalid domains
 
 ### Phase 2: Core Generation & Configuration
 
-#### 4. [ ] **Implement Consumer Module Generation**
+#### 4. [x] **Implement Consumer Module Generation**
 
-4.1. [ ] Implement `generate_consumer_module/2` helper function
+4.1. [x] Implement `generate_consumer_module/2` helper function
 
 - Use existing pattern from `lib/ash_discord/consumer.ex:1-50`
 - Generate module with `use AshDiscord.Consumer` and DSL block
 - Add comprehensive module documentation with examples
-- Follow naming pattern: `#{app_name}.DiscordConsumer` 4.2. [ ] Add domain
+- Follow naming pattern: `#{app_name}.DiscordConsumer` 4.2. [x] Add domain
   configuration logic to generation function
 - Add `domains([...])` configuration based on `--domains` option
 - Include commented examples when domains list is empty
-- Add guidance comments for manual domain addition 4.3. [ ] Use
+- Add guidance comments for manual domain addition 4.3. [x] Use
   `Igniter.Project.Module.create_module/3` in helper function
 - Ensure proper AST generation and formatting
 - Handle module conflicts and existing file detection
@@ -105,17 +105,17 @@ for invalid domains
 📝 **Commit**:
 `feat(installer): implement Discord consumer module generation with DSL`
 
-#### 5. [ ] **Add Dependency Management**
+#### 5. [x] **Add Dependency Management**
 
-5.1. [ ] Implement `add_dependencies/1` helper function
+5.1. [x] Implement `add_dependencies/1` helper function
 
 - Use `Igniter.Project.Deps.add_dep/2` to add `{:nostrum, "~> 0.10"}`
 - Include version compatibility validation
-- Handle existing dependency conflicts gracefully 5.2. [ ] Add ash_discord
+- Handle existing dependency conflicts gracefully 5.2. [x] Add ash_discord
   runtime availability check to helper function
 - Verify ash_discord is available at runtime, not just dev/test
 - Add runtime dependency if needed
-- Validate ash_discord version compatibility 5.3. [ ] Add dependency conflict
+- Validate ash_discord version compatibility 5.3. [x] Add dependency conflict
   resolution to helper function
 - Check for existing Discord libraries (nostrum versions)
 - Provide clear guidance for resolving conflicts
@@ -124,17 +124,17 @@ for invalid domains
 📝 **Commit**:
 `feat(installer): add nostrum and ash_discord dependency management`
 
-#### 6. [ ] **Setup Environment Configuration**
+#### 6. [x] **Setup Environment Configuration**
 
-6.1. [ ] Implement `setup_discord_configuration/1` helper function
+6.1. [x] Implement `setup_discord_configuration/1` helper function
 
 - Use `Igniter.Project.Config.configure_new/4` for `config/dev.exs`
 - Add `config :nostrum, token: "your_dev_bot_token_here"`
-- Include configuration comments for token setup 6.2. [ ] Add production
+- Include configuration comments for token setup 6.2. [x] Add production
   environment config to helper function
 - Configure `config/runtime.exs` with secure token configuration
 - Add `System.get_env("DISCORD_TOKEN")` with error handling
-- Follow Phoenix runtime configuration patterns 6.3. [ ] Add test environment
+- Follow Phoenix runtime configuration patterns 6.3. [x] Add test environment
   handling to helper function
 - Add test-specific Nostrum configuration if needed
 - Ensure tests don't require Discord tokens
@@ -142,15 +142,15 @@ for invalid domains
 
 📝 **Commit**: `feat(installer): add environment-specific Discord configuration`
 
-#### 7. [ ] **Integrate Consumer into Supervision Tree**
+#### 7. [x] **Integrate Consumer into Supervision Tree**
 
-7.1. [ ] Use `Igniter.Project.Application.add_new_child/3` for integration - Add
+7.1. [x] Use `Igniter.Project.Application.add_new_child/3` for integration - Add
 consumer module to application supervision tree - Position after PubSub if
 present, otherwise at appropriate location - Follow pattern from
-`lib/steward/application.ex:42-43` 7.2. [ ] Add supervision configuration - Use
+`lib/steward/application.ex:42-43` 7.2. [x] Add supervision configuration - Use
 simple child spec: `{ConsumerModule, []}` - Include restart strategy appropriate
 for Discord consumers - Add positioning logic for integration with existing
-children 7.3. [ ] Validate supervision tree integration - Ensure consumer starts
+children 7.3. [x] Validate supervision tree integration - Ensure consumer starts
 properly with application - Handle supervision tree conflicts gracefully - Add
 validation for successful integration
 
@@ -159,12 +159,12 @@ validation for successful integration
 
 ### Phase 3: Quality & Integration
 
-#### 8. [ ] **Add Spark.Formatter Configuration**
+#### 8. [x] **Add Spark.Formatter Configuration**
 
-8.1. [ ] Update `.formatter.exs` to include AshDiscord DSL formatting - Add
+8.1. [x] Update `.formatter.exs` to include AshDiscord DSL formatting - Add
 `import_deps: [:ash_discord]` if not present - Include proper DSL formatting for
 `ash_discord_consumer` blocks - Follow existing Spark.Formatter patterns in the
-project 8.2. [ ] Validate formatter configuration - Test DSL formatting works
+project 8.2. [x] Validate formatter configuration - Test DSL formatting works
 properly on generated consumer - Ensure code formatting follows project
 conventions - Add formatter validation to installer process
 

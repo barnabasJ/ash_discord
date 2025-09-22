@@ -289,7 +289,7 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
   # Transforms a single permission overwrite to standardized format
   defp transform_single_overwrite(overwrite) do
     %{
-      "id" => to_string(overwrite.id || overwrite["id"]),
+      "id" => overwrite.id || overwrite["id"],
       "type" => overwrite.type || overwrite["type"] || 0,
       "allow" => to_string(overwrite.allow || overwrite["allow"] || 0),
       "deny" => to_string(overwrite.deny || overwrite["deny"] || 0)

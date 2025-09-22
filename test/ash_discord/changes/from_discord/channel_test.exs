@@ -64,13 +64,13 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       assert length(overwrites) == 3
 
       # Check first overwrite (role)
-      first_overwrite = Enum.find(overwrites, &(&1["id"] == "123"))
+      first_overwrite = Enum.find(overwrites, &(&1["id"] == 123))
       assert first_overwrite["type"] == 0
       assert first_overwrite["allow"] == "1024"
       assert first_overwrite["deny"] == "0"
 
       # Check second overwrite (member)
-      second_overwrite = Enum.find(overwrites, &(&1["id"] == "456"))
+      second_overwrite = Enum.find(overwrites, &(&1["id"] == 456))
       assert second_overwrite["type"] == 1
       assert second_overwrite["allow"] == "0"
       assert second_overwrite["deny"] == "2048"
@@ -238,12 +238,12 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       assert length(overwrites) == 2
 
       # Check updated role permission
-      role_overwrite = Enum.find(overwrites, &(&1["id"] == "123"))
+      role_overwrite = Enum.find(overwrites, &(&1["id"] == 123))
       assert role_overwrite["allow"] == "2048"
       assert role_overwrite["deny"] == "1024"
 
       # Check new member permission
-      member_overwrite = Enum.find(overwrites, &(&1["id"] == "456"))
+      member_overwrite = Enum.find(overwrites, &(&1["id"] == 456))
       assert member_overwrite["type"] == 1
       assert member_overwrite["allow"] == "8"
     end

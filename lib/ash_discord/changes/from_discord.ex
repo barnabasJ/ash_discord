@@ -262,7 +262,24 @@ defmodule AshDiscord.Changes.FromDiscord do
     end
   end
 
+  # Helper to conditionally manage relationships if they exist on the resource
+  defp maybe_manage_relationship(changeset, relationship_name, value, manager_fn)
+       when not is_nil(value) do
+    resource = changeset.resource
+
+    if Ash.Resource.Info.relationship(resource, relationship_name) do
+      manager_fn.(changeset, value)
+    else
+      # If no relationship exists, try setting as attribute if it exists
+      maybe_set_attribute(changeset, :"#{relationship_name}_id", value)
+    end
+  end
+
+  defp maybe_manage_relationship(changeset, _relationship_name, nil, _manager_fn), do: changeset
+
   defp transform_channel(changeset, discord_data) do
+    guild_id = Map.get(discord_data, :guild_id)
+
     changeset
     |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
     |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
@@ -271,11 +288,13 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> maybe_set_attribute(:topic, discord_data.topic)
     |> maybe_set_attribute(:nsfw, discord_data.nsfw)
     |> maybe_set_attribute(:parent_id, discord_data.parent_id)
-    |> maybe_set_attribute(:guild_id, discord_data.guild_id)
     |> maybe_set_attribute(
       :permission_overwrites,
       Transformations.transform_permission_overwrites(discord_data.permission_overwrites)
     )
+    |> maybe_manage_relationship(:guild, guild_id, fn cs, id ->
+      Transformations.manage_guild_relationship(cs, id)
+    end)
   end
 
   defp transform_message(changeset, discord_data) do

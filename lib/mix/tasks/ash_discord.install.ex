@@ -61,7 +61,9 @@ defmodule Mix.Tasks.AshDiscord.Install do
         c: :consumer,
         d: :domains,
         y: :yes
-      ]
+      ],
+      installs: [{:ash, "~> 3.0"}],
+      adds_deps: [{:nostrum, "~> 0.10"}]
     }
   end
 
@@ -181,11 +183,11 @@ defmodule Mix.Tasks.AshDiscord.Install do
   # Helper functions for installer operations
 
   @doc false
-  # Adds nostrum and ensures ash_discord runtime dependency
+  # Ensures ash_discord runtime dependency
   defp add_dependencies(igniter) do
-    igniter
-    |> add_nostrum_dependency()
-    |> ensure_ash_discord_runtime()
+    # nostrum is handled by adds_deps in info/2
+    # ash is handled by installs in info/2
+    ensure_ash_discord_runtime(igniter)
   end
 
   @doc false
@@ -222,10 +224,6 @@ defmodule Mix.Tasks.AshDiscord.Install do
   end
 
   # Implementation helper functions
-
-  defp add_nostrum_dependency(igniter) do
-    Igniter.Project.Deps.add_dep(igniter, {:nostrum, "~> 0.10"})
-  end
 
   defp ensure_ash_discord_runtime(igniter) do
     # Ensure ash_discord is available at runtime

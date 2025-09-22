@@ -111,10 +111,26 @@ defmodule AshDiscord.Changes.FromDiscord do
 
   # Data retrieval with struct-first pattern
   defp get_discord_data(changeset, type) do
+    # Check for discord_struct first
     case Ash.Changeset.get_argument(changeset, :discord_struct) do
       nil ->
-        # Fallback to API fetch (placeholder for now)
-        AshDiscord.Changes.FromDiscord.ApiFetchers.fetch_from_api(changeset, type)
+        # For backward compatibility with interaction type, check :interaction argument
+        if type == :interaction do
+          case Ash.Changeset.get_argument(changeset, :interaction) do
+            nil ->
+              # Fallback to API fetch
+              AshDiscord.Changes.FromDiscord.ApiFetchers.fetch_from_api(changeset, type)
+
+            interaction when is_map(interaction) ->
+              {:ok, interaction}
+
+            invalid ->
+              {:error, "Invalid value provided for interaction: #{inspect(invalid)}"}
+          end
+        else
+          # Fallback to API fetch for other types
+          AshDiscord.Changes.FromDiscord.ApiFetchers.fetch_from_api(changeset, type)
+        end
 
       discord_struct when is_map(discord_struct) ->
         {:ok, discord_struct}
@@ -474,19 +490,59 @@ defmodule AshDiscord.Changes.FromDiscord do
   end
 
   defp transform_interaction(changeset, discord_data) do
+    # Extract custom_id from interaction data
+    custom_id =
+      case discord_data do
+        %{data: %{custom_id: custom_id}} -> custom_id
+        _ -> nil
+      end
+
+    # Extract user ID from interaction (handles both guild and DM interactions)
+    user_discord_id = get_interaction_user_id(discord_data)
+
     changeset
     |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
-    |> maybe_set_attribute(:application_id, discord_data.application_id)
     |> Ash.Changeset.force_change_attribute(:type, discord_data.type)
-    |> maybe_set_attribute(:guild_id, discord_data.guild_id)
-    |> Ash.Changeset.force_change_attribute(:channel_id, discord_data.channel_id)
-    |> Ash.Changeset.force_change_attribute(:user_id, get_interaction_user_id(discord_data))
     |> Ash.Changeset.force_change_attribute(:token, discord_data.token)
-    |> maybe_set_attribute(:data, discord_data.data)
-    |> maybe_set_attribute(:locale, discord_data.locale)
-    |> maybe_set_attribute(:app_permissions, Map.get(discord_data, :app_permissions))
-    |> maybe_set_attribute(:version, Map.get(discord_data, :version))
-    |> maybe_set_attribute(:guild_locale, Map.get(discord_data, :guild_locale))
+    |> Ash.Changeset.force_change_attribute(:application_id, discord_data.application_id)
+    |> maybe_set_attribute(:custom_id, custom_id)
+    # Store full interaction struct as data
+    |> maybe_set_attribute(:data, discord_data)
+    |> maybe_manage_interaction_guild_relationship(discord_data)
+    |> maybe_manage_interaction_channel_relationship(discord_data)
+    |> maybe_manage_interaction_user_relationship(user_discord_id)
+  end
+
+  # Manage guild relationship for interactions
+  defp maybe_manage_interaction_guild_relationship(changeset, %{guild_id: guild_id})
+       when not is_nil(guild_id) do
+    Transformations.manage_guild_relationship(changeset, guild_id)
+  end
+
+  defp maybe_manage_interaction_guild_relationship(changeset, _), do: changeset
+
+  # Manage channel relationship for interactions
+  defp maybe_manage_interaction_channel_relationship(changeset, %{
+         channel_id: channel_id,
+         guild_id: guild_id
+       })
+       when not is_nil(channel_id) do
+    Ash.Changeset.manage_relationship(
+      changeset,
+      :channel,
+      %{discord_id: channel_id, guild_discord_id: guild_id},
+      type: :append_and_remove,
+      on_no_match: {:create, :from_discord}
+    )
+  end
+
+  defp maybe_manage_interaction_channel_relationship(changeset, _), do: changeset
+
+  # Manage user relationship for interactions
+  defp maybe_manage_interaction_user_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_interaction_user_relationship(changeset, user_discord_id) do
+    Transformations.manage_user_relationship(changeset, user_discord_id)
   end
 
   # Helper function to safely extract ID from nested structs

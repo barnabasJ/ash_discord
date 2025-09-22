@@ -49,14 +49,14 @@ validation structure
 📝 **Commit**:
 `feat(installer): add basic Mix.Tasks.AshDiscord.Install structure`
 
-#### 2. [ ] **Add Option Parsing and Validation**
+#### 2. [x] **Add Option Parsing and Validation**
 
-2.1. [ ] Create option parsing function - Extract and validate `--consumer` with
+2.1. [x] Create option parsing function - Extract and validate `--consumer` with
 default naming (`AppName.DiscordConsumer`) - Parse `--domains` as
 comma-separated list with validation - Handle `--yes` flag for skipping
-confirmations 2.2. [ ] Add project compatibility validation - Verify Phoenix
+confirmations 2.2. [x] Add project compatibility validation - Verify Phoenix
 application structure exists - Check for Ash framework presence (dependency or
-source) - Validate Phoenix version compatibility (>= 1.7) 2.3. [ ] Implement
+source) - Validate Phoenix version compatibility (>= 1.7) 2.3. [x] Implement
 domain validation logic - Check specified domains exist in the project -
 Validate domains use proper Ash.Domain extensions - Provide clear error messages
 for invalid domains

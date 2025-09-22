@@ -337,15 +337,7 @@ defmodule Mix.Tasks.AshDiscord.Install do
     # Position it after PubSub if present, otherwise add at the end
     Igniter.Project.Application.add_new_child(
       igniter,
-      consumer_module,
-      after: fn children ->
-        # Find PubSub position if it exists
-        Enum.find_index(children, fn
-          {Phoenix.PubSub, _} -> true
-          module when is_atom(module) -> module == Phoenix.PubSub
-          _ -> false
-        end)
-      end
+      consumer_module
     )
   end
 

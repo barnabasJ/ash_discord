@@ -32,15 +32,15 @@ functionality verification before proceeding to the next phase.
 
 ### Phase 1: Foundation & Core Infrastructure
 
-#### 1. [ ] **Create Main Installer Task Structure**
+#### 1. [x] **Create Main Installer Task Structure**
 
-1.1. [ ] Create `lib/mix/tasks/ash_discord.install.ex` - Follow pattern from Ash
+1.1. [x] Create `lib/mix/tasks/ash_discord.install.ex` - Follow pattern from Ash
 ecosystem installers - Implement `use Igniter.Mix.Task` behavior - Add proper
 module documentation with usage examples - 📖
-[Igniter.Mix.Task](https://hexdocs.pm/igniter/Igniter.Mix.Task.html) 1.2. [ ]
+[Igniter.Mix.Task](https://hexdocs.pm/igniter/Igniter.Mix.Task.html) 1.2. [x]
 Implement `info/2` callback with option schema - Add `--consumer` (string),
 `--domains` (string), `--yes` (boolean) options - Set appropriate aliases: `-c`,
-`-d`, `-y` - Configure task group as `:ash` for ecosystem consistency 1.3. [ ]
+`-d`, `-y` - Configure task group as `:ash` for ecosystem consistency 1.3. [x]
 Create basic `igniter/1` callback structure - Set up pipeline placeholder for
 all installation phases - Add app_name extraction:
 `Igniter.Project.Application.app_name(igniter)` - Add option parsing and

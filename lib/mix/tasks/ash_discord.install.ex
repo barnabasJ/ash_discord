@@ -75,6 +75,7 @@ defmodule Mix.Tasks.AshDiscord.Install do
     |> setup_discord_configuration()
     |> add_consumer_to_supervision_tree(options)
     |> add_formatter_configuration()
+    |> add_installation_summary(options)
   end
 
   # Helper function for parsing and validating installer options
@@ -351,5 +352,123 @@ defmodule Mix.Tasks.AshDiscord.Install do
   defp add_spark_formatter_plugin(igniter) do
     # Add Spark.Formatter plugin if not already present
     Igniter.Project.Formatter.add_formatter_plugin(igniter, Spark.Formatter)
+  end
+
+  defp add_installation_summary(igniter, options) do
+    consumer_module = options[:consumer]
+    domains = options[:domains]
+
+    summary = generate_installation_summary(consumer_module, domains)
+
+    Igniter.add_notice(igniter, summary)
+  end
+
+  defp generate_installation_summary(consumer_module, domains) do
+    """
+
+    🎉 AshDiscord Installation Complete!
+
+    ✅ Consumer module created: #{inspect(consumer_module)}
+    ✅ Dependencies added: nostrum (~> 0.10), ash_discord
+    ✅ Discord configuration added for all environments
+    ✅ Consumer integrated into application supervision tree
+    ✅ Formatter configured for AshDiscord DSL
+
+    📝 Next Steps:
+
+    1. **Configure Your Discord Bot Token**
+
+       Development (config/dev.exs):
+       ```elixir
+       config :nostrum,
+         token: "your_dev_bot_token_here"
+       ```
+
+       Production (set environment variable):
+       ```bash
+       export DISCORD_TOKEN="your_production_bot_token"
+       ```
+
+       Get a bot token from: https://discord.com/developers/applications
+
+    2. **Configure Ash Domains**#{domains_configuration_message(domains)}
+
+    3. **Add Discord Commands**
+
+       In your Ash domains, define Discord interactions:
+
+       ```elixir
+       defmodule MyApp.Discord do
+         use Ash.Domain
+
+         discord do
+           command :ping do
+             description "Responds with Pong!"
+
+             execute fn interaction ->
+               {:ok, %{content: "Pong! 🏓"}}
+             end
+           end
+         end
+       end
+       ```
+
+    4. **Start Your Application**
+
+       ```bash
+       mix deps.get
+       mix compile
+       iex -S mix phx.server
+       ```
+
+       Your Discord bot will automatically connect and register commands!
+
+    📚 Documentation:
+
+    - AshDiscord Guide: https://hexdocs.pm/ash_discord
+    - Nostrum Documentation: https://hexdocs.pm/nostrum
+    - Discord Developer Portal: https://discord.com/developers/docs
+
+    💡 Tips:
+
+    - Use `mix ash_discord.gen.command` to generate new Discord commands
+    - Check logs for Discord connection status and command registration
+    - Test commands in a development Discord server first
+    - Use Discord's application commands for better user experience
+
+    🔧 Troubleshooting:
+
+    If your bot doesn't connect:
+    - Verify your bot token is correct
+    - Check that the bot has been invited to your server
+    - Ensure your bot has the necessary permissions
+    - Review the logs for connection errors
+
+    Happy Discord bot building! 🚀
+    """
+  end
+
+  defp domains_configuration_message([]) do
+    """
+
+       Your consumer currently has no domains configured.
+       Edit your consumer module and add domains to the DSL:
+
+       ```elixir
+       ash_discord_consumer do
+         domains [MyApp.Discord, MyApp.Chat]
+       end
+       ```
+    """
+  end
+
+  defp domains_configuration_message(domains) do
+    """
+
+       Your consumer is configured with these domains:
+       #{Enum.map_join(domains, "\n       ", &"- #{inspect(&1)}")}
+
+       You can add more domains by editing the consumer module.
+    """
   end
 end

@@ -1034,6 +1034,79 @@ defmodule AshDiscord.Consumer do
       def handle_message_reaction_remove(data), do: :ok
       def handle_message_reaction_remove_all(data), do: :ok
 
+      def handle_guild_create(guild) do
+        Logger.info("AshDiscord: handle_guild_create called for guild #{guild.id}")
+
+        case AshDiscord.Consumer.Info.ash_discord_consumer_guild_resource(__MODULE__) do
+          {:ok, resource} ->
+            Logger.info("AshDiscord: Found guild resource: #{inspect(resource)}")
+
+            case resource
+                 |> Ash.Changeset.for_create(
+                   :from_discord,
+                   %{
+                     discord_id: guild.id,
+                     discord_struct: guild
+                   },
+                   context: %{
+                     private: %{ash_discord?: true},
+                     shared: %{private: %{ash_discord?: true}}
+                   }
+                 )
+                 |> Ash.create() do
+              {:ok, created_guild} ->
+                Logger.info("AshDiscord: Successfully created guild #{created_guild.discord_id}")
+                :ok
+
+              {:error, error} ->
+                Logger.warning(
+                  "AshDiscord: Failed to create guild #{guild.id}: #{inspect(error)}"
+                )
+
+                :ok
+            end
+
+          :error ->
+            Logger.info("AshDiscord: No guild resource configured")
+            :ok
+        end
+      end
+
+      def handle_guild_update(guild) do
+        with {:ok, resource} <-
+               AshDiscord.Consumer.Info.ash_discord_consumer_guild_resource(__MODULE__),
+             {:ok, _guild} <-
+               resource
+               |> Ash.Changeset.for_create(
+                 :from_discord,
+                 %{
+                   discord_id: guild.id,
+                   discord_struct: guild
+                 },
+                 context: %{
+                   private: %{ash_discord?: true},
+                   shared: %{private: %{ash_discord?: true}}
+                 }
+               )
+               |> Ash.create() do
+          :ok
+        else
+          {:error, error} ->
+            Logger.warning("Failed to update guild #{guild.id}: #{inspect(error)}")
+            :ok
+
+          :error ->
+            # No guild resource configured
+            :ok
+        end
+      end
+
+      def handle_guild_delete(data) do
+        # Guild deletion not yet implemented
+        # TODO: Implement guild deletion when needed
+        :ok
+      end
+
       def handle_guild_role_create(role) do
         with {:ok, resource} <-
                AshDiscord.Consumer.Info.ash_discord_consumer_role_resource(__MODULE__),

@@ -39,30 +39,38 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
   - `{:error, reason}` - Cache miss or fetching disabled
   """
   def fetch_from_api(changeset, type) do
-    # Special handling for guild_member which uses user_discord_id and guild_discord_id
-    if type == :guild_member do
-      fetch_guild_member_from_api(changeset)
-    else
-      discord_id = extract_discord_id(changeset)
+    # Special handling for entities that don't have discord_id fields or aren't API-fetchable
+    cond do
+      type == :guild_member ->
+        fetch_guild_member_from_api(changeset)
 
-      Logger.info("""
-      API fetch attempted for Discord #{type} with ID: #{inspect(discord_id)}
-      Consider using struct-first pattern with :discord_struct argument for better performance.
-      """)
+      type in [:typing_indicator, :message_reaction] ->
+        # These are event-based entities, not persistent Discord entities
+        # They should always be created from provided data, not fetched from API
+        {:error,
+         "#{type} entities cannot be fetched from Discord API - they are event-based. Please provide discord_struct argument."}
 
-      case discord_id do
-        nil ->
-          {:error, "No Discord ID found for #{type} entity"}
+      true ->
+        discord_id = extract_discord_id(changeset)
 
-        id ->
-          case fetch_from_nostrum_api(type, id, changeset) do
-            {:ok, entity} ->
-              {:ok, entity}
+        Logger.info("""
+        API fetch attempted for Discord #{type} with ID: #{inspect(discord_id)}
+        Consider using struct-first pattern with :discord_struct argument for better performance.
+        """)
 
-            {:error, reason} ->
-              {:error, "Failed to fetch #{type} with ID #{id}: #{inspect(reason)}"}
-          end
-      end
+        case discord_id do
+          nil ->
+            {:error, "No Discord ID found for #{type} entity"}
+
+          id ->
+            case fetch_from_nostrum_api(type, id, changeset) do
+              {:ok, entity} ->
+                {:ok, entity}
+
+              {:error, reason} ->
+                {:error, "Failed to fetch #{type} with ID #{id}: #{inspect(reason)}"}
+            end
+        end
     end
   end
 

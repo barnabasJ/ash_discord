@@ -115,21 +115,27 @@ defmodule AshDiscord.Changes.FromDiscord do
     case Ash.Changeset.get_argument(changeset, :discord_struct) do
       nil ->
         # For backward compatibility with interaction type, check :interaction argument
-        if type == :interaction do
-          case Ash.Changeset.get_argument(changeset, :interaction) do
-            nil ->
-              # Fallback to API fetch
-              AshDiscord.Changes.FromDiscord.ApiFetchers.fetch_from_api(changeset, type)
+        cond do
+          type == :interaction ->
+            case Ash.Changeset.get_argument(changeset, :interaction) do
+              nil ->
+                # Fallback to API fetch
+                AshDiscord.Changes.FromDiscord.ApiFetchers.fetch_from_api(changeset, type)
 
-            interaction when is_map(interaction) ->
-              {:ok, interaction}
+              interaction when is_map(interaction) ->
+                {:ok, interaction}
 
-            invalid ->
-              {:error, "Invalid value provided for interaction: #{inspect(invalid)}"}
-          end
-        else
-          # Fallback to API fetch for other types
-          AshDiscord.Changes.FromDiscord.ApiFetchers.fetch_from_api(changeset, type)
+              invalid ->
+                {:error, "Invalid value provided for interaction: #{inspect(invalid)}"}
+            end
+
+          # For event-based entities, construct data from arguments
+          type in [:typing_indicator, :message_reaction] ->
+            construct_event_data(changeset, type)
+
+          true ->
+            # Fallback to API fetch for other types
+            AshDiscord.Changes.FromDiscord.ApiFetchers.fetch_from_api(changeset, type)
         end
 
       discord_struct when is_map(discord_struct) ->
@@ -137,6 +143,51 @@ defmodule AshDiscord.Changes.FromDiscord do
 
       invalid ->
         {:error, "Invalid value provided for discord_struct: #{inspect(invalid)}"}
+    end
+  end
+
+  # Construct event data from changeset arguments for event-based entities
+  defp construct_event_data(changeset, :typing_indicator) do
+    user_id = Ash.Changeset.get_argument_or_attribute(changeset, :user_discord_id)
+    channel_id = Ash.Changeset.get_argument_or_attribute(changeset, :channel_discord_id)
+    guild_id = Ash.Changeset.get_argument_or_attribute(changeset, :guild_discord_id)
+
+    if user_id && channel_id do
+      typing_data = %{
+        user_id: user_id,
+        channel_id: channel_id,
+        guild_id: guild_id,
+        timestamp: DateTime.utc_now(),
+        member: nil
+      }
+
+      {:ok, typing_data}
+    else
+      {:error, "TypingIndicator requires user_discord_id and channel_discord_id"}
+    end
+  end
+
+  defp construct_event_data(changeset, :message_reaction) do
+    user_id = Ash.Changeset.get_argument_or_attribute(changeset, :user_id)
+    message_id = Ash.Changeset.get_argument_or_attribute(changeset, :message_id)
+    channel_id = Ash.Changeset.get_argument_or_attribute(changeset, :channel_id)
+    guild_id = Ash.Changeset.get_argument_or_attribute(changeset, :guild_id)
+
+    if user_id && message_id && channel_id do
+      reaction_data = %{
+        user_id: user_id,
+        message_id: message_id,
+        channel_id: channel_id,
+        guild_id: guild_id,
+        # Will be set from arguments in transformation
+        emoji: nil,
+        count: 1,
+        me: false
+      }
+
+      {:ok, reaction_data}
+    else
+      {:error, "MessageReaction requires user_id, message_id, and channel_id"}
     end
   end
 
@@ -419,7 +470,7 @@ defmodule AshDiscord.Changes.FromDiscord do
 
   defp transform_voice_state(changeset, discord_data) do
     changeset
-    |> Ash.Changeset.force_change_attribute(:user_id, discord_data.user_id)
+    |> Ash.Changeset.force_change_attribute(:user_discord_id, discord_data.user_id)
     |> maybe_set_attribute(:channel_discord_id, discord_data.channel_id)
     |> maybe_set_attribute(:guild_discord_id, discord_data.guild_id)
     |> Ash.Changeset.force_change_attribute(:session_id, discord_data.session_id)
@@ -491,10 +542,43 @@ defmodule AshDiscord.Changes.FromDiscord do
 
   defp transform_typing_indicator(changeset, discord_data) do
     changeset
-    |> Ash.Changeset.force_change_attribute(:user_id, discord_data.user_id)
+    |> Ash.Changeset.force_change_attribute(:user_discord_id, discord_data.user_id)
     |> Ash.Changeset.force_change_attribute(:channel_discord_id, discord_data.channel_id)
     |> maybe_set_attribute(:guild_discord_id, discord_data.guild_id)
-    |> Transformations.set_datetime_field(:timestamp, discord_data.timestamp)
+    |> set_typing_timestamp(discord_data)
+    |> maybe_set_attribute(:member, Map.get(discord_data, :member))
+  end
+
+  # Handle timestamp setting for typing indicators (matches original logic)
+  defp set_typing_timestamp(changeset, %{timestamp: timestamp}) when not is_nil(timestamp) do
+    # Parse Unix timestamp if it's an integer
+    parsed_timestamp =
+      case timestamp do
+        timestamp when is_integer(timestamp) ->
+          case DateTime.from_unix(timestamp) do
+            {:ok, dt} -> dt
+            _ -> nil
+          end
+
+        timestamp when is_binary(timestamp) ->
+          case DateTime.from_iso8601(timestamp) do
+            {:ok, dt, _} -> dt
+            _ -> nil
+          end
+
+        %DateTime{} = dt ->
+          dt
+
+        _ ->
+          nil
+      end
+
+    Ash.Changeset.force_change_attribute(changeset, :timestamp, parsed_timestamp)
+  end
+
+  defp set_typing_timestamp(changeset, _) do
+    # Default to current timestamp if none provided
+    Ash.Changeset.force_change_attribute(changeset, :timestamp, DateTime.utc_now())
   end
 
   defp transform_sticker(changeset, discord_data) do

@@ -598,6 +598,7 @@ defmodule AshDiscord.Consumer do
 
       use Nostrum.Consumer
       require Logger
+      require Ash.Query
       alias AshDiscord.Logger, as: AshLogger
 
       defp parse_timestamp(timestamp_string) do
@@ -1032,9 +1033,78 @@ defmodule AshDiscord.Consumer do
       def handle_message_reaction_add(data), do: :ok
       def handle_message_reaction_remove(data), do: :ok
       def handle_message_reaction_remove_all(data), do: :ok
-      def handle_guild_role_create(role), do: :ok
-      def handle_guild_role_update(role), do: :ok
-      def handle_guild_role_delete(data), do: :ok
+
+      def handle_guild_role_create(role) do
+        with {:ok, resource} <-
+               AshDiscord.Consumer.Info.ash_discord_consumer_role_resource(__MODULE__),
+             {:ok, _role} <-
+               resource
+               |> Ash.Changeset.for_create(
+                 :from_discord,
+                 %{
+                   discord_id: role.id,
+                   guild_discord_id: role.guild_id,
+                   discord_struct: role
+                 },
+                 context: %{
+                   private: %{ash_discord?: true},
+                   shared: %{private: %{ash_discord?: true}}
+                 }
+               )
+               |> Ash.create() do
+          :ok
+        else
+          {:error, error} ->
+            Logger.warning(
+              "Failed to create role #{role.id} in guild #{role.guild_id}: #{inspect(error)}"
+            )
+
+            :ok
+
+          :error ->
+            # No role resource configured
+            :ok
+        end
+      end
+
+      def handle_guild_role_update(role) do
+        with {:ok, resource} <-
+               AshDiscord.Consumer.Info.ash_discord_consumer_role_resource(__MODULE__),
+             {:ok, _role} <-
+               resource
+               |> Ash.Changeset.for_create(
+                 :from_discord,
+                 %{
+                   discord_id: role.id,
+                   guild_discord_id: role.guild_id,
+                   discord_struct: role
+                 },
+                 context: %{
+                   private: %{ash_discord?: true},
+                   shared: %{private: %{ash_discord?: true}}
+                 }
+               )
+               |> Ash.create() do
+          :ok
+        else
+          {:error, error} ->
+            Logger.warning(
+              "Failed to update role #{role.id} in guild #{role.guild_id}: #{inspect(error)}"
+            )
+
+            :ok
+
+          :error ->
+            # No role resource configured
+            :ok
+        end
+      end
+
+      def handle_guild_role_delete(data) do
+        # Role deletion not yet implemented
+        # TODO: Implement role deletion when needed
+        :ok
+      end
 
       def handle_guild_member_add(guild_id, member) do
         with {:ok, resource} <-

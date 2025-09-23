@@ -390,13 +390,32 @@ defmodule AshDiscord.Changes.FromDiscord do
   end
 
   defp transform_emoji(changeset, discord_data) do
+    # Determine if this is a custom emoji (has an ID)
+    custom =
+      case discord_data.id do
+        nil -> false
+        _ -> true
+      end
+
     changeset
     |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
     |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
     |> Ash.Changeset.force_change_attribute(:animated, discord_data.animated || false)
-    |> maybe_set_attribute(:managed, discord_data.managed)
-    |> maybe_set_attribute(:require_colons, discord_data.require_colons)
+    |> Ash.Changeset.force_change_attribute(:custom, custom)
+    |> maybe_set_attribute(:available, Map.get(discord_data, :available, true))
+    |> maybe_set_attribute(:require_colons, Map.get(discord_data, :require_colons, true))
+    |> maybe_set_attribute(:managed, discord_data.managed || false)
+    |> maybe_set_attribute(:roles, Map.get(discord_data, :roles, []))
+    |> maybe_manage_emoji_user_relationship(discord_data)
   end
+
+  # Manage user relationship for emojis
+  defp maybe_manage_emoji_user_relationship(changeset, %{user: %{id: user_id}})
+       when not is_nil(user_id) do
+    Transformations.manage_user_relationship(changeset, user_id)
+  end
+
+  defp maybe_manage_emoji_user_relationship(changeset, _), do: changeset
 
   defp transform_voice_state(changeset, discord_data) do
     changeset

@@ -140,7 +140,6 @@ defmodule AshDiscord.Changes.FromDiscord.UserTest do
       # But with updated attributes
       assert updated_user.discord_username == "updated_user"
       assert updated_user.discord_avatar == "updated_avatar"
-
     end
 
     test "upsert works with API fallback" do
@@ -168,7 +167,6 @@ defmodule AshDiscord.Changes.FromDiscord.UserTest do
       assert updated_user.id == original_user.id
       assert updated_user.discord_id == discord_id
       assert updated_user.discord_username == "api_updated_user"
-
     end
   end
 

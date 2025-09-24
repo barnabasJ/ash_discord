@@ -72,12 +72,10 @@ defmodule Mix.Tasks.AshDiscord.Install do
     options = parse_and_validate_options(igniter)
 
     igniter
-    |> add_dependencies()
     |> generate_consumer_module(options)
     |> setup_discord_configuration()
     |> add_consumer_to_supervision_tree(options)
     |> add_formatter_configuration()
-    |> validate_integration(options)
     |> add_installation_summary(options)
   end
 
@@ -183,14 +181,6 @@ defmodule Mix.Tasks.AshDiscord.Install do
   # Helper functions for installer operations
 
   @doc false
-  # Ensures ash_discord runtime dependency
-  defp add_dependencies(igniter) do
-    # nostrum is handled by adds_deps in info/2
-    # ash is handled by installs in info/2
-    ensure_ash_discord_runtime(igniter)
-  end
-
-  @doc false
   # Generates the Discord consumer module with DSL configuration
   defp generate_consumer_module(igniter, options) do
     consumer_module = options[:consumer]
@@ -221,22 +211,6 @@ defmodule Mix.Tasks.AshDiscord.Install do
     igniter
     |> Igniter.Project.Formatter.import_dep(:ash_discord)
     |> add_spark_formatter_plugin()
-  end
-
-  # Implementation helper functions
-
-  defp ensure_ash_discord_runtime(igniter) do
-    # Ensure ash_discord is available at runtime
-    case Igniter.Project.Deps.get_dep(igniter, :ash_discord) do
-      nil ->
-        # ash_discord should already be installed if this installer is running
-        # but we'll add it if somehow it's not present
-        Igniter.Project.Deps.add_dep(igniter, {:ash_discord, "~> 0.1"})
-
-      _dep ->
-        # ash_discord is already present
-        igniter
-    end
   end
 
   defp generate_consumer_module_content(igniter, consumer_module, domains) do
@@ -342,74 +316,6 @@ defmodule Mix.Tasks.AshDiscord.Install do
   defp add_spark_formatter_plugin(igniter) do
     # Add Spark.Formatter plugin if not already present
     Igniter.Project.Formatter.add_formatter_plugin(igniter, Spark.Formatter)
-  end
-
-  defp validate_integration(igniter, options) do
-    consumer_module = options[:consumer]
-
-    igniter
-    |> validate_compilation_readiness(consumer_module)
-    |> validate_supervision_integration(consumer_module)
-    |> validate_configuration_completeness()
-  end
-
-  defp validate_compilation_readiness(igniter, consumer_module) do
-    # Validate that generated code will compile
-    case Igniter.Project.Module.module_exists(igniter, consumer_module) do
-      {true, updated_igniter} ->
-        updated_igniter
-
-      {false, updated_igniter} ->
-        # This should not happen if generation succeeded, but we check anyway
-        Igniter.add_issue(
-          updated_igniter,
-          """
-          Warning: Consumer module #{inspect(consumer_module)} was not found after generation.
-          Please verify the installation completed successfully.
-          """
-        )
-    end
-  end
-
-  defp validate_supervision_integration(igniter, consumer_module) do
-    # Validate consumer is in supervision tree
-    app_module = Igniter.Project.Application.app_module(igniter)
-
-    case app_module do
-      nil ->
-        Igniter.add_issue(
-          igniter,
-          """
-          Warning: No application module found.
-          The Discord consumer may not start automatically.
-          Please manually add #{inspect(consumer_module)} to your supervision tree.
-          """
-        )
-
-      _module ->
-        # Consumer should be added by add_consumer_to_supervision_tree
-        igniter
-    end
-  end
-
-  defp validate_configuration_completeness(igniter) do
-    # Check if configuration files exist and can be modified
-    config_files = ["config/dev.exs", "config/runtime.exs", "config/test.exs"]
-
-    Enum.reduce(config_files, igniter, fn config_file, acc ->
-      if File.exists?(config_file) do
-        acc
-      else
-        Igniter.add_warning(
-          acc,
-          """
-          Configuration file #{config_file} not found.
-          Discord configuration may not be complete.
-          Please manually configure :nostrum token in this environment.
-          """
-        )
-      end
-    end)
   end
 
   defp add_installation_summary(igniter, options) do

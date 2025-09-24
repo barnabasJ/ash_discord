@@ -1030,9 +1030,41 @@ defmodule AshDiscord.Consumer do
       end
 
       # Default implementations for callbacks not yet implemented
-      def handle_message_reaction_add(data), do: :ok
-      def handle_message_reaction_remove(data), do: :ok
-      def handle_message_reaction_remove_all(data), do: :ok
+      def handle_message_reaction_add(data) do
+        case AshDiscord.Consumer.Info.ash_discord_consumer_message_reaction_resource(__MODULE__) do
+          {:ok, resource} ->
+            resource
+            |> Ash.Changeset.for_create(
+              :from_discord,
+              %{
+                discord_struct: data
+              },
+              context: %{
+                private: %{ash_discord?: true},
+                shared: %{private: %{ash_discord?: true}}
+              }
+            )
+            |> Ash.create()
+
+          :error ->
+            Logger.warning("No message reaction resource configured")
+            {:error, "No message reaction resource configured"}
+        end
+
+        :ok
+      end
+
+      def handle_message_reaction_remove(data) do
+        # Reaction removal not yet implemented due to filter macro issues
+        Logger.info("AshDiscord: Message reaction removal requested - not yet implemented")
+        :ok
+      end
+
+      def handle_message_reaction_remove_all(data) do
+        # Reaction removal not yet implemented due to filter macro issues
+        Logger.info("AshDiscord: Message reaction remove all requested - not yet implemented")
+        :ok
+      end
 
       def handle_guild_create(guild) do
         Logger.info("AshDiscord: handle_guild_create called for guild #{guild.id}")
@@ -1102,8 +1134,9 @@ defmodule AshDiscord.Consumer do
       end
 
       def handle_guild_delete(data) do
-        # Guild deletion not yet implemented
-        # TODO: Implement guild deletion when needed
+        # Guild deletion not yet implemented due to filter macro issues
+        # TODO: Implement guild deletion when filter issues are resolved
+        Logger.info("AshDiscord: Guild deletion requested for #{data.id} - not yet implemented")
         :ok
       end
 
@@ -1322,13 +1355,143 @@ defmodule AshDiscord.Consumer do
         end
       end
 
-      def handle_channel_create(channel), do: :ok
-      def handle_channel_update(channel), do: :ok
-      def handle_channel_delete(channel), do: :ok
-      def handle_voice_state_update(voice_state), do: :ok
-      def handle_typing_start(typing_data), do: :ok
-      def handle_invite_create(invite), do: :ok
-      def handle_invite_delete(invite_data), do: :ok
+      def handle_channel_create(channel) do
+        case AshDiscord.Consumer.Info.ash_discord_consumer_channel_resource(__MODULE__) do
+          {:ok, resource} ->
+            resource
+            |> Ash.Changeset.for_create(
+              :from_discord,
+              %{
+                discord_id: channel.id,
+                discord_struct: channel
+              },
+              context: %{
+                private: %{ash_discord?: true},
+                shared: %{private: %{ash_discord?: true}}
+              }
+            )
+            |> Ash.create()
+
+          :error ->
+            Logger.warning("No channel resource configured")
+            {:error, "No channel resource configured"}
+        end
+
+        :ok
+      end
+
+      def handle_channel_update(channel) do
+        case AshDiscord.Consumer.Info.ash_discord_consumer_channel_resource(__MODULE__) do
+          {:ok, resource} ->
+            resource
+            |> Ash.Changeset.for_create(
+              :from_discord,
+              %{
+                discord_id: channel.id,
+                discord_struct: channel
+              },
+              context: %{
+                private: %{ash_discord?: true},
+                shared: %{private: %{ash_discord?: true}}
+              }
+            )
+            |> Ash.create()
+
+          :error ->
+            Logger.warning("No channel resource configured")
+            {:error, "No channel resource configured"}
+        end
+
+        :ok
+      end
+
+      def handle_channel_delete(channel) do
+        # Channel deletion not yet implemented due to filter macro issues
+        Logger.info(
+          "AshDiscord: Channel deletion requested for #{channel.id} - not yet implemented"
+        )
+
+        :ok
+      end
+
+      def handle_voice_state_update(voice_state) do
+        case AshDiscord.Consumer.Info.ash_discord_consumer_voice_state_resource(__MODULE__) do
+          {:ok, resource} ->
+            resource
+            |> Ash.Changeset.for_create(
+              :from_discord,
+              %{
+                discord_struct: voice_state
+              },
+              context: %{
+                private: %{ash_discord?: true},
+                shared: %{private: %{ash_discord?: true}}
+              }
+            )
+            |> Ash.create()
+
+          :error ->
+            Logger.warning("No voice state resource configured")
+            {:error, "No voice state resource configured"}
+        end
+
+        :ok
+      end
+
+      def handle_typing_start(typing_data) do
+        case AshDiscord.Consumer.Info.ash_discord_consumer_typing_indicator_resource(__MODULE__) do
+          {:ok, resource} ->
+            resource
+            |> Ash.Changeset.for_create(
+              :from_discord,
+              %{
+                discord_struct: typing_data
+              },
+              context: %{
+                private: %{ash_discord?: true},
+                shared: %{private: %{ash_discord?: true}}
+              }
+            )
+            |> Ash.create()
+
+          :error ->
+            Logger.warning("No typing indicator resource configured")
+            {:error, "No typing indicator resource configured"}
+        end
+
+        :ok
+      end
+
+      def handle_invite_create(invite) do
+        case AshDiscord.Consumer.Info.ash_discord_consumer_invite_resource(__MODULE__) do
+          {:ok, resource} ->
+            resource
+            |> Ash.Changeset.for_create(
+              :from_discord,
+              %{
+                discord_struct: invite
+              },
+              context: %{
+                private: %{ash_discord?: true},
+                shared: %{private: %{ash_discord?: true}}
+              }
+            )
+            |> Ash.create()
+
+          :error ->
+            Logger.warning("No invite resource configured")
+            {:error, "No invite resource configured"}
+        end
+
+        :ok
+      end
+
+      def handle_invite_delete(invite_data) do
+        # Invite deletion not yet implemented due to filter macro issues
+        Logger.info("AshDiscord: Invite deletion requested - not yet implemented")
+        :ok
+      end
+
       def handle_unknown_event(event), do: :ok
 
       def command_allowed_for_interaction?(interaction, command) do

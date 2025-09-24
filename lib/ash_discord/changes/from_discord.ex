@@ -332,8 +332,9 @@ defmodule AshDiscord.Changes.FromDiscord do
 
   defp maybe_set_attribute(changeset, field, value) do
     resource = changeset.resource
+    has_attribute = Ash.Resource.Info.attribute(resource, field)
 
-    if Ash.Resource.Info.attribute(resource, field) do
+    if has_attribute do
       Ash.Changeset.force_change_attribute(changeset, field, value)
     else
       changeset
@@ -495,23 +496,51 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> maybe_set_attribute(:avatar, Map.get(discord_data, :avatar))
     |> maybe_set_attribute(:channel_discord_id, Map.get(discord_data, :channel_id))
     |> maybe_set_attribute(:guild_discord_id, Map.get(discord_data, :guild_id))
-    |> maybe_set_attribute(:token, Map.get(discord_data, :token))
+    |> maybe_set_attribute(:application_id, Map.get(discord_data, :application_id))
+    |> maybe_set_attribute(:user_discord_id, get_nested_id(Map.get(discord_data, :user)))
+    |> maybe_set_attribute(
+      :source_guild_discord_id,
+      get_nested_id(Map.get(discord_data, :source_guild))
+    )
+    |> maybe_set_attribute(
+      :source_channel_discord_id,
+      get_nested_id(Map.get(discord_data, :source_channel))
+    )
   end
 
   defp transform_invite(changeset, discord_data) do
+    # Handle both API format (nested objects) and event format (flat IDs)
+    guild_id =
+      case Map.get(discord_data, :guild) do
+        nil -> Map.get(discord_data, :guild_id)
+        guild_obj -> guild_obj.id
+      end
+
+    channel_id =
+      case Map.get(discord_data, :channel) do
+        nil -> Map.get(discord_data, :channel_id)
+        channel_obj -> channel_obj.id
+      end
+
     changeset
     |> Ash.Changeset.force_change_attribute(:code, discord_data.code)
-    |> maybe_set_attribute(:guild_discord_id, get_nested_id(discord_data.guild))
-    |> Ash.Changeset.force_change_attribute(:channel_discord_id, discord_data.channel.id)
-    |> maybe_set_attribute(:inviter_id, get_nested_id(discord_data.inviter))
-    |> maybe_set_attribute(:target_user_id, get_nested_id(discord_data.target_user))
-    |> maybe_set_attribute(:target_user_type, discord_data.target_user_type)
-    |> maybe_set_attribute(:approximate_presence_count, discord_data.approximate_presence_count)
-    |> maybe_set_attribute(:approximate_member_count, discord_data.approximate_member_count)
-    |> maybe_set_attribute(:uses, discord_data.uses)
-    |> maybe_set_attribute(:max_uses, discord_data.max_uses)
-    |> maybe_set_attribute(:max_age, discord_data.max_age)
-    |> maybe_set_attribute(:temporary, discord_data.temporary)
+    |> maybe_set_attribute(:guild_discord_id, guild_id)
+    |> Ash.Changeset.force_change_attribute(:channel_discord_id, channel_id)
+    |> maybe_set_attribute(:inviter_id, get_nested_id(Map.get(discord_data, :inviter)))
+    |> maybe_set_attribute(:target_user_id, get_nested_id(Map.get(discord_data, :target_user)))
+    |> maybe_set_attribute(:target_user_type, Map.get(discord_data, :target_user_type))
+    |> maybe_set_attribute(
+      :approximate_presence_count,
+      Map.get(discord_data, :approximate_presence_count)
+    )
+    |> maybe_set_attribute(
+      :approximate_member_count,
+      Map.get(discord_data, :approximate_member_count)
+    )
+    |> maybe_set_attribute(:uses, Map.get(discord_data, :uses))
+    |> maybe_set_attribute(:max_uses, Map.get(discord_data, :max_uses))
+    |> maybe_set_attribute(:max_age, Map.get(discord_data, :max_age))
+    |> maybe_set_attribute(:temporary, Map.get(discord_data, :temporary))
     |> Transformations.set_datetime_field(:created_at, discord_data.created_at)
   end
 

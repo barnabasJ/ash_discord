@@ -48,6 +48,9 @@ defmodule Mix.Tasks.AshDiscord.Install do
 
   use Igniter.Mix.Task
 
+  alias Igniter.Project.{Config, Deps}
+  alias Igniter.Project.Module, as: ProjectModule
+
   @impl Igniter.Mix.Task
   def info(_argv, _parent) do
     %Igniter.Mix.Task.Info{
@@ -129,36 +132,40 @@ defmodule Mix.Tasks.AshDiscord.Install do
   defp validate_project_compatibility!(igniter) do
     # Check for Phoenix application structure
     # Note: We'll check for Phoenix by looking for Phoenix deps instead
-    phoenix_dep = Igniter.Project.Deps.get_dep(igniter, :phoenix)
+    case Deps.get_dep(igniter, :phoenix) do
+      {:error, _} ->
+        raise """
+        AshDiscord requires a Phoenix application.
 
-    unless phoenix_dep do
-      raise """
-      AshDiscord requires a Phoenix application.
+        This installer is designed to work with Phoenix applications.
+        Please ensure your application is a Phoenix project before running this installer.
+        """
 
-      This installer is designed to work with Phoenix applications.
-      Please ensure your application is a Phoenix project before running this installer.
-      """
+      {:ok, _} ->
+        :ok
     end
 
     # Check for Ash framework presence
-    deps = Igniter.Project.Deps.get_dep(igniter, :ash)
+    case Deps.get_dep(igniter, :ash) do
+      {:error, _} ->
+        raise """
+          AshDiscord requires the Ash framework to be installed.
 
-    unless deps do
-      raise """
-      AshDiscord requires the Ash framework to be installed.
+        Please add Ash to your dependencies first:
+            {:ash, "~> 3.0"}
 
-      Please add Ash to your dependencies first:
-          {:ash, "~> 3.0"}
+        Then run `mix deps.get` before running this installer again.
+        """
 
-      Then run `mix deps.get` before running this installer again.
-      """
+      {:ok, _} ->
+        :ok
     end
   end
 
   defp validate_domains!(igniter, domains) do
     # For each specified domain, validate it exists and uses Ash.Domain
     Enum.each(domains, fn domain_module ->
-      case Igniter.Project.Module.module_exists(igniter, domain_module) do
+      case ProjectModule.module_exists(igniter, domain_module) do
         {false, _igniter} ->
           raise """
           Domain module #{inspect(domain_module)} does not exist.
@@ -260,11 +267,11 @@ defmodule Mix.Tasks.AshDiscord.Install do
     end
     """
 
-    Igniter.Project.Module.create_module(igniter, consumer_module, module_content)
+    ProjectModule.create_module(igniter, consumer_module, module_content)
   end
 
   defp setup_development_config(igniter) do
-    Igniter.Project.Config.configure_new(
+    Config.configure_new(
       igniter,
       "dev.exs",
       :nostrum,
@@ -284,7 +291,7 @@ defmodule Mix.Tasks.AshDiscord.Install do
       \"\"\"
     """
 
-    Igniter.Project.Config.configure_runtime_env(
+    Config.configure_runtime_env(
       igniter,
       :prod,
       :nostrum,
@@ -295,7 +302,7 @@ defmodule Mix.Tasks.AshDiscord.Install do
 
   defp setup_test_config(igniter) do
     # Test environment should not require a real Discord token
-    Igniter.Project.Config.configure_new(
+    Config.configure_new(
       igniter,
       "test.exs",
       :nostrum,

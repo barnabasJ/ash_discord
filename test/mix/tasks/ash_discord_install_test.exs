@@ -78,16 +78,6 @@ defmodule Mix.Tasks.AshDiscord.InstallTest do
       |> assert_creates("lib/test/discord_consumer.ex")
     end
 
-    test "dependency management is configured" do
-      # Dependencies are specified in info/2:
-      # - installs: [{:ash, "~> 3.0"}] - ensures Ash is installed before running
-      # - adds_deps: [{:nostrum, "~> 0.10"}] - adds nostrum to mix.exs
-      # These are handled by Igniter framework, not directly testable in test mode
-      phx_test_project()
-      |> Igniter.compose_task("ash_discord.install", [])
-      |> assert_creates("lib/test/discord_consumer.ex")
-    end
-
     test "environment configuration sets up all environments" do
       phx_test_project()
       |> Igniter.compose_task("ash_discord.install", [])
@@ -106,6 +96,12 @@ defmodule Mix.Tasks.AshDiscord.InstallTest do
         53 + |  config :nostrum, token: \"System.get_env(\\\"DISCORD_TOKEN\\\") ||
         54 + |  raise \\\"\\\"\\\"
         55 + |  Missing required environment variable: DISCORD_TOKEN
+        56 + |
+        57 + |  Please set the DISCORD_TOKEN environment variable to your Discord bot token.
+        58 + |  You can get a bot token from https://discord.com/developers/applications
+        59 + |  \\\"\\\"\\\"
+        60 + |\"
+        61 + |
       ...|
       """)
     end
@@ -129,12 +125,11 @@ defmodule Mix.Tasks.AshDiscord.InstallTest do
     end
 
     test "installer is idempotent" do
-      project =
-        phx_test_project()
-        |> Igniter.compose_task("ash_discord.install", [])
-
-      # Running again should work without errors
-      Igniter.compose_task(project, "ash_discord.install", [])
+      phx_test_project()
+      |> Igniter.compose_task("ash_discord.install", [])
+      |> apply_igniter!()
+      |> Igniter.compose_task("ash_discord.install", [])
+      |> assert_unchanged()
     end
   end
 

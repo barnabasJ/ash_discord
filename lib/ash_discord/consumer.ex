@@ -694,7 +694,6 @@ defmodule AshDiscord.Consumer do
               :ok
 
             {:error, error} ->
-              dbg(error)
               require Logger
               Logger.error("Failed to save guild #{guild.name} (#{guild.id}): #{inspect(error)}")
               # Don't crash the consumer

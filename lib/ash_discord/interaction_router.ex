@@ -84,8 +84,6 @@ defmodule AshDiscord.InteractionRouter do
               {:ok, user}
 
             {:error, reason} ->
-              dbg(reason)
-
               AshLogger.log_interaction(
                 :error,
                 "Failed to create/find user via from_discord",

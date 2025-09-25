@@ -472,19 +472,19 @@ defmodule AshDiscord.Changes.FromDiscord do
   defp transform_voice_state(changeset, discord_data) do
     changeset
     |> Ash.Changeset.force_change_attribute(:user_discord_id, discord_data.user_id)
-    |> maybe_set_attribute(:channel_discord_id, discord_data.channel_id)
-    |> maybe_set_attribute(:guild_discord_id, discord_data.guild_id)
+    |> maybe_set_attribute(:channel_discord_id, Map.get(discord_data, :channel_id))
+    |> maybe_set_attribute(:guild_discord_id, Map.get(discord_data, :guild_id))
     |> Ash.Changeset.force_change_attribute(:session_id, discord_data.session_id)
-    |> maybe_set_attribute(:deaf, discord_data.deaf)
-    |> maybe_set_attribute(:mute, discord_data.mute)
-    |> maybe_set_attribute(:self_deaf, discord_data.self_deaf)
-    |> maybe_set_attribute(:self_mute, discord_data.self_mute)
-    |> maybe_set_attribute(:self_stream, discord_data.self_stream)
-    |> maybe_set_attribute(:self_video, discord_data.self_video)
-    |> maybe_set_attribute(:suppress, discord_data.suppress)
+    |> maybe_set_attribute(:deaf, Map.get(discord_data, :deaf))
+    |> maybe_set_attribute(:mute, Map.get(discord_data, :mute))
+    |> maybe_set_attribute(:self_deaf, Map.get(discord_data, :self_deaf))
+    |> maybe_set_attribute(:self_mute, Map.get(discord_data, :self_mute))
+    |> maybe_set_attribute(:self_stream, Map.get(discord_data, :self_stream))
+    |> maybe_set_attribute(:self_video, Map.get(discord_data, :self_video))
+    |> maybe_set_attribute(:suppress, Map.get(discord_data, :suppress))
     |> Transformations.set_datetime_field(
       :request_to_speak_timestamp,
-      discord_data.request_to_speak_timestamp
+      Map.get(discord_data, :request_to_speak_timestamp)
     )
   end
 
@@ -493,18 +493,20 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
     |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
     |> Ash.Changeset.force_change_attribute(:type, discord_data.type)
-    |> maybe_set_attribute(:avatar, Map.get(discord_data, :avatar))
-    |> maybe_set_attribute(:channel_discord_id, Map.get(discord_data, :channel_id))
-    |> maybe_set_attribute(:guild_discord_id, Map.get(discord_data, :guild_id))
-    |> maybe_set_attribute(:application_id, Map.get(discord_data, :application_id))
-    |> maybe_set_attribute(:user_discord_id, get_nested_id(Map.get(discord_data, :user)))
+    |> maybe_set_attribute(:avatar, discord_data.avatar)
+    |> maybe_set_attribute(:token, discord_data.token)
+    |> maybe_set_attribute(:url, discord_data.url)
+    |> maybe_set_attribute(:channel_discord_id, discord_data.channel_id)
+    |> maybe_set_attribute(:guild_discord_id, discord_data.guild_id)
+    |> maybe_set_attribute(:application_id, discord_data.application_id)
+    |> maybe_set_attribute(:user_discord_id, get_nested_id(discord_data.user))
     |> maybe_set_attribute(
       :source_guild_discord_id,
-      get_nested_id(Map.get(discord_data, :source_guild))
+      get_nested_id(discord_data.source_guild)
     )
     |> maybe_set_attribute(
       :source_channel_discord_id,
-      get_nested_id(Map.get(discord_data, :source_channel))
+      get_nested_id(discord_data.source_channel)
     )
   end
 
@@ -523,12 +525,15 @@ defmodule AshDiscord.Changes.FromDiscord do
       end
 
     changeset
-    |> Ash.Changeset.force_change_attribute(:code, discord_data.code)
+    |> Ash.Changeset.force_change_attribute(:code, Map.get(discord_data, :code, ""))
     |> maybe_set_attribute(:guild_discord_id, guild_id)
     |> Ash.Changeset.force_change_attribute(:channel_discord_id, channel_id)
-    |> maybe_set_attribute(:inviter_id, get_nested_id(Map.get(discord_data, :inviter)))
-    |> maybe_set_attribute(:target_user_id, get_nested_id(Map.get(discord_data, :target_user)))
-    |> maybe_set_attribute(:target_user_type, Map.get(discord_data, :target_user_type))
+    |> maybe_set_attribute(:inviter_discord_id, get_nested_id(Map.get(discord_data, :inviter)))
+    |> maybe_set_attribute(
+      :target_user_discord_id,
+      get_nested_id(Map.get(discord_data, :target_user))
+    )
+    |> maybe_set_attribute(:target_type, Map.get(discord_data, :target_type))
     |> maybe_set_attribute(
       :approximate_presence_count,
       Map.get(discord_data, :approximate_presence_count)
@@ -541,7 +546,10 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> maybe_set_attribute(:max_uses, Map.get(discord_data, :max_uses))
     |> maybe_set_attribute(:max_age, Map.get(discord_data, :max_age))
     |> maybe_set_attribute(:temporary, Map.get(discord_data, :temporary))
-    |> Transformations.set_datetime_field(:created_at, discord_data.created_at)
+    |> Transformations.set_datetime_field(:created_at, Map.get(discord_data, :created_at))
+    |> Transformations.set_datetime_field(:expires_at, Map.get(discord_data, :expires_at))
+    |> maybe_set_attribute(:stage_instance, Map.get(discord_data, :stage_instance))
+    |> maybe_set_attribute(:guild_scheduled_event, Map.get(discord_data, :guild_scheduled_event))
   end
 
   defp transform_message_attachment(changeset, discord_data) do
@@ -611,15 +619,28 @@ defmodule AshDiscord.Changes.FromDiscord do
   end
 
   defp transform_sticker(changeset, discord_data) do
-    changeset
-    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
-    |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
-    |> maybe_set_attribute(:description, discord_data.description)
-    |> maybe_set_attribute(:tags, discord_data.tags)
-    |> maybe_set_attribute(:type, discord_data.type)
-    |> maybe_set_attribute(:format_type, discord_data.format_type)
-    |> maybe_set_attribute(:available, discord_data.available)
-    |> maybe_set_attribute(:guild_discord_id, discord_data.guild_id)
+    # Validate required fields
+    case {Map.get(discord_data, :id), Map.get(discord_data, :name)} do
+      {nil, _} ->
+        Ash.Changeset.add_error(changeset, "discord_id is required")
+
+      {_, nil} ->
+        Ash.Changeset.add_error(changeset, "name is required")
+
+      {discord_id, name} ->
+        changeset
+        |> Ash.Changeset.force_change_attribute(:discord_id, discord_id)
+        |> Ash.Changeset.force_change_attribute(:name, name)
+        |> maybe_set_attribute(:pack_id, Map.get(discord_data, :pack_id))
+        |> maybe_set_attribute(:description, Map.get(discord_data, :description))
+        |> maybe_set_attribute(:tags, Map.get(discord_data, :tags))
+        |> maybe_set_attribute(:type, Map.get(discord_data, :type))
+        |> maybe_set_attribute(:format_type, Map.get(discord_data, :format_type))
+        |> maybe_set_attribute(:available, Map.get(discord_data, :available))
+        |> maybe_set_attribute(:sort_value, Map.get(discord_data, :sort_value))
+        |> maybe_set_attribute(:guild_discord_id, Map.get(discord_data, :guild_id))
+        |> maybe_set_attribute(:user_discord_id, get_nested_id(Map.get(discord_data, :user)))
+    end
   end
 
   defp transform_interaction(changeset, discord_data) do

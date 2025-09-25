@@ -847,7 +847,74 @@ defmodule AshDiscord.Consumer do
         end
       end
 
-      def handle_guild_delete(data), do: :ok
+      def handle_guild_delete(data) do
+        Logger.debug("AshDiscord: handle_guild_delete called with data: #{inspect(data)}")
+
+        with {:ok, resource} <-
+               AshDiscord.Consumer.Info.ash_discord_consumer_guild_resource(__MODULE__) do
+          Logger.info("AshDiscord: Guild resource found: #{inspect(resource)}")
+
+          case data do
+            %{unavailable: nil} ->
+              # Permanent deletion - unavailable=nil means guild was actually deleted
+              guild_discord_id = data.id
+              Logger.info("AshDiscord: Deleting guild #{guild_discord_id} (permanent removal)")
+
+              case resource
+                   |> Ash.Query.for_read(:read)
+                   |> Ash.Query.filter(discord_id: guild_discord_id)
+                   |> Ash.Query.set_context(%{
+                     private: %{ash_discord?: true},
+                     shared: %{private: %{ash_discord?: true}}
+                   })
+                   |> Ash.read() do
+                {:ok, [guild]} ->
+                  Logger.info("AshDiscord: Found guild to delete: #{inspect(guild)}")
+
+                  case guild |> Ash.destroy(actor: %{role: :bot}) do
+                    :ok ->
+                      Logger.info("AshDiscord: Guild #{guild_discord_id} deleted successfully")
+                      :ok
+
+                    {:error, error} ->
+                      Logger.error(
+                        "AshDiscord: Failed to delete guild #{guild_discord_id}: #{inspect(error)}"
+                      )
+
+                      :ok
+                  end
+
+                {:ok, []} ->
+                  Logger.info(
+                    "AshDiscord: Guild #{guild_discord_id} not found, nothing to delete"
+                  )
+
+                  :ok
+
+                {:error, error} ->
+                  Logger.error(
+                    "AshDiscord: Failed to find guild #{guild_discord_id} for deletion: #{inspect(error)}"
+                  )
+
+                  :ok
+              end
+
+            %{unavailable: true} ->
+              # Temporary unavailability - guild still exists but bot can't access it
+              Logger.info("AshDiscord: Guild #{data.id} became unavailable (temporary)")
+              :ok
+
+            _ ->
+              # Default case - treat as unavailable
+              Logger.info("AshDiscord: Guild #{data.id} deletion/unavailability (unknown state)")
+              :ok
+          end
+        else
+          :error ->
+            Logger.info("AshDiscord: No guild resource configured")
+            :ok
+        end
+      end
 
       def handle_ready(data) do
         # Register Discord commands when bot is ready
@@ -1131,13 +1198,6 @@ defmodule AshDiscord.Consumer do
             # No guild resource configured
             :ok
         end
-      end
-
-      def handle_guild_delete(data) do
-        # Guild deletion not yet implemented due to filter macro issues
-        # TODO: Implement guild deletion when filter issues are resolved
-        Logger.info("AshDiscord: Guild deletion requested for #{data.id} - not yet implemented")
-        :ok
       end
 
       def handle_guild_role_create(role) do

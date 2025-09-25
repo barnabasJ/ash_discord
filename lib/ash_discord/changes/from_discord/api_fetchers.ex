@@ -44,6 +44,9 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
       type == :guild_member ->
         fetch_guild_member_from_api(changeset)
 
+      type == :invite ->
+        fetch_invite_from_api(changeset)
+
       type in [:typing_indicator, :message_reaction] ->
         # These are event-based entities, not persistent Discord entities
         # They should always be created from provided data, not fetched from API
@@ -95,6 +98,42 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
       end
     else
       {:error, "No Discord ID found for guild_member entity"}
+    end
+  end
+
+  # Special handler for invite API fetch
+  defp fetch_invite_from_api(changeset) do
+    invite_code = extract_invite_code(changeset)
+
+    Logger.info("""
+    API fetch attempted for Discord invite with code: #{inspect(invite_code)}
+    Consider using struct-first pattern with :discord_struct argument for better performance.
+    """)
+
+    if invite_code do
+      case fetch_from_nostrum_api(:invite, invite_code, changeset) do
+        {:ok, entity} ->
+          {:ok, entity}
+
+        {:error, reason} ->
+          {:error, "Failed to fetch invite: #{inspect(reason)}"}
+      end
+    else
+      {:error, "No invite code found for invite entity"}
+    end
+  end
+
+  # Extract invite code from changeset arguments or attributes
+  defp extract_invite_code(changeset) do
+    case Ash.Changeset.get_argument(changeset, :code) do
+      nil ->
+        case Ash.Changeset.get_attribute(changeset, :code) do
+          nil -> nil
+          code -> code
+        end
+
+      code ->
+        code
     end
   end
 

@@ -8,8 +8,11 @@ defmodule AshDiscord.IntegrationTest do
 
   setup do
     copy(Nostrum.Api.Interaction)
+    copy(Nostrum.Api.User)
+    copy(Nostrum.Api.Guild)
+    copy(Nostrum.Api.Channel)
 
-    stub(Nostrum.Api.Interaction, :create_response, fn _id, _token, response ->
+    expect(Nostrum.Api.Interaction, :create_response, fn _id, _token, response ->
       {:ok, response}
     end)
 
@@ -75,11 +78,37 @@ defmodule AshDiscord.IntegrationTest do
     end
 
     test "consumer processes message events with from_discord actions" do
+      # Pre-create entities to avoid relationship management issues
+      guild_id = generate_snowflake()
+      channel_id = generate_snowflake()
+      user_id = generate_snowflake()
+
+      {:ok, _guild} =
+        TestApp.Discord.Guild.create(%{
+          discord_id: guild_id,
+          name: "Test Guild"
+        })
+
+      {:ok, _channel} =
+        TestApp.Discord.Channel.create(%{
+          discord_id: channel_id,
+          name: "test-channel",
+          type: 0,
+          guild_id: guild_id
+        })
+
+      {:ok, _user} =
+        TestApp.Discord.User.create(%{
+          discord_id: user_id,
+          discord_username: "testuser"
+        })
+
       message_data =
         message(%{
           content: "Test message content",
-          channel_id: generate_snowflake(),
-          guild_id: generate_snowflake()
+          channel_id: channel_id,
+          guild_id: guild_id,
+          author: user(%{id: user_id})
         })
 
       result = IntegrationTestConsumer.handle_message_create(message_data)

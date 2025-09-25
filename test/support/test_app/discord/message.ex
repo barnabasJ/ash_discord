@@ -121,9 +121,14 @@ defmodule TestApp.Discord.Message do
       source_attribute: :guild_id
     )
 
-    belongs_to(:user, TestApp.Discord.User,
+    belongs_to(:author, TestApp.Discord.User,
       destination_attribute: :discord_id,
       source_attribute: :author_id
+    )
+
+    belongs_to(:channel, TestApp.Discord.Channel,
+      destination_attribute: :discord_id,
+      source_attribute: :channel_id
     )
   end
 

@@ -71,6 +71,20 @@ defmodule TestApp.Discord.Channel do
   actions do
     defaults([:read, :destroy])
 
+    create :create do
+      accept([
+        :discord_id,
+        :name,
+        :type,
+        :position,
+        :topic,
+        :nsfw,
+        :parent_id,
+        :permission_overwrites,
+        :guild_id
+      ])
+    end
+
     create :from_discord do
       description("Create channel from Discord data")
       primary?(true)
@@ -116,5 +130,12 @@ defmodule TestApp.Discord.Channel do
         :guild_id
       ])
     end
+  end
+
+  code_interface do
+    define(:create)
+    define(:from_discord)
+    define(:update)
+    define(:read)
   end
 end

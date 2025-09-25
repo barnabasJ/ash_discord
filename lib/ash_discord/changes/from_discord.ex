@@ -491,12 +491,14 @@ defmodule AshDiscord.Changes.FromDiscord do
   defp transform_webhook(changeset, discord_data) do
     changeset
     |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
-    |> maybe_set_attribute(:name, Map.get(discord_data, :name))
-    |> maybe_set_attribute(:avatar, Map.get(discord_data, :avatar))
-    |> maybe_set_attribute(:token, Map.get(discord_data, :token))
-    |> maybe_set_attribute(:channel_discord_id, Map.get(discord_data, :channel_id))
-    |> maybe_set_attribute(:guild_discord_id, Map.get(discord_data, :guild_id))
-    |> maybe_set_attribute(:user_discord_id, get_nested_id(Map.get(discord_data, :user)))
+    |> maybe_set_attribute(:name, discord_data.name)
+    |> maybe_set_attribute(:avatar, discord_data.avatar)
+    |> maybe_set_attribute(:token, discord_data.token)
+    |> maybe_set_attribute_if_exists(:channel_discord_id, discord_data.channel_id)
+    |> maybe_set_attribute_if_exists(:channel_id, discord_data.channel_id)
+    |> maybe_set_attribute_if_exists(:guild_discord_id, discord_data.guild_id)
+    |> maybe_set_attribute_if_exists(:guild_id, discord_data.guild_id)
+    |> maybe_set_attribute_if_exists(:user_discord_id, get_nested_id(discord_data.user))
   end
 
   defp transform_invite(changeset, discord_data) do
@@ -515,31 +517,42 @@ defmodule AshDiscord.Changes.FromDiscord do
 
     changeset
     |> Ash.Changeset.force_change_attribute(:code, Map.get(discord_data, :code, ""))
-    |> maybe_set_attribute(:guild_discord_id, guild_id)
-    |> Ash.Changeset.force_change_attribute(:channel_discord_id, channel_id)
-    # Auto-create relationships
+    |> maybe_set_attribute_if_exists(:guild_discord_id, guild_id)
+    |> maybe_set_attribute_if_exists(:guild_id, guild_id)
+    |> maybe_set_attribute_if_exists(:channel_discord_id, channel_id)
+    |> maybe_set_attribute_if_exists(:channel_id, channel_id)
+    # Auto-create relationships (only if relationships exist)
     |> maybe_manage_invite_guild_relationship(guild_id)
     |> maybe_manage_invite_channel_relationship(channel_id)
-    |> maybe_set_attribute(:inviter_discord_id, get_nested_id(Map.get(discord_data, :inviter)))
-    |> maybe_set_attribute(
+    |> maybe_set_attribute_if_exists(
+      :inviter_discord_id,
+      get_nested_id(Map.get(discord_data, :inviter))
+    )
+    |> maybe_set_attribute_if_exists(:inviter_id, get_nested_id(Map.get(discord_data, :inviter)))
+    |> maybe_set_attribute_if_exists(
       :target_user_discord_id,
       get_nested_id(Map.get(discord_data, :target_user))
     )
-    |> maybe_set_attribute(:target_type, Map.get(discord_data, :target_type))
-    |> maybe_set_attribute(
+    |> maybe_set_attribute_if_exists(
+      :target_user_id,
+      get_nested_id(Map.get(discord_data, :target_user))
+    )
+    |> maybe_set_attribute_if_exists(:target_type, Map.get(discord_data, :target_type))
+    |> maybe_set_attribute_if_exists(:target_user_type, Map.get(discord_data, :target_type))
+    |> maybe_set_attribute_if_exists(
       :approximate_presence_count,
       Map.get(discord_data, :approximate_presence_count)
     )
-    |> maybe_set_attribute(
+    |> maybe_set_attribute_if_exists(
       :approximate_member_count,
       Map.get(discord_data, :approximate_member_count)
     )
-    |> maybe_set_attribute(:uses, Map.get(discord_data, :uses))
-    |> maybe_set_attribute(:max_uses, Map.get(discord_data, :max_uses))
-    |> maybe_set_attribute(:max_age, Map.get(discord_data, :max_age))
-    |> maybe_set_attribute(:temporary, Map.get(discord_data, :temporary))
-    |> Transformations.set_datetime_field(:created_at, Map.get(discord_data, :created_at))
-    |> Transformations.set_datetime_field(:expires_at, Map.get(discord_data, :expires_at))
+    |> maybe_set_attribute_if_exists(:uses, Map.get(discord_data, :uses))
+    |> maybe_set_attribute_if_exists(:max_uses, Map.get(discord_data, :max_uses))
+    |> maybe_set_attribute_if_exists(:max_age, Map.get(discord_data, :max_age))
+    |> maybe_set_attribute_if_exists(:temporary, Map.get(discord_data, :temporary))
+    |> conditionally_set_datetime_field(:created_at, Map.get(discord_data, :created_at))
+    |> conditionally_set_datetime_field(:expires_at, Map.get(discord_data, :expires_at))
     |> maybe_set_attribute(:stage_instance, Map.get(discord_data, :stage_instance))
     |> maybe_set_attribute(:guild_scheduled_event, Map.get(discord_data, :guild_scheduled_event))
   end
@@ -548,19 +561,55 @@ defmodule AshDiscord.Changes.FromDiscord do
   defp maybe_manage_invite_guild_relationship(changeset, nil), do: changeset
 
   defp maybe_manage_invite_guild_relationship(changeset, guild_discord_id) do
-    Transformations.manage_guild_relationship(changeset, guild_discord_id)
+    resource = changeset.resource
+
+    # Only manage guild relationship if the resource has a :guild relationship
+    if Ash.Resource.Info.relationship(resource, :guild) do
+      Transformations.manage_guild_relationship(changeset, guild_discord_id)
+    else
+      changeset
+    end
   end
 
   defp maybe_manage_invite_channel_relationship(changeset, nil), do: changeset
 
   defp maybe_manage_invite_channel_relationship(changeset, channel_discord_id) do
-    # Use the established pattern from message channel management
-    Ash.Changeset.manage_relationship(changeset, :channel, channel_discord_id,
-      type: :append_and_remove,
-      on_no_match: {:create, :from_discord},
-      use_identities: [:discord_id],
-      value_is_key: :discord_id
-    )
+    resource = changeset.resource
+
+    # Only manage channel relationship if the resource has a :channel relationship
+    if Ash.Resource.Info.relationship(resource, :channel) do
+      # Use the established pattern from message channel management
+      Ash.Changeset.manage_relationship(changeset, :channel, channel_discord_id,
+        type: :append_and_remove,
+        on_no_match: {:create, :from_discord},
+        use_identities: [:discord_id],
+        value_is_key: :discord_id
+      )
+    else
+      changeset
+    end
+  end
+
+  # Helper to conditionally set attributes based on resource schema
+  defp maybe_set_attribute_if_exists(changeset, attribute_name, value) do
+    resource = changeset.resource
+
+    if Ash.Resource.Info.attribute(resource, attribute_name) do
+      maybe_set_attribute(changeset, attribute_name, value)
+    else
+      changeset
+    end
+  end
+
+  # Helper to conditionally set datetime fields based on resource schema
+  defp conditionally_set_datetime_field(changeset, attribute_name, value) do
+    resource = changeset.resource
+
+    if Ash.Resource.Info.attribute(resource, attribute_name) do
+      Transformations.set_datetime_field(changeset, attribute_name, value)
+    else
+      changeset
+    end
   end
 
   defp transform_message_attachment(changeset, discord_data) do

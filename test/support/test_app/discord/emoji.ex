@@ -30,6 +30,12 @@ defmodule TestApp.Discord.Emoji do
       default: false
     )
 
+    attribute(:custom, :boolean,
+      allow_nil?: true,
+      public?: true,
+      default: false
+    )
+
     attribute(:managed, :boolean,
       allow_nil?: true,
       public?: true,
@@ -65,12 +71,12 @@ defmodule TestApp.Discord.Emoji do
 
       upsert?(true)
       upsert_identity(:discord_id)
-      upsert_fields([:name, :animated, :managed, :require_colons])
+      upsert_fields([:name, :animated, :custom, :managed, :require_colons])
     end
 
     update :update do
       primary?(true)
-      accept([:name, :animated, :managed, :require_colons])
+      accept([:name, :animated, :custom, :managed, :require_colons])
     end
   end
 end

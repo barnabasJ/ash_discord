@@ -185,10 +185,6 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
           ArgumentError -> {:error, :api_unavailable}
         end
 
-      :message ->
-        # Message requires channel_id and message_id, can't fetch with just ID
-        {:error, :requires_channel_id}
-
       :emoji ->
         # Emoji requires guild_id and emoji_id, can't fetch with just ID
         {:error, :requires_guild_id}

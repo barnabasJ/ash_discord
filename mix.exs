@@ -22,7 +22,8 @@ defmodule AshDiscord.MixProject do
         "coveralls",
         "coveralls.detail",
         "coveralls.html"
-      ]
+      ],
+      dialyzer: [plt_add_apps: [:mix, :mnesia, :plug, :ex_unit, :stream_data]]
     ]
   end
 
@@ -87,13 +88,6 @@ defmodule AshDiscord.MixProject do
       format: "format",
       quality: ["format", "credo --strict", "dialyzer"],
 
-      # Test environment setup aliases  
-      "test.setup": &test_setup/1,
-      "test.migrate": ["cmd MIX_ENV=test mix ash.migrate"],
-      "test.rollback": ["cmd MIX_ENV=test mix ash.rollback"],
-      "test.reset": &test_reset/1,
-      "test.tear_down": ["cmd MIX_ENV=test mix ash.tear_down"],
-
       # Test coverage aliases
       "test.coverage": ["coveralls"],
       "test.coverage.html": ["coveralls.html"],
@@ -107,16 +101,5 @@ defmodule AshDiscord.MixProject do
       "spark.formatter": "spark.formatter --extensions AshDiscord",
       "format.all": ["format", "spark.formatter --extensions AshDiscord"]
     ]
-  end
-
-  defp test_setup(_) do
-    Mix.shell().cmd("MIX_ENV=test mix ecto.create")
-    Mix.shell().cmd("MIX_ENV=test mix ash.setup")
-  end
-
-  defp test_reset(_) do
-    Mix.shell().cmd("MIX_ENV=test mix ecto.drop")
-    Mix.shell().cmd("MIX_ENV=test mix ecto.create")
-    Mix.shell().cmd("MIX_ENV=test mix ash.setup")
   end
 end

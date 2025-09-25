@@ -272,14 +272,14 @@ defmodule AshDiscord.Changes.FromDiscord do
     changeset
     # Set user_discord_id from the member's user data
     |> Ash.Changeset.force_change_attribute(:user_discord_id, user_discord_id)
-    |> maybe_set_attribute(:nick, discord_data.nick)
-    |> maybe_set_attribute(:avatar, discord_data.avatar)
-    |> maybe_set_attribute(:flags, discord_data.flags)
-    |> Transformations.set_datetime_field(:joined_at, discord_data.joined_at)
-    |> Transformations.set_datetime_field(:premium_since, discord_data.premium_since)
+    |> maybe_set_attribute(:nick, Map.get(discord_data, :nick))
+    |> maybe_set_attribute(:avatar, Map.get(discord_data, :avatar))
+    |> maybe_set_attribute(:flags, Map.get(discord_data, :flags))
+    |> Transformations.set_datetime_field(:joined_at, Map.get(discord_data, :joined_at))
+    |> Transformations.set_datetime_field(:premium_since, Map.get(discord_data, :premium_since))
     |> Transformations.set_datetime_field(
       :communication_disabled_until,
-      discord_data.communication_disabled_until
+      Map.get(discord_data, :communication_disabled_until)
     )
     |> maybe_set_member_boolean_attributes(discord_data)
     |> Transformations.manage_guild_relationship(guild_discord_id)
@@ -300,9 +300,9 @@ defmodule AshDiscord.Changes.FromDiscord do
 
   defp maybe_set_member_boolean_attributes(changeset, discord_data) do
     changeset
-    |> maybe_set_attribute(:deaf, discord_data.deaf)
-    |> maybe_set_attribute(:mute, discord_data.mute)
-    |> maybe_set_attribute(:pending, discord_data.pending)
+    |> maybe_set_attribute(:deaf, Map.get(discord_data, :deaf))
+    |> maybe_set_attribute(:mute, Map.get(discord_data, :mute))
+    |> maybe_set_attribute(:pending, Map.get(discord_data, :pending))
   end
 
   defp transform_role(changeset, discord_data) do
@@ -319,12 +319,12 @@ defmodule AshDiscord.Changes.FromDiscord do
 
   defp maybe_set_role_attributes(changeset, discord_data) do
     changeset
-    |> maybe_set_attribute(:hoist, discord_data.hoist)
+    |> maybe_set_attribute(:hoist, Map.get(discord_data, :hoist))
     |> maybe_set_attribute(:icon, Map.get(discord_data, :icon))
     |> maybe_set_attribute(:unicode_emoji, Map.get(discord_data, :unicode_emoji))
-    |> maybe_set_attribute(:position, discord_data.position)
-    |> maybe_set_attribute(:managed, discord_data.managed)
-    |> maybe_set_attribute(:mentionable, discord_data.mentionable)
+    |> maybe_set_attribute(:position, Map.get(discord_data, :position))
+    |> maybe_set_attribute(:managed, Map.get(discord_data, :managed))
+    |> maybe_set_attribute(:mentionable, Map.get(discord_data, :mentionable))
     |> maybe_set_attribute(:tags, Map.get(discord_data, :tags))
   end
 
@@ -491,23 +491,12 @@ defmodule AshDiscord.Changes.FromDiscord do
   defp transform_webhook(changeset, discord_data) do
     changeset
     |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
-    |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
-    |> Ash.Changeset.force_change_attribute(:type, discord_data.type)
-    |> maybe_set_attribute(:avatar, discord_data.avatar)
-    |> maybe_set_attribute(:token, discord_data.token)
-    |> maybe_set_attribute(:url, discord_data.url)
-    |> maybe_set_attribute(:channel_discord_id, discord_data.channel_id)
-    |> maybe_set_attribute(:guild_discord_id, discord_data.guild_id)
-    |> maybe_set_attribute(:application_id, discord_data.application_id)
-    |> maybe_set_attribute(:user_discord_id, get_nested_id(discord_data.user))
-    |> maybe_set_attribute(
-      :source_guild_discord_id,
-      get_nested_id(discord_data.source_guild)
-    )
-    |> maybe_set_attribute(
-      :source_channel_discord_id,
-      get_nested_id(discord_data.source_channel)
-    )
+    |> maybe_set_attribute(:name, Map.get(discord_data, :name))
+    |> maybe_set_attribute(:avatar, Map.get(discord_data, :avatar))
+    |> maybe_set_attribute(:token, Map.get(discord_data, :token))
+    |> maybe_set_attribute(:channel_discord_id, Map.get(discord_data, :channel_id))
+    |> maybe_set_attribute(:guild_discord_id, Map.get(discord_data, :guild_id))
+    |> maybe_set_attribute(:user_discord_id, get_nested_id(Map.get(discord_data, :user)))
   end
 
   defp transform_invite(changeset, discord_data) do

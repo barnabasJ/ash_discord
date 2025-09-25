@@ -517,6 +517,9 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> Ash.Changeset.force_change_attribute(:code, Map.get(discord_data, :code, ""))
     |> maybe_set_attribute(:guild_discord_id, guild_id)
     |> Ash.Changeset.force_change_attribute(:channel_discord_id, channel_id)
+    # Auto-create relationships
+    |> maybe_manage_invite_guild_relationship(guild_id)
+    |> maybe_manage_invite_channel_relationship(channel_id)
     |> maybe_set_attribute(:inviter_discord_id, get_nested_id(Map.get(discord_data, :inviter)))
     |> maybe_set_attribute(
       :target_user_discord_id,
@@ -539,6 +542,25 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> Transformations.set_datetime_field(:expires_at, Map.get(discord_data, :expires_at))
     |> maybe_set_attribute(:stage_instance, Map.get(discord_data, :stage_instance))
     |> maybe_set_attribute(:guild_scheduled_event, Map.get(discord_data, :guild_scheduled_event))
+  end
+
+  # Helper functions for invite relationship management
+  defp maybe_manage_invite_guild_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_invite_guild_relationship(changeset, guild_discord_id) do
+    Transformations.manage_guild_relationship(changeset, guild_discord_id)
+  end
+
+  defp maybe_manage_invite_channel_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_invite_channel_relationship(changeset, channel_discord_id) do
+    # Use the established pattern from message channel management
+    Ash.Changeset.manage_relationship(changeset, :channel, channel_discord_id,
+      type: :append_and_remove,
+      on_no_match: {:create, :from_discord},
+      use_identities: [:discord_id],
+      value_is_key: :discord_id
+    )
   end
 
   defp transform_message_attachment(changeset, discord_data) do

@@ -1614,9 +1614,13 @@ defmodule AshDiscord.Consumer do
             case resource
                  |> Ash.Query.for_read(:read)
                  |> Ash.Query.filter(code: invite_data.code)
+                 |> Ash.Query.set_context(%{
+                   private: %{ash_discord?: true},
+                   shared: %{private: %{ash_discord?: true}}
+                 })
                  |> Ash.read_one() do
               {:ok, invite} when not is_nil(invite) ->
-                case Ash.destroy(invite) do
+                case Ash.destroy(invite, actor: %{role: :bot}) do
                   :ok ->
                     Logger.info("AshDiscord: Invite deleted successfully")
                     :ok

@@ -1580,31 +1580,65 @@ defmodule AshDiscord.Consumer do
       def handle_invite_create(invite) do
         case AshDiscord.Consumer.Info.ash_discord_consumer_invite_resource(__MODULE__) do
           {:ok, resource} ->
-            resource
-            |> Ash.Changeset.for_create(
-              :from_discord,
-              %{
-                discord_struct: invite
-              },
-              context: %{
-                private: %{ash_discord?: true},
-                shared: %{private: %{ash_discord?: true}}
-              }
-            )
-            |> Ash.create()
+            case resource
+                 |> Ash.Changeset.for_create(
+                   :from_discord,
+                   %{
+                     discord_struct: invite
+                   },
+                   context: %{
+                     private: %{ash_discord?: true},
+                     shared: %{private: %{ash_discord?: true}}
+                   }
+                 )
+                 |> Ash.create() do
+              {:ok, _invite} ->
+                Logger.info("AshDiscord: Invite created successfully")
+                :ok
+
+              {:error, error} ->
+                Logger.error("AshDiscord: Failed to create invite: #{inspect(error)}")
+                {:error, error}
+            end
 
           :error ->
             Logger.warning("No invite resource configured")
             {:error, "No invite resource configured"}
         end
-
-        :ok
       end
 
       def handle_invite_delete(invite_data) do
-        # Invite deletion not yet implemented due to filter macro issues
-        Logger.info("AshDiscord: Invite deletion requested - not yet implemented")
-        :ok
+        case AshDiscord.Consumer.Info.ash_discord_consumer_invite_resource(__MODULE__) do
+          {:ok, resource} ->
+            # Try to find and delete the invite by code
+            case resource
+                 |> Ash.Query.for_read(:read)
+                 |> Ash.Query.filter(code: invite_data.code)
+                 |> Ash.read_one() do
+              {:ok, invite} when not is_nil(invite) ->
+                case Ash.destroy(invite) do
+                  :ok ->
+                    Logger.info("AshDiscord: Invite deleted successfully")
+                    :ok
+
+                  {:error, error} ->
+                    Logger.error("AshDiscord: Failed to delete invite: #{inspect(error)}")
+                    {:error, error}
+                end
+
+              {:ok, nil} ->
+                Logger.warning("AshDiscord: Invite not found for deletion: #{invite_data.code}")
+                :ok
+
+              {:error, error} ->
+                Logger.error("AshDiscord: Failed to find invite for deletion: #{inspect(error)}")
+                {:error, error}
+            end
+
+          :error ->
+            Logger.warning("No invite resource configured")
+            :ok
+        end
       end
 
       def handle_unknown_event(event), do: :ok

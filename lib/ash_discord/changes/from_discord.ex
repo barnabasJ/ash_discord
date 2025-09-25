@@ -407,8 +407,8 @@ defmodule AshDiscord.Changes.FromDiscord do
 
     changeset
     |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
-    |> Ash.Changeset.force_change_attribute(:content, discord_data.content || "")
-    |> maybe_set_attribute(:embeds, discord_data.embeds || [])
+    |> Ash.Changeset.force_change_attribute(:content, Map.get(discord_data, :content, ""))
+    |> maybe_set_attribute(:embeds, Map.get(discord_data, :embeds, []))
     # Manage relationships
     |> maybe_manage_guild_relationship(guild_discord_id)
     |> maybe_manage_channel_relationship(channel_discord_id)
@@ -451,12 +451,12 @@ defmodule AshDiscord.Changes.FromDiscord do
 
     changeset
     |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
-    |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
-    |> Ash.Changeset.force_change_attribute(:animated, discord_data.animated || false)
+    |> maybe_set_attribute(:name, Map.get(discord_data, :name))
+    |> Ash.Changeset.force_change_attribute(:animated, Map.get(discord_data, :animated, false))
     |> Ash.Changeset.force_change_attribute(:custom, custom)
     |> maybe_set_attribute(:available, Map.get(discord_data, :available, true))
     |> maybe_set_attribute(:require_colons, Map.get(discord_data, :require_colons, true))
-    |> maybe_set_attribute(:managed, discord_data.managed || false)
+    |> maybe_set_attribute(:managed, Map.get(discord_data, :managed, false))
     |> maybe_set_attribute(:roles, Map.get(discord_data, :roles, []))
     |> maybe_manage_emoji_user_relationship(discord_data)
   end

@@ -19,7 +19,7 @@ defmodule TestApp.Discord.Guild do
   end
 
   identities do
-    identity(:unique_discord_id, [:discord_id], pre_check_with: TestApp.Domain)
+    identity(:discord_id, [:discord_id], pre_check_with: TestApp.Domain)
   end
 
   actions do
@@ -33,7 +33,7 @@ defmodule TestApp.Discord.Guild do
     create :from_discord do
       accept([:discord_id, :name, :description, :icon])
       upsert?(true)
-      upsert_identity(:unique_discord_id)
+      upsert_identity(:discord_id)
       upsert_fields([:name, :description, :icon])
 
       argument(:discord_struct, :map,

@@ -508,14 +508,17 @@ defmodule AshDiscord.Changes.FromDiscord do
   defp transform_webhook(changeset, discord_data) do
     changeset
     |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
-    |> maybe_set_attribute(:name, discord_data.name)
-    |> maybe_set_attribute(:avatar, discord_data.avatar)
-    |> maybe_set_attribute(:token, discord_data.token)
-    |> maybe_set_attribute_if_exists(:channel_discord_id, discord_data.channel_id)
-    |> maybe_set_attribute_if_exists(:channel_id, discord_data.channel_id)
-    |> maybe_set_attribute_if_exists(:guild_discord_id, discord_data.guild_id)
-    |> maybe_set_attribute_if_exists(:guild_id, discord_data.guild_id)
-    |> maybe_set_attribute_if_exists(:user_discord_id, get_nested_id(discord_data.user))
+    |> maybe_set_attribute(:name, Map.get(discord_data, :name))
+    |> maybe_set_attribute(:avatar, Map.get(discord_data, :avatar))
+    |> maybe_set_attribute(:token, Map.get(discord_data, :token))
+    |> maybe_set_attribute_if_exists(:channel_discord_id, Map.get(discord_data, :channel_id))
+    |> maybe_set_attribute_if_exists(:channel_id, Map.get(discord_data, :channel_id))
+    |> maybe_set_attribute_if_exists(:guild_discord_id, Map.get(discord_data, :guild_id))
+    |> maybe_set_attribute_if_exists(:guild_id, Map.get(discord_data, :guild_id))
+    |> maybe_set_attribute_if_exists(
+      :user_discord_id,
+      get_nested_id(Map.get(discord_data, :user))
+    )
   end
 
   defp transform_invite(changeset, discord_data) do

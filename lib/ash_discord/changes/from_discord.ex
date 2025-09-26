@@ -630,17 +630,24 @@ defmodule AshDiscord.Changes.FromDiscord do
   end
 
   defp transform_message_reaction(changeset, discord_data) do
+    # Handle emoji data - can be directly in discord_data or nested
+    emoji_data = Map.get(discord_data, :emoji)
+
     changeset
-    |> maybe_set_attribute(:emoji_id, get_nested_id(discord_data.emoji))
-    |> maybe_set_attribute(:emoji_name, discord_data.emoji && discord_data.emoji.name)
-    |> maybe_set_attribute(:emoji_animated, discord_data.emoji && discord_data.emoji.animated)
-    |> Ash.Changeset.force_change_attribute(:count, discord_data.count || 1)
-    |> maybe_set_attribute(:me, discord_data.me || false)
-    # Context fields come from arguments, not from discord_data
-    |> maybe_set_from_argument(:user_id)
-    |> maybe_set_from_argument(:message_id)
-    |> maybe_set_from_argument(:channel_id)
-    |> maybe_set_from_argument(:guild_id)
+    |> maybe_set_attribute(:emoji_id, get_nested_id(emoji_data))
+    |> maybe_set_attribute(:emoji_name, emoji_data && Map.get(emoji_data, :name))
+    |> maybe_set_attribute(:emoji_animated, emoji_data && Map.get(emoji_data, :animated, false))
+    # Set ID fields directly from discord_data
+    |> Ash.Changeset.force_change_attribute(:user_discord_id, Map.get(discord_data, :user_id))
+    |> Ash.Changeset.force_change_attribute(
+      :message_discord_id,
+      Map.get(discord_data, :message_id)
+    )
+    |> Ash.Changeset.force_change_attribute(
+      :channel_discord_id,
+      Map.get(discord_data, :channel_id)
+    )
+    |> Ash.Changeset.force_change_attribute(:guild_discord_id, Map.get(discord_data, :guild_id))
   end
 
   defp transform_typing_indicator(changeset, discord_data) do
@@ -774,4 +781,16 @@ defmodule AshDiscord.Changes.FromDiscord do
   defp get_interaction_user_id(%{user: %{id: id}}), do: id
   defp get_interaction_user_id(%{member: %{user: %{id: id}}}), do: id
   defp get_interaction_user_id(_), do: nil
+
+  # Sets context field (user_discord_id, message_discord_id, etc.) from discord_data
+  defp set_context_field(changeset, field, discord_data, data_key) do
+    case Map.get(discord_data, data_key) do
+      nil ->
+        # Fallback to argument if discord_data doesn't have the field
+        maybe_set_from_argument(changeset, field)
+
+      value ->
+        Ash.Changeset.force_change_attribute(changeset, field, value)
+    end
+  end
 end

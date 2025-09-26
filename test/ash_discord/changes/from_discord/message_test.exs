@@ -10,6 +10,9 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
 
   describe "struct-first pattern" do
     test "creates message from discord struct with all attributes" do
+      Mimic.copy(Nostrum.Api.Channel)
+      Mimic.copy(Nostrum.Api.Guild)
+
       message_struct =
         message(%{
           id: 123_456_789,
@@ -23,6 +26,16 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
           mention_everyone: false,
           pinned: false
         })
+
+      # Mock channel API call for relationship management
+      Mimic.expect(Nostrum.Api.Channel, :get, fn 555_666_777 ->
+        {:ok, channel(%{id: 555_666_777, name: "test-channel", type: 0})}
+      end)
+
+      # Mock guild API call for relationship management
+      Mimic.expect(Nostrum.Api.Guild, :get, fn 111_222_333 ->
+        {:ok, guild(%{id: 111_222_333, name: "Test Guild"})}
+      end)
 
       result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
 
@@ -40,18 +53,32 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
     end
 
     test "handles edited message" do
+      Mimic.copy(Nostrum.Api.Channel)
+      Mimic.copy(Nostrum.Api.Guild)
+
       message_struct =
         message(%{
           id: 987_654_321,
           content: "This message was edited",
           author: user(%{id: 123_456_789, username: "editor"}),
           channel_id: 777_888_999,
+          guild_id: 555_666_777,
           timestamp: "2023-02-01T12:00:00Z",
           edited_timestamp: "2023-02-01T12:05:00Z",
           tts: false,
           mention_everyone: false,
           pinned: false
         })
+
+      # Mock channel API call for relationship management
+      Mimic.expect(Nostrum.Api.Channel, :get, fn 777_888_999 ->
+        {:ok, channel(%{id: 777_888_999, name: "test-channel", type: 0})}
+      end)
+
+      # Mock guild API call for relationship management
+      Mimic.expect(Nostrum.Api.Guild, :get, fn 555_666_777 ->
+        {:ok, guild(%{id: 555_666_777, name: "Test Guild"})}
+      end)
 
       result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
 
@@ -63,17 +90,31 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
     end
 
     test "handles TTS message" do
+      Mimic.copy(Nostrum.Api.Channel)
+      Mimic.copy(Nostrum.Api.Guild)
+
       message_struct =
         message(%{
           id: 111_222_333,
           content: "This is a text-to-speech message",
           author: user(%{id: 444_555_666, username: "tts_user"}),
           channel_id: 777_888_999,
+          guild_id: 333_444_555,
           timestamp: "2023-03-10T15:30:00Z",
           tts: true,
           mention_everyone: false,
           pinned: false
         })
+
+      # Mock channel API call for relationship management
+      Mimic.expect(Nostrum.Api.Channel, :get, fn 777_888_999 ->
+        {:ok, channel(%{id: 777_888_999, name: "test-channel", type: 0})}
+      end)
+
+      # Mock guild API call for relationship management
+      Mimic.expect(Nostrum.Api.Guild, :get, fn 333_444_555 ->
+        {:ok, guild(%{id: 333_444_555, name: "Test Guild"})}
+      end)
 
       result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
 
@@ -83,17 +124,31 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
     end
 
     test "handles message with @everyone mention" do
+      Mimic.copy(Nostrum.Api.Channel)
+      Mimic.copy(Nostrum.Api.Guild)
+
       message_struct =
         message(%{
           id: 333_444_555,
           content: "@everyone Important announcement!",
           author: user(%{id: 666_777_888, username: "announcer"}),
           channel_id: 999_111_222,
+          guild_id: 777_888_999,
           timestamp: "2023-04-05T09:00:00Z",
           tts: false,
           mention_everyone: true,
           pinned: false
         })
+
+      # Mock channel API call for relationship management
+      Mimic.expect(Nostrum.Api.Channel, :get, fn 999_111_222 ->
+        {:ok, channel(%{id: 999_111_222, name: "test-channel", type: 0})}
+      end)
+
+      # Mock guild API call for relationship management
+      Mimic.expect(Nostrum.Api.Guild, :get, fn 777_888_999 ->
+        {:ok, guild(%{id: 777_888_999, name: "Test Guild"})}
+      end)
 
       result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
 
@@ -103,17 +158,31 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
     end
 
     test "handles pinned message" do
+      Mimic.copy(Nostrum.Api.Channel)
+      Mimic.copy(Nostrum.Api.Guild)
+
       message_struct =
         message(%{
           id: 555_666_777,
           content: "This message is pinned",
           author: user(%{id: 888_999_111, username: "pinner"}),
           channel_id: 222_333_444,
+          guild_id: 111_222_333,
           timestamp: "2023-05-12T14:20:00Z",
           tts: false,
           mention_everyone: false,
           pinned: true
         })
+
+      # Mock channel API call for relationship management
+      Mimic.expect(Nostrum.Api.Channel, :get, fn 222_333_444 ->
+        {:ok, channel(%{id: 222_333_444, name: "test-channel", type: 0})}
+      end)
+
+      # Mock guild API call for relationship management
+      Mimic.expect(Nostrum.Api.Guild, :get, fn 111_222_333 ->
+        {:ok, guild(%{id: 111_222_333, name: "Test Guild"})}
+      end)
 
       result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
 
@@ -123,17 +192,31 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
     end
 
     test "handles empty message content" do
+      Mimic.copy(Nostrum.Api.Channel)
+      Mimic.copy(Nostrum.Api.Guild)
+
       message_struct =
         message(%{
           id: 777_888_999,
           content: "",
           author: user(%{id: 111_222_333, username: "empty_user"}),
           channel_id: 444_555_666,
+          guild_id: 999_888_777,
           timestamp: "2023-06-01T18:45:00Z",
           tts: false,
           mention_everyone: false,
           pinned: false
         })
+
+      # Mock channel API call for relationship management
+      Mimic.expect(Nostrum.Api.Channel, :get, fn 444_555_666 ->
+        {:ok, channel(%{id: 444_555_666, name: "test-channel", type: 0})}
+      end)
+
+      # Mock guild API call for relationship management
+      Mimic.expect(Nostrum.Api.Guild, :get, fn 999_888_777 ->
+        {:ok, guild(%{id: 999_888_777, name: "Test Guild"})}
+      end)
 
       result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
 
@@ -153,7 +236,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       assert {:error, error} = result
       error_message = Exception.message(error)
       assert error_message =~ "Failed to fetch message with ID #{discord_id}"
-      assert error_message =~ ":requires_channel_id"
+      assert error_message =~ ":requires_channel_and_message_ids"
     end
 
     test "requires discord_struct for message creation" do
@@ -167,7 +250,20 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
 
   describe "upsert behavior" do
     test "updates existing message instead of creating duplicate" do
+      Mimic.copy(Nostrum.Api.Channel)
+      Mimic.copy(Nostrum.Api.Guild)
+
       discord_id = 555_666_777
+
+      # Mock channel API call for relationship management
+      Mimic.expect(Nostrum.Api.Channel, :get, fn 111_222_333 ->
+        {:ok, channel(%{id: 111_222_333, name: "test-channel", type: 0})}
+      end)
+
+      # Mock guild API call for relationship management
+      Mimic.expect(Nostrum.Api.Guild, :get, fn 222_333_444 ->
+        {:ok, guild(%{id: 222_333_444, name: "Test Guild"})}
+      end)
 
       # Create initial message
       initial_struct =
@@ -176,6 +272,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
           content: "Original content",
           author: user(%{id: 123_456_789, username: "author"}),
           channel_id: 111_222_333,
+          guild_id: 222_333_444,
           timestamp: "2023-01-01T00:00:00Z",
           edited_timestamp: nil,
           pinned: false
@@ -192,6 +289,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
           content: "Edited content",
           author: user(%{id: 123_456_789, username: "author"}),
           channel_id: 111_222_333,
+          guild_id: 222_333_444,
           timestamp: "2023-01-01T00:00:00Z",
           edited_timestamp: "2023-01-01T00:05:00Z",
           pinned: true
@@ -211,7 +309,20 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
     end
 
     test "upsert works with pin status changes" do
+      Mimic.copy(Nostrum.Api.Channel)
+      Mimic.copy(Nostrum.Api.Guild)
+
       discord_id = 333_444_555
+
+      # Mock channel API call for relationship management
+      Mimic.expect(Nostrum.Api.Channel, :get, fn 777_888_999 ->
+        {:ok, channel(%{id: 777_888_999, name: "test-channel", type: 0})}
+      end)
+
+      # Mock guild API call for relationship management
+      Mimic.expect(Nostrum.Api.Guild, :get, fn 555_666_777 ->
+        {:ok, guild(%{id: 555_666_777, name: "Test Guild"})}
+      end)
 
       # Create initial unpinned message
       initial_struct =
@@ -220,6 +331,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
           content: "Important message",
           author: user(%{id: 987_654_321, username: "important_user"}),
           channel_id: 777_888_999,
+          guild_id: 555_666_777,
           timestamp: "2023-07-01T10:00:00Z",
           pinned: false
         })
@@ -235,6 +347,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
           content: "Important message",
           author: user(%{id: 987_654_321, username: "important_user"}),
           channel_id: 777_888_999,
+          guild_id: 555_666_777,
           timestamp: "2023-07-01T10:00:00Z",
           pinned: true
         })

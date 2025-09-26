@@ -390,21 +390,27 @@ defmodule AshDiscord.Changes.FromDiscord do
     # Get channel_discord_id from struct, with fallback to arguments for API fetching
     channel_discord_id = discord_data.channel_id
 
-    # Extract author ID from the message struct
-    author_discord_id =
-      case discord_data do
-        %{author: %{id: author_id}} when not is_nil(author_id) -> author_id
-        _ -> nil
-      end
+    # Extract full author struct from the message struct
+    author_data = Map.get(discord_data, :author)
 
     changeset
     |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
     |> Ash.Changeset.force_change_attribute(:content, Map.get(discord_data, :content, ""))
     |> maybe_set_attribute(:embeds, Map.get(discord_data, :embeds, []))
+    # Set timestamp fields
+    |> Transformations.set_datetime_field(:timestamp, Map.get(discord_data, :timestamp))
+    |> Transformations.set_datetime_field(
+      :edited_timestamp,
+      Map.get(discord_data, :edited_timestamp)
+    )
+    # Set boolean fields
+    |> maybe_set_attribute(:tts, Map.get(discord_data, :tts, false))
+    |> maybe_set_attribute(:mention_everyone, Map.get(discord_data, :mention_everyone, false))
+    |> maybe_set_attribute(:pinned, Map.get(discord_data, :pinned, false))
     # Manage relationships
     |> maybe_manage_guild_relationship(guild_discord_id)
     |> maybe_manage_channel_relationship(channel_discord_id)
-    |> maybe_manage_author_relationship(author_discord_id)
+    |> maybe_manage_author_relationship(author_data)
   end
 
   # Manage guild relationship for messages
@@ -429,7 +435,15 @@ defmodule AshDiscord.Changes.FromDiscord do
   # Manage author relationship for messages
   defp maybe_manage_author_relationship(changeset, nil), do: changeset
 
-  defp maybe_manage_author_relationship(changeset, author_discord_id) do
+  defp maybe_manage_author_relationship(changeset, author_data) when is_map(author_data) do
+    # When we have the full author struct, just set the author_id directly
+    author_discord_id = author_data.id
+    Ash.Changeset.force_change_attribute(changeset, :author_id, author_discord_id)
+  end
+
+  defp maybe_manage_author_relationship(changeset, author_discord_id)
+       when is_integer(author_discord_id) do
+    # Fallback to ID-only approach (will try API fetch)
     Transformations.manage_user_relationship(changeset, author_discord_id, :author)
   end
 

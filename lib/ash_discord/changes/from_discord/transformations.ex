@@ -167,7 +167,7 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
   def manage_guild_relationship(changeset, guild_id) when not is_nil(guild_id) do
     Ash.Changeset.manage_relationship(changeset, :guild, guild_id,
       type: :append_and_remove,
-      use_identities: [:discord_id],
+      use_identities: [:unique_discord_id],
       value_is_key: :discord_id,
       on_no_match: {:create, :from_discord}
     )

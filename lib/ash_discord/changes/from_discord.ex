@@ -397,16 +397,19 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
     |> Ash.Changeset.force_change_attribute(:content, Map.get(discord_data, :content, ""))
     |> maybe_set_attribute(:embeds, Map.get(discord_data, :embeds, []))
-    # Set timestamp fields
-    |> Transformations.set_datetime_field(:timestamp, Map.get(discord_data, :timestamp))
-    |> Transformations.set_datetime_field(
+    # Set timestamp fields - only if attribute exists
+    |> conditionally_set_datetime_field(:timestamp, Map.get(discord_data, :timestamp))
+    |> conditionally_set_datetime_field(
       :edited_timestamp,
       Map.get(discord_data, :edited_timestamp)
     )
-    # Set boolean fields
-    |> maybe_set_attribute(:tts, Map.get(discord_data, :tts, false))
-    |> maybe_set_attribute(:mention_everyone, Map.get(discord_data, :mention_everyone, false))
-    |> maybe_set_attribute(:pinned, Map.get(discord_data, :pinned, false))
+    # Set boolean fields - only if attribute exists
+    |> conditionally_set_attribute(:tts, Map.get(discord_data, :tts, false))
+    |> conditionally_set_attribute(
+      :mention_everyone,
+      Map.get(discord_data, :mention_everyone, false)
+    )
+    |> conditionally_set_attribute(:pinned, Map.get(discord_data, :pinned, false))
     # Manage relationships
     |> maybe_manage_guild_relationship(guild_discord_id)
     |> maybe_manage_channel_relationship(channel_discord_id)
@@ -436,9 +439,17 @@ defmodule AshDiscord.Changes.FromDiscord do
   defp maybe_manage_author_relationship(changeset, nil), do: changeset
 
   defp maybe_manage_author_relationship(changeset, author_data) when is_map(author_data) do
-    # When we have the full author struct, just set the author_id directly
     author_discord_id = author_data.id
-    Ash.Changeset.force_change_attribute(changeset, :author_id, author_discord_id)
+    resource = changeset.resource
+
+    # Check if resource has author_id attribute or author relationship
+    if Ash.Resource.Info.attribute(resource, :author_id) do
+      # For resources with author_id attribute (ash_discord test resources)
+      Ash.Changeset.force_change_attribute(changeset, :author_id, author_discord_id)
+    else
+      # For resources with author relationship (steward resources)
+      Transformations.manage_user_relationship(changeset, author_discord_id, :author)
+    end
   end
 
   defp maybe_manage_author_relationship(changeset, author_discord_id)
@@ -613,6 +624,17 @@ defmodule AshDiscord.Changes.FromDiscord do
 
     if Ash.Resource.Info.attribute(resource, attribute_name) do
       Transformations.set_datetime_field(changeset, attribute_name, value)
+    else
+      changeset
+    end
+  end
+
+  # Only sets attribute if it exists on the resource
+  defp conditionally_set_attribute(changeset, attribute_name, value) do
+    resource = changeset.resource
+
+    if Ash.Resource.Info.attribute(resource, attribute_name) do
+      maybe_set_attribute(changeset, attribute_name, value)
     else
       changeset
     end

@@ -384,19 +384,11 @@ defmodule AshDiscord.Changes.FromDiscord do
   end
 
   defp transform_message(changeset, discord_data) do
-    # Get guild_discord_id from arguments or struct
-    guild_discord_id =
-      case discord_data do
-        %{guild_id: guild_id} when not is_nil(guild_id) -> guild_id
-        _ -> Ash.Changeset.get_argument(changeset, :guild_discord_id)
-      end
+    # Get guild_discord_id from struct
+    guild_discord_id = discord_data.guild_id
 
-    # Get channel_discord_id from arguments or struct
-    channel_discord_id =
-      case discord_data do
-        %{channel_id: channel_id} when not is_nil(channel_id) -> channel_id
-        _ -> Ash.Changeset.get_argument(changeset, :channel_discord_id)
-      end
+    # Get channel_discord_id from struct, with fallback to arguments for API fetching
+    channel_discord_id = discord_data.channel_id
 
     # Extract author ID from the message struct
     author_discord_id =

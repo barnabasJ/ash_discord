@@ -87,6 +87,16 @@ defmodule TestApp.Discord.Message do
 
       argument(:discord_struct, :struct, description: "Discord message data to transform")
 
+      argument(:channel_discord_id, :integer,
+        allow_nil?: true,
+        description: "Channel ID for API fallback"
+      )
+
+      argument(:message_discord_id, :integer,
+        allow_nil?: true,
+        description: "Message ID for API fallback"
+      )
+
       change({AshDiscord.Changes.FromDiscord, type: :message})
     end
 

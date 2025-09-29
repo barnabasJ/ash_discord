@@ -6,6 +6,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   ci:
     uses: ash-project/ash/.github/workflows/ash-ci.yml@main

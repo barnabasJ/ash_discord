@@ -12,6 +12,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
     test "creates message from discord struct with all attributes" do
       Mimic.copy(Nostrum.Api.Channel)
       Mimic.copy(Nostrum.Api.Guild)
+      Mimic.copy(Nostrum.Api.User)
 
       message_struct =
         message(%{
@@ -37,6 +38,11 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
         {:ok, guild(%{id: 111_222_333, name: "Test Guild"})}
       end)
 
+      # Mock user API call for author relationship management
+      Mimic.expect(Nostrum.Api.User, :get, fn 987_654_321 ->
+        {:ok, user(%{id: 987_654_321, username: "test_user"})}
+      end)
+
       result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
 
       assert {:ok, created_message} = result
@@ -55,6 +61,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
     test "handles edited message" do
       Mimic.copy(Nostrum.Api.Channel)
       Mimic.copy(Nostrum.Api.Guild)
+      Mimic.copy(Nostrum.Api.User)
 
       message_struct =
         message(%{
@@ -80,6 +87,11 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
         {:ok, guild(%{id: 555_666_777, name: "Test Guild"})}
       end)
 
+      # Mock user API call for author relationship management
+      Mimic.expect(Nostrum.Api.User, :get, fn 123_456_789 ->
+        {:ok, user(%{id: 123_456_789, username: "editor"})}
+      end)
+
       result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
 
       assert {:ok, created_message} = result
@@ -92,6 +104,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
     test "handles TTS message" do
       Mimic.copy(Nostrum.Api.Channel)
       Mimic.copy(Nostrum.Api.Guild)
+      Mimic.copy(Nostrum.Api.User)
 
       message_struct =
         message(%{
@@ -116,6 +129,11 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
         {:ok, guild(%{id: 333_444_555, name: "Test Guild"})}
       end)
 
+      # Mock user API call for author relationship management
+      Mimic.expect(Nostrum.Api.User, :get, fn 444_555_666 ->
+        {:ok, user(%{id: 444_555_666, username: "tts_user"})}
+      end)
+
       result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
 
       assert {:ok, created_message} = result
@@ -126,6 +144,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
     test "handles message with @everyone mention" do
       Mimic.copy(Nostrum.Api.Channel)
       Mimic.copy(Nostrum.Api.Guild)
+      Mimic.copy(Nostrum.Api.User)
 
       message_struct =
         message(%{
@@ -150,6 +169,11 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
         {:ok, guild(%{id: 777_888_999, name: "Test Guild"})}
       end)
 
+      # Mock user API call for author relationship management
+      Mimic.expect(Nostrum.Api.User, :get, fn 666_777_888 ->
+        {:ok, user(%{id: 666_777_888, username: "announcer"})}
+      end)
+
       result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
 
       assert {:ok, created_message} = result
@@ -160,6 +184,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
     test "handles pinned message" do
       Mimic.copy(Nostrum.Api.Channel)
       Mimic.copy(Nostrum.Api.Guild)
+      Mimic.copy(Nostrum.Api.User)
 
       message_struct =
         message(%{
@@ -184,6 +209,11 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
         {:ok, guild(%{id: 111_222_333, name: "Test Guild"})}
       end)
 
+      # Mock user API call for author relationship management
+      Mimic.expect(Nostrum.Api.User, :get, fn 888_999_111 ->
+        {:ok, user(%{id: 888_999_111, username: "pinner"})}
+      end)
+
       result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
 
       assert {:ok, created_message} = result
@@ -194,6 +224,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
     test "handles empty message content" do
       Mimic.copy(Nostrum.Api.Channel)
       Mimic.copy(Nostrum.Api.Guild)
+      Mimic.copy(Nostrum.Api.User)
 
       message_struct =
         message(%{
@@ -216,6 +247,11 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       # Mock guild API call for relationship management
       Mimic.expect(Nostrum.Api.Guild, :get, fn 999_888_777 ->
         {:ok, guild(%{id: 999_888_777, name: "Test Guild"})}
+      end)
+
+      # Mock user API call for author relationship management
+      Mimic.expect(Nostrum.Api.User, :get, fn 111_222_333 ->
+        {:ok, user(%{id: 111_222_333, username: "empty_user"})}
       end)
 
       result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
@@ -252,6 +288,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
     test "updates existing message instead of creating duplicate" do
       Mimic.copy(Nostrum.Api.Channel)
       Mimic.copy(Nostrum.Api.Guild)
+      Mimic.copy(Nostrum.Api.User)
 
       discord_id = 555_666_777
 
@@ -263,6 +300,11 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       # Mock guild API call for relationship management
       Mimic.expect(Nostrum.Api.Guild, :get, fn 222_333_444 ->
         {:ok, guild(%{id: 222_333_444, name: "Test Guild"})}
+      end)
+
+      # Mock user API call for author relationship management
+      Mimic.expect(Nostrum.Api.User, :get, fn 123_456_789 ->
+        {:ok, user(%{id: 123_456_789, username: "author"})}
       end)
 
       # Create initial message
@@ -311,6 +353,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
     test "upsert works with pin status changes" do
       Mimic.copy(Nostrum.Api.Channel)
       Mimic.copy(Nostrum.Api.Guild)
+      Mimic.copy(Nostrum.Api.User)
 
       discord_id = 333_444_555
 
@@ -322,6 +365,11 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       # Mock guild API call for relationship management
       Mimic.expect(Nostrum.Api.Guild, :get, fn 555_666_777 ->
         {:ok, guild(%{id: 555_666_777, name: "Test Guild"})}
+      end)
+
+      # Mock user API call for author relationship management
+      Mimic.expect(Nostrum.Api.User, :get, fn 987_654_321 ->
+        {:ok, user(%{id: 987_654_321, username: "important_user"})}
       end)
 
       # Create initial unpinned message

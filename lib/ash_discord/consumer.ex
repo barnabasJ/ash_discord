@@ -1106,7 +1106,11 @@ defmodule AshDiscord.Consumer do
             |> Ash.Changeset.for_create(
               :from_discord,
               %{
-                discord_struct: data
+                discord_struct: data,
+                user_discord_id: data.user_id,
+                message_discord_id: data.message_id,
+                channel_discord_id: data.channel_id,
+                guild_discord_id: data.guild_id
               },
               context: %{
                 private: %{ash_discord?: true},
@@ -1187,13 +1191,9 @@ defmodule AshDiscord.Consumer do
                 {:error, error}
             end
 
-          {:error, :not_configured} ->
+          :error ->
             Logger.info("AshDiscord: No message reaction resource configured")
             :ok
-
-          {:error, error} ->
-            Logger.error("AshDiscord: Error getting message reaction resource: #{inspect(error)}")
-            {:error, error}
         end
       end
 

@@ -172,11 +172,13 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
       user_id = 555_666_777
       message_id = 111_222_333
       emoji_name = "👍"
+      # Use concrete ID instead of nil
+      emoji_id = 123_456_789
 
       # Create initial reaction
       initial_struct =
         message_reaction(%{
-          emoji: %{id: nil, name: emoji_name, animated: false},
+          emoji: %{id: emoji_id, name: emoji_name, animated: false},
           count: 1,
           me: false
         })
@@ -193,7 +195,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
       # Update same reaction with new count
       updated_struct =
         message_reaction(%{
-          emoji: %{id: nil, name: emoji_name, animated: false},
+          emoji: %{id: emoji_id, name: emoji_name, animated: false},
           count: 5,
           me: true
         })
@@ -215,6 +217,57 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       # But with updated attributes
       assert updated_reaction.count == 5
+      assert updated_reaction.me == true
+    end
+
+    test "updates existing standard emoji reaction instead of creating duplicate" do
+      user_id = 777_888_999
+      message_id = 222_333_444
+      emoji_name = "❤️"
+
+      # Create initial reaction with standard emoji (no ID)
+      initial_struct =
+        message_reaction(%{
+          emoji: %{id: nil, name: emoji_name, animated: false},
+          count: 1,
+          me: false
+        })
+
+      {:ok, original_reaction} =
+        TestApp.Discord.message_reaction_from_discord(%{
+          discord_struct: initial_struct,
+          user_id: user_id,
+          message_id: message_id,
+          channel_id: 555_666_777,
+          guild_id: 888_999_000
+        })
+
+      # Update same reaction with new count
+      updated_struct =
+        message_reaction(%{
+          emoji: %{id: nil, name: emoji_name, animated: false},
+          count: 3,
+          me: true
+        })
+
+      {:ok, updated_reaction} =
+        TestApp.Discord.message_reaction_from_discord(%{
+          discord_struct: updated_struct,
+          user_id: user_id,
+          message_id: message_id,
+          channel_id: 555_666_777,
+          guild_id: 888_999_000
+        })
+
+      # Should be same record (same Ash ID)
+      assert updated_reaction.id == original_reaction.id
+      assert updated_reaction.user_id == original_reaction.user_id
+      assert updated_reaction.message_id == original_reaction.message_id
+      assert updated_reaction.emoji_name == original_reaction.emoji_name
+      assert updated_reaction.emoji_id == nil
+
+      # But with updated attributes
+      assert updated_reaction.count == 3
       assert updated_reaction.me == true
     end
 

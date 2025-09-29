@@ -115,6 +115,9 @@ defmodule AshDiscord.ConsumerTest do
   describe "Resource integration" do
     setup do
       copy(Nostrum.Api.ApplicationCommand)
+      copy(Nostrum.Api.Channel)
+      copy(Nostrum.Api.Guild)
+      copy(Nostrum.Api.User)
 
       stub(Nostrum.Api.ApplicationCommand, :bulk_overwrite_guild_commands, fn _guild_id,
                                                                               _commands ->

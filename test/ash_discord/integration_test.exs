@@ -63,6 +63,11 @@ defmodule AshDiscord.IntegrationTest do
           user: user(%{username: "testuser"})
         })
 
+      # Mock the interaction response to avoid rate limiter issues
+      expect(Nostrum.Api.Interaction, :create_response, fn _interaction_id, _token, _response ->
+        {:ok, %{}}
+      end)
+
       # Process the interaction
       result = IntegrationTestConsumer.handle_interaction_create(interaction)
 
@@ -166,6 +171,11 @@ defmodule AshDiscord.IntegrationTest do
         interaction(%{
           data: %{name: "nonexistent_command", options: []}
         })
+
+      # Mock the interaction response to avoid rate limiter issues
+      expect(Nostrum.Api.Interaction, :create_response, fn _interaction_id, _token, _response ->
+        {:ok, %{}}
+      end)
 
       result = IntegrationTestConsumer.handle_interaction_create(invalid_interaction)
 

@@ -91,7 +91,9 @@ defmodule TestApp.Discord.MessageReaction do
   end
 
   identities do
-    identity :reaction_identity, [:user_id, :message_id, :emoji_name, :emoji_id] do
+    # Use user_id, message_id, and either emoji_id (for custom) or emoji_name (for standard)
+    # We'll exclude emoji_id from the identity and handle uniqueness through a combination
+    identity :reaction_identity, [:user_id, :message_id, :emoji_name] do
       pre_check_with(TestApp.Discord)
     end
   end

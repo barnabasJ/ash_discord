@@ -699,11 +699,68 @@ defmodule AshDiscord.Changes.FromDiscord do
     # Set reaction count and me fields
     |> maybe_set_attribute(:count, Map.get(discord_data, :count))
     |> maybe_set_attribute(:me, Map.get(discord_data, :me))
-    # Set ID fields - arguments take precedence over discord_data
-    |> maybe_set_from_argument(:user_id)
-    |> maybe_set_from_argument(:message_id)
-    |> maybe_set_from_argument(:channel_id)
-    |> maybe_set_from_argument(:guild_id)
+    # Set ID fields - discord_data takes precedence over arguments
+    |> set_message_reaction_id_field(discord_data, :user_id)
+    |> set_message_reaction_id_field(discord_data, :message_id)
+    |> set_message_reaction_id_field(discord_data, :channel_id)
+    |> set_message_reaction_id_field(discord_data, :guild_id)
+  end
+
+  # Helper to set message reaction ID fields with struct precedence over arguments
+  # Handles both naming conventions: :user_id vs :user_discord_id
+  defp set_message_reaction_id_field(changeset, discord_data, struct_key) do
+    struct_value = Map.get(discord_data, struct_key)
+    resource = changeset.resource
+
+    # Determine which field name to use based on what exists on the resource
+    # Convert :user_id -> :user_discord_id, not :user_id_discord_id
+    struct_key_str = to_string(struct_key)
+
+    discord_field_name =
+      struct_key_str
+      |> String.replace_suffix("_id", "_discord_id")
+      |> String.to_atom()
+
+    simple_field_name = struct_key
+
+    target_field =
+      cond do
+        Ash.Resource.Info.attribute(resource, discord_field_name) -> discord_field_name
+        Ash.Resource.Info.attribute(resource, simple_field_name) -> simple_field_name
+        true -> nil
+      end
+
+    cond do
+      # If target field doesn't exist on resource, skip
+      is_nil(target_field) ->
+        changeset
+
+      # If struct has the value, use it (struct takes precedence)
+      not is_nil(struct_value) ->
+        Ash.Changeset.force_change_attribute(changeset, target_field, struct_value)
+
+      # Otherwise, fallback to argument
+      true ->
+        # Try both possible argument names: simple (user_id) and discord (user_discord_id)
+        simple_arg = struct_key
+        discord_arg = String.to_atom("#{struct_key}_discord_id")
+
+        case {Ash.Changeset.get_argument(changeset, simple_arg),
+              Ash.Changeset.get_argument(changeset, discord_arg)} do
+          {nil, nil} ->
+            changeset
+
+          {value, nil} ->
+            Ash.Changeset.force_change_attribute(changeset, target_field, value)
+
+          {nil, value} ->
+            Ash.Changeset.force_change_attribute(changeset, target_field, value)
+
+          {simple_value, _discord_value} ->
+            # If both exist, prefer simple naming for consistency with struct fields
+            Ash.Changeset.force_change_attribute(changeset, target_field, simple_value)
+        end
+    end
   end
 
   defp transform_typing_indicator(changeset, discord_data) do

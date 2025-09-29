@@ -97,6 +97,11 @@ defmodule TestApp.Discord.Message do
         description: "Message ID for API fallback"
       )
 
+      argument(:guild_discord_id, :integer,
+        allow_nil?: true,
+        description: "Guild ID for API fallback"
+      )
+
       change({AshDiscord.Changes.FromDiscord, type: :message})
     end
 

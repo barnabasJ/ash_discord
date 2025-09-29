@@ -79,18 +79,14 @@ behavior to the project maintainers.
 4. **Check code quality:**
 
    ```bash
-   # Traditional approach
+   # Individual quality checks
    mix format
    mix credo
    mix dialyzer
    mix sobelow
 
-   # Or use ex_check (recommended - unified quality checks)
-   mix check
-
-   # Or use fast local CI (recommended for development)
-   make ci-local    # ~60 seconds
-   act -W .github/workflows/ci-local.yml
+   # Or use quality alias (recommended - runs format, credo, dialyzer)
+   mix quality
    ```
 
 ### Discord Bot Setup (for testing)
@@ -112,35 +108,22 @@ behavior to the project maintainers.
    mix run --no-halt
    ```
 
-### Local CI Development (New!)
+### Quality Assurance
 
-We've implemented a modern dual CI architecture for fast local development:
-
-#### **Local CI with Act Tool**
-
-```bash
-# Install act (macOS)
-brew install act
-
-# Fast local validation (~60 seconds)
-make ci-local
-act -W .github/workflows/ci-local.yml
-
-# Run integration tests locally
-make ci-integration
-```
+Our project uses automated CI for comprehensive quality checks:
 
 #### **Quality Commands**
 
 ```bash
-# Quick security + quality check (recommended)
-mix check
+# Recommended: Run all quality checks
+mix quality         # Format, credo, dialyzer
 
-# Just security scanning
-mix sobelow --config
-
-# Dependency audit
-mix deps.audit
+# Individual tools
+mix format          # Code formatting
+mix credo --strict  # Code analysis
+mix dialyzer        # Static analysis
+mix sobelow --config # Security scanning
+mix deps.audit      # Dependency audit
 ```
 
 #### **CI Architecture**
@@ -148,10 +131,6 @@ mix deps.audit
 - **Centralized CI**: Uses `ash-project/ash/.github/workflows/ash-ci.yml@main`
 - **Integration Tests**: Real Phoenix + Bare Elixir project testing
 - **Security Scanning**: Sobelow + hex.audit for vulnerability detection
-- **10x Faster**: Local feedback with act tool
-
-See our **[Local CI Guide](LOCAL_CI.md)** for detailed setup and
-troubleshooting.
 
 ## Contributing Guidelines
 
@@ -244,17 +223,14 @@ submit PR.
 5. **Check code quality:**
 
    ```bash
-   # RECOMMENDED: Fast local CI (includes security scanning)
-   make ci-local    # ~60 seconds
+   # Recommended: Run all quality checks
+   mix quality      # Format, credo, dialyzer
 
-   # Or traditional approach
+   # Or run individual tools
    mix format
    mix credo --strict
    mix dialyzer
    mix sobelow --config
-
-   # Or comprehensive quality check with ex_check
-   mix check
    ```
 
 6. **Update CHANGELOG.md** if your change affects users

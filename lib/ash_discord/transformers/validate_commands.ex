@@ -14,9 +14,9 @@ defmodule AshDiscord.Transformers.ValidateCommands do
 
   use Spark.Dsl.Transformer
 
+  alias AshDiscord.Errors
   alias Spark.Dsl.{Extension, Transformer}
   alias Spark.Error.DslError
-  alias AshDiscord.Errors
 
   require Logger
 

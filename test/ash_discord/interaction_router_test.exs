@@ -3,8 +3,8 @@ defmodule AshDiscord.InteractionRouterTest do
 
   import AshDiscord.Test.Generators.Discord
 
-  alias AshDiscord.InteractionRouter
   alias AshDiscord.Info
+  alias AshDiscord.InteractionRouter
   alias TestApp.Discord
 
   setup do

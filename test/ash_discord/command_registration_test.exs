@@ -14,8 +14,8 @@ defmodule AshDiscord.CommandRegistrationTest do
     :ok
   end
 
-  alias AshDiscord.Consumer
   alias AshDiscord.Command
+  alias AshDiscord.Consumer
 
   describe "command scope filtering" do
     test "filters global commands correctly" do

@@ -1,9 +1,9 @@
 defmodule AshDiscord.ResponseFormatterTest do
   use ExUnit.Case, async: true
 
+  alias AshDiscord.Command
   alias AshDiscord.ResponseFormatter
   alias AshDiscord.ResponseFormatter.Default
-  alias AshDiscord.Command
 
   describe "behavior interface" do
     test "format_response/3 delegates to appropriate formatter callback" do

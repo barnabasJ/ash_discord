@@ -1,8 +1,8 @@
 defmodule AshDiscord.DslTest do
   use ExUnit.Case
 
-  alias TestApp.Discord
   alias AshDiscord.Info
+  alias TestApp.Discord
 
   describe "DSL compilation and validation" do
     test "domain compiles with AshDiscord extension" do

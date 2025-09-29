@@ -15,11 +15,11 @@ defmodule AshDiscord.Transformers.AutoDetectOptions do
   alias Ash.Type.UtcDatetime
   alias Ash.Type.UtcDatetimeUsec
   alias Ash.Type.UUID
-  alias Spark.Dsl.Extension
-  alias Spark.Dsl.Transformer
   alias AshDiscord.Option
   alias AshDiscord.Transformers.EnhanceCommands
   alias AshDiscord.Transformers.ValidateCommands
+  alias Spark.Dsl.Extension
+  alias Spark.Dsl.Transformer
 
   require Logger
 

@@ -5,10 +5,10 @@ defmodule AshDiscord.Transformers.EnhanceCommands do
 
   use Spark.Dsl.Transformer
 
-  alias Spark.Dsl.Extension
-  alias Spark.Dsl.Transformer
   alias AshDiscord.Transformers.AutoDetectOptions
   alias AshDiscord.Transformers.ValidateCommands
+  alias Spark.Dsl.Extension
+  alias Spark.Dsl.Transformer
 
   require Logger
 

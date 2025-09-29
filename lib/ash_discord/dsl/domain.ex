@@ -5,10 +5,10 @@ defmodule AshDiscord.Dsl.Domain do
   Provides the `discord do` block for Ash domains to define Discord slash commands.
   """
 
-  alias Spark.Dsl.Entity
-  alias Spark.Dsl.Section
   alias AshDiscord.Command
   alias AshDiscord.Option
+  alias Spark.Dsl.Entity
+  alias Spark.Dsl.Section
 
   @option %Entity{
     name: :option,

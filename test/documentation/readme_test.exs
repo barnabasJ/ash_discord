@@ -43,7 +43,7 @@ defmodule Documentation.ReadmeTest do
     assert contributing_content =~ "brew install act"
 
     # New quality commands
-    assert contributing_content =~ "mix quality.full"
+    assert contributing_content =~ "mix check"
     assert contributing_content =~ "mix sobelow --config"
     assert contributing_content =~ "mix deps.audit"
 
@@ -97,9 +97,9 @@ defmodule Documentation.ReadmeTest do
   end
 
   test "documented commands are executable" do
-    # Test that documented quality commands exist in mix.exs
+    # Test that documented dependencies exist in mix.exs
     mix_content = File.read!("mix.exs")
-    assert mix_content =~ "quality.full"
+    assert mix_content =~ "ex_check"
     assert mix_content =~ "deps.audit"
 
     # Test that sobelow dependency exists

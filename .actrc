@@ -1,3 +1,0 @@
-# Act local CI configuration
--P ubuntu-latest=catthehacker/ubuntu:act-latest
---reuse

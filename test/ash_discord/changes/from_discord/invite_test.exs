@@ -14,18 +14,16 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
     copy(Nostrum.Api.Guild)
     copy(Nostrum.Api.User)
 
-    # Mock channel API calls for any channel ID
-    expect(Nostrum.Api.Channel, :get, fn channel_id ->
+    # Use stub instead of expect for multiple API calls
+    stub(Nostrum.Api.Channel, :get, fn channel_id ->
       {:ok, channel(%{id: channel_id, name: "test_channel_#{channel_id}", type: 0})}
     end)
 
-    # Mock guild API calls for any guild ID
-    expect(Nostrum.Api.Guild, :get, fn guild_id ->
+    stub(Nostrum.Api.Guild, :get, fn guild_id ->
       {:ok, guild(%{id: guild_id, name: "Test Guild #{guild_id}"})}
     end)
 
-    # Mock user API calls for any user ID
-    expect(Nostrum.Api.User, :get, fn user_id ->
+    stub(Nostrum.Api.User, :get, fn user_id ->
       {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
     end)
 
@@ -193,16 +191,15 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
   end
 
   describe "API fallback pattern" do
-    test "invite API fallback fails when API is unavailable" do
-      # Invite API fetching is supported but may fail in test environment
+    test "invite requires invite code" do
+      # Invites require an invite code to be valid
       discord_id = "abc123def"
 
       result = TestApp.Discord.invite_from_discord(%{discord_id: discord_id})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch invite with ID #{discord_id}"
-      assert error_message =~ ":api_unavailable"
+      assert error_message =~ "No invite code found for invite entity"
     end
 
     test "requires discord_struct for invite creation" do
@@ -210,7 +207,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for invite entity"
+      assert error_message =~ "No invite code found for invite entity"
     end
   end
 

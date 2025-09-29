@@ -50,6 +50,9 @@ jobs:
           mix deps.get
           mix compile
 
+      - name: Install igniter archive
+        run: mix archive.install hex igniter --force
+
       - name: Create test project (${{ matrix.project-type.type }})
         run: |
           if [ "${{ matrix.project-type.type }}" = "phoenix" ]; then

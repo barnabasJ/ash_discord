@@ -243,7 +243,7 @@ defmodule AshDiscord.InteractionRouter do
     options = interaction.data.options || []
 
     Map.new(options, fn option ->
-      {String.to_atom(option.name), option.value}
+      {String.to_existing_atom(option.name), option.value}
     end)
   end
 
@@ -382,7 +382,7 @@ defmodule AshDiscord.InteractionRouter do
   """
   def parse_options(options) when is_list(options) do
     Map.new(options, fn option ->
-      {String.to_atom(option.name), option.value}
+      {String.to_existing_atom(option.name), option.value}
     end)
   end
 

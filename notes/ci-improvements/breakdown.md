@@ -33,13 +33,13 @@ complete.
 
 ### Stream A: Centralized Workflow Migration (Phase 1)
 
-1. [ ] **Backup Current CI Configuration** 1.1. [ ] Create backup of current
+1. [x] **Backup Current CI Configuration** 1.1. [x] Create backup of current
        `.github/workflows/ci.yml` - Copy `.github/workflows/ci.yml` to
        `.github/workflows/ci.yml.backup` - Document current configuration for
        rollback reference - 📖
        [GitHub Workflow Backup Best Practices](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions)
 
-   1.2. [ ] Ensure clean working directory on current installer branch - Verify
+   1.2. [x] Ensure clean working directory on current installer branch - Verify
    we're on the `installer` branch: `git branch --show-current` - Ensure clean
    working directory before changes: `git status`
 

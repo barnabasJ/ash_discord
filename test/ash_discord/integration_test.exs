@@ -12,10 +12,6 @@ defmodule AshDiscord.IntegrationTest do
     copy(Nostrum.Api.Guild)
     copy(Nostrum.Api.Channel)
 
-    expect(Nostrum.Api.Interaction, :create_response, fn _id, _token, response ->
-      {:ok, response}
-    end)
-
     :ok
   end
 

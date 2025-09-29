@@ -652,31 +652,31 @@ defmodule AshDiscord.Consumer do
       end
 
       def handle_message_update(message) do
-        with {:ok, message_resource} <-
-               AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(__MODULE__) do
-          # Update the existing message - provide channel and guild IDs from the message struct
-          case message_resource
-               |> Ash.Changeset.for_create(:from_discord, %{
-                 discord_struct: message,
-                 channel_discord_id: message.channel_id,
-                 guild_discord_id: message.guild_id,
-                 discord_id: message.id
-               })
-               |> Ash.Changeset.set_context(%{
-                 private: %{ash_discord?: true},
-                 shared: %{private: %{ash_discord?: true}}
-               })
-               |> Ash.create() do
-            {:ok, _message_record} ->
-              :ok
+        case AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(__MODULE__) do
+          {:ok, message_resource} ->
+            # Update the existing message - provide channel and guild IDs from the message struct
+            case message_resource
+                 |> Ash.Changeset.for_create(:from_discord, %{
+                   discord_struct: message,
+                   channel_discord_id: message.channel_id,
+                   guild_discord_id: message.guild_id,
+                   discord_id: message.id
+                 })
+                 |> Ash.Changeset.set_context(%{
+                   private: %{ash_discord?: true},
+                   shared: %{private: %{ash_discord?: true}}
+                 })
+                 |> Ash.create() do
+              {:ok, _message_record} ->
+                :ok
 
-            {:error, error} ->
-              require Logger
-              Logger.error("Failed to update message #{message.id}: #{inspect(error)}")
-              # Don't crash the consumer
-              :ok
-          end
-        else
+              {:error, error} ->
+                require Logger
+                Logger.error("Failed to update message #{message.id}: #{inspect(error)}")
+                # Don't crash the consumer
+                :ok
+            end
+
           :error ->
             # No message resource configured
             :ok
@@ -684,52 +684,14 @@ defmodule AshDiscord.Consumer do
       end
 
       def handle_message_delete(data) do
-        with {:ok, message_resource} <-
-               AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(__MODULE__) do
-          require Ash.Query
-
-          # Delete the message by discord_id
-          query =
-            message_resource
-            |> Ash.Query.filter(discord_id: data.id)
-
-          case Ash.bulk_destroy(query, :destroy, %{},
-                 context: %{
-                   private: %{ash_discord?: true},
-                   shared: %{private: %{ash_discord?: true}}
-                 }
-               ) do
-            %Ash.BulkResult{status: :success} ->
-              :ok
-
-            result ->
-              require Logger
-              Logger.error("Failed to delete message #{data.id}: #{inspect(result)}")
-              :ok
-          end
-        else
-          :error ->
-            # No message resource configured
-            :ok
-        end
-      end
-
-      def handle_message_delete_bulk(data) do
-        with {:ok, message_resource} <-
-               AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(__MODULE__) do
-          # Handle empty IDs list gracefully
-          if data.ids == [] do
-            :ok
-          else
+        case AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(__MODULE__) do
+          {:ok, message_resource} ->
             require Ash.Query
 
-            # Delete all messages by discord_id
-            # We need to build a filter that checks if discord_id is in the list
-            filter = [or: Enum.map(data.ids, fn id -> [discord_id: id] end)]
-
+            # Delete the message by discord_id
             query =
               message_resource
-              |> Ash.Query.filter(filter)
+              |> Ash.Query.filter(discord_id: data.id)
 
             case Ash.bulk_destroy(query, :destroy, %{},
                    context: %{
@@ -742,11 +704,49 @@ defmodule AshDiscord.Consumer do
 
               result ->
                 require Logger
-                Logger.error("Failed to bulk delete messages: #{inspect(result)}")
+                Logger.error("Failed to delete message #{data.id}: #{inspect(result)}")
                 :ok
             end
-          end
-        else
+
+          :error ->
+            # No message resource configured
+            :ok
+        end
+      end
+
+      def handle_message_delete_bulk(data) do
+        case AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(__MODULE__) do
+          {:ok, message_resource} ->
+            # Handle empty IDs list gracefully
+            if data.ids == [] do
+              :ok
+            else
+              require Ash.Query
+
+              # Delete all messages by discord_id
+              # We need to build a filter that checks if discord_id is in the list
+              filter = [or: Enum.map(data.ids, fn id -> [discord_id: id] end)]
+
+              query =
+                message_resource
+                |> Ash.Query.filter(filter)
+
+              case Ash.bulk_destroy(query, :destroy, %{},
+                     context: %{
+                       private: %{ash_discord?: true},
+                       shared: %{private: %{ash_discord?: true}}
+                     }
+                   ) do
+                %Ash.BulkResult{status: :success} ->
+                  :ok
+
+                result ->
+                  require Logger
+                  Logger.error("Failed to bulk delete messages: #{inspect(result)}")
+                  :ok
+              end
+            end
+
           :error ->
             # No message resource configured
             :ok
@@ -754,62 +754,70 @@ defmodule AshDiscord.Consumer do
       end
 
       def handle_guild_create(guild) do
-        with {:ok, domains} <- AshDiscord.Consumer.Info.ash_discord_consumer_domains(__MODULE__) do
-          commands = AshDiscord.Consumer.collect_commands(domains)
+        case AshDiscord.Consumer.Info.ash_discord_consumer_domains(__MODULE__) do
+          {:ok, domains} ->
+            commands = AshDiscord.Consumer.collect_commands(domains)
 
-          # Filter by scope and register appropriately
-          global_commands =
-            commands
-            |> Enum.filter(&(&1.scope == :global))
-            |> Enum.map(&AshDiscord.Consumer.to_discord_command/1)
+            # Filter by scope and register appropriately
+            global_commands =
+              commands
+              |> Enum.filter(&(&1.scope == :global))
+              |> Enum.map(&AshDiscord.Consumer.to_discord_command/1)
 
-          guild_commands =
-            commands
-            |> Enum.filter(&(&1.scope == :guild))
-            |> Enum.map(&AshDiscord.Consumer.to_discord_command/1)
+            guild_commands =
+              commands
+              |> Enum.filter(&(&1.scope == :guild))
+              |> Enum.map(&AshDiscord.Consumer.to_discord_command/1)
 
-          case Nostrum.Api.ApplicationCommand.bulk_overwrite_guild_commands(
-                 guild.id,
-                 guild_commands
-               ) do
-            {:ok, _} ->
-              require Logger
+            case Nostrum.Api.ApplicationCommand.bulk_overwrite_guild_commands(
+                   guild.id,
+                   guild_commands
+                 ) do
+              {:ok, _} ->
+                require Logger
 
-              Logger.info(
-                "Registered #{length(guild_commands)} guild command(s) for #{guild.name}"
-              )
+                Logger.info(
+                  "Registered #{length(guild_commands)} guild command(s) for #{guild.name}"
+                )
 
-            {:error, error} ->
-              require Logger
+              {:error, error} ->
+                require Logger
 
-              Logger.error(
-                "Failed to register guild commands for #{guild.name}: #{inspect(error)}"
-              )
-          end
+                Logger.error(
+                  "Failed to register guild commands for #{guild.name}: #{inspect(error)}"
+                )
+            end
+
+          _ ->
+            :ok
         end
 
-        with {:ok, guild_resource} <-
-               AshDiscord.Consumer.Info.ash_discord_consumer_guild_resource(__MODULE__) do
-          case guild_resource
-               |> Ash.Changeset.for_create(:from_discord, %{
-                 discord_id: guild.id,
-                 discord_struct: guild
-               })
-               |> Ash.Changeset.set_context(%{
-                 private: %{ash_discord?: true},
-                 shared: %{private: %{ash_discord?: true}}
-               })
-               |> Ash.create() do
-            {:ok, _guild_record} ->
-              :ok
+        case AshDiscord.Consumer.Info.ash_discord_consumer_guild_resource(__MODULE__) do
+          {:ok, guild_resource} ->
+            case guild_resource
+                 |> Ash.Changeset.for_create(:from_discord, %{
+                   discord_id: guild.id,
+                   discord_struct: guild
+                 })
+                 |> Ash.Changeset.set_context(%{
+                   private: %{ash_discord?: true},
+                   shared: %{private: %{ash_discord?: true}}
+                 })
+                 |> Ash.create() do
+              {:ok, _guild_record} ->
+                :ok
 
-            {:error, error} ->
-              require Logger
-              Logger.error("Failed to save guild #{guild.name} (#{guild.id}): #{inspect(error)}")
-              # Don't crash the consumer
-              :ok
-          end
-        else
+              {:error, error} ->
+                require Logger
+
+                Logger.error(
+                  "Failed to save guild #{guild.name} (#{guild.id}): #{inspect(error)}"
+                )
+
+                # Don't crash the consumer
+                :ok
+            end
+
           :error ->
             # No guild resource configured
             :ok

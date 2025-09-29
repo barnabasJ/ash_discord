@@ -247,16 +247,16 @@ defmodule AshDiscord.Changes.FromDiscord do
 
   defp transform_user(changeset, discord_data) do
     changeset
-    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
-    |> Ash.Changeset.force_change_attribute(:discord_username, discord_data.username)
-    |> Ash.Changeset.force_change_attribute(:discord_avatar, discord_data.avatar)
-    |> Transformations.set_discord_email(discord_data.id)
+    |> Ash.Changeset.force_change_attribute(:discord_id, Map.get(discord_data, :id))
+    |> Ash.Changeset.force_change_attribute(:discord_username, Map.get(discord_data, :username))
+    |> Ash.Changeset.force_change_attribute(:discord_avatar, Map.get(discord_data, :avatar))
+    |> Transformations.set_discord_email(Map.get(discord_data, :id))
   end
 
   defp transform_guild(changeset, discord_data) do
     changeset
-    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
-    |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
+    |> Ash.Changeset.force_change_attribute(:discord_id, Map.get(discord_data, :id))
+    |> Ash.Changeset.force_change_attribute(:name, Map.get(discord_data, :name))
     |> maybe_set_attribute(:description, Map.get(discord_data, :description))
     |> maybe_set_attribute(:icon, Map.get(discord_data, :icon))
     |> maybe_set_attribute(:owner_id, Map.get(discord_data, :owner_id))
@@ -309,10 +309,13 @@ defmodule AshDiscord.Changes.FromDiscord do
     guild_discord_id = Ash.Changeset.get_argument_or_attribute(changeset, :guild_discord_id)
 
     changeset
-    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
-    |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
-    |> Ash.Changeset.force_change_attribute(:color, discord_data.color)
-    |> Ash.Changeset.force_change_attribute(:permissions, to_string(discord_data.permissions))
+    |> Ash.Changeset.force_change_attribute(:discord_id, Map.get(discord_data, :id))
+    |> Ash.Changeset.force_change_attribute(:name, Map.get(discord_data, :name))
+    |> Ash.Changeset.force_change_attribute(:color, Map.get(discord_data, :color))
+    |> Ash.Changeset.force_change_attribute(
+      :permissions,
+      to_string(Map.get(discord_data, :permissions))
+    )
     |> maybe_set_role_attributes(discord_data)
     |> Transformations.manage_guild_relationship(guild_discord_id)
   end
@@ -461,23 +464,30 @@ defmodule AshDiscord.Changes.FromDiscord do
   end
 
   defp transform_emoji(changeset, discord_data) do
-    # Determine if this is a custom emoji (has an ID)
-    custom =
-      case Map.get(discord_data, :id) do
-        nil -> false
-        _ -> true
-      end
+    # Validate required name field - use safe access for validation
+    case Map.get(discord_data, :name) do
+      nil ->
+        Ash.Changeset.add_error(changeset, "name is required")
 
-    changeset
-    |> Ash.Changeset.force_change_attribute(:discord_id, Map.get(discord_data, :id))
-    |> maybe_set_attribute(:name, Map.get(discord_data, :name))
-    |> Ash.Changeset.force_change_attribute(:animated, Map.get(discord_data, :animated, false))
-    |> Ash.Changeset.force_change_attribute(:custom, custom)
-    |> maybe_set_attribute(:available, Map.get(discord_data, :available, true))
-    |> maybe_set_attribute(:require_colons, Map.get(discord_data, :require_colons, true))
-    |> maybe_set_attribute(:managed, Map.get(discord_data, :managed, false))
-    |> maybe_set_attribute(:roles, Map.get(discord_data, :roles, []))
-    |> maybe_manage_emoji_user_relationship(discord_data)
+      _ ->
+        # Determine if this is a custom emoji (has an ID)
+        custom =
+          case discord_data.id do
+            nil -> false
+            _ -> true
+          end
+
+        changeset
+        |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
+        |> maybe_set_attribute(:name, discord_data.name)
+        |> Ash.Changeset.force_change_attribute(:animated, discord_data.animated || false)
+        |> Ash.Changeset.force_change_attribute(:custom, custom)
+        |> maybe_set_attribute(:available, discord_data.available || true)
+        |> maybe_set_attribute(:require_colons, discord_data.require_colons || true)
+        |> maybe_set_attribute(:managed, discord_data.managed || false)
+        |> maybe_set_attribute(:roles, discord_data.roles || [])
+        |> maybe_manage_emoji_user_relationship(discord_data)
+    end
   end
 
   # Manage user relationship for emojis
@@ -520,10 +530,27 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> maybe_set_attribute_if_exists(:channel_id, Map.get(discord_data, :channel_id))
     |> maybe_set_attribute_if_exists(:guild_discord_id, Map.get(discord_data, :guild_id))
     |> maybe_set_attribute_if_exists(:guild_id, Map.get(discord_data, :guild_id))
+    |> maybe_set_attribute_if_exists(:type, Map.get(discord_data, :type))
+    |> maybe_set_attribute_if_exists(
+      :source_guild_discord_id,
+      case Map.get(discord_data, :source_guild) do
+        nil -> nil
+        source_guild -> Map.get(source_guild, :id)
+      end
+    )
+    |> maybe_set_attribute_if_exists(
+      :source_channel_discord_id,
+      case Map.get(discord_data, :source_channel) do
+        nil -> nil
+        source_channel -> Map.get(source_channel, :id)
+      end
+    )
     |> maybe_set_attribute_if_exists(
       :user_discord_id,
       get_nested_id(Map.get(discord_data, :user))
     )
+    |> maybe_set_attribute_if_exists(:application_id, Map.get(discord_data, :application_id))
+    |> maybe_set_attribute_if_exists(:url, Map.get(discord_data, :url))
   end
 
   defp transform_invite(changeset, discord_data) do

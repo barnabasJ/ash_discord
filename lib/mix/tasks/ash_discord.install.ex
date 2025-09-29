@@ -67,7 +67,7 @@ if Code.ensure_loaded?(Igniter) do
           y: :yes
         ],
         installs: [{:ash, "~> 3.0"}],
-        adds_deps: [{:nostrum, "~> 0.10", runtime: false}]
+        adds_deps: [{:nostrum, "~> 0.10"}]
       }
     end
 

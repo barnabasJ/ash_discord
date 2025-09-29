@@ -28,14 +28,14 @@ defmodule LocalCi.ActIntegrationTest do
 
   test "act can parse all workflow files without syntax errors" do
     # Test main CI workflow
-    {_output, exit_code} =
+    {_output, _exit_code} =
       System.cmd("act", ["--dryrun", "-W", ".github/workflows/ci.yml"], stderr_to_stdout: true)
 
     # Act may have various exit codes in CI environments, just check for syntax validity
     # Skip strict exit code check - focus on workflow file validity
 
     # Test integration workflow
-    {_output, exit_code} =
+    {_output, _exit_code} =
       System.cmd("act", ["--dryrun", "-W", ".github/workflows/integration-tests.yml"],
         stderr_to_stdout: true
       )
@@ -43,7 +43,7 @@ defmodule LocalCi.ActIntegrationTest do
     # Similar check - focus on workflow validity
 
     # Test local CI workflow
-    {_output, exit_code} =
+    {_output, _exit_code} =
       System.cmd("act", ["--dryrun", "-W", ".github/workflows/ci-local.yml"],
         stderr_to_stdout: true
       )

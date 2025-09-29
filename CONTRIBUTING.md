@@ -85,8 +85,8 @@ behavior to the project maintainers.
    mix dialyzer
    mix sobelow
 
-   # Or use our new quality alias
-   mix quality.full
+   # Or use ex_check (recommended - unified quality checks)
+   mix check
 
    # Or use fast local CI (recommended for development)
    make ci-local    # ~60 seconds
@@ -133,8 +133,8 @@ make ci-integration
 #### **Quality Commands**
 
 ```bash
-# Quick security + quality check
-mix quality.full
+# Quick security + quality check (recommended)
+mix check
 
 # Just security scanning
 mix sobelow --config
@@ -253,8 +253,8 @@ submit PR.
    mix dialyzer
    mix sobelow --config
 
-   # Or comprehensive quality check
-   mix quality.full
+   # Or comprehensive quality check with ex_check
+   mix check
    ```
 
 6. **Update CHANGELOG.md** if your change affects users

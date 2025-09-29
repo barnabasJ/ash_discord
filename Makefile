@@ -31,10 +31,8 @@ ci-all: ci-local ci-test ci-integration
 
 # Local Elixir tasks (without act)
 quality:
-	@echo "📋 Running quality checks..."
-	mix format --check-formatted
-	mix credo --strict
-	mix sobelow --config
+	@echo "📋 Running quality checks with ex_check..."
+	mix check
 
 deps:
 	@echo "📦 Getting and auditing dependencies..."

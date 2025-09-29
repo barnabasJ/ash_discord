@@ -53,6 +53,7 @@ defmodule AshDiscord.MixProject do
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:sobelow, "~> 0.14", only: [:dev, :test], runtime: false},
+      {:ex_check, "~> 0.16", only: [:dev, :test], runtime: false},
       {:mimic, "~> 1.7", only: :test},
       {:excoveralls, "~> 0.18", only: :test}
     ]
@@ -89,7 +90,6 @@ defmodule AshDiscord.MixProject do
       format: "format",
       quality: ["format", "credo --strict", "dialyzer"],
       "deps.audit": ["hex.audit", "deps.unlock --check-unused"],
-      "quality.full": ["format", "credo --strict", "dialyzer", "sobelow --config"],
 
       # Test coverage aliases
       "test.coverage": ["coveralls"],

@@ -176,8 +176,26 @@ act --list
 - ✅ Static analysis (credo --strict)
 - ✅ Security scanning (sobelow --config)
 - ✅ Tests (warnings as errors)
-- ❌ Type checking (dialyzer) - too slow
+- ❌ Type checking (dialyzer) - too slow for local CI
 - ❌ Spark formatter - handled by main CI
+
+### Quality Checks (ex_check)
+
+For comprehensive quality checking, use ex_check:
+
+```bash
+# Run all configured quality tools
+mix check
+
+# Run only specific tools
+mix check --only formatter --only credo
+
+# Run in fix mode to auto-resolve issues
+mix check --fix
+
+# Run tools in parallel (default)
+mix check --parallel
+```
 
 ### Integration Tests
 

@@ -639,13 +639,14 @@ defmodule AshDiscord.Changes.FromDiscord do
 
   defp transform_message_attachment(changeset, discord_data) do
     changeset
-    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
-    |> Ash.Changeset.force_change_attribute(:filename, discord_data.filename)
-    |> Ash.Changeset.force_change_attribute(:size, discord_data.size)
-    |> Ash.Changeset.force_change_attribute(:url, discord_data.url)
-    |> maybe_set_attribute(:proxy_url, discord_data.proxy_url)
-    |> maybe_set_attribute(:height, discord_data.height)
-    |> maybe_set_attribute(:width, discord_data.width)
+    |> Ash.Changeset.force_change_attribute(:discord_id, Map.get(discord_data, :id))
+    |> Ash.Changeset.force_change_attribute(:filename, Map.get(discord_data, :filename))
+    |> Ash.Changeset.force_change_attribute(:size, Map.get(discord_data, :size))
+    |> Ash.Changeset.force_change_attribute(:url, Map.get(discord_data, :url))
+    |> maybe_set_attribute(:proxy_url, Map.get(discord_data, :proxy_url))
+    |> maybe_set_attribute(:height, Map.get(discord_data, :height))
+    |> maybe_set_attribute(:width, Map.get(discord_data, :width))
+    |> maybe_set_attribute(:content_type, Map.get(discord_data, :content_type))
   end
 
   defp transform_message_reaction(changeset, discord_data) do

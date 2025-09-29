@@ -127,11 +127,11 @@ defmodule AshDiscord.Errors do
       context = context_parts |> Enum.filter(& &1) |> Enum.join(" | ")
 
       recovery_section =
-        if not Enum.empty?(error.recovery_actions) do
+        if Enum.empty?(error.recovery_actions) do
+          ""
+        else
           actions = Enum.join(error.recovery_actions, "; ")
           "\nRecovery: #{actions}"
-        else
-          ""
         end
 
       "#{base_message} (#{context})#{recovery_section}"

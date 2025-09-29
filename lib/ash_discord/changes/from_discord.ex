@@ -718,7 +718,9 @@ defmodule AshDiscord.Changes.FromDiscord do
     # Get ID with struct precedence over arguments
     id_value = get_id_with_fallback(changeset, discord_data, struct_key)
 
-    if not is_nil(id_value) do
+    if is_nil(id_value) do
+      changeset
+    else
       # Determine target field name based on what exists on the resource
       target_field = get_target_field_name(changeset.resource, struct_key)
 
@@ -727,8 +729,6 @@ defmodule AshDiscord.Changes.FromDiscord do
       else
         changeset
       end
-    else
-      changeset
     end
   end
 
@@ -736,10 +736,7 @@ defmodule AshDiscord.Changes.FromDiscord do
   defp get_id_with_fallback(changeset, discord_data, struct_key) do
     struct_value = Map.get(discord_data, struct_key)
 
-    if not is_nil(struct_value) do
-      # Struct value takes precedence
-      struct_value
-    else
+    if is_nil(struct_value) do
       # Fallback to arguments - try both naming conventions
       simple_arg = struct_key
       discord_arg = String.to_atom("#{struct_key}_discord_id")
@@ -752,6 +749,9 @@ defmodule AshDiscord.Changes.FromDiscord do
         # Prefer simple naming
         {simple_value, _discord_value} -> simple_value
       end
+    else
+      # Struct value takes precedence
+      struct_value
     end
   end
 

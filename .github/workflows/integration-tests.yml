@@ -51,7 +51,7 @@ jobs:
           mix compile
 
       - name: Install igniter archive
-        run: mix archive.install hex igniter --force
+        run: mix archive.install hex igniter_new --force
 
       - name: Create test project (${{ matrix.project-type.type }})
         run: |

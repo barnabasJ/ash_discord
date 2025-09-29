@@ -638,6 +638,10 @@ defmodule AshDiscord.Changes.FromDiscord do
   # Only sets attribute if it exists on the resource
 
   defp transform_message_attachment(changeset, discord_data) do
+    # Infer content type from filename if not provided
+    content_type =
+      Map.get(discord_data, :content_type) || infer_content_type(Map.get(discord_data, :filename))
+
     changeset
     |> Ash.Changeset.force_change_attribute(:discord_id, Map.get(discord_data, :id))
     |> Ash.Changeset.force_change_attribute(:filename, Map.get(discord_data, :filename))
@@ -646,7 +650,7 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> maybe_set_attribute(:proxy_url, Map.get(discord_data, :proxy_url))
     |> maybe_set_attribute(:height, Map.get(discord_data, :height))
     |> maybe_set_attribute(:width, Map.get(discord_data, :width))
-    |> maybe_set_attribute(:content_type, Map.get(discord_data, :content_type))
+    |> maybe_set_attribute(:content_type, content_type)
   end
 
   defp transform_message_reaction(changeset, discord_data) do
@@ -855,4 +859,33 @@ defmodule AshDiscord.Changes.FromDiscord do
       value -> maybe_set_attribute(changeset, field, value)
     end
   end
+
+  # Infer content type from filename extension
+  defp infer_content_type(nil), do: nil
+
+  defp infer_content_type(filename) when is_binary(filename) do
+    case String.downcase(Path.extname(filename)) do
+      ".pdf" -> "application/pdf"
+      ".png" -> "image/png"
+      ".jpg" -> "image/jpeg"
+      ".jpeg" -> "image/jpeg"
+      ".gif" -> "image/gif"
+      ".webp" -> "image/webp"
+      ".txt" -> "text/plain"
+      ".json" -> "application/json"
+      ".zip" -> "application/zip"
+      ".mp4" -> "video/mp4"
+      ".mov" -> "video/quicktime"
+      ".avi" -> "video/x-msvideo"
+      ".mkv" -> "video/x-matroska"
+      ".webm" -> "video/webm"
+      ".mp3" -> "audio/mpeg"
+      ".wav" -> "audio/wav"
+      ".ogg" -> "audio/ogg"
+      ".flac" -> "audio/flac"
+      _ -> "application/octet-stream"
+    end
+  end
+
+  defp infer_content_type(_), do: nil
 end

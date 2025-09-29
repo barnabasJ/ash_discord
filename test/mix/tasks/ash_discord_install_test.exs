@@ -6,7 +6,42 @@ defmodule Mix.Tasks.AshDiscord.InstallTest do
     test "installs with default options" do
       phx_test_project()
       |> Igniter.compose_task("ash_discord.install", [])
-      |> assert_creates("lib/test/discord_consumer.ex")
+      |> assert_creates("lib/test/discord_consumer.ex", """
+      defmodule Test.DiscordConsumer do
+        @moduledoc \"\"\"
+        Discord consumer for handling Discord events and commands.
+
+        This consumer automatically processes Discord interactions and routes them
+        to the appropriate Ash actions based on your domain configuration.
+
+        ## Configuration
+
+        Configure your Discord bot token in your environment configuration:
+
+            # config/dev.exs
+            config :nostrum,
+              token: "your_dev_bot_token_here"
+
+            # config/runtime.exs (for production)
+            config :nostrum,
+              token: System.get_env("DISCORD_TOKEN")
+
+        ## Adding Discord Commands
+
+        To add Discord commands, implement them in your configured Ash domains.
+        Each domain can define Discord interactions that will be automatically
+        registered and handled by this consumer.
+        \"\"\"
+
+        use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          # Add your Ash domains that should handle Discord interactions
+          # Example: domains([MyApp.Discord, MyApp.Chat])
+          domains([])
+        end
+      end
+      """)
       # Note: Dependencies handled by installs/adds_deps in info/2
       |> assert_has_patch("config/dev.exs", """
       ...|
@@ -20,7 +55,42 @@ defmodule Mix.Tasks.AshDiscord.InstallTest do
     test "installs with custom consumer name" do
       phx_test_project()
       |> Igniter.compose_task("ash_discord.install", ["--consumer", "MyApp.Bot.Consumer"])
-      |> assert_creates("lib/my_app/bot/consumer.ex")
+      |> assert_creates("lib/my_app/bot/consumer.ex", """
+      defmodule MyApp.Bot.Consumer do
+        @moduledoc \"\"\"
+        Discord consumer for handling Discord events and commands.
+
+        This consumer automatically processes Discord interactions and routes them
+        to the appropriate Ash actions based on your domain configuration.
+
+        ## Configuration
+
+        Configure your Discord bot token in your environment configuration:
+
+            # config/dev.exs
+            config :nostrum,
+              token: "your_dev_bot_token_here"
+
+            # config/runtime.exs (for production)
+            config :nostrum,
+              token: System.get_env("DISCORD_TOKEN")
+
+        ## Adding Discord Commands
+
+        To add Discord commands, implement them in your configured Ash domains.
+        Each domain can define Discord interactions that will be automatically
+        registered and handled by this consumer.
+        \"\"\"
+
+        use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          # Add your Ash domains that should handle Discord interactions
+          # Example: domains([MyApp.Discord, MyApp.Chat])
+          domains([])
+        end
+      end
+      """)
     end
 
     test "installs with configured domains" do
@@ -75,7 +145,42 @@ defmodule Mix.Tasks.AshDiscord.InstallTest do
     test "consumer generation creates proper module structure" do
       phx_test_project()
       |> Igniter.compose_task("ash_discord.install", [])
-      |> assert_creates("lib/test/discord_consumer.ex")
+      |> assert_creates("lib/test/discord_consumer.ex", """
+      defmodule Test.DiscordConsumer do
+        @moduledoc \"\"\"
+        Discord consumer for handling Discord events and commands.
+
+        This consumer automatically processes Discord interactions and routes them
+        to the appropriate Ash actions based on your domain configuration.
+
+        ## Configuration
+
+        Configure your Discord bot token in your environment configuration:
+
+            # config/dev.exs
+            config :nostrum,
+              token: "your_dev_bot_token_here"
+
+            # config/runtime.exs (for production)
+            config :nostrum,
+              token: System.get_env("DISCORD_TOKEN")
+
+        ## Adding Discord Commands
+
+        To add Discord commands, implement them in your configured Ash domains.
+        Each domain can define Discord interactions that will be automatically
+        registered and handled by this consumer.
+        \"\"\"
+
+        use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          # Add your Ash domains that should handle Discord interactions
+          # Example: domains([MyApp.Discord, MyApp.Chat])
+          domains([])
+        end
+      end
+      """)
     end
 
     test "environment configuration sets up all environments" do
@@ -137,7 +242,42 @@ defmodule Mix.Tasks.AshDiscord.InstallTest do
     test "parses consumer option correctly" do
       phx_test_project()
       |> Igniter.compose_task("ash_discord.install", ["-c", "Custom.Consumer"])
-      |> assert_creates("lib/custom/consumer.ex")
+      |> assert_creates("lib/custom/consumer.ex", """
+      defmodule Custom.Consumer do
+        @moduledoc \"\"\"
+        Discord consumer for handling Discord events and commands.
+
+        This consumer automatically processes Discord interactions and routes them
+        to the appropriate Ash actions based on your domain configuration.
+
+        ## Configuration
+
+        Configure your Discord bot token in your environment configuration:
+
+            # config/dev.exs
+            config :nostrum,
+              token: "your_dev_bot_token_here"
+
+            # config/runtime.exs (for production)
+            config :nostrum,
+              token: System.get_env("DISCORD_TOKEN")
+
+        ## Adding Discord Commands
+
+        To add Discord commands, implement them in your configured Ash domains.
+        Each domain can define Discord interactions that will be automatically
+        registered and handled by this consumer.
+        \"\"\"
+
+        use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          # Add your Ash domains that should handle Discord interactions
+          # Example: domains([MyApp.Discord, MyApp.Chat])
+          domains([])
+        end
+      end
+      """)
     end
 
     test "parses domains option with multiple domains" do
@@ -145,13 +285,81 @@ defmodule Mix.Tasks.AshDiscord.InstallTest do
       |> create_domain_module("A.Domain")
       |> create_domain_module("B.Domain")
       |> Igniter.compose_task("ash_discord.install", ["-d", "A.Domain,B.Domain"])
-      |> assert_creates("lib/test/discord_consumer.ex")
+      |> assert_creates("lib/test/discord_consumer.ex", """
+      defmodule Test.DiscordConsumer do
+        @moduledoc \"\"\"
+        Discord consumer for handling Discord events and commands.
+
+        This consumer automatically processes Discord interactions and routes them
+        to the appropriate Ash actions based on your domain configuration.
+
+        ## Configuration
+
+        Configure your Discord bot token in your environment configuration:
+
+            # config/dev.exs
+            config :nostrum,
+              token: "your_dev_bot_token_here"
+
+            # config/runtime.exs (for production)
+            config :nostrum,
+              token: System.get_env("DISCORD_TOKEN")
+
+        ## Adding Discord Commands
+
+        To add Discord commands, implement them in your configured Ash domains.
+        Each domain can define Discord interactions that will be automatically
+        registered and handled by this consumer.
+        \"\"\"
+
+        use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          domains([A.Domain, B.Domain])
+        end
+      end
+      """)
     end
 
     test "skips confirmation with --yes flag" do
       phx_test_project()
       |> Igniter.compose_task("ash_discord.install", ["--yes"])
-      |> assert_creates("lib/test/discord_consumer.ex")
+      |> assert_creates("lib/test/discord_consumer.ex", """
+      defmodule Test.DiscordConsumer do
+        @moduledoc \"\"\"
+        Discord consumer for handling Discord events and commands.
+
+        This consumer automatically processes Discord interactions and routes them
+        to the appropriate Ash actions based on your domain configuration.
+
+        ## Configuration
+
+        Configure your Discord bot token in your environment configuration:
+
+            # config/dev.exs
+            config :nostrum,
+              token: "your_dev_bot_token_here"
+
+            # config/runtime.exs (for production)
+            config :nostrum,
+              token: System.get_env("DISCORD_TOKEN")
+
+        ## Adding Discord Commands
+
+        To add Discord commands, implement them in your configured Ash domains.
+        Each domain can define Discord interactions that will be automatically
+        registered and handled by this consumer.
+        \"\"\"
+
+        use AshDiscord.Consumer
+
+        ash_discord_consumer do
+          # Add your Ash domains that should handle Discord interactions
+          # Example: domains([MyApp.Discord, MyApp.Chat])
+          domains([])
+        end
+      end
+      """)
     end
   end
 

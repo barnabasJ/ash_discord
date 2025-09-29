@@ -4,7 +4,7 @@ defmodule Mix.Tasks.CiQualityTest do
   test "quality.full alias includes all required tools" do
     aliases = Mix.Project.config()[:aliases]
 
-    assert aliases["quality.full"] == [
+    assert aliases[:"quality.full"] == [
              "format",
              "credo --strict",
              "dialyzer",
@@ -15,7 +15,7 @@ defmodule Mix.Tasks.CiQualityTest do
   test "deps.audit alias includes audit tools" do
     aliases = Mix.Project.config()[:aliases]
 
-    assert aliases["deps.audit"] == [
+    assert aliases[:"deps.audit"] == [
              "hex.audit",
              "deps.unlock --check-unused"
            ]

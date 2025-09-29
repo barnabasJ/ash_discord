@@ -115,9 +115,6 @@ if Code.ensure_loaded?(Igniter) do
             |> Enum.map(&Module.concat([&1]))
         end
 
-      # Validate project compatibility
-      validate_project_compatibility!(igniter)
-
       # Validate specified domains if any were provided
       if domains != [] do
         validate_domains!(igniter, domains)
@@ -130,41 +127,7 @@ if Code.ensure_loaded?(Igniter) do
       ]
     end
 
-    defp validate_project_compatibility!(igniter) do
-      # Check for Phoenix application structure
-      # Note: We'll check for Phoenix by looking for Phoenix deps instead
-      case Deps.get_dep(igniter, :phoenix) do
-        {:error, _} ->
-          raise """
-          AshDiscord requires a Phoenix application.
-
-          This installer is designed to work with Phoenix applications.
-          Please ensure your application is a Phoenix project before running this installer.
-          """
-
-        {:ok, _} ->
-          :ok
-      end
-
-      # Check for Ash framework presence
-      case Deps.get_dep(igniter, :ash) do
-        {:error, _} ->
-          raise """
-            AshDiscord requires the Ash framework to be installed.
-
-          Please add Ash to your dependencies first:
-              {:ash, "~> 3.0"}
-
-          Then run `mix deps.get` before running this installer again.
-          """
-
-        {:ok, _} ->
-          :ok
-      end
-    end
-
     defp validate_domains!(igniter, domains) do
-      # For each specified domain, validate it exists and uses Ash.Domain
       Enum.each(domains, fn domain_module ->
         case ProjectModule.module_exists(igniter, domain_module) do
           {false, _igniter} ->
@@ -179,7 +142,7 @@ if Code.ensure_loaded?(Igniter) do
             """
 
           {true, _igniter} ->
-            # Verify it's actually an Ash domain
+            # TODO: Verify it's actually an Ash domain
             # This validation will be enhanced once we can inspect the module content
             :ok
         end

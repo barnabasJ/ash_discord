@@ -439,7 +439,7 @@ defmodule AshDiscord.Changes.FromDiscord do
   defp maybe_manage_author_relationship(changeset, nil), do: changeset
 
   defp maybe_manage_author_relationship(changeset, author_data) when is_map(author_data) do
-    author_discord_id = author_data.id
+    author_discord_id = get_nested_id(author_data)
     resource = changeset.resource
 
     # Check if resource has author_id attribute or author relationship

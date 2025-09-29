@@ -88,7 +88,6 @@ defmodule AshDiscord.MixProject do
       # Code quality aliases
       credo: "credo --strict",
       format: "format",
-      quality: ["format", "credo --strict", "dialyzer"],
       "deps.audit": ["hex.audit", "deps.unlock --check-unused"],
 
       # Test coverage aliases

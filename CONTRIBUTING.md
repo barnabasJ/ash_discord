@@ -85,8 +85,8 @@ behavior to the project maintainers.
    mix dialyzer
    mix sobelow
 
-   # Or use quality alias (recommended - runs format, credo, dialyzer)
-   mix quality
+   # Or use ex_check (recommended - comprehensive quality checks)
+   mix check
    ```
 
 ### Discord Bot Setup (for testing)
@@ -115,8 +115,8 @@ Our project uses automated CI for comprehensive quality checks:
 #### **Quality Commands**
 
 ```bash
-# Recommended: Run all quality checks
-mix quality         # Format, credo, dialyzer
+# Recommended: Run comprehensive quality checks
+mix check           # Format, credo, dialyzer, sobelow, tests
 
 # Individual tools
 mix format          # Code formatting
@@ -223,8 +223,8 @@ submit PR.
 5. **Check code quality:**
 
    ```bash
-   # Recommended: Run all quality checks
-   mix quality      # Format, credo, dialyzer
+   # Recommended: Run comprehensive quality checks
+   mix check        # Format, credo, dialyzer, sobelow, tests
 
    # Or run individual tools
    mix format

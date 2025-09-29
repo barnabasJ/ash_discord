@@ -205,8 +205,8 @@ assurance:
 ### **Local Development**
 
 ```bash
-# Run local quality checks
-mix quality        # Format, credo, dialyzer
+# Run comprehensive quality checks
+mix check          # Format, credo, dialyzer, sobelow, tests
 mix test           # Run all tests
 
 # Run specific test files

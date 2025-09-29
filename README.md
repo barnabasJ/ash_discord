@@ -204,19 +204,13 @@ assurance:
 
 ### **Local Development**
 
-- ⚡ **Fast Feedback**: `<60s` local CI with [act tool](LOCAL_CI.md)
-- 🚀 **10x Performance**: Local validation vs 2-5min GitHub Actions
-- 📋 **Quality Checks**: Essential checks without slow operations (dialyzer)
-
 ```bash
-# Quick local validation
-make ci-local    # ~60 seconds
-act -W .github/workflows/ci-local.yml
+# Run local quality checks
+mix quality        # Format, credo, dialyzer
+mix test           # Run all tests
 
-# Full integration testing
-make ci-integration
-
-# See LOCAL_CI.md for complete guide
+# Run specific test files
+mix test test/ash_discord/integration_test.exs
 ```
 
 ## 🤝 Contributing

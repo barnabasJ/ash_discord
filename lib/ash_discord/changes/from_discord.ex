@@ -721,16 +721,16 @@ defmodule AshDiscord.Changes.FromDiscord do
         changeset
         |> Ash.Changeset.force_change_attribute(:discord_id, discord_id)
         |> Ash.Changeset.force_change_attribute(:name, name)
-        |> maybe_set_attribute(:pack_id, discord_data.pack_id)
-        |> maybe_set_attribute(:description, discord_data.description)
-        |> maybe_set_attribute(:tags, discord_data.tags)
-        |> maybe_set_attribute(:type, discord_data.type)
-        |> maybe_set_attribute(:format_type, discord_data.format_type)
-        |> maybe_set_attribute(:available, discord_data.available)
-        |> maybe_set_attribute(:sort_value, discord_data.sort_value)
-        |> maybe_set_attribute(:guild_discord_id, discord_data.guild_id)
-        |> maybe_set_attribute(:guild_id, discord_data.guild_id)
-        |> maybe_set_attribute(:user_discord_id, get_nested_id(discord_data.user))
+        |> maybe_set_attribute(:pack_id, Map.get(discord_data, :pack_id))
+        |> maybe_set_attribute(:description, Map.get(discord_data, :description))
+        |> maybe_set_attribute(:tags, Map.get(discord_data, :tags))
+        |> maybe_set_attribute(:type, Map.get(discord_data, :type))
+        |> maybe_set_attribute(:format_type, Map.get(discord_data, :format_type))
+        |> maybe_set_attribute(:available, Map.get(discord_data, :available))
+        |> maybe_set_attribute(:sort_value, Map.get(discord_data, :sort_value))
+        |> maybe_set_attribute(:guild_discord_id, Map.get(discord_data, :guild_id))
+        |> maybe_set_attribute(:guild_id, Map.get(discord_data, :guild_id))
+        |> maybe_set_attribute(:user_discord_id, get_nested_id(Map.get(discord_data, :user)))
     end
   end
 

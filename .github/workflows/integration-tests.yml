@@ -80,12 +80,8 @@ jobs:
           # Check configuration
           grep -q "config :nostrum" config/dev.exs
 
-      - name: Compile deps
+      - name: compile the project
         run: |
           cd test_project
-          mix deps.compile
-
-      - name: Run test project tests
-        run: |
-          cd test_project
-          mix test --warnings-as-errors
+          mix compile
+      # Can't run tests yet because of missing token for nostrum

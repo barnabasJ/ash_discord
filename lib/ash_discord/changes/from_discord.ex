@@ -651,30 +651,34 @@ defmodule AshDiscord.Changes.FromDiscord do
 
   defp transform_message_reaction(changeset, discord_data) do
     # Handle emoji data - can be directly in discord_data or nested
-    emoji_data = discord_data.emoji
+    emoji_data = Map.get(discord_data, :emoji)
 
     changeset
     |> maybe_set_attribute(:emoji_id, get_nested_id(emoji_data))
-    |> maybe_set_attribute(:emoji_name, emoji_data && emoji_data.name)
+    |> maybe_set_attribute(:emoji_name, emoji_data && Map.get(emoji_data, :name))
     |> maybe_set_attribute(
       :emoji_animated,
-      emoji_data && Map.has_key?(emoji_data, :animated) && emoji_data.animated
+      emoji_data && Map.has_key?(emoji_data, :animated) && Map.get(emoji_data, :animated)
     )
-    # Set ID fields from arguments, not discord_data (reaction struct doesn't contain these)
+    # Set ID fields - prefer discord_data if available, otherwise use arguments
+    |> maybe_set_attribute(:user_discord_id, Map.get(discord_data, :user_id))
     |> maybe_set_from_argument_to_attribute(:user_discord_id)
+    |> maybe_set_attribute(:message_discord_id, Map.get(discord_data, :message_id))
     |> maybe_set_from_argument_to_attribute(:message_discord_id)
+    |> maybe_set_attribute(:channel_discord_id, Map.get(discord_data, :channel_id))
     |> maybe_set_from_argument_to_attribute(:channel_discord_id)
+    |> maybe_set_attribute(:guild_discord_id, Map.get(discord_data, :guild_id))
     |> maybe_set_from_argument_to_attribute(:guild_discord_id)
   end
 
   defp transform_typing_indicator(changeset, discord_data) do
     changeset
-    |> maybe_set_attribute(:user_discord_id, discord_data.user_id)
-    |> maybe_set_attribute(:user_id, discord_data.user_id)
-    |> maybe_set_attribute(:channel_discord_id, discord_data.channel_id)
-    |> maybe_set_attribute(:channel_id, discord_data.channel_id)
-    |> maybe_set_attribute(:guild_discord_id, discord_data.guild_id)
-    |> maybe_set_attribute(:guild_id, discord_data.guild_id)
+    |> maybe_set_attribute(:user_discord_id, Map.get(discord_data, :user_id))
+    |> maybe_set_attribute(:user_id, Map.get(discord_data, :user_id))
+    |> maybe_set_attribute(:channel_discord_id, Map.get(discord_data, :channel_id))
+    |> maybe_set_attribute(:channel_id, Map.get(discord_data, :channel_id))
+    |> maybe_set_attribute(:guild_discord_id, Map.get(discord_data, :guild_id))
+    |> maybe_set_attribute(:guild_id, Map.get(discord_data, :guild_id))
     |> set_typing_timestamp(discord_data)
     |> maybe_set_attribute(:member, Map.get(discord_data, :member))
   end

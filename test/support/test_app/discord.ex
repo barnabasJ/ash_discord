@@ -79,7 +79,7 @@ defmodule TestApp.Discord do
       description("Test ping command")
     end
 
-    # Echo command with options for integration tests  
+    # Echo command with options for integration tests
     command :echo, TestApp.Discord.Message, :create do
       description("Echo back a message")
 
@@ -92,7 +92,7 @@ defmodule TestApp.Discord do
       # Options auto-detected from action inputs
     end
 
-    # Command with manual options override  
+    # Command with manual options override
     command :search, TestApp.Discord.Message, :search do
       description("Search messages")
 

@@ -203,7 +203,7 @@ defmodule AshDiscord.CommandRegistrationTest do
       end)
 
       # Call the event handler - this will:
-      # 1. Try to find the command using find_command("nonexistent_command")  
+      # 1. Try to find the command using find_command("nonexistent_command")
       # 2. Get nil back since the command doesn't exist
       # 3. Pass nil to InteractionRouter.route_interaction
       # 4. InteractionRouter should handle the nil command gracefully and send error response
@@ -230,7 +230,7 @@ defmodule AshDiscord.CommandRegistrationTest do
       result = EmptyConsumer.find_command(:nonexistent_command)
       assert result == nil
 
-      # Should return nil for string command names too  
+      # Should return nil for string command names too
       result = EmptyConsumer.find_command("nonexistent_command")
       assert result == nil
     end

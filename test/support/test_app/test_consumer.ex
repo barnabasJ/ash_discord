@@ -36,7 +36,7 @@ defmodule TestApp.TestConsumer do
     # Route through AshDiscord system
     result = super(interaction)
 
-    # Store for test verification  
+    # Store for test verification
     Process.put(:last_command, interaction)
     Process.put(:last_command_result, result)
 

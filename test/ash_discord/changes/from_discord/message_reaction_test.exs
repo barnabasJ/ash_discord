@@ -147,17 +147,15 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
   end
 
   describe "API fallback pattern" do
-    test "message reaction API fallback is not supported" do
-      # Message reactions don't support direct API fetching in our implementation
+    test "message reaction requires discord_struct" do
+      # Message reactions require discord_struct argument
       discord_id = 999_888_777
 
       result = TestApp.Discord.message_reaction_from_discord(%{discord_id: discord_id})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch message_reaction with ID #{discord_id}"
-      error_message = Exception.message(error)
-      assert error_message =~ ":unsupported_type"
+      assert error_message =~ "argument discord_struct is required"
     end
 
     test "requires discord_struct for message reaction creation" do
@@ -165,7 +163,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for message_reaction entity"
+      assert error_message =~ "argument discord_struct is required"
     end
   end
 

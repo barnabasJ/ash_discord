@@ -136,7 +136,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for typing_indicator entity"
+      assert error_message =~ "argument discord_struct is required"
     end
   end
 

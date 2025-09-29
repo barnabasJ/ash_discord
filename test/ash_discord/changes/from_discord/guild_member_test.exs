@@ -7,6 +7,28 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
+  import Mimic
+
+  setup do
+    copy(Nostrum.Api.User)
+    copy(Nostrum.Api.Guild)
+
+    # Mock user API calls for any user ID with basic user data
+    expect(Nostrum.Api.User, :get, fn user_id ->
+      {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
+    end)
+
+    # Mock guild API calls for standard guild ID
+    expect(Nostrum.Api.Guild, :get, fn guild_id ->
+      if guild_id == 555_666_777 do
+        {:ok, guild(%{id: 555_666_777, name: "Test Guild"})}
+      else
+        {:error, :not_found}
+      end
+    end)
+
+    :ok
+  end
 
   describe "struct-first pattern" do
     test "creates guild member from discord struct with all attributes" do
@@ -124,17 +146,15 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
   end
 
   describe "API fallback pattern" do
-    test "guild member API fallback is not supported" do
-      # Guild members don't support direct API fetching in our implementation
+    test "guild member requires user_id" do
+      # Guild members require user_id attribute and cannot be created without it
       discord_id = 999_888_777
 
       result = TestApp.Discord.guild_member_from_discord(%{discord_id: discord_id})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch guild_member with ID #{discord_id}"
-      error_message = Exception.message(error)
-      assert error_message =~ ":unsupported_type"
+      assert error_message =~ "attribute user_id is required"
     end
 
     test "requires discord_struct for guild member creation" do

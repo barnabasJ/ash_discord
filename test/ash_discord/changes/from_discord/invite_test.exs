@@ -7,6 +7,30 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
 
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
+  import Mimic
+
+  setup do
+    copy(Nostrum.Api.Channel)
+    copy(Nostrum.Api.Guild)
+    copy(Nostrum.Api.User)
+
+    # Mock channel API calls for any channel ID
+    expect(Nostrum.Api.Channel, :get, fn channel_id ->
+      {:ok, channel(%{id: channel_id, name: "test_channel_#{channel_id}", type: 0})}
+    end)
+
+    # Mock guild API calls for any guild ID
+    expect(Nostrum.Api.Guild, :get, fn guild_id ->
+      {:ok, guild(%{id: guild_id, name: "Test Guild #{guild_id}"})}
+    end)
+
+    # Mock user API calls for any user ID
+    expect(Nostrum.Api.User, :get, fn user_id ->
+      {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
+    end)
+
+    :ok
+  end
 
   describe "struct-first pattern" do
     test "creates invite from discord struct with all attributes" do
@@ -29,11 +53,11 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
 
       assert {:ok, created_invite} = result
       assert created_invite.code == invite_struct.code
-      assert created_invite.guild_id == invite_struct.guild.id
-      assert created_invite.channel_id == invite_struct.channel.id
-      assert created_invite.inviter_id == invite_struct.inviter.id
+      assert created_invite.guild_discord_id == invite_struct.guild.id
+      assert created_invite.channel_discord_id == invite_struct.channel.id
+      assert created_invite.inviter_discord_id == invite_struct.inviter.id
       assert created_invite.target_user_type == nil
-      assert created_invite.target_user_id == nil
+      assert created_invite.target_user_discord_id == nil
       assert created_invite.uses == invite_struct.uses
       assert created_invite.max_uses == invite_struct.max_uses
       assert created_invite.max_age == invite_struct.max_age
@@ -115,8 +139,8 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
       assert {:ok, created_invite} = result
       assert created_invite.code == invite_struct.code
       assert created_invite.target_user_type == 1
-      # target_user is nil in struct, so target_user_id should be nil
-      assert created_invite.target_user_id == nil
+      # target_user is nil in struct, so target_user_discord_id should be nil
+      assert created_invite.target_user_discord_id == nil
     end
 
     test "handles embedded application target invite" do
@@ -141,7 +165,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
       assert {:ok, created_invite} = result
       assert created_invite.code == invite_struct.code
       assert created_invite.target_user_type == 2
-      assert created_invite.target_user_id == nil
+      assert created_invite.target_user_discord_id == nil
     end
 
     test "handles invite without inviter" do

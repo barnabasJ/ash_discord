@@ -9,6 +9,9 @@ defmodule AshDiscord.ConsumerTest do
   describe "Consumer using macro" do
     setup do
       copy(Nostrum.Api.Interaction)
+      copy(Nostrum.Api.Channel)
+      copy(Nostrum.Api.Guild)
+      copy(Nostrum.Api.User)
       :ok
     end
 
@@ -149,6 +152,33 @@ defmodule AshDiscord.ConsumerTest do
     test "message creation works with consumer" do
       # Use proper Nostrum message struct
       message_data = message(%{content: "Hello world"})
+
+      # Mock channel API call for relationship management
+      expect(Nostrum.Api.Channel, :get, fn channel_id ->
+        if channel_id == message_data.channel_id do
+          {:ok, channel(%{id: message_data.channel_id, name: "test-channel", type: 0})}
+        else
+          {:error, :not_found}
+        end
+      end)
+
+      # Mock guild API call for relationship management
+      expect(Nostrum.Api.Guild, :get, fn guild_id ->
+        if guild_id == message_data.guild_id do
+          {:ok, guild(%{id: message_data.guild_id, name: "Test Guild"})}
+        else
+          {:error, :not_found}
+        end
+      end)
+
+      # Mock user API call for relationship management
+      expect(Nostrum.Api.User, :get, fn user_id ->
+        if user_id == message_data.author.id do
+          {:ok, user(%{id: message_data.author.id, username: message_data.author.username})}
+        else
+          {:error, :not_found}
+        end
+      end)
 
       message = %Nostrum.Struct.Message{
         id: message_data.id,

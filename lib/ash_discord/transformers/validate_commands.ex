@@ -126,12 +126,10 @@ defmodule AshDiscord.Transformers.ValidateCommands do
   end
 
   defp validate_command_options_enhanced(options) do
-    cond do
-      length(options) > 25 ->
-        {:error, :too_many_options}
-
-      true ->
-        validate_each_option_enhanced(options)
+    if length(options) > 25 do
+      {:error, :too_many_options}
+    else
+      validate_each_option_enhanced(options)
     end
   end
 

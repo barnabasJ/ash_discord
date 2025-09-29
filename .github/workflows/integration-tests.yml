@@ -54,6 +54,7 @@ jobs:
         run: mix archive.install hex igniter_new --force
 
       - name: Install phx_new archive (for Phoenix projects)
+        if: matrix.project-type.type == 'phoenix'
         run: mix archive.install hex phx_new --force
 
       - name: Create test project (${{ matrix.project-type.type }})

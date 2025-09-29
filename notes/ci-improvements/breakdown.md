@@ -249,17 +249,17 @@ complete.
 
    📝 **Commit**: `ci: add act configuration for local CI execution`
 
-10. [ ] **Create Local CI Usage Documentation** 10.1. [ ] Document act
+10. [x] **Create Local CI Usage Documentation** 10.1. [x] Document act
         installation and setup - Installation instructions: `brew install act`
         (macOS), curl script (Linux) - Basic usage: `act` (all workflows),
         `act -j test` (main CI), `act -j integration-test` - Troubleshooting
         common issues (architecture, permissions, disk space)
 
-    10.2. [ ] Add development workflow integration examples - Pre-push
+    10.2. [x] Add development workflow integration examples - Pre-push
     validation with act - Integration with IDEs and git hooks - Performance
     expectations: <60s local vs 2-5min GitHub
 
-    10.3. [ ] Optional: Create Makefile targets for local CI - `make ci-local`
+    10.3. [x] Optional: Create Makefile targets for local CI - `make ci-local`
     runs all local CI - `make ci-test` runs main CI only - `make ci-integration`
     runs integration tests
 

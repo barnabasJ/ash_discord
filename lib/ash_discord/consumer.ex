@@ -1151,9 +1151,19 @@ defmodule AshDiscord.Consumer do
               |> Ash.Query.filter(user_discord_id: user_id)
               |> Ash.Query.filter(message_discord_id: message_id)
               |> Ash.Query.filter(emoji_name: emoji_name)
-              |> Ash.Query.filter(emoji_id: emoji_id)
+              |> then(fn q ->
+                if is_nil(emoji_id) do
+                  Ash.Query.filter(q, is_nil(emoji_id))
+                else
+                  Ash.Query.filter(q, emoji_id: emoji_id)
+                end
+              end)
+              |> Ash.Query.set_context(%{
+                private: %{ash_discord?: true},
+                shared: %{private: %{ash_discord?: true}}
+              })
 
-            case Ash.read(query, actor: %{role: :bot}) do
+            case Ash.read(query) do
               {:ok, []} ->
                 Logger.info("AshDiscord: No matching reaction found to remove")
                 :ok
@@ -1161,8 +1171,14 @@ defmodule AshDiscord.Consumer do
               {:ok, [reaction]} ->
                 Logger.info("AshDiscord: Found reaction to remove: #{reaction.id}")
 
-                case Ash.destroy(reaction, actor: %{role: :bot}) do
-                  {:ok, _} ->
+                case Ash.destroy(reaction,
+                       action: :destroy,
+                       context: %{
+                         private: %{ash_discord?: true},
+                         shared: %{private: %{ash_discord?: true}}
+                       }
+                     ) do
+                  :ok ->
                     Logger.info("AshDiscord: Successfully removed reaction")
                     :ok
 
@@ -1178,10 +1194,20 @@ defmodule AshDiscord.Consumer do
 
                 results =
                   Enum.map(multiple_reactions, fn reaction ->
-                    Ash.destroy(reaction, actor: %{role: :bot})
+                    Ash.destroy(reaction,
+                      action: :destroy,
+                      context: %{
+                        private: %{ash_discord?: true},
+                        shared: %{private: %{ash_discord?: true}}
+                      }
+                    )
                   end)
 
-                case Enum.find(results, fn result -> match?({:error, _}, result) end) do
+                # Check if any destroy failed
+                case Enum.find(results, fn
+                       :ok -> false
+                       {:error, _} -> true
+                     end) do
                   nil -> :ok
                   {:error, error} -> {:error, error}
                 end
@@ -1198,9 +1224,91 @@ defmodule AshDiscord.Consumer do
       end
 
       def handle_message_reaction_remove_all(data) do
-        # Reaction removal not yet implemented due to filter macro issues
-        Logger.info("AshDiscord: Message reaction remove all requested - not yet implemented")
-        :ok
+        Logger.info("AshDiscord: Message reaction remove all requested")
+
+        case AshDiscord.Consumer.Info.ash_discord_consumer_message_reaction_resource(__MODULE__) do
+          {:ok, resource} ->
+            Logger.info("AshDiscord: Found message reaction resource: #{inspect(resource)}")
+
+            # Get the message_id and emoji from the data
+            message_id = Map.get(data, :message_id)
+            emoji_name = get_in(data, [:emoji, :name])
+            emoji_id = get_in(data, [:emoji, :id])
+
+            Logger.info(
+              "AshDiscord: Removing all reactions for message_id=#{message_id}, emoji_name=#{emoji_name}, emoji_id=#{inspect(emoji_id)}"
+            )
+
+            # Build query - if emoji is present, remove only that emoji, otherwise remove all reactions
+            query =
+              if emoji_name || emoji_id do
+                resource
+                |> Ash.Query.new()
+                |> Ash.Query.filter(message_discord_id: message_id)
+                |> Ash.Query.filter(emoji_name: emoji_name)
+                |> then(fn q ->
+                  if is_nil(emoji_id) do
+                    Ash.Query.filter(q, is_nil(emoji_id))
+                  else
+                    Ash.Query.filter(q, emoji_id: emoji_id)
+                  end
+                end)
+                |> Ash.Query.set_context(%{
+                  private: %{ash_discord?: true},
+                  shared: %{private: %{ash_discord?: true}}
+                })
+              else
+                resource
+                |> Ash.Query.new()
+                |> Ash.Query.filter(message_discord_id: message_id)
+                |> Ash.Query.set_context(%{
+                  private: %{ash_discord?: true},
+                  shared: %{private: %{ash_discord?: true}}
+                })
+              end
+
+            case Ash.read(query) do
+              {:ok, []} ->
+                Logger.info("AshDiscord: No reactions found to remove")
+                :ok
+
+              {:ok, reactions} ->
+                Logger.info("AshDiscord: Found #{length(reactions)} reactions to remove")
+
+                results =
+                  Enum.map(reactions, fn reaction ->
+                    Ash.destroy(reaction,
+                      action: :destroy,
+                      context: %{
+                        private: %{ash_discord?: true},
+                        shared: %{private: %{ash_discord?: true}}
+                      }
+                    )
+                  end)
+
+                # Check if any destroy failed
+                case Enum.find(results, fn
+                       :ok -> false
+                       {:error, _} -> true
+                     end) do
+                  nil ->
+                    Logger.info("AshDiscord: Successfully removed all reactions")
+                    :ok
+
+                  {:error, error} ->
+                    Logger.error("AshDiscord: Failed to remove some reactions: #{inspect(error)}")
+                    {:error, error}
+                end
+
+              {:error, error} ->
+                Logger.error("AshDiscord: Failed to query reactions: #{inspect(error)}")
+                {:error, error}
+            end
+
+          :error ->
+            Logger.info("AshDiscord: No message reaction resource configured")
+            :ok
+        end
       end
 
       def handle_guild_create(guild) do

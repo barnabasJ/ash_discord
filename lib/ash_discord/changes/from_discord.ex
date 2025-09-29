@@ -168,10 +168,10 @@ defmodule AshDiscord.Changes.FromDiscord do
   end
 
   defp construct_event_data(changeset, :message_reaction) do
-    user_id = Ash.Changeset.get_argument_or_attribute(changeset, :user_id)
-    message_id = Ash.Changeset.get_argument_or_attribute(changeset, :message_id)
-    channel_id = Ash.Changeset.get_argument_or_attribute(changeset, :channel_id)
-    guild_id = Ash.Changeset.get_argument_or_attribute(changeset, :guild_id)
+    user_id = Ash.Changeset.get_argument_or_attribute(changeset, :user_discord_id)
+    message_id = Ash.Changeset.get_argument_or_attribute(changeset, :message_discord_id)
+    channel_id = Ash.Changeset.get_argument_or_attribute(changeset, :channel_discord_id)
+    guild_id = Ash.Changeset.get_argument_or_attribute(changeset, :guild_discord_id)
 
     if user_id && message_id && channel_id do
       reaction_data = %{
@@ -187,7 +187,8 @@ defmodule AshDiscord.Changes.FromDiscord do
 
       {:ok, reaction_data}
     else
-      {:error, "MessageReaction requires user_id, message_id, and channel_id"}
+      {:error,
+       "MessageReaction requires user_discord_id, message_discord_id, and channel_discord_id"}
     end
   end
 
@@ -654,14 +655,15 @@ defmodule AshDiscord.Changes.FromDiscord do
     changeset
     |> maybe_set_attribute(:emoji_id, get_nested_id(emoji_data))
     |> maybe_set_attribute(:emoji_name, emoji_data && emoji_data.name)
-    |> maybe_set_attribute(:emoji_animated, emoji_data && (emoji_data.animated || false))
-    |> maybe_set_attribute(:count, discord_data.count)
-    |> maybe_set_attribute(:me, discord_data.me)
+    |> maybe_set_attribute(
+      :emoji_animated,
+      emoji_data && Map.has_key?(emoji_data, :animated) && emoji_data.animated
+    )
     # Set ID fields from arguments, not discord_data (reaction struct doesn't contain these)
-    |> maybe_set_from_argument_to_attribute(:user_id)
-    |> maybe_set_from_argument_to_attribute(:message_id)
-    |> maybe_set_from_argument_to_attribute(:channel_id)
-    |> maybe_set_from_argument_to_attribute(:guild_id)
+    |> maybe_set_from_argument_to_attribute(:user_discord_id)
+    |> maybe_set_from_argument_to_attribute(:message_discord_id)
+    |> maybe_set_from_argument_to_attribute(:channel_discord_id)
+    |> maybe_set_from_argument_to_attribute(:guild_discord_id)
   end
 
   defp transform_typing_indicator(changeset, discord_data) do

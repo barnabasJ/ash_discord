@@ -626,7 +626,8 @@ defmodule AshDiscord.Consumer do
                  |> Ash.Changeset.for_create(:from_discord, %{
                    discord_struct: message,
                    channel_discord_id: message.channel_id,
-                   message_discord_id: message.id
+                   guild_discord_id: message.guild_id,
+                   discord_id: message.id
                  })
                  |> Ash.Changeset.set_context(%{
                    private: %{ash_discord?: true},
@@ -658,7 +659,8 @@ defmodule AshDiscord.Consumer do
                |> Ash.Changeset.for_create(:from_discord, %{
                  discord_struct: message,
                  channel_discord_id: message.channel_id,
-                 message_discord_id: message.id
+                 guild_discord_id: message.guild_id,
+                 discord_id: message.id
                })
                |> Ash.Changeset.set_context(%{
                  private: %{ash_discord?: true},

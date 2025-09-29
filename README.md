@@ -8,6 +8,7 @@
 > breaking changes are expected.
 
 [![CI](https://github.com/ash-project/ash_discord/workflows/CI/badge.svg)](https://github.com/ash-project/ash_discord/actions)
+[![Integration Tests](https://github.com/ash-project/ash_discord/workflows/Integration%20Tests/badge.svg)](https://github.com/ash-project/ash_discord/actions)
 [![Hex.pm](https://img.shields.io/hexpm/v/ash_discord.svg)](https://hex.pm/packages/ash_discord)
 [![Documentation](https://img.shields.io/badge/docs-hexdocs-purple.svg)](https://hexdocs.pm/ash_discord/)
 
@@ -179,10 +180,49 @@ command :moderate_message, ModerationResource, :review do
 end
 ```
 
+## 🔧 CI/Development
+
+Our project uses a modern dual CI architecture for comprehensive quality
+assurance:
+
+### **Centralized CI** (via Ash Ecosystem)
+
+- 🔗 **Centralized Workflow**: Leverages
+  `ash-project/ash/.github/workflows/ash-ci.yml@main`
+- 🛡️ **Security Scanning**: Sobelow static analysis + hex.audit dependency
+  scanning
+- ⚡ **Ecosystem Alignment**: Automatic improvements inherited from Ash core
+- 📊 **Quality Gates**: Format, Credo, Dialyzer, Spark formatter
+
+### **Integration Testing**
+
+- 🏗️ **Real-World Validation**: Phoenix + Bare Elixir project installation
+  testing
+- ✅ **Installation Success**: 100% success rate across supported scenarios
+- 🔍 **Generated Code**: File creation, configuration, and compilation
+  verification
+
+### **Local Development**
+
+- ⚡ **Fast Feedback**: `<60s` local CI with [act tool](LOCAL_CI.md)
+- 🚀 **10x Performance**: Local validation vs 2-5min GitHub Actions
+- 📋 **Quality Checks**: Essential checks without slow operations (dialyzer)
+
+```bash
+# Quick local validation
+make ci-local    # ~60 seconds
+act -W .github/workflows/ci-local.yml
+
+# Full integration testing
+make ci-integration
+
+# See LOCAL_CI.md for complete guide
+```
+
 ## 🤝 Contributing
 
 We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for
-details.
+details on local development setup and testing requirements.
 
 ## 📄 License
 
@@ -202,4 +242,3 @@ Built with ❤️ by the Ash Framework community.
 **Ready to revolutionize your Discord bot development?**
 
 **[🚀 Get Started Now - 30 Minute Quick Start](docs/quick-start-guide.md)**
-

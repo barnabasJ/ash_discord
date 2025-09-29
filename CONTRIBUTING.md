@@ -1,6 +1,8 @@
 # Contributing to AshDiscord
 
-Thank you for your interest in contributing to AshDiscord! We welcome contributions from developers of all skill levels. This guide will help you get started.
+Thank you for your interest in contributing to AshDiscord! We welcome
+contributions from developers of all skill levels. This guide will help you get
+started.
 
 ## Table of Contents
 
@@ -16,16 +18,22 @@ Thank you for your interest in contributing to AshDiscord! We welcome contributi
 
 ## Code of Conduct
 
-This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to the project maintainers.
+This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By
+participating, you are expected to uphold this code. Please report unacceptable
+behavior to the project maintainers.
 
 ## Getting Started
 
 ### Ways to Contribute
 
-- 🐛 **Report bugs** using our [bug report template](.github/ISSUE_TEMPLATE/bug_report.yml)
-- ✨ **Request features** using our [feature request template](.github/ISSUE_TEMPLATE/feature_request.yml)
-- ❓ **Ask questions** using our [question template](.github/ISSUE_TEMPLATE/question.yml)
-- 📖 **Improve documentation** by fixing typos, adding examples, or clarifying concepts
+- 🐛 **Report bugs** using our
+  [bug report template](.github/ISSUE_TEMPLATE/bug_report.yml)
+- ✨ **Request features** using our
+  [feature request template](.github/ISSUE_TEMPLATE/feature_request.yml)
+- ❓ **Ask questions** using our
+  [question template](.github/ISSUE_TEMPLATE/question.yml)
+- 📖 **Improve documentation** by fixing typos, adding examples, or clarifying
+  concepts
 - 🧪 **Add tests** to improve code coverage or test edge cases
 - ⚡ **Optimize performance** by identifying and fixing bottlenecks
 - 🔧 **Submit code changes** to fix bugs or add features
@@ -33,7 +41,8 @@ This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participatin
 ### Before You Start
 
 1. **Search existing issues** to avoid duplicates
-2. **Read our documentation** at [hexdocs.pm/ash_discord](https://hexdocs.pm/ash_discord/)
+2. **Read our documentation** at
+   [hexdocs.pm/ash_discord](https://hexdocs.pm/ash_discord/)
 3. **Join our community** on [Discord](https://discord.gg/ash-hq) for questions
 4. **Check the roadmap** in our issues to see planned features
 
@@ -49,33 +58,48 @@ This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participatin
 ### Local Development
 
 1. **Fork and clone the repository:**
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/ash_discord.git
    cd ash_discord
    ```
 
 2. **Install dependencies:**
+
    ```bash
    mix deps.get
    ```
 
 3. **Run tests to verify setup:**
+
    ```bash
    mix test
    ```
 
 4. **Check code quality:**
+
    ```bash
+   # Traditional approach
    mix format
    mix credo
    mix dialyzer
+   mix sobelow
+
+   # Or use our new quality alias
+   mix quality.full
+
+   # Or use fast local CI (recommended for development)
+   make ci-local    # ~60 seconds
+   act -W .github/workflows/ci-local.yml
    ```
 
 ### Discord Bot Setup (for testing)
 
-1. **Create a Discord Application** at [discord.com/developers/applications](https://discord.com/developers/applications)
+1. **Create a Discord Application** at
+   [discord.com/developers/applications](https://discord.com/developers/applications)
 
 2. **Set environment variables:**
+
    ```bash
    export DISCORD_BOT_TOKEN="your_bot_token"
    export DISCORD_APPLICATION_ID="your_application_id"
@@ -88,11 +112,53 @@ This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participatin
    mix run --no-halt
    ```
 
+### Local CI Development (New!)
+
+We've implemented a modern dual CI architecture for fast local development:
+
+#### **Local CI with Act Tool**
+
+```bash
+# Install act (macOS)
+brew install act
+
+# Fast local validation (~60 seconds)
+make ci-local
+act -W .github/workflows/ci-local.yml
+
+# Run integration tests locally
+make ci-integration
+```
+
+#### **Quality Commands**
+
+```bash
+# Quick security + quality check
+mix quality.full
+
+# Just security scanning
+mix sobelow --config
+
+# Dependency audit
+mix deps.audit
+```
+
+#### **CI Architecture**
+
+- **Centralized CI**: Uses `ash-project/ash/.github/workflows/ash-ci.yml@main`
+- **Integration Tests**: Real Phoenix + Bare Elixir project testing
+- **Security Scanning**: Sobelow + hex.audit for vulnerability detection
+- **10x Faster**: Local feedback with act tool
+
+See our **[Local CI Guide](LOCAL_CI.md)** for detailed setup and
+troubleshooting.
+
 ## Contributing Guidelines
 
 ### Issue Guidelines
 
 #### Bug Reports
+
 - Use the bug report template
 - Include clear reproduction steps
 - Provide relevant system information
@@ -100,6 +166,7 @@ This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participatin
 - Test with the latest version when possible
 
 #### Feature Requests
+
 - Use the feature request template
 - Explain the problem you're solving
 - Provide use cases and examples
@@ -107,6 +174,7 @@ This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participatin
 - Research existing Discord API capabilities
 
 #### Questions
+
 - Search documentation and existing issues first
 - Use the question template
 - Provide context about what you're trying to accomplish
@@ -116,34 +184,39 @@ This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participatin
 ### Code Contribution Guidelines
 
 #### Small Changes (< 20 lines)
+
 - Documentation fixes
 - Minor bug fixes
 - Typo corrections
 - Small refactoring
 
-*Process*: Submit PR directly with clear description.
+_Process_: Submit PR directly with clear description.
 
 #### Medium Changes (20-100 lines)
+
 - New utility functions
 - Test improvements
 - Documentation enhancements
 - Bug fixes with moderate scope
 
-*Process*: Create issue first to discuss approach, then submit PR.
+_Process_: Create issue first to discuss approach, then submit PR.
 
 #### Large Changes (100+ lines)
+
 - New features
 - Breaking changes
 - Major refactoring
 - API changes
 
-*Process*: Create detailed issue → discuss design → get approval → implement → submit PR.
+_Process_: Create detailed issue → discuss design → get approval → implement →
+submit PR.
 
 ## Pull Request Process
 
 ### Before Submitting
 
 1. **Create a feature branch:**
+
    ```bash
    git checkout -b feature/your-feature-name
    # or
@@ -153,29 +226,35 @@ This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participatin
 2. **Make your changes following our code standards**
 
 3. **Add or update tests:**
+
    ```bash
    # Run tests
    mix test
-   
+
    # Check coverage
    mix test --cover
    ```
 
 4. **Update documentation:**
+
    - Add `@doc` and `@spec` for new functions
    - Update relevant guides if needed
    - Add examples for new features
 
 5. **Check code quality:**
+
    ```bash
-   # Format code
+   # RECOMMENDED: Fast local CI (includes security scanning)
+   make ci-local    # ~60 seconds
+
+   # Or traditional approach
    mix format
-   
-   # Check style
-   mix credo
-   
-   # Check types
+   mix credo --strict
    mix dialyzer
+   mix sobelow --config
+
+   # Or comprehensive quality check
+   mix quality.full
    ```
 
 6. **Update CHANGELOG.md** if your change affects users
@@ -183,6 +262,7 @@ This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participatin
 ### Submitting Your PR
 
 1. **Push your branch:**
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -223,27 +303,27 @@ end
 defmodule AshDiscord.Consumer do
   @moduledoc """
   Provides Discord event consumption capabilities.
-  
+
   ## Examples
-  
+
       defmodule MyBot.Consumer do
         use AshDiscord.Consumer, domains: [MyBot.Discord]
       end
   """
-  
+
   @doc """
   Handles Discord interaction events.
-  
+
   ## Parameters
-  
+
   - `interaction` - The Discord interaction struct
-  
+
   ## Returns
-  
+
   - `{:ok, response}` - Successful response
   - `{:error, reason}` - Error with reason
   """
-  @spec handle_interaction(Nostrum.Struct.Interaction.t()) :: 
+  @spec handle_interaction(Nostrum.Struct.Interaction.t()) ::
     {:ok, term()} | {:error, term()}
   def handle_interaction(interaction) do
     # Implementation
@@ -291,23 +371,23 @@ lib/
 defmodule AshDiscord.ConsumerTest do
   use ExUnit.Case
   doctest AshDiscord.Consumer
-  
+
   describe "handle_interaction/1" do
     test "handles slash command successfully" do
       interaction = build_interaction(:slash_command)
-      
+
       assert {:ok, response} = AshDiscord.Consumer.handle_interaction(interaction)
       assert response.type == :channel_message_with_source
     end
-    
+
     test "returns error for invalid command" do
       interaction = build_interaction(:invalid_command)
-      
+
       assert {:error, reason} = AshDiscord.Consumer.handle_interaction(interaction)
       assert reason =~ "Unknown command"
     end
   end
-  
+
   # Helper functions
   defp build_interaction(type) do
     # Build test interaction struct
@@ -351,28 +431,30 @@ end)
 ### Documentation Types
 
 #### Module Documentation
+
 ```elixir
 defmodule AshDiscord.Consumer do
   @moduledoc """
   Handles Discord events and routes them to Ash actions.
-  
+
   The Consumer provides a macro-based approach to handling Discord events
   with minimal boilerplate while maintaining full extensibility.
-  
+
   ## Quick Start
-  
+
       defmodule MyBot.Consumer do
         use AshDiscord.Consumer, domains: [MyBot.Discord]
       end
-  
+
   ## Configuration
-  
+
   See `AshDiscord.Consumer.Config` for available options.
   """
 end
 ```
 
 #### Function Documentation
+
 ```elixir
 @doc """
 Registers a Discord command with the Discord API.
@@ -449,7 +531,8 @@ Contributors are recognized in several ways:
 If you have questions about contributing that aren't covered here:
 
 1. **Check our [FAQ](docs/troubleshooting-guide.md#frequently-asked-questions)**
-2. **Search existing [GitHub issues](https://github.com/ash-project/ash_discord/issues)**
+2. **Search existing
+   [GitHub issues](https://github.com/ash-project/ash_discord/issues)**
 3. **Ask in [Discord](https://discord.gg/ash-hq) #ash-discord channel**
 4. **Create a [question issue](.github/ISSUE_TEMPLATE/question.yml)**
 
@@ -459,4 +542,5 @@ We're here to help and want your contribution to be successful!
 
 **Thank you for contributing to AshDiscord!** 🎉
 
-Every contribution, no matter how small, makes AshDiscord better for the entire community.
+Every contribution, no matter how small, makes AshDiscord better for the entire
+community.

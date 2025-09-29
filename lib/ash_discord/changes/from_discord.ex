@@ -367,16 +367,18 @@ defmodule AshDiscord.Changes.FromDiscord do
     guild_id = Map.get(discord_data, :guild_id)
 
     changeset
-    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
-    |> Ash.Changeset.force_change_attribute(:name, discord_data.name)
-    |> Ash.Changeset.force_change_attribute(:type, discord_data.type)
-    |> maybe_set_attribute(:position, discord_data.position)
-    |> maybe_set_attribute(:topic, discord_data.topic)
-    |> maybe_set_attribute(:nsfw, discord_data.nsfw)
-    |> maybe_set_attribute(:parent_id, discord_data.parent_id)
+    |> Ash.Changeset.force_change_attribute(:discord_id, Map.get(discord_data, :id))
+    |> Ash.Changeset.force_change_attribute(:name, Map.get(discord_data, :name))
+    |> Ash.Changeset.force_change_attribute(:type, Map.get(discord_data, :type))
+    |> maybe_set_attribute(:position, Map.get(discord_data, :position))
+    |> maybe_set_attribute(:topic, Map.get(discord_data, :topic))
+    |> maybe_set_attribute(:nsfw, Map.get(discord_data, :nsfw))
+    |> maybe_set_attribute(:parent_id, Map.get(discord_data, :parent_id))
     |> maybe_set_attribute(
       :permission_overwrites,
-      Transformations.transform_permission_overwrites(discord_data.permission_overwrites)
+      Transformations.transform_permission_overwrites(
+        Map.get(discord_data, :permission_overwrites)
+      )
     )
     |> maybe_manage_relationship(:guild, guild_id, fn cs, id ->
       Transformations.manage_guild_relationship(cs, id)
@@ -461,13 +463,13 @@ defmodule AshDiscord.Changes.FromDiscord do
   defp transform_emoji(changeset, discord_data) do
     # Determine if this is a custom emoji (has an ID)
     custom =
-      case discord_data.id do
+      case Map.get(discord_data, :id) do
         nil -> false
         _ -> true
       end
 
     changeset
-    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
+    |> Ash.Changeset.force_change_attribute(:discord_id, Map.get(discord_data, :id))
     |> maybe_set_attribute(:name, Map.get(discord_data, :name))
     |> Ash.Changeset.force_change_attribute(:animated, Map.get(discord_data, :animated, false))
     |> Ash.Changeset.force_change_attribute(:custom, custom)

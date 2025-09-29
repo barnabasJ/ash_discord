@@ -344,13 +344,6 @@ defmodule AshDiscord.Changes.FromDiscord do
     end
   end
 
-  defp maybe_set_from_argument(changeset, field) do
-    case Ash.Changeset.get_argument(changeset, field) do
-      nil -> changeset
-      value -> Ash.Changeset.force_change_attribute(changeset, field, value)
-    end
-  end
-
   # Helper to conditionally manage relationships if they exist on the resource
   defp maybe_manage_relationship(changeset, relationship_name, value, manager_fn)
        when not is_nil(value) do
@@ -941,26 +934,6 @@ defmodule AshDiscord.Changes.FromDiscord do
   defp get_interaction_user_id(%{user: %{id: id}}), do: id
   defp get_interaction_user_id(%{member: %{user: %{id: id}}}), do: id
   defp get_interaction_user_id(_), do: nil
-
-  # Sets context field (user_discord_id, message_discord_id, etc.) from discord_data
-  defp set_context_field(changeset, field, discord_data, data_key) do
-    case Map.get(discord_data, data_key) do
-      nil ->
-        # Fallback to argument if discord_data doesn't have the field
-        maybe_set_from_argument(changeset, field)
-
-      value ->
-        Ash.Changeset.force_change_attribute(changeset, field, value)
-    end
-  end
-
-  # Sets attribute from argument if argument exists and attribute exists
-  defp maybe_set_from_argument_to_attribute(changeset, field) do
-    case Ash.Changeset.get_argument(changeset, field) do
-      nil -> changeset
-      value -> maybe_set_attribute(changeset, field, value)
-    end
-  end
 
   # Infer content type from filename extension
   defp infer_content_type(nil), do: nil

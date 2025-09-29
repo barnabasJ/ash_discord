@@ -91,7 +91,7 @@ defmodule TestApp.Discord.MessageReaction do
   end
 
   identities do
-    identity :reaction_identity, [:message_id, :emoji_name] do
+    identity :reaction_identity, [:user_id, :message_id, :emoji_name, :emoji_id] do
       pre_check_with(TestApp.Discord)
     end
   end

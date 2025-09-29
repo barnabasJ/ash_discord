@@ -696,13 +696,24 @@ defmodule AshDiscord.Changes.FromDiscord do
       :emoji_animated,
       emoji_data && Map.has_key?(emoji_data, :animated) && Map.get(emoji_data, :animated)
     )
-    # Set ID fields - prefer discord_data if available, otherwise use arguments
+    # Set reaction count and me fields
+    |> maybe_set_attribute(:count, Map.get(discord_data, :count))
+    |> maybe_set_attribute(:me, Map.get(discord_data, :me))
+    # Set ID fields - fallback to discord_data first, then override with arguments if present
+    |> maybe_set_attribute(:user_id, Map.get(discord_data, :user_id))
+    |> maybe_set_from_argument_to_attribute(:user_id)
     |> maybe_set_attribute(:user_discord_id, Map.get(discord_data, :user_id))
     |> maybe_set_from_argument_to_attribute(:user_discord_id)
+    |> maybe_set_attribute(:message_id, Map.get(discord_data, :message_id))
+    |> maybe_set_from_argument_to_attribute(:message_id)
     |> maybe_set_attribute(:message_discord_id, Map.get(discord_data, :message_id))
     |> maybe_set_from_argument_to_attribute(:message_discord_id)
+    |> maybe_set_attribute(:channel_id, Map.get(discord_data, :channel_id))
+    |> maybe_set_from_argument_to_attribute(:channel_id)
     |> maybe_set_attribute(:channel_discord_id, Map.get(discord_data, :channel_id))
     |> maybe_set_from_argument_to_attribute(:channel_discord_id)
+    |> maybe_set_attribute(:guild_id, Map.get(discord_data, :guild_id))
+    |> maybe_set_from_argument_to_attribute(:guild_id)
     |> maybe_set_attribute(:guild_discord_id, Map.get(discord_data, :guild_id))
     |> maybe_set_from_argument_to_attribute(:guild_discord_id)
   end

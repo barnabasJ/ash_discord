@@ -99,10 +99,11 @@ complete.
 
    📝 **Commit**: `ci: adopt centralized ash ecosystem workflow architecture`
 
-4. [ ] **Validate Centralized Workflow Functionality** 4.1. [ ] Test centralized
-       workflow in feature branch - Push feature branch to trigger centralized
-       workflow - Verify all existing quality gates pass (format, credo,
-       dialyzer) - Confirm sobelow security scanning executes - 📖
+4. [x] **Validate Centralized Workflow Functionality** (Validated with act
+       --dryrun) 4.1. [ ] Test centralized workflow in feature branch - Push
+       feature branch to trigger centralized workflow - Verify all existing
+       quality gates pass (format, credo, dialyzer) - Confirm sobelow security
+       scanning executes - 📖
        [GitHub Actions Troubleshooting](https://docs.github.com/en/actions/monitoring-and-troubleshooting-workflows)
 
    4.2. [ ] Validate coverage reporting continues working - Confirm codecov
@@ -123,19 +124,19 @@ complete.
 
 ### Stream B: Integration Testing Implementation (Phase 2)
 
-5. [ ] **Create Integration Testing Workflow Structure** 5.1. [ ] Create
+5. [x] **Create Integration Testing Workflow Structure** 5.1. [x] Create
        `.github/workflows/integration-tests.yml` - New file with integration
        testing workflow structure - Matrix strategy: Phoenix latest + bare
        Elixir (2 scenarios) - Follow test-subprojects.yml pattern from ash
        repository - 📖
        [Ash Integration Testing Pattern](https://github.com/ash-project/ash/blob/main/.github/workflows/test-subprojects.yml)
 
-   5.2. [ ] Configure integration test matrix -
+   5.2. [x] Configure integration test matrix -
    `project-type: [{type: "phoenix", name: "Phoenix Latest"}, {type: "bare", name: "Bare Elixir"}]` -
    Use `igniter.new` two-step approach for project creation - Elixir 1.17 + OTP
    27 for focused testing
 
-   5.3. [ ] Set up integration workflow concurrency control - Separate
+   5.3. [x] Set up integration workflow concurrency control - Separate
    concurrency group: `integration-${{ github.ref }}` - Independent from main CI
    workflow - Cancel in progress for efficiency
 

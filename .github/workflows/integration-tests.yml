@@ -1,0 +1,88 @@
+name: Integration Tests
+
+on: [push, pull_request]
+
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration-test:
+    name: Integration Test (${{ matrix.project-type.name }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        project-type:
+          - { type: "phoenix", name: "Phoenix Latest" }
+          - { type: "bare", name: "Bare Elixir" }
+        elixir: ["1.17"]
+        otp: ["27"]
+
+    env:
+      MIX_ENV: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key:
+            integration-deps-${{ runner.os }}-${{ matrix.otp }}-${{
+            matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            integration-deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}
+
+      - name: Install dependencies for installer
+        run: |
+          mix deps.get
+          mix compile
+
+      - name: Create test project (${{ matrix.project-type.type }})
+        run: |
+          if [ "${{ matrix.project-type.type }}" = "phoenix" ]; then
+            mix igniter.new test_project --with phx.new --with-args="--no-ecto --no-live --no-dashboard"
+          else
+            mix igniter.new test_project --sup
+          fi
+
+      - name: Install ash_discord in test project
+        run: |
+          cd test_project
+          mix deps.get
+          # Use local ash_discord source for testing
+          sed -i 's/{:ash_discord,.*}/{:ash_discord, path: ".."}/' mix.exs
+          mix deps.get
+          mix ash_discord.install --yes
+
+      - name: Verify installation
+        run: |
+          cd test_project
+          # Check consumer file exists
+          test -f "lib/test_project/discord_consumer.ex"
+          # Check consumer content
+          grep -q "use AshDiscord.Consumer" lib/test_project/discord_consumer.ex
+          # Check configuration
+          grep -q "config :nostrum" config/dev.exs
+
+      - name: Compile test project
+        run: |
+          cd test_project
+          mix compile --warnings-as-errors
+
+      - name: Run test project tests
+        run: |
+          cd test_project
+          mix test

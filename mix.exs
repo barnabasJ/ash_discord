@@ -22,7 +22,8 @@ defmodule AshDiscord.MixProject do
         "coveralls",
         "coveralls.detail",
         "coveralls.html"
-      ]
+      ],
+      dialyzer: [plt_add_apps: [:mix, :mnesia, :plug, :ex_unit, :stream_data]]
     ]
   end
 
@@ -51,6 +52,8 @@ defmodule AshDiscord.MixProject do
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:sobelow, "~> 0.14", only: [:dev, :test], runtime: false},
+      {:ex_check, "~> 0.16", only: [:dev, :test], runtime: false},
       {:mimic, "~> 1.7", only: :test},
       {:excoveralls, "~> 0.18", only: :test}
     ]
@@ -85,14 +88,7 @@ defmodule AshDiscord.MixProject do
       # Code quality aliases
       credo: "credo --strict",
       format: "format",
-      quality: ["format", "credo --strict", "dialyzer"],
-
-      # Test environment setup aliases  
-      "test.setup": &test_setup/1,
-      "test.migrate": ["cmd MIX_ENV=test mix ash.migrate"],
-      "test.rollback": ["cmd MIX_ENV=test mix ash.rollback"],
-      "test.reset": &test_reset/1,
-      "test.tear_down": ["cmd MIX_ENV=test mix ash.tear_down"],
+      "deps.audit": ["hex.audit", "deps.unlock --check-unused"],
 
       # Test coverage aliases
       "test.coverage": ["coveralls"],
@@ -107,16 +103,5 @@ defmodule AshDiscord.MixProject do
       "spark.formatter": "spark.formatter --extensions AshDiscord",
       "format.all": ["format", "spark.formatter --extensions AshDiscord"]
     ]
-  end
-
-  defp test_setup(_) do
-    Mix.shell().cmd("MIX_ENV=test mix ecto.create")
-    Mix.shell().cmd("MIX_ENV=test mix ash.setup")
-  end
-
-  defp test_reset(_) do
-    Mix.shell().cmd("MIX_ENV=test mix ecto.drop")
-    Mix.shell().cmd("MIX_ENV=test mix ecto.create")
-    Mix.shell().cmd("MIX_ENV=test mix ash.setup")
   end
 end

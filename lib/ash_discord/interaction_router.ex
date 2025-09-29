@@ -84,8 +84,6 @@ defmodule AshDiscord.InteractionRouter do
               {:ok, user}
 
             {:error, reason} ->
-              dbg(reason)
-
               AshLogger.log_interaction(
                 :error,
                 "Failed to create/find user via from_discord",
@@ -245,7 +243,7 @@ defmodule AshDiscord.InteractionRouter do
     options = interaction.data.options || []
 
     Map.new(options, fn option ->
-      {String.to_atom(option.name), option.value}
+      {String.to_existing_atom(option.name), option.value}
     end)
   end
 
@@ -384,7 +382,7 @@ defmodule AshDiscord.InteractionRouter do
   """
   def parse_options(options) when is_list(options) do
     Map.new(options, fn option ->
-      {String.to_atom(option.name), option.value}
+      {String.to_existing_atom(option.name), option.value}
     end)
   end
 

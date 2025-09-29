@@ -1,6 +1,5 @@
 import Config
 
-
 config :ash_discord,
   ash_domains: [TestApp.Discord]
 

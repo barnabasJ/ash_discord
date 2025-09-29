@@ -21,3 +21,6 @@ ash_discord-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# folder to test on example projects
+/examples/*

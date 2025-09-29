@@ -45,14 +45,14 @@ complete.
 
    📝 **Commit**: `ci: backup current workflow for safe migration`
 
-2. [ ] **Add Security Dependencies and Quality Aliases** 2.1. [ ] Add sobelow
+2. [x] **Add Security Dependencies and Quality Aliases** 2.1. [x] Add sobelow
        dependency to mix.exs - Add
        `{:sobelow, "~> 0.14", only: [:dev, :test], runtime: false}` to deps/0 -
        Pattern reference: `mix.exs:20-30` existing dev dependencies structure -
        📖
        [Sobelow Security Scanner](https://hexdocs.pm/sobelow/0.14.0/Sobelow.html)
 
-   2.2. [ ] Add enhanced quality aliases to mix.exs - Add
+   2.2. [x] Add enhanced quality aliases to mix.exs - Add
    `"deps.audit": ["hex.audit", "deps.unlock --check-unused"]` to aliases/0 -
    Add
    `"quality.full": ["format", "spark.formatter", "credo --strict", "dialyzer", "sobelow"]`
@@ -60,7 +60,7 @@ complete.
    📖
    [Mix Aliases Documentation](https://hexdocs.pm/mix/Mix.html#module-aliases)
 
-   2.3. [ ] Install and verify new dependencies - Run `mix deps.get` to install
+   2.3. [x] Install and verify new dependencies - Run `mix deps.get` to install
    sobelow - Run `mix quality.full` to verify all tools work - Run
    `mix deps.audit` to verify audit toolchain
 

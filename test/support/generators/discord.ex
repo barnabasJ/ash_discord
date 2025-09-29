@@ -278,9 +278,15 @@ defmodule AshDiscord.Test.Generators.Discord do
           edited_time =
             result.timestamp
             |> DateTime.from_iso8601()
-            |> elem(1)
-            |> DateTime.add(Faker.random_between(60, 7200), :second)
-            |> DateTime.to_iso8601()
+            |> case do
+              {:ok, dt, _} ->
+                dt
+                |> DateTime.add(Faker.random_between(60, 7200), :second)
+                |> DateTime.to_iso8601()
+
+              _ ->
+                result.timestamp
+            end
 
           Map.put(result, :edited_timestamp, edited_time)
         else

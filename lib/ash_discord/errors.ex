@@ -49,9 +49,7 @@ defmodule AshDiscord.Errors do
 
     defp format_context(context) do
       context_info =
-        context
-        |> Enum.map(fn {key, value} -> "  #{key}: #{inspect(value)}" end)
-        |> Enum.join("\n")
+        Enum.map_join(context, "\n", fn {key, value} -> "  #{key}: #{inspect(value)}" end)
 
       """
 
@@ -67,8 +65,7 @@ defmodule AshDiscord.Errors do
       formatted_suggestions =
         suggestions
         |> Enum.with_index(1)
-        |> Enum.map(fn {suggestion, index} -> "  #{index}. #{suggestion}" end)
-        |> Enum.join("\n")
+        |> Enum.map_join("\n", fn {suggestion, index} -> "  #{index}. #{suggestion}" end)
 
       """
       💡 Suggested Fixes:
@@ -83,8 +80,7 @@ defmodule AshDiscord.Errors do
       formatted_examples =
         examples
         |> Enum.with_index(1)
-        |> Enum.map(fn {example, index} -> "  #{index}. #{example}" end)
-        |> Enum.join("\n")
+        |> Enum.map_join("\n", fn {example, index} -> "  #{index}. #{example}" end)
 
       """
       📋 Examples:

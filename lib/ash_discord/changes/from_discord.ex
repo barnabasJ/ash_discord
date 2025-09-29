@@ -561,7 +561,7 @@ defmodule AshDiscord.Changes.FromDiscord do
       get_nested_id(Map.get(discord_data, :target_user))
     )
     |> maybe_set_attribute(:target_type, Map.get(discord_data, :target_type))
-    |> maybe_set_attribute(:target_user_type, discord_data.target_user_type)
+    |> maybe_set_attribute(:target_user_type, Map.get(discord_data, :target_user_type))
     |> maybe_set_attribute_if_exists(
       :approximate_presence_count,
       Map.get(discord_data, :approximate_presence_count)

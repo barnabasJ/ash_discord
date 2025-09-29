@@ -186,7 +186,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
 
       assert {:ok, created_invite} = result
       assert created_invite.code == invite_struct.code
-      assert created_invite.inviter_id == nil
+      assert created_invite.inviter_discord_id == nil
     end
   end
 

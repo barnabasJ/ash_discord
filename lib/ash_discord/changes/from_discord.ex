@@ -699,23 +699,11 @@ defmodule AshDiscord.Changes.FromDiscord do
     # Set reaction count and me fields
     |> maybe_set_attribute(:count, Map.get(discord_data, :count))
     |> maybe_set_attribute(:me, Map.get(discord_data, :me))
-    # Set ID fields - fallback to discord_data first, then override with arguments if present
-    |> maybe_set_attribute(:user_id, Map.get(discord_data, :user_id))
-    |> maybe_set_from_argument_to_attribute(:user_id)
-    |> maybe_set_attribute(:user_discord_id, Map.get(discord_data, :user_id))
-    |> maybe_set_from_argument_to_attribute(:user_discord_id)
-    |> maybe_set_attribute(:message_id, Map.get(discord_data, :message_id))
-    |> maybe_set_from_argument_to_attribute(:message_id)
-    |> maybe_set_attribute(:message_discord_id, Map.get(discord_data, :message_id))
-    |> maybe_set_from_argument_to_attribute(:message_discord_id)
-    |> maybe_set_attribute(:channel_id, Map.get(discord_data, :channel_id))
-    |> maybe_set_from_argument_to_attribute(:channel_id)
-    |> maybe_set_attribute(:channel_discord_id, Map.get(discord_data, :channel_id))
-    |> maybe_set_from_argument_to_attribute(:channel_discord_id)
-    |> maybe_set_attribute(:guild_id, Map.get(discord_data, :guild_id))
-    |> maybe_set_from_argument_to_attribute(:guild_id)
-    |> maybe_set_attribute(:guild_discord_id, Map.get(discord_data, :guild_id))
-    |> maybe_set_from_argument_to_attribute(:guild_discord_id)
+    # Set ID fields - arguments take precedence over discord_data
+    |> maybe_set_from_argument(:user_id)
+    |> maybe_set_from_argument(:message_id)
+    |> maybe_set_from_argument(:channel_id)
+    |> maybe_set_from_argument(:guild_id)
   end
 
   defp transform_typing_indicator(changeset, discord_data) do

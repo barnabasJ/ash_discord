@@ -1124,9 +1124,77 @@ defmodule AshDiscord.Consumer do
       end
 
       def handle_message_reaction_remove(data) do
-        # Reaction removal not yet implemented due to filter macro issues
-        Logger.info("AshDiscord: Message reaction removal requested - not yet implemented")
-        :ok
+        Logger.info("AshDiscord: Message reaction removal requested")
+
+        case AshDiscord.Consumer.Info.ash_discord_consumer_message_reaction_resource(__MODULE__) do
+          {:ok, resource} ->
+            Logger.info("AshDiscord: Found message reaction resource: #{inspect(resource)}")
+
+            # Find and destroy the reaction based on user_id, message_id, emoji_name, and emoji_id
+            user_id = Map.get(data, :user_id)
+            message_id = Map.get(data, :message_id)
+            emoji_name = get_in(data, [:emoji, :name])
+            emoji_id = get_in(data, [:emoji, :id])
+
+            Logger.info(
+              "AshDiscord: Looking for reaction with user_id=#{user_id}, message_id=#{message_id}, emoji_name=#{emoji_name}, emoji_id=#{inspect(emoji_id)}"
+            )
+
+            # Build filters one by one to avoid compilation issues
+            query =
+              resource
+              |> Ash.Query.new()
+              |> Ash.Query.filter(user_discord_id: user_id)
+              |> Ash.Query.filter(message_discord_id: message_id)
+              |> Ash.Query.filter(emoji_name: emoji_name)
+              |> Ash.Query.filter(emoji_id: emoji_id)
+
+            case Ash.read(query, actor: %{role: :bot}) do
+              {:ok, []} ->
+                Logger.info("AshDiscord: No matching reaction found to remove")
+                :ok
+
+              {:ok, [reaction]} ->
+                Logger.info("AshDiscord: Found reaction to remove: #{reaction.id}")
+
+                case Ash.destroy(reaction, actor: %{role: :bot}) do
+                  {:ok, _} ->
+                    Logger.info("AshDiscord: Successfully removed reaction")
+                    :ok
+
+                  {:error, error} ->
+                    Logger.error("AshDiscord: Failed to remove reaction: #{inspect(error)}")
+                    {:error, error}
+                end
+
+              {:ok, multiple_reactions} ->
+                Logger.warning(
+                  "AshDiscord: Found multiple matching reactions (#{length(multiple_reactions)}), removing all"
+                )
+
+                results =
+                  Enum.map(multiple_reactions, fn reaction ->
+                    Ash.destroy(reaction, actor: %{role: :bot})
+                  end)
+
+                case Enum.find(results, fn result -> match?({:error, _}, result) end) do
+                  nil -> :ok
+                  {:error, error} -> {:error, error}
+                end
+
+              {:error, error} ->
+                Logger.error("AshDiscord: Failed to query reactions: #{inspect(error)}")
+                {:error, error}
+            end
+
+          {:error, :not_configured} ->
+            Logger.info("AshDiscord: No message reaction resource configured")
+            :ok
+
+          {:error, error} ->
+            Logger.error("AshDiscord: Error getting message reaction resource: #{inspect(error)}")
+            {:error, error}
+        end
       end
 
       def handle_message_reaction_remove_all(data) do

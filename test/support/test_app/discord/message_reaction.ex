@@ -137,7 +137,18 @@ defmodule TestApp.Discord.MessageReaction do
 
       upsert?(true)
       upsert_identity(:reaction_identity)
-      upsert_fields([:count, :me, :emoji_animated, :user_id, :message_id, :channel_id, :guild_id])
+
+      upsert_fields([
+        :emoji_id,
+        :emoji_name,
+        :count,
+        :me,
+        :emoji_animated,
+        :user_id,
+        :message_id,
+        :channel_id,
+        :guild_id
+      ])
     end
 
     update :update do

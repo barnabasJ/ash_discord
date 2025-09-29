@@ -390,16 +390,16 @@ defmodule AshDiscord.Changes.FromDiscord do
 
   defp transform_message(changeset, discord_data) do
     # Get guild_discord_id from struct
-    guild_discord_id = discord_data.guild_id
+    guild_discord_id = Map.get(discord_data, :guild_id)
 
     # Get channel_discord_id from struct, with fallback to arguments for API fetching
-    channel_discord_id = discord_data.channel_id
+    channel_discord_id = Map.get(discord_data, :channel_id)
 
     # Extract full author struct from the message struct
     author_data = Map.get(discord_data, :author)
 
     changeset
-    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
+    |> Ash.Changeset.force_change_attribute(:discord_id, Map.get(discord_data, :id))
     |> Ash.Changeset.force_change_attribute(:content, Map.get(discord_data, :content, ""))
     |> maybe_set_attribute(:embeds, Map.get(discord_data, :embeds, []))
     # Set timestamp fields - only if attribute exists
@@ -472,20 +472,23 @@ defmodule AshDiscord.Changes.FromDiscord do
       _ ->
         # Determine if this is a custom emoji (has an ID)
         custom =
-          case discord_data.id do
+          case Map.get(discord_data, :id) do
             nil -> false
             _ -> true
           end
 
         changeset
-        |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
-        |> maybe_set_attribute(:name, discord_data.name)
-        |> Ash.Changeset.force_change_attribute(:animated, discord_data.animated || false)
+        |> Ash.Changeset.force_change_attribute(:discord_id, Map.get(discord_data, :id))
+        |> maybe_set_attribute(:name, Map.get(discord_data, :name))
+        |> Ash.Changeset.force_change_attribute(
+          :animated,
+          Map.get(discord_data, :animated, false)
+        )
         |> Ash.Changeset.force_change_attribute(:custom, custom)
-        |> maybe_set_attribute(:available, discord_data.available || true)
-        |> maybe_set_attribute(:require_colons, discord_data.require_colons || true)
-        |> maybe_set_attribute(:managed, discord_data.managed || false)
-        |> maybe_set_attribute(:roles, discord_data.roles || [])
+        |> maybe_set_attribute(:available, Map.get(discord_data, :available, true))
+        |> maybe_set_attribute(:require_colons, Map.get(discord_data, :require_colons, true))
+        |> maybe_set_attribute(:managed, Map.get(discord_data, :managed, false))
+        |> maybe_set_attribute(:roles, Map.get(discord_data, :roles, []))
         |> maybe_manage_emoji_user_relationship(discord_data)
     end
   end
@@ -500,29 +503,29 @@ defmodule AshDiscord.Changes.FromDiscord do
 
   defp transform_voice_state(changeset, discord_data) do
     changeset
-    |> maybe_set_attribute(:user_discord_id, discord_data.user_id)
-    |> maybe_set_attribute(:user_id, discord_data.user_id)
-    |> maybe_set_attribute(:channel_discord_id, discord_data.channel_id)
-    |> maybe_set_attribute(:channel_id, discord_data.channel_id)
-    |> maybe_set_attribute(:guild_discord_id, discord_data.guild_id)
-    |> maybe_set_attribute(:guild_id, discord_data.guild_id)
-    |> Ash.Changeset.force_change_attribute(:session_id, discord_data.session_id)
-    |> maybe_set_attribute(:deaf, discord_data.deaf)
-    |> maybe_set_attribute(:mute, discord_data.mute)
-    |> maybe_set_attribute(:self_deaf, discord_data.self_deaf)
-    |> maybe_set_attribute(:self_mute, discord_data.self_mute)
-    |> maybe_set_attribute(:self_stream, discord_data.self_stream)
-    |> maybe_set_attribute(:self_video, discord_data.self_video)
-    |> maybe_set_attribute(:suppress, discord_data.suppress)
+    |> maybe_set_attribute(:user_discord_id, Map.get(discord_data, :user_id))
+    |> maybe_set_attribute(:user_id, Map.get(discord_data, :user_id))
+    |> maybe_set_attribute(:channel_discord_id, Map.get(discord_data, :channel_id))
+    |> maybe_set_attribute(:channel_id, Map.get(discord_data, :channel_id))
+    |> maybe_set_attribute(:guild_discord_id, Map.get(discord_data, :guild_id))
+    |> maybe_set_attribute(:guild_id, Map.get(discord_data, :guild_id))
+    |> Ash.Changeset.force_change_attribute(:session_id, Map.get(discord_data, :session_id))
+    |> maybe_set_attribute(:deaf, Map.get(discord_data, :deaf))
+    |> maybe_set_attribute(:mute, Map.get(discord_data, :mute))
+    |> maybe_set_attribute(:self_deaf, Map.get(discord_data, :self_deaf))
+    |> maybe_set_attribute(:self_mute, Map.get(discord_data, :self_mute))
+    |> maybe_set_attribute(:self_stream, Map.get(discord_data, :self_stream))
+    |> maybe_set_attribute(:self_video, Map.get(discord_data, :self_video))
+    |> maybe_set_attribute(:suppress, Map.get(discord_data, :suppress))
     |> Transformations.set_datetime_field(
       :request_to_speak_timestamp,
-      discord_data.request_to_speak_timestamp
+      Map.get(discord_data, :request_to_speak_timestamp)
     )
   end
 
   defp transform_webhook(changeset, discord_data) do
     changeset
-    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
+    |> Ash.Changeset.force_change_attribute(:discord_id, Map.get(discord_data, :id))
     |> maybe_set_attribute(:name, Map.get(discord_data, :name))
     |> maybe_set_attribute(:avatar, Map.get(discord_data, :avatar))
     |> maybe_set_attribute(:token, Map.get(discord_data, :token))
@@ -786,21 +789,24 @@ defmodule AshDiscord.Changes.FromDiscord do
     user_discord_id = get_interaction_user_id(discord_data)
 
     changeset
-    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
-    |> Ash.Changeset.force_change_attribute(:type, discord_data.type)
-    |> Ash.Changeset.force_change_attribute(:token, discord_data.token)
-    |> Ash.Changeset.force_change_attribute(:application_id, discord_data.application_id)
+    |> Ash.Changeset.force_change_attribute(:discord_id, Map.get(discord_data, :id))
+    |> Ash.Changeset.force_change_attribute(:type, Map.get(discord_data, :type))
+    |> Ash.Changeset.force_change_attribute(:token, Map.get(discord_data, :token))
+    |> Ash.Changeset.force_change_attribute(
+      :application_id,
+      Map.get(discord_data, :application_id)
+    )
     |> maybe_set_attribute(:custom_id, custom_id)
     # Store full interaction struct as data
     |> maybe_set_attribute(:data, discord_data)
     # Set ID attributes for test resource compatibility
-    |> maybe_set_attribute(:guild_id, discord_data.guild_id)
-    |> maybe_set_attribute(:channel_id, discord_data.channel_id)
+    |> maybe_set_attribute(:guild_id, Map.get(discord_data, :guild_id))
+    |> maybe_set_attribute(:channel_id, Map.get(discord_data, :channel_id))
     |> maybe_set_attribute(:user_id, user_discord_id)
     # Set additional attributes for test resource compatibility
-    |> maybe_set_attribute(:version, discord_data.version)
-    |> maybe_set_attribute(:locale, discord_data.locale)
-    |> maybe_set_attribute(:guild_locale, discord_data.guild_locale)
+    |> maybe_set_attribute(:version, Map.get(discord_data, :version))
+    |> maybe_set_attribute(:locale, Map.get(discord_data, :locale))
+    |> maybe_set_attribute(:guild_locale, Map.get(discord_data, :guild_locale))
     |> maybe_manage_interaction_guild_relationship(discord_data)
     |> maybe_manage_interaction_channel_relationship(discord_data)
     |> maybe_manage_interaction_user_relationship(user_discord_id)

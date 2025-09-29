@@ -244,6 +244,38 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
   def manage_channel_relationship(changeset, _nil_channel_id), do: changeset
 
   @doc """
+  Manages message relationship with auto-creation capabilities.
+
+  Sets up relationship management for message associations using Ash's
+  relationship management features with auto-creation when the related
+  message doesn't exist.
+
+  ## Parameters
+
+  - `changeset` - The Ash changeset to modify
+  - `message_id` - The Discord message ID to associate
+
+  ## Returns
+
+  Updated changeset with message relationship managed.
+
+  ## Examples
+
+      changeset = manage_message_relationship(changeset, discord_data.message_id)
+
+  """
+  def manage_message_relationship(changeset, message_id) when not is_nil(message_id) do
+    Ash.Changeset.manage_relationship(changeset, :message, message_id,
+      type: :append_and_remove,
+      use_identities: [:discord_id],
+      value_is_key: :discord_id,
+      on_no_match: {:create, :from_discord}
+    )
+  end
+
+  def manage_message_relationship(changeset, _nil_message_id), do: changeset
+
+  @doc """
   Transforms Discord permission overwrites to a standardized map format.
 
   Converts Discord permission overwrite data structures into a consistent

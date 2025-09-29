@@ -6,6 +6,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  ImageOS: ubuntu24
+
 jobs:
   ci:
     uses: ash-project/ash/.github/workflows/ash-ci.yml@main

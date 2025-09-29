@@ -61,11 +61,7 @@ jobs:
       - name: Install ash_discord in test project
         run: |
           cd test_project
-          mix deps.get
-          # Use local ash_discord source for testing
-          sed -i 's/{:ash_discord,.*}/{:ash_discord, path: ".."}/' mix.exs
-          mix deps.get
-          mix ash_discord.install --yes
+          mix igniter.install ash_discord@path:.. --yes
 
       - name: Verify installation
         run: |
@@ -77,12 +73,7 @@ jobs:
           # Check configuration
           grep -q "config :nostrum" config/dev.exs
 
-      - name: Compile test project
-        run: |
-          cd test_project
-          mix compile --warnings-as-errors
-
       - name: Run test project tests
         run: |
           cd test_project
-          mix test
+          mix test --warnings-as-errors

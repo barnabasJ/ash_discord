@@ -142,108 +142,81 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
   """
   def fetch_from_nostrum_api(type, discord_id, changeset \\ nil) do
     case type do
-      :user ->
-        try do
-          Nostrum.Api.User.get(discord_id)
-        rescue
-          ArgumentError -> {:error, :api_unavailable}
-        end
+      :user -> fetch_simple_entity(&Nostrum.Api.User.get/1, discord_id)
+      :guild -> fetch_simple_entity(&Nostrum.Api.Guild.get/1, discord_id)
+      :channel -> fetch_simple_entity(&Nostrum.Api.Channel.get/1, discord_id)
+      :webhook -> fetch_simple_entity(&Nostrum.Api.Webhook.get/1, discord_id)
+      :invite -> fetch_simple_entity(&Nostrum.Api.Invite.get/1, discord_id)
+      :sticker -> fetch_simple_entity(&Nostrum.Api.Sticker.get/1, discord_id)
+      :emoji -> {:error, :requires_guild_id}
+      :role -> fetch_role_entity(changeset, discord_id)
+      :guild_member -> fetch_guild_member_entity(changeset)
+      :message -> fetch_message_entity(changeset)
+      _ -> {:error, :unsupported_type}
+    end
+  end
 
-      :guild ->
-        try do
-          Nostrum.Api.Guild.get(discord_id)
-        rescue
-          ArgumentError -> {:error, :api_unavailable}
-        end
+  # Fetches a simple entity that only requires an ID
+  defp fetch_simple_entity(api_function, discord_id) do
+    try do
+      api_function.(discord_id)
+    rescue
+      ArgumentError -> {:error, :api_unavailable}
+    end
+  end
 
-      :channel ->
-        try do
-          Nostrum.Api.Channel.get(discord_id)
-        rescue
-          ArgumentError -> {:error, :api_unavailable}
-        end
+  # Fetches role entity which requires guild context
+  defp fetch_role_entity(changeset, discord_id) do
+    if changeset do
+      guild_discord_id = extract_guild_discord_id(changeset)
 
-      :webhook ->
-        try do
-          Nostrum.Api.Webhook.get(discord_id)
-        rescue
-          ArgumentError -> {:error, :api_unavailable}
-        end
-
-      :invite ->
-        # Invite uses code instead of ID
-        try do
-          Nostrum.Api.Invite.get(discord_id)
-        rescue
-          ArgumentError -> {:error, :api_unavailable}
-        end
-
-      :sticker ->
-        try do
-          Nostrum.Api.Sticker.get(discord_id)
-        rescue
-          ArgumentError -> {:error, :api_unavailable}
-        end
-
-      :emoji ->
-        # Emoji requires guild_id and emoji_id, can't fetch with just ID
+      if guild_discord_id do
+        fetch_role_from_guild(guild_discord_id, discord_id)
+      else
         {:error, :requires_guild_id}
+      end
+    else
+      {:error, :requires_guild_id}
+    end
+  end
 
-      :role ->
-        # Role requires guild_id - try to get it from changeset if available
-        if changeset do
-          guild_discord_id = extract_guild_discord_id(changeset)
+  # Fetches guild_member entity which requires both guild and user IDs
+  defp fetch_guild_member_entity(changeset) do
+    if changeset do
+      guild_discord_id = extract_guild_discord_id(changeset)
+      user_discord_id = extract_user_discord_id(changeset)
 
-          if guild_discord_id do
-            fetch_role_from_guild(guild_discord_id, discord_id)
-          else
-            {:error, :requires_guild_id}
-          end
-        else
-          {:error, :requires_guild_id}
+      if guild_discord_id && user_discord_id do
+        try do
+          Nostrum.Api.Guild.member(guild_discord_id, user_discord_id)
+        rescue
+          ArgumentError -> {:error, :api_unavailable}
         end
+      else
+        {:error, :requires_guild_and_user_ids}
+      end
+    else
+      {:error, :requires_guild_and_user_ids}
+    end
+  end
 
-      :guild_member ->
-        # GuildMember requires both guild_discord_id and user_discord_id
-        if changeset do
-          guild_discord_id = extract_guild_discord_id(changeset)
-          user_discord_id = extract_user_discord_id(changeset)
+  # Fetches message entity which requires channel and message IDs
+  defp fetch_message_entity(changeset) do
+    if changeset do
+      channel_id = extract_channel_discord_id(changeset)
+      message_id = extract_discord_id(changeset)
 
-          if guild_discord_id && user_discord_id do
-            try do
-              Nostrum.Api.Guild.member(guild_discord_id, user_discord_id)
-            rescue
-              ArgumentError -> {:error, :api_unavailable}
-            end
-          else
-            {:error, :requires_guild_and_user_ids}
-          end
-        else
-          {:error, :requires_guild_and_user_ids}
+      if channel_id && message_id do
+        try do
+          Nostrum.Api.Message.get(channel_id, message_id)
+        rescue
+          ArgumentError -> {:error, :api_unavailable}
         end
-
-      :message ->
-        # Message requires channel_id and message_id, can't fetch with just ID
-        # But we can use channel_discord_id argument if available
-        if changeset do
-          channel_id = extract_channel_discord_id(changeset)
-          message_id = extract_discord_id(changeset)
-
-          if channel_id && message_id do
-            try do
-              Nostrum.Api.Message.get(channel_id, message_id)
-            rescue
-              ArgumentError -> {:error, :api_unavailable}
-            end
-          else
-            {:error, :requires_channel_and_message_ids}
-          end
-        else
-          {:error, :requires_channel_and_message_ids}
-        end
-
-      _ ->
-        {:error, :unsupported_type}
+      else
+        {:error, :requires_channel_and_message_ids}
+      end
+    else
+      {:error, :requires_channel_and_message_ids}
     end
   end
 

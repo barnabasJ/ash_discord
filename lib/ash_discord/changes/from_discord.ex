@@ -114,35 +114,42 @@ defmodule AshDiscord.Changes.FromDiscord do
     # Check for discord_struct first
     case Ash.Changeset.get_argument(changeset, :discord_struct) do
       nil ->
-        # For backward compatibility with interaction type, check :interaction argument
-        cond do
-          type == :interaction ->
-            case Ash.Changeset.get_argument(changeset, :interaction) do
-              nil ->
-                # Fallback to API fetch
-                AshDiscord.Changes.FromDiscord.ApiFetchers.fetch_from_api(changeset, type)
-
-              interaction when is_map(interaction) ->
-                {:ok, interaction}
-
-              invalid ->
-                {:error, "Invalid value provided for interaction: #{inspect(invalid)}"}
-            end
-
-          # For event-based entities, construct data from arguments
-          type in [:typing_indicator, :message_reaction] ->
-            construct_event_data(changeset, type)
-
-          true ->
-            # Fallback to API fetch for other types
-            AshDiscord.Changes.FromDiscord.ApiFetchers.fetch_from_api(changeset, type)
-        end
+        get_discord_data_without_struct(changeset, type)
 
       discord_struct when is_map(discord_struct) ->
         {:ok, discord_struct}
 
       invalid ->
         {:error, "Invalid value provided for discord_struct: #{inspect(invalid)}"}
+    end
+  end
+
+  defp get_discord_data_without_struct(changeset, type) do
+    cond do
+      type == :interaction ->
+        get_interaction_data(changeset, type)
+
+      # For event-based entities, construct data from arguments
+      type in [:typing_indicator, :message_reaction] ->
+        construct_event_data(changeset, type)
+
+      true ->
+        # Fallback to API fetch for other types
+        AshDiscord.Changes.FromDiscord.ApiFetchers.fetch_from_api(changeset, type)
+    end
+  end
+
+  defp get_interaction_data(changeset, type) do
+    case Ash.Changeset.get_argument(changeset, :interaction) do
+      nil ->
+        # Fallback to API fetch
+        AshDiscord.Changes.FromDiscord.ApiFetchers.fetch_from_api(changeset, type)
+
+      interaction when is_map(interaction) ->
+        {:ok, interaction}
+
+      invalid ->
+        {:error, "Invalid value provided for interaction: #{inspect(invalid)}"}
     end
   end
 

@@ -148,8 +148,8 @@ complete.
 
    📝 **Commit**: `ci: add integration testing workflow structure`
 
-6. [ ] **Implement Phoenix Project Integration Test** 6.1. [ ] Add Phoenix
-       project creation step - Use
+6. [x] **Implement Phoenix Project Integration Test** (Implemented in
+       integration-tests.yml) 6.1. [ ] Add Phoenix project creation step - Use
        `mix igniter.new test_project --with phx.new --with-args="--no-ecto --no-live --no-dashboard"` -
        Verify Phoenix archive installation if needed - Handle project creation
        in clean environment - 📖
@@ -171,9 +171,10 @@ complete.
 
    📝 **Commit**: `ci: implement Phoenix project integration testing`
 
-7. [ ] **Implement Bare Elixir Integration Test** 7.1. [ ] Add bare Elixir
-       project creation step - Use `mix igniter.new test_project --sup` - Create
-       supervision tree project structure - Verify minimal Elixir project setup
+7. [x] **Implement Bare Elixir Integration Test** (Implemented in
+       integration-tests.yml) 7.1. [ ] Add bare Elixir project creation step -
+       Use `mix igniter.new test_project --sup` - Create supervision tree
+       project structure - Verify minimal Elixir project setup
 
    7.2. [ ] Add ash_discord installation for bare project -
    `cd test_project && mix ash_discord.install --yes` - Handle installation in
@@ -191,8 +192,9 @@ complete.
 
    📝 **Commit**: `ci: implement bare Elixir integration testing`
 
-8. [ ] **Add Comprehensive Installation Verification** 8.1. [ ] Add file
-       creation verification - Verify consumer module exists:
+8. [x] **Add Comprehensive Installation Verification** (Implemented in
+       integration-tests.yml) 8.1. [ ] Add file creation verification - Verify
+       consumer module exists:
        `test -f "lib/test_project/discord_consumer.ex"` - Check consumer
        content:
        `grep -q "use AshDiscord.Consumer" lib/test_project/discord_consumer.ex` -
@@ -223,18 +225,18 @@ complete.
 
 ### Stream C: Local CI Setup and Optimization (Phase 3)
 
-9. [ ] **Add Act Local CI Configuration** 9.1. [ ] Create optional `.actrc`
+9. [x] **Add Act Local CI Configuration** 9.1. [x] Create optional `.actrc`
        configuration file - Add
        `-P ubuntu-latest=catthehacker/ubuntu:act-latest` for better container -
        Add `--reuse` flag for container persistence - 📖
        [Act Configuration Guide](https://github.com/nektos/act#configuration)
 
-   9.2. [ ] Test act compatibility with both workflows - Verify `act` runs both
+   9.2. [x] Test act compatibility with both workflows - Verify `act` runs both
    CI and integration workflows - Test `act -j test` runs main CI workflow -
    Test `act -j integration-test` runs integration tests - Document any
    compatibility issues and solutions
 
-   9.3. [ ] Create optional act-optimized workflow (if needed) -
+   9.3. [x] Create optional act-optimized workflow (if needed) -
    `.github/workflows/ci-local.yml` for faster local testing - Simplified matrix
    for local development speed - Single Elixir/OTP combination for quick
    validation

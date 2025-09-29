@@ -447,13 +447,13 @@ defmodule AshDiscord.Changes.FromDiscord do
     author_discord_id = get_nested_id(author_data)
     resource = changeset.resource
 
-    # Check if resource has author_id attribute or author relationship
-    if Ash.Resource.Info.attribute(resource, :author_id) do
-      # For resources with author_id attribute (ash_discord test resources)
-      Ash.Changeset.force_change_attribute(changeset, :author_id, author_discord_id)
-    else
-      # For resources with author relationship (steward resources)
+    # Always use relationship management - this properly handles discord_id identity lookup
+    # and auto-creation of User records, setting the author_id UUID correctly
+    if Ash.Resource.Info.relationship(resource, :author) do
       Transformations.manage_user_relationship(changeset, author_discord_id, :author)
+    else
+      # No author relationship on this resource
+      changeset
     end
   end
 

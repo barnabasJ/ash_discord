@@ -150,7 +150,7 @@ defmodule AshDiscord.CommandRegistrationTest do
       ]
 
       large_guild = %{id: 123_456_789, name: "Large Guild"}
-      small_guild = %{id: 12345, name: "Small Guild"}
+      small_guild = %{id: 12_345, name: "Small Guild"}
 
       # Large guild should get all commands
       large_filtered = TestFilter.filter_commands(commands, large_guild)

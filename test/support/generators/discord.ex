@@ -205,7 +205,7 @@ defmodule AshDiscord.Test.Generators.Discord do
       topic: Faker.Lorem.sentence(3..15),
       nsfw: false,
       last_message_id: nil,
-      bitrate: 64000,
+      bitrate: 64_000,
       user_limit: 0,
       rate_limit_per_user: 0
     }

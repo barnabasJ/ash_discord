@@ -260,7 +260,7 @@ defmodule AshDiscord.LoggerTest do
         {500, :debug},
         {2000, :info},
         {7000, :warning},
-        {12000, :error}
+        {12_000, :error}
       ]
 
       for {duration, expected_level} <- test_cases do

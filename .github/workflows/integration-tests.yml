@@ -80,6 +80,11 @@ jobs:
           # Check configuration
           grep -q "config :nostrum" config/dev.exs
 
+      - name: Compile deps
+        run: |
+          cd test_project
+          mix deps.compile
+
       - name: Run test project tests
         run: |
           cd test_project

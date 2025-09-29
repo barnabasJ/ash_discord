@@ -74,7 +74,7 @@ complete.
    📝 **Commit**:
    `deps: add sobelow security scanning and enhanced quality aliases`
 
-3. [ ] **Replace CI Workflow with Centralized Pattern** 3.1. [ ] Replace
+3. [x] **Replace CI Workflow with Centralized Pattern** 3.1. [x] Replace
        `.github/workflows/ci.yml` content with centralized workflow call -
        Replace entire file content with centralized workflow pattern -
        Configuration: `spark-formatter: true`, `sobelow: true`,
@@ -82,12 +82,12 @@ complete.
        `on: [push, pull_request]` - 📖
        [Ash Centralized CI Workflow](https://github.com/ash-project/ash/blob/main/.github/workflows/ash-ci.yml)
 
-   3.2. [ ] Configure workflow inputs for ash_discord specific needs - Review
+   3.2. [x] Configure workflow inputs for ash_discord specific needs - Review
    centralized workflow documentation for available inputs - Configure matrix
    strategy inheritance from centralized workflow - Ensure secrets inheritance:
    `secrets: inherit`
 
-   3.3. [ ] Verify concurrency control configuration - Maintain
+   3.3. [x] Verify concurrency control configuration - Maintain
    `concurrency.group: ${{ github.workflow }}-${{ github.ref }}` - Ensure
    `cancel-in-progress: true` for efficient resource usage
 

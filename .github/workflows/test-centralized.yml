@@ -1,13 +1,14 @@
-name: CI
+name: Test Centralized Workflow
 
-on: [push, pull_request]
+on:
+  workflow_dispatch: # Manual trigger only for testing
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: test-centralized-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  ci:
+  test-centralized:
     uses: ash-project/ash/.github/workflows/ash-ci.yml@main
     with:
       spark-formatter: true

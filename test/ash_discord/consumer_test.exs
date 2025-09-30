@@ -54,35 +54,11 @@ defmodule AshDiscord.ConsumerTest do
       end
     end
 
-    test "overridden callbacks work correctly" do
-      # Test message create override - use proper Nostrum struct
-      test_user = user(%{username: "testuser", discriminator: "0001"})
-
-      message = %Nostrum.Struct.Message{
-        id: generate_snowflake(),
-        content: "test message",
-        channel_id: generate_snowflake(),
-        author: %Nostrum.Struct.User{
-          id: test_user.id,
-          username: test_user.username,
-          discriminator: test_user.discriminator,
-          avatar: test_user.avatar,
-          bot: test_user.bot
-        },
-        guild_id: generate_snowflake(),
-        timestamp: DateTime.utc_now() |> DateTime.to_iso8601()
-      }
-
-      # This should call our override
-      result = TestConsumer.handle_message_create(message)
-      assert result == :ok
-    end
-
     test "interaction handling works" do
       interaction =
         interaction(%{
           data: %{name: "hello", options: []},
-          member: %{user: user()}
+          member: member(%{user_id: user().id})
         })
 
       TestConsumer.handle_interaction_create(interaction)

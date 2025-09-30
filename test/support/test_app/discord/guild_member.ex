@@ -98,6 +98,7 @@ defmodule TestApp.Discord.GuildMember do
   end
 
   relationships do
+    # TODO: use the regular ids
     belongs_to(:guild, TestApp.Discord.Guild,
       destination_attribute: :discord_id,
       source_attribute: :guild_id

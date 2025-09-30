@@ -166,6 +166,7 @@ defmodule AshDiscord.IntegrationTest do
   end
 
   describe "error handling" do
+    @tag :focus
     test "handles invalid interaction gracefully" do
       invalid_interaction =
         interaction(%{
@@ -177,8 +178,12 @@ defmodule AshDiscord.IntegrationTest do
         {:ok, %{}}
       end)
 
-      result = IntegrationTestConsumer.handle_interaction_create(invalid_interaction)
+      {result, log} =
+        ExUnit.CaptureLog.with_log(fn ->
+          IntegrationTestConsumer.handle_interaction_create(invalid_interaction)
+        end)
 
+      assert log =~ "command is nil"
       assert result == :ok
 
       # Should receive error notification

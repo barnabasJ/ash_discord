@@ -350,7 +350,6 @@ defmodule AshDiscord.Test.Generators.Discord do
 
   - `:user_id` - User ID (defaults to generated snowflake)
   - `:guild_id` - Guild ID (defaults to generated snowflake)
-  - `:user` - User struct (defaults to generated user)
   - `:nick` - Nickname (defaults to nil)
   - `:roles` - Role IDs (defaults to empty list)
   - `:joined_at` - Join timestamp (defaults to past datetime)
@@ -370,7 +369,6 @@ defmodule AshDiscord.Test.Generators.Discord do
 
     defaults = %{
       user_id: member_user.id,
-      user: member_user,
       nick: if(Faker.Util.pick([true, false, false]), do: Faker.Person.first_name(), else: nil),
       roles: [],
       joined_at: Faker.DateTime.backward(365) |> DateTime.to_iso8601(),
@@ -380,16 +378,7 @@ defmodule AshDiscord.Test.Generators.Discord do
       pending: false
     }
 
-    merged = merge_attrs(defaults, attrs)
-
-    # Sync user_id with user.id if user is provided
-    merged =
-      case merged.user do
-        %{id: id} -> Map.put(merged, :user_id, id)
-        _ -> merged
-      end
-
-    struct(Nostrum.Struct.Guild.Member, merged)
+    struct(Nostrum.Struct.Guild.Member, merge_attrs(defaults, attrs))
   end
 
   @doc """

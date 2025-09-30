@@ -59,7 +59,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
     test "handles member without nickname" do
       member_struct =
         guild_member(%{
-          user: user(%{id: 987_654_321, username: "no_nick_user"}),
+          user_id: 987_654_321,
           nick: nil,
           joined_at: "2023-02-20T15:45:00Z",
           deaf: false,
@@ -81,7 +81,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
     test "handles deafened member" do
       member_struct =
         guild_member(%{
-          user: user(%{id: 111_222_333, username: "deaf_user"}),
+          user_id: 111_222_333,
           nick: "DeafUser",
           joined_at: "2023-03-10T08:15:00Z",
           deaf: true,
@@ -103,7 +103,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
     test "handles muted member" do
       member_struct =
         guild_member(%{
-          user: user(%{id: 777_888_999, username: "mute_user"}),
+          user_id: 777_888_999,
           nick: "MuteUser",
           joined_at: "2023-04-05T12:00:00Z",
           deaf: false,
@@ -125,7 +125,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
     test "handles member with both deaf and mute" do
       member_struct =
         guild_member(%{
-          user: user(%{id: 333_444_555, username: "silent_user"}),
+          user_id: 333_444_555,
           nick: "SilentUser",
           joined_at: "2023-05-12T18:30:00Z",
           deaf: true,
@@ -174,7 +174,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       # Create initial member
       initial_struct =
         guild_member(%{
-          user: user(%{id: user_id, username: "original_user"}),
+          user_id: user_id,
           nick: "OriginalNick",
           joined_at: "2023-01-01T00:00:00Z",
           deaf: false,
@@ -190,7 +190,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       # Update same member with new data
       updated_struct =
         guild_member(%{
-          user: user(%{id: user_id, username: "original_user"}),
+          user_id: user_id,
           nick: "UpdatedNick",
           joined_at: "2023-01-01T00:00:00Z",
           deaf: true,
@@ -221,7 +221,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       # Create initial member with nickname
       initial_struct =
         guild_member(%{
-          user: user(%{id: user_id, username: "nick_user"}),
+          user_id: user_id,
           nick: "OldNick",
           joined_at: "2023-06-01T12:00:00Z",
           deaf: false,
@@ -237,7 +237,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       # Remove nickname
       updated_struct =
         guild_member(%{
-          user: user(%{id: user_id, username: "nick_user"}),
+          user_id: user_id,
           nick: nil,
           joined_at: "2023-06-01T12:00:00Z",
           deaf: false,
@@ -287,7 +287,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
     test "handles invalid joined_at format" do
       member_struct =
         guild_member(%{
-          user: user(%{id: 123_456_789, username: "test_user"}),
+          user_id: 123_456_789,
           nick: "TestUser",
           # Invalid datetime format
           joined_at: "not_a_datetime",

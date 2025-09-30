@@ -4,7 +4,7 @@ config :ash_discord,
   ash_domains: [TestApp.Discord]
 
 config :logger,
-  level: :info,
+  level: :error,
   backends: [:console],
   console: [
     format: "$time [$level] $message $metadata\n",

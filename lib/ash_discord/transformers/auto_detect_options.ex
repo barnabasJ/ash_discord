@@ -23,6 +23,8 @@ defmodule AshDiscord.Transformers.AutoDetectOptions do
 
   require Logger
 
+  # TODO: we need to add the primary key ar maybe a configured identity as an option
+  # for commands that fetch or modify existing records
   @impl true
   def transform(dsl_state) do
     discord_commands = Extension.get_entities(dsl_state, [:discord])

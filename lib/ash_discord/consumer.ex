@@ -1144,7 +1144,8 @@ defmodule AshDiscord.Consumer do
 
             case Ash.bulk_destroy(
                    query,
-                   action: :destroy,
+                   :destroy,
+                   %{},
                    context: %{
                      private: %{ash_discord?: true},
                      shared: %{private: %{ash_discord?: true}}
@@ -1159,34 +1160,9 @@ defmodule AshDiscord.Consumer do
                 {:error, error}
             end
 
-          {:ok, multiple_reactions} ->
-            Logger.warning(
-              "AshDiscord: Found multiple matching reactions (#{length(multiple_reactions)}), removing all"
-            )
-
-            results =
-              Enum.map(multiple_reactions, fn reaction ->
-                Ash.destroy(reaction,
-                  action: :destroy,
-                  context: %{
-                    private: %{ash_discord?: true},
-                    shared: %{private: %{ash_discord?: true}}
-                  }
-                )
-              end)
-
-            # Check if any destroy failed
-            case Enum.find(results, fn
-                   :ok -> false
-                   {:error, _} -> true
-                 end) do
-              nil -> :ok
-              {:error, error} -> {:error, error}
-            end
-
-          {:error, error} ->
-            Logger.error("AshDiscord: Failed to query reactions: #{inspect(error)}")
-            {:error, error}
+          :error ->
+            Logger.info("AshDiscord: No message reaction resource configured")
+            :ok
         end
       end
 

@@ -1151,13 +1151,13 @@ defmodule AshDiscord.Consumer do
                      shared: %{private: %{ash_discord?: true}}
                    }
                  ) do
-              :ok ->
+              %Ash.BulkResult{status: :success} ->
                 Logger.info("AshDiscord: Successfully removed reaction")
                 :ok
 
-              {:error, error} ->
-                Logger.error("AshDiscord: Failed to remove reaction: #{inspect(error)}")
-                {:error, error}
+              %Ash.BulkResult{errors: errors} ->
+                Logger.error("AshDiscord: Failed to remove reaction: #{inspect(errors)}")
+                {:error, errors}
             end
 
           :error ->

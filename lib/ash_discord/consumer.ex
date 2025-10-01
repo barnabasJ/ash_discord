@@ -1106,7 +1106,7 @@ defmodule AshDiscord.Consumer do
         :ok
       end
 
-      def handle_message_reaction_remove(data) do
+      def handle_message_reaction_remove(%Nostrum.Struct.Event.MessageReactionRemove{} = data) do
         Logger.info("AshDiscord: Message reaction removal requested")
 
         case AshDiscord.Consumer.Info.ash_discord_consumer_message_reaction_resource(__MODULE__) do
@@ -1114,10 +1114,10 @@ defmodule AshDiscord.Consumer do
             Logger.info("AshDiscord: Found message reaction resource: #{inspect(resource)}")
 
             # Find and destroy the reaction based on user_id, message_id, emoji_name, and emoji_id
-            user_id = Map.get(data, :user_id)
-            message_id = Map.get(data, :message_id)
-            emoji_name = get_in(data, [:emoji, :name])
-            emoji_id = get_in(data, [:emoji, :id])
+            user_id = data.user_id
+            message_id = data.message_id
+            emoji_name = data.emoji.name
+            emoji_id = data.emoji.id
 
             Logger.info(
               "AshDiscord: Looking for reaction with user_id=#{user_id}, message_id=#{message_id}, emoji_name=#{emoji_name}, emoji_id=#{inspect(emoji_id)}"
@@ -1142,63 +1142,51 @@ defmodule AshDiscord.Consumer do
                 shared: %{private: %{ash_discord?: true}}
               })
 
-            case Ash.read(query) do
-              {:ok, []} ->
-                Logger.info("AshDiscord: No matching reaction found to remove")
+            case Ash.bulk_destroy(
+                   query,
+                   action: :destroy,
+                   context: %{
+                     private: %{ash_discord?: true},
+                     shared: %{private: %{ash_discord?: true}}
+                   }
+                 ) do
+              :ok ->
+                Logger.info("AshDiscord: Successfully removed reaction")
                 :ok
 
-              {:ok, [reaction]} ->
-                Logger.info("AshDiscord: Found reaction to remove: #{reaction.id}")
-
-                case Ash.destroy(reaction,
-                       action: :destroy,
-                       context: %{
-                         private: %{ash_discord?: true},
-                         shared: %{private: %{ash_discord?: true}}
-                       }
-                     ) do
-                  :ok ->
-                    Logger.info("AshDiscord: Successfully removed reaction")
-                    :ok
-
-                  {:error, error} ->
-                    Logger.error("AshDiscord: Failed to remove reaction: #{inspect(error)}")
-                    {:error, error}
-                end
-
-              {:ok, multiple_reactions} ->
-                Logger.warning(
-                  "AshDiscord: Found multiple matching reactions (#{length(multiple_reactions)}), removing all"
-                )
-
-                results =
-                  Enum.map(multiple_reactions, fn reaction ->
-                    Ash.destroy(reaction,
-                      action: :destroy,
-                      context: %{
-                        private: %{ash_discord?: true},
-                        shared: %{private: %{ash_discord?: true}}
-                      }
-                    )
-                  end)
-
-                # Check if any destroy failed
-                case Enum.find(results, fn
-                       :ok -> false
-                       {:error, _} -> true
-                     end) do
-                  nil -> :ok
-                  {:error, error} -> {:error, error}
-                end
-
               {:error, error} ->
-                Logger.error("AshDiscord: Failed to query reactions: #{inspect(error)}")
+                Logger.error("AshDiscord: Failed to remove reaction: #{inspect(error)}")
                 {:error, error}
             end
 
-          :error ->
-            Logger.info("AshDiscord: No message reaction resource configured")
-            :ok
+          {:ok, multiple_reactions} ->
+            Logger.warning(
+              "AshDiscord: Found multiple matching reactions (#{length(multiple_reactions)}), removing all"
+            )
+
+            results =
+              Enum.map(multiple_reactions, fn reaction ->
+                Ash.destroy(reaction,
+                  action: :destroy,
+                  context: %{
+                    private: %{ash_discord?: true},
+                    shared: %{private: %{ash_discord?: true}}
+                  }
+                )
+              end)
+
+            # Check if any destroy failed
+            case Enum.find(results, fn
+                   :ok -> false
+                   {:error, _} -> true
+                 end) do
+              nil -> :ok
+              {:error, error} -> {:error, error}
+            end
+
+          {:error, error} ->
+            Logger.error("AshDiscord: Failed to query reactions: #{inspect(error)}")
+            {:error, error}
         end
       end
 

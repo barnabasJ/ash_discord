@@ -116,9 +116,23 @@ defmodule AshDiscord.Context do
       user.id
     else
       case payload do
-        {_guild_id, %Nostrum.Struct.Guild.Member{user_id: user_id}} -> user_id
-        {_guild_id, _old, %Nostrum.Struct.Guild.Member{user_id: user_id}} -> user_id
-        _ -> nil
+        # {guild_id, member} or {guild_id, old_member, new_member}
+        {_guild_id, %Nostrum.Struct.Guild.Member{user_id: user_id}} ->
+          user_id
+
+        {_guild_id, _old, %Nostrum.Struct.Guild.Member{user_id: user_id}} ->
+          user_id
+
+        # {guild_id, presence_old, presence_new} - extract from new presence
+        {_guild_id, _old_presence, new_presence} when is_map(new_presence) ->
+          extract_user_id(new_presence, nil)
+
+        # {old, new} - extract from new
+        {_old, new} when is_map(new) ->
+          extract_user_id(new, nil)
+
+        _ ->
+          nil
       end
     end
   end
@@ -128,12 +142,19 @@ defmodule AshDiscord.Context do
       user != nil ->
         user.id
 
+      # Direct user_id field (reactions, typing, voice, etc.)
       Map.has_key?(payload, :user_id) ->
         payload.user_id
 
+      # Member with user_id
       Map.has_key?(payload, :member) && is_map(payload.member) &&
           Map.has_key?(payload.member, :user_id) ->
         payload.member.user_id
+
+      # Presence update - user is nested
+      Map.has_key?(payload, :user) && is_map(payload.user) &&
+          Map.has_key?(payload.user, :id) ->
+        payload.user.id
 
       true ->
         nil

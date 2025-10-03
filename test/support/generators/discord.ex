@@ -977,6 +977,199 @@ defmodule AshDiscord.Test.Generators.Discord do
     struct(Nostrum.Struct.Guild.UnavailableGuild, merge_attrs(defaults, attrs))
   end
 
+  @doc """
+  Generates a Discord thread channel struct.
+
+  ## Options
+
+  - `:id` - Thread ID (defaults to generated snowflake)
+  - `:type` - Channel type (defaults to 11 for public thread)
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+  - `:parent_id` - Parent channel ID (defaults to generated snowflake)
+  - `:name` - Thread name (defaults to generated name)
+  - `:owner_id` - Thread creator user ID (defaults to generated snowflake)
+  - `:message_count` - Approximate message count (defaults to random 0-100)
+  - `:member_count` - Approximate member count (defaults to random 1-50)
+
+  ## Examples
+
+      iex> thread = thread(%{name: "Discussion Thread"})
+      iex> thread.name
+      "Discussion Thread"
+      iex> thread.type
+      11
+  """
+  def thread(attrs \\ %{}) do
+    defaults = %{
+      id: generate_snowflake(),
+      type: 11,
+      guild_id: generate_snowflake(),
+      parent_id: generate_snowflake(),
+      name: "#{Faker.Lorem.word()} Thread",
+      owner_id: generate_snowflake(),
+      message_count: Faker.random_between(0, 100),
+      member_count: Faker.random_between(1, 50),
+      thread_metadata: %{
+        archived: false,
+        auto_archive_duration: 1440,
+        archive_timestamp: Faker.DateTime.backward(1) |> DateTime.to_iso8601(),
+        locked: false
+      }
+    }
+
+    struct(Nostrum.Struct.Channel, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
+  Generates a Discord MessageReactionAdd event struct.
+
+  ## Options
+
+  - `:user_id` - User ID (defaults to generated snowflake)
+  - `:channel_id` - Channel ID (defaults to generated snowflake)
+  - `:message_id` - Message ID (defaults to generated snowflake)
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+  - `:emoji` - Emoji map (defaults to unicode emoji)
+
+  ## Examples
+
+      iex> event = message_reaction_add_event(%{user_id: 123})
+      iex> event.user_id
+      123
+  """
+  def message_reaction_add_event(attrs \\ %{}) do
+    defaults = %{
+      user_id: generate_snowflake(),
+      channel_id: generate_snowflake(),
+      message_id: generate_snowflake(),
+      guild_id: generate_snowflake(),
+      emoji: %{
+        id: nil,
+        name: Faker.Util.pick(["👍", "❤️", "😂", "🔥"]),
+        animated: false
+      },
+      member: nil
+    }
+
+    struct(Nostrum.Struct.Event.MessageReactionAdd, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
+  Generates a Discord MessageReactionRemove event struct.
+
+  ## Options
+
+  - `:user_id` - User ID (defaults to generated snowflake)
+  - `:channel_id` - Channel ID (defaults to generated snowflake)
+  - `:message_id` - Message ID (defaults to generated snowflake)
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+  - `:emoji` - Emoji map (defaults to unicode emoji)
+
+  ## Examples
+
+      iex> event = message_reaction_remove_event(%{user_id: 123})
+      iex> event.user_id
+      123
+  """
+  def message_reaction_remove_event(attrs \\ %{}) do
+    defaults = %{
+      user_id: generate_snowflake(),
+      channel_id: generate_snowflake(),
+      message_id: generate_snowflake(),
+      guild_id: generate_snowflake(),
+      emoji: %{
+        id: nil,
+        name: Faker.Util.pick(["👍", "❤️", "😂", "🔥"]),
+        animated: false
+      }
+    }
+
+    struct(Nostrum.Struct.Event.MessageReactionRemove, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
+  Generates a Discord MessageReactionRemoveAll event struct.
+
+  ## Options
+
+  - `:channel_id` - Channel ID (defaults to generated snowflake)
+  - `:message_id` - Message ID (defaults to generated snowflake)
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+
+  ## Examples
+
+      iex> event = message_reaction_remove_all_event(%{message_id: 123})
+      iex> event.message_id
+      123
+  """
+  def message_reaction_remove_all_event(attrs \\ %{}) do
+    defaults = %{
+      channel_id: generate_snowflake(),
+      message_id: generate_snowflake(),
+      guild_id: generate_snowflake()
+    }
+
+    struct(Nostrum.Struct.Event.MessageReactionRemoveAll, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
+  Generates a Discord Ready event struct.
+
+  ## Options
+
+  - `:user` - Bot user struct (defaults to generated user)
+  - `:guilds` - List of unavailable guilds (defaults to empty list)
+  - `:session_id` - Session ID (defaults to generated UUID)
+  - `:application` - Application data (defaults to basic map)
+
+  ## Examples
+
+      iex> event = ready_event(%{session_id: "abc123"})
+      iex> event.session_id
+      "abc123"
+  """
+  def ready_event(attrs \\ %{}) do
+    defaults = %{
+      user: user(%{bot: true}),
+      guilds: [],
+      session_id: Faker.UUID.v4(),
+      application: %{
+        id: generate_snowflake(),
+        flags: 0
+      },
+      shard: nil
+    }
+
+    struct(Nostrum.Struct.Event.Ready, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
+  Generates a Discord ThreadMember struct.
+
+  ## Options
+
+  - `:id` - Thread ID (defaults to generated snowflake)
+  - `:user_id` - User ID (defaults to generated snowflake)
+  - `:join_timestamp` - Join timestamp (defaults to recent datetime)
+  - `:flags` - Thread member flags (defaults to 0)
+
+  ## Examples
+
+      iex> thread_member = thread_member(%{user_id: 123})
+      iex> thread_member.user_id
+      123
+  """
+  def thread_member(attrs \\ %{}) do
+    defaults = %{
+      id: generate_snowflake(),
+      user_id: generate_snowflake(),
+      join_timestamp: Faker.DateTime.backward(7) |> DateTime.to_iso8601(),
+      flags: 0
+    }
+
+    struct(Nostrum.Struct.ThreadMember, merge_attrs(defaults, attrs))
+  end
+
   # Private helper functions
 
   defp merge_attrs(defaults, overrides) when is_map(overrides) do

@@ -98,6 +98,11 @@ defmodule TestApp.Discord.MessageReaction do
     end
   end
 
+  code_interface do
+    define(:read!, action: :read)
+    define(:by_id, action: :read, get_by: [:id])
+  end
+
   actions do
     defaults([:read, :destroy])
 

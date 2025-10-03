@@ -1,4 +1,7 @@
 defmodule AshDiscord.Consumer.Handler.Guild do
+  require Logger
+  require Ash.Query
+
   @spec create(
           consumer :: module(),
           new_guild :: Nostrum.Struct.Guild.t(),

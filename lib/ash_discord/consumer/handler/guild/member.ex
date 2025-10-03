@@ -1,5 +1,6 @@
 defmodule AshDiscord.Consumer.Handler.Guild.Member do
   require Logger
+  require Ash.Query
 
   @spec add(
           consumer :: module(),
@@ -101,7 +102,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
 
         query =
           resource
-          |> Ash.Query.filter(user_discord_id == ^user_discord_id and guild_id == ^guild_id)
+          |> Ash.Query.filter(user_discord_id: user_discord_id, guild_id: guild_id)
 
         case Ash.bulk_destroy!(query, :destroy, %{},
                context: %{

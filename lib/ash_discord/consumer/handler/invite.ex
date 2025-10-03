@@ -1,5 +1,6 @@
 defmodule AshDiscord.Consumer.Handler.Invite do
   require Logger
+  require Ash.Query
 
   @spec create(
           consumer :: module(),

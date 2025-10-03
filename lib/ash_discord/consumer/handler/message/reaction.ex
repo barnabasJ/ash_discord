@@ -1,5 +1,6 @@
 defmodule AshDiscord.Consumer.Handler.Message.Reaction do
   require Logger
+  require Ash.Query
 
   @spec add(
           consumer :: module(),

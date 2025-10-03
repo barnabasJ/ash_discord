@@ -1,5 +1,6 @@
 defmodule AshDiscord.Consumer.Handler.Message do
   require Logger
+  require Ash.Query
 
   @spec create(
           consumer :: module(),
@@ -130,15 +131,11 @@ defmodule AshDiscord.Consumer.Handler.Message do
         if data.ids == [] do
           :ok
         else
-          require Ash.Query
-
           # Delete all messages by discord_id
           # We need to build a filter that checks if discord_id is in the list
-          filter = [or: Enum.map(data.ids, fn id -> [discord_id: id] end)]
-
           query =
             message_resource
-            |> Ash.Query.filter(filter)
+            |> Ash.Query.filter(discord_id in ^data.ids)
 
           case Ash.bulk_destroy(query, :destroy, %{},
                  context: %{

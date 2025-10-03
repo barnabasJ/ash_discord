@@ -4,7 +4,7 @@ defmodule AshDiscord.Consumer.Handler.Message do
 
   @spec create(
           consumer :: module(),
-          message :: Nostrum.Struct.Message.t(),
+          message :: AshDiscord.Consumer.Payload.message_create(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
@@ -49,9 +49,7 @@ defmodule AshDiscord.Consumer.Handler.Message do
 
   @spec update(
           consumer :: module(),
-          message_data ::
-            {old_message :: Nostrum.Struct.Message.t() | nil,
-             updated_message :: Nostrum.Struct.Message.t()},
+          message_data :: AshDiscord.Consumer.Payload.message_update(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()

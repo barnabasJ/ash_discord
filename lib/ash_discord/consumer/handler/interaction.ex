@@ -3,7 +3,7 @@ defmodule AshDiscord.Consumer.Handler.Interaction do
 
   @spec create(
           consumer :: module(),
-          interaction :: Nostrum.Struct.Interaction.t(),
+          interaction :: AshDiscord.Consumer.Payload.interaction_create(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()

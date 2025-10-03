@@ -3,17 +3,18 @@ defmodule AshDiscord.Consumer.Handler do
   @spec handle_event(consumer :: module(), event_payload_ws :: Nostrum.Consumer.event()) :: any()
   def handle_event(consumer, {event, payload, ws_state}) do
     callback = callback(event)
+    callback_atom = String.to_existing_atom(callback)
 
-    if function_exported?(consumer, String.to_existing_atom(callback), 3) do
-      Logger.info("Handling #{event} with #{consumer}.#{callback}/3")
+    if function_exported?(consumer, callback_atom, 2) do
+      Logger.info("Handling #{event} with #{consumer}.#{callback}/2")
 
-      case apply(consumer, callback, [payload, ws_state]) do
+      case apply(consumer, callback_atom, [payload, ws_state]) do
         {:error, _} = error ->
-          Logger.error("Error handling #{event} in #{consumer}.#{callback}/3: #{inspect(error)}")
+          Logger.error("Error handling #{event} in #{consumer}.#{callback}/2: #{inspect(error)}")
           error
 
         other ->
-          Logger.info("Successfully handled #{event} in #{consumer}.#{callback}/3")
+          Logger.info("Successfully handled #{event} in #{consumer}.#{callback}/2")
           other
       end
     else

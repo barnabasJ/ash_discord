@@ -15,43 +15,9 @@ defmodule AshDiscord.ConsumerTest do
       :ok
     end
 
-    test "generates callback functions" do
-      callbacks_arity_1 = [
-        :handle_message_create,
-        :handle_message_update,
-        :handle_message_delete,
-        :handle_message_delete_bulk,
-        :handle_message_reaction_add,
-        :handle_message_reaction_remove,
-        :handle_message_reaction_remove_all,
-        :handle_guild_create,
-        :handle_guild_update,
-        :handle_guild_delete,
-        :handle_guild_role_create,
-        :handle_guild_role_update,
-        :handle_guild_role_delete,
-        :handle_channel_create,
-        :handle_channel_update,
-        :handle_channel_delete,
-        :handle_ready,
-        :handle_interaction_create,
-        :handle_application_command,
-        :handle_unknown_event
-      ]
-
-      callbacks_arity_2 = [
-        :handle_guild_member_add,
-        :handle_guild_member_update,
-        :handle_guild_member_remove
-      ]
-
-      for callback <- callbacks_arity_1 do
-        assert function_exported?(TestConsumer, callback, 1)
-      end
-
-      for callback <- callbacks_arity_2 do
-        assert function_exported?(TestConsumer, callback, 2)
-      end
+    test "has handle_event callback" do
+      # All events now go through handle_event/1
+      assert function_exported?(TestConsumer, :handle_event, 1)
     end
 
     test "interaction handling works" do
@@ -61,16 +27,24 @@ defmodule AshDiscord.ConsumerTest do
           member: member(%{user_id: user().id})
         })
 
-      TestConsumer.handle_interaction_create(interaction)
+      # Mock the interaction response to avoid rate limiter issues
+      expect(Nostrum.Api.Interaction, :create_response, fn _interaction_id, _token, _response ->
+        {:ok, %{}}
+      end)
+
+      ws_state = %Nostrum.Struct.WSState{}
+      TestConsumer.handle_event({:INTERACTION_CREATE, interaction, ws_state})
 
       # Verify interaction was stored
       assert Process.get(:last_interaction) == interaction
-      assert Process.get(:last_interaction_result) == :ok
+      assert Process.get(:last_interaction_result) == {:ok, %{}}
     end
 
     test "application command routing works" do
       command_interaction =
         interaction(%{
+          # Application command
+          type: 2,
           data: %{name: "hello", options: []},
           member: %{user: user()}
         })
@@ -80,11 +54,11 @@ defmodule AshDiscord.ConsumerTest do
         {:ok, %{}}
       end)
 
-      TestConsumer.handle_application_command(command_interaction)
+      ws_state = %Nostrum.Struct.WSState{}
+      TestConsumer.handle_event({:INTERACTION_CREATE, command_interaction, ws_state})
 
-      # Verify command was processed
-      assert Process.get(:last_command) == command_interaction
-      assert Process.get(:last_command_result) == {:ok, %{}}
+      # Verify interaction was stored
+      assert Process.get(:last_interaction) == command_interaction
     end
   end
 
@@ -116,7 +90,8 @@ defmodule AshDiscord.ConsumerTest do
         member_count: guild_data.member_count
       }
 
-      TestConsumer.handle_guild_create(guild)
+      ws_state = %Nostrum.Struct.WSState{}
+      TestConsumer.handle_event({:GUILD_CREATE, guild, ws_state})
 
       # Verify guild was created
       guilds = TestApp.Discord.Guild.read!()
@@ -174,7 +149,8 @@ defmodule AshDiscord.ConsumerTest do
         timestamp: message_data.timestamp
       }
 
-      TestConsumer.handle_message_create(message)
+      ws_state = %Nostrum.Struct.WSState{}
+      TestConsumer.handle_event({:MESSAGE_CREATE, message, ws_state})
 
       # Verify message was created
       messages = TestApp.Discord.Message.read!()

@@ -208,58 +208,10 @@ defmodule AshDiscord.IntegrationTest do
 
   describe "consumer macro behavior" do
     test "consumer has all required callback functions" do
-      # Test that all callback functions were generated
-      callbacks = [
-        :handle_message_create,
-        :handle_message_update,
-        :handle_message_delete,
-        :handle_message_delete_bulk,
-        :handle_message_reaction_add,
-        :handle_message_reaction_remove,
-        :handle_message_reaction_remove_all,
-        :handle_guild_create,
-        :handle_guild_update,
-        :handle_guild_delete,
-        :handle_ready,
-        :handle_application_command,
-        :handle_guild_role_create,
-        :handle_guild_role_update,
-        :handle_guild_role_delete,
-        :handle_guild_member_add,
-        :handle_guild_member_update,
-        :handle_guild_member_remove,
-        :handle_channel_create,
-        :handle_channel_update,
-        :handle_channel_delete,
-        :handle_voice_state_update,
-        :handle_typing_start,
-        :handle_invite_create,
-        :handle_invite_delete,
-        :handle_interaction_create,
-        :handle_unknown_event
-      ]
-
-      # Test most callbacks with arity 1
-      arity_1_callbacks =
-        callbacks --
-          [:handle_guild_member_add, :handle_guild_member_update, :handle_guild_member_remove]
-
-      Enum.each(arity_1_callbacks, fn callback ->
-        assert function_exported?(IntegrationTestConsumer, callback, 1),
-               "Callback #{callback}/1 not exported"
-      end)
-
-      # Test guild member callbacks with arity 2
-      guild_member_callbacks = [
-        :handle_guild_member_add,
-        :handle_guild_member_update,
-        :handle_guild_member_remove
-      ]
-
-      Enum.each(guild_member_callbacks, fn callback ->
-        assert function_exported?(IntegrationTestConsumer, callback, 2),
-               "Callback #{callback}/2 not exported"
-      end)
+      # Test that handle_event callback was generated
+      # All events now go through handle_event/1
+      assert function_exported?(IntegrationTestConsumer, :handle_event, 1),
+             "Callback handle_event/1 not exported"
     end
 
     test "consumer has correct domains configured" do

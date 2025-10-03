@@ -312,30 +312,24 @@ defmodule AshDiscord.Changes.FromDiscord do
     |> maybe_set_attribute(:pending, Map.get(discord_data, :pending))
   end
 
-  defp transform_role(changeset, discord_data) do
+  defp transform_role(changeset, %Nostrum.Struct.Guild.Role{} = discord_data) do
     guild_discord_id = Ash.Changeset.get_argument_or_attribute(changeset, :guild_discord_id)
 
     changeset
-    |> Ash.Changeset.force_change_attribute(:discord_id, Map.get(discord_data, :id))
-    |> Ash.Changeset.force_change_attribute(:name, Map.get(discord_data, :name))
-    |> Ash.Changeset.force_change_attribute(:color, Map.get(discord_data, :color))
-    |> Ash.Changeset.force_change_attribute(
+    |> Ash.Changeset.force_change_attribute(:discord_id, discord_data.id)
+    |> maybe_set_attribute(:name, discord_data.name)
+    |> maybe_set_attribute(:color, discord_data.color)
+    |> maybe_set_attribute(
       :permissions,
-      to_string(Map.get(discord_data, :permissions))
+      to_string(discord_data.permissions)
     )
-    |> maybe_set_role_attributes(discord_data)
+    |> maybe_set_attribute(:hoist, discord_data.hoist)
+    |> maybe_set_attribute(:icon, discord_data.icon)
+    |> maybe_set_attribute(:unicode_emoji, discord_data.unicode_emoji)
+    |> maybe_set_attribute(:position, discord_data.position)
+    |> maybe_set_attribute(:managed, discord_data.managed)
+    |> maybe_set_attribute(:mentionable, discord_data.mentionable)
     |> Transformations.manage_guild_relationship(guild_discord_id)
-  end
-
-  defp maybe_set_role_attributes(changeset, discord_data) do
-    changeset
-    |> maybe_set_attribute(:hoist, Map.get(discord_data, :hoist))
-    |> maybe_set_attribute(:icon, Map.get(discord_data, :icon))
-    |> maybe_set_attribute(:unicode_emoji, Map.get(discord_data, :unicode_emoji))
-    |> maybe_set_attribute(:position, Map.get(discord_data, :position))
-    |> maybe_set_attribute(:managed, Map.get(discord_data, :managed))
-    |> maybe_set_attribute(:mentionable, Map.get(discord_data, :mentionable))
-    |> maybe_set_attribute(:tags, Map.get(discord_data, :tags))
   end
 
   defp maybe_set_attribute(changeset, _field, nil), do: changeset

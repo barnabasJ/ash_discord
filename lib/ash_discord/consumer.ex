@@ -509,36 +509,45 @@ defmodule AshDiscord.Consumer do
   @callback create_user_from_discord(discord_user :: map()) ::
               any() | {:ok, any()} | {:error, any()} | nil
 
+  @callback handle_presence_update(data :: map()) :: :ok | {:error, any()}
+  @callback handle_user_update(user :: map()) :: :ok | {:error, any()}
+  @callback handle_guild_unavailable(user :: map()) :: :ok | {:error, any()}
+  @callback handle_guild_available(user :: map()) :: :ok | {:error, any()}
+
   # Make all callbacks optional with default implementations
   @optional_callbacks [
+    create_user_from_discord: 1,
+    handle_application_command: 1,
+    handle_channel_create: 1,
+    handle_channel_delete: 1,
+    handle_channel_update: 1,
+    handle_guild_create: 1,
+    handle_guild_delete: 1,
+    handle_guild_member_add: 2,
+    handle_guild_member_remove: 2,
+    handle_guild_member_update: 2,
+    handle_guild_role_create: 1,
+    handle_guild_role_delete: 1,
+    handle_guild_role_update: 1,
+    handle_guild_update: 1,
+    handle_guild_unavailable: 1,
+    handle_guild_available: 1,
+    handle_interaction_create: 1,
+    handle_invite_create: 1,
+    handle_invite_delete: 1,
     handle_message_create: 1,
-    handle_message_update: 1,
     handle_message_delete: 1,
     handle_message_delete_bulk: 1,
     handle_message_reaction_add: 1,
     handle_message_reaction_remove: 1,
     handle_message_reaction_remove_all: 1,
-    handle_guild_create: 1,
-    handle_guild_update: 1,
-    handle_guild_delete: 1,
+    handle_message_update: 1,
+    handle_presence_update: 1,
     handle_ready: 1,
-    handle_interaction_create: 1,
-    handle_application_command: 1,
-    handle_guild_role_create: 1,
-    handle_guild_role_update: 1,
-    handle_guild_role_delete: 1,
-    handle_guild_member_add: 2,
-    handle_guild_member_update: 2,
-    handle_guild_member_remove: 2,
-    handle_channel_create: 1,
-    handle_channel_update: 1,
-    handle_channel_delete: 1,
-    handle_voice_state_update: 1,
     handle_typing_start: 1,
-    handle_invite_create: 1,
-    handle_invite_delete: 1,
     handle_unknown_event: 1,
-    create_user_from_discord: 1
+    handle_user_update: 1,
+    handle_voice_state_update: 1
   ]
 
   def collect_commands(domains) do
@@ -608,49 +617,8 @@ defmodule AshDiscord.Consumer do
         end
       end
 
-      # Main event dispatcher - routes Discord events to appropriate callbacks
-      def handle_event({:MESSAGE_CREATE, message, _ws_state}) do
-        handle_message_create(message)
-      end
-
-      def handle_event({:MESSAGE_UPDATE, {_old_message, message}, _ws_state}) do
-        handle_message_update(message)
-      end
-
-      def handle_event({:MESSAGE_DELETE, data, _ws_state}) do
-        handle_message_delete(data)
-      end
-
-      def handle_event({:MESSAGE_DELETE_BULK, data, _ws_state}) do
-        handle_message_delete_bulk(data)
-      end
-
-      def handle_event({:MESSAGE_REACTION_ADD, data, _ws_state}) do
-        handle_message_reaction_add(data)
-      end
-
-      def handle_event({:MESSAGE_REACTION_REMOVE, data, _ws_state}) do
-        handle_message_reaction_remove(data)
-      end
-
-      def handle_event({:MESSAGE_REACTION_REMOVE_ALL, data, _ws_state}) do
-        handle_message_reaction_remove_all(data)
-      end
-
-      def handle_event({:GUILD_CREATE, guild, _ws_state}) do
-        handle_guild_create(guild)
-      end
-
-      def handle_event({:GUILD_UPDATE, guild, _ws_state}) do
-        handle_guild_update(guild)
-      end
-
-      def handle_event({:GUILD_DELETE, data, _ws_state}) do
-        handle_guild_delete(data)
-      end
-
-      def handle_event({:READY, data, _ws_state}) do
-        handle_ready(data)
+      def handle_event(event) do
+        AshDiscord.Consumer.Handler.handle_event(__MODULE__, event)
       end
 
       def handle_event({:INTERACTION_CREATE, interaction, _ws_state}) do
@@ -664,62 +632,6 @@ defmodule AshDiscord.Consumer do
           _ ->
             :ok
         end
-      end
-
-      def handle_event({:GUILD_ROLE_CREATE, role, _ws_state}) do
-        handle_guild_role_create(role)
-      end
-
-      def handle_event({:GUILD_ROLE_UPDATE, role, _ws_state}) do
-        handle_guild_role_update(role)
-      end
-
-      def handle_event({:GUILD_ROLE_DELETE, data, _ws_state}) do
-        handle_guild_role_delete(data)
-      end
-
-      def handle_event({:GUILD_MEMBER_ADD, {guild_id, member}, _ws_state}) do
-        handle_guild_member_add(guild_id, member)
-      end
-
-      def handle_event({:GUILD_MEMBER_UPDATE, {guild_id, member}, _ws_state}) do
-        handle_guild_member_update(guild_id, member)
-      end
-
-      def handle_event({:GUILD_MEMBER_REMOVE, {guild_id, member}, _ws_state}) do
-        handle_guild_member_remove(guild_id, member)
-      end
-
-      def handle_event({:CHANNEL_CREATE, channel, _ws_state}) do
-        handle_channel_create(channel)
-      end
-
-      def handle_event({:CHANNEL_UPDATE, channel, _ws_state}) do
-        handle_channel_update(channel)
-      end
-
-      def handle_event({:CHANNEL_DELETE, channel, _ws_state}) do
-        handle_channel_delete(channel)
-      end
-
-      def handle_event({:VOICE_STATE_UPDATE, voice_state, _ws_state}) do
-        handle_voice_state_update(voice_state)
-      end
-
-      def handle_event({:TYPING_START, typing_data, _ws_state}) do
-        handle_typing_start(typing_data)
-      end
-
-      def handle_event({:INVITE_CREATE, invite, _ws_state}) do
-        handle_invite_create(invite)
-      end
-
-      def handle_event({:INVITE_DELETE, invite_data, _ws_state}) do
-        handle_invite_delete(invite_data)
-      end
-
-      def handle_event(event) do
-        handle_unknown_event(event)
       end
 
       # Default callback implementations with automatic resource handling
@@ -857,65 +769,6 @@ defmodule AshDiscord.Consumer do
 
           :error ->
             # No message resource configured
-            :ok
-        end
-      end
-
-      def handle_guild_create(guild) do
-        case AshDiscord.Consumer.Info.ash_discord_consumer_domains(__MODULE__) do
-          {:ok, domains} ->
-            commands = AshDiscord.Consumer.collect_commands(domains)
-
-            guild_commands =
-              commands
-              |> Enum.filter(&(&1.scope == :guild))
-              |> Enum.map(&AshDiscord.Consumer.to_discord_command/1)
-
-            case Nostrum.Api.ApplicationCommand.bulk_overwrite_guild_commands(
-                   guild.id,
-                   guild_commands
-                 ) do
-              {:ok, _} ->
-                Logger.info(
-                  "Registered #{length(guild_commands)} guild command(s) for #{guild.name}"
-                )
-
-              {:error, error} ->
-                Logger.error(
-                  "Failed to register guild commands for #{guild.name}: #{inspect(error)}"
-                )
-            end
-
-          _ ->
-            :ok
-        end
-
-        case AshDiscord.Consumer.Info.ash_discord_consumer_guild_resource(__MODULE__) do
-          {:ok, guild_resource} ->
-            case guild_resource
-                 |> Ash.Changeset.for_create(:from_discord, %{
-                   discord_id: guild.id,
-                   discord_struct: guild
-                 })
-                 |> Ash.Changeset.set_context(%{
-                   private: %{ash_discord?: true},
-                   shared: %{private: %{ash_discord?: true}}
-                 })
-                 |> Ash.create() do
-              {:ok, _guild_record} ->
-                :ok
-
-              {:error, error} ->
-                Logger.error(
-                  "Failed to save guild #{guild.name} (#{guild.id}): #{inspect(error)}"
-                )
-
-                # Don't crash the consumer
-                :ok
-            end
-
-          :error ->
-            # No guild resource configured
             :ok
         end
       end
@@ -1287,7 +1140,9 @@ defmodule AshDiscord.Consumer do
         end
       end
 
-      def handle_guild_role_update(role) do
+      def handle_guild_role_update({guild_id, _old_role, %Nostrum.Struct.Guild.Role{} = role}) do
+        Logger.debug("AshDiscord: Handling guild role update for role #{role.id}")
+
         with {:ok, resource} <-
                AshDiscord.Consumer.Info.ash_discord_consumer_role_resource(__MODULE__),
              {:ok, _role} <-
@@ -1296,7 +1151,7 @@ defmodule AshDiscord.Consumer do
                  :from_discord,
                  %{
                    discord_id: role.id,
-                   guild_discord_id: role.guild_id,
+                   guild_discord_id: guild_id,
                    discord_struct: role
                  },
                  context: %{
@@ -1722,7 +1577,6 @@ defmodule AshDiscord.Consumer do
                      handle_message_reaction_add: 1,
                      handle_message_reaction_remove: 1,
                      handle_message_reaction_remove_all: 1,
-                     handle_guild_create: 1,
                      handle_guild_update: 1,
                      handle_guild_delete: 1,
                      handle_guild_role_create: 1,

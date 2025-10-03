@@ -1,13 +1,19 @@
 defmodule AshDiscord.Consumer.Handler.User do
   @spec update(
           consumer :: module(),
-          new_presence ::
-            {guild_id :: integer(),
-             {old_presence :: Nostrum.Struct.Presence.t(),
-              new_presence :: Nostrum.Struct.Presence.t()}},
+          {old_user :: Nostrum.Struct.User.t() | nil, new_user :: Nostrum.Struct.User.t()},
           ws_state :: Nostrum.Struct.WSState.t()
         ) :: any()
-  def update(_consumer, _user, _ws_state) do
+  def update(_consumer, _user_data, _ws_state) do
+    :ok
+  end
+
+  @spec settings(
+          consumer :: module(),
+          data :: no_return(),
+          ws_state :: Nostrum.Struct.WSState.t()
+        ) :: any()
+  def settings(_consumer, _data, _ws_state) do
     :ok
   end
 end

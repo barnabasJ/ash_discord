@@ -68,7 +68,7 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
         TestApp.Discord.Channel
         |> Ash.Changeset.for_create(:from_discord, %{
           discord_id: channel_data.id,
-          discord_struct: channel_data
+          data: channel_data
         })
         |> Ash.create()
 

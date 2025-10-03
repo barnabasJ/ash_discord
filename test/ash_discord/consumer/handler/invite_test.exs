@@ -62,7 +62,7 @@ defmodule AshDiscord.Consumer.Handler.InviteTest do
       {:ok, _created} =
         TestApp.Discord.Invite
         |> Ash.Changeset.for_create(:from_discord, %{
-          discord_struct: invite_data
+          data: invite_data
         })
         |> Ash.create()
 

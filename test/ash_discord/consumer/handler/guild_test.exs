@@ -91,7 +91,7 @@ defmodule AshDiscord.Consumer.Handler.GuildTest do
         TestApp.Discord.Guild
         |> Ash.Changeset.for_create(:from_discord, %{
           discord_id: guild_data.id,
-          discord_struct: guild_data
+          data: guild_data
         })
         |> Ash.create()
 
@@ -118,7 +118,7 @@ defmodule AshDiscord.Consumer.Handler.GuildTest do
         TestApp.Discord.Guild
         |> Ash.Changeset.for_create(:from_discord, %{
           discord_id: guild_data.id,
-          discord_struct: guild_data
+          data: guild_data
         })
         |> Ash.create()
 

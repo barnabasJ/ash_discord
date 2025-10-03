@@ -39,7 +39,7 @@ defmodule AshDiscord.Consumer.Handler.Message.ReactionTest do
       {:ok, _created} =
         TestApp.Discord.MessageReaction
         |> Ash.Changeset.for_create(:from_discord, %{
-          discord_struct: reaction_event,
+          data: reaction_event,
           user_id: reaction_event.user_id,
           message_id: reaction_event.message_id,
           channel_id: reaction_event.channel_id,
@@ -95,7 +95,7 @@ defmodule AshDiscord.Consumer.Handler.Message.ReactionTest do
       {:ok, _} =
         TestApp.Discord.MessageReaction
         |> Ash.Changeset.for_create(:from_discord, %{
-          discord_struct: reaction_event1,
+          data: reaction_event1,
           user_id: reaction_event1.user_id,
           message_id: reaction_event1.message_id,
           channel_id: reaction_event1.channel_id,
@@ -106,7 +106,7 @@ defmodule AshDiscord.Consumer.Handler.Message.ReactionTest do
       {:ok, _} =
         TestApp.Discord.MessageReaction
         |> Ash.Changeset.for_create(:from_discord, %{
-          discord_struct: reaction_event2,
+          data: reaction_event2,
           user_id: reaction_event2.user_id,
           message_id: reaction_event2.message_id,
           channel_id: reaction_event2.channel_id,

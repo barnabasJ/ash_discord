@@ -132,7 +132,7 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
         TestApp.Discord.Message
         |> Ash.Changeset.for_create(:from_discord, %{
           discord_id: message_data.id,
-          discord_struct: message_data
+          data: message_data
         })
         |> Ash.create()
 
@@ -181,7 +181,7 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
         TestApp.Discord.Message
         |> Ash.Changeset.for_create(:from_discord, %{
           discord_id: message1_data.id,
-          discord_struct: message1_data
+          data: message1_data
         })
         |> Ash.create()
 
@@ -189,7 +189,7 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
         TestApp.Discord.Message
         |> Ash.Changeset.for_create(:from_discord, %{
           discord_id: message2_data.id,
-          discord_struct: message2_data
+          data: message2_data
         })
         |> Ash.create()
 

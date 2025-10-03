@@ -20,4 +20,18 @@ defmodule AshDiscord.Consumer.Payloads.PresenceUpdate do
       allow_nil?: false,
       description: "The updated presence state"
   end
+
+  @doc """
+  Create a PresenceUpdate TypedStruct from Nostrum presence update event data.
+
+  Accepts a tuple `{guild_id, old_presence, new_presence}` where presences are maps.
+  """
+  def new({guild_id, old_presence, new_presence})
+      when is_integer(guild_id) and is_map(new_presence) do
+    super(%{
+      guild_id: guild_id,
+      old_presence: old_presence,
+      new_presence: new_presence
+    })
+  end
 end

@@ -43,7 +43,7 @@ defmodule AshDiscord.IntegrationTest do
     @impl AshDiscord.Consumer
     def handle_message_create(message, _ws_state, _context) do
       # Create message using from_discord action
-      case TestApp.Discord.Message.from_discord(%{discord_struct: message}) do
+      case TestApp.Discord.Message.from_discord(%{data: message}) do
         {:ok, created_message} ->
           send(self(), {:message_created, created_message})
           :ok

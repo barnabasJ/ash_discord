@@ -3,12 +3,13 @@ defmodule AshDiscord.Consumer.Handler.Message do
   require Ash.Query
 
   @spec create(
-          consumer :: module(),
           message :: AshDiscord.Consumer.Payload.message_create(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def create(consumer, message, _ws_state, _context) do
+  def create(message, _ws_state, context) do
+    consumer = context.consumer
+
     with {:ok, message_resource} <-
            AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(consumer),
          {:ok, store_bot_messages} <-
@@ -48,12 +49,13 @@ defmodule AshDiscord.Consumer.Handler.Message do
   end
 
   @spec update(
-          consumer :: module(),
           message_data :: AshDiscord.Consumer.Payload.message_update(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def update(consumer, {_old_message, message}, _ws_state, _context) do
+  def update({_old_message, message}, _ws_state, context) do
+    consumer = context.consumer
+
     case AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(consumer) do
       {:ok, message_resource} ->
         # Update the existing message - provide channel and guild IDs from the message struct
@@ -85,12 +87,13 @@ defmodule AshDiscord.Consumer.Handler.Message do
   end
 
   @spec delete(
-          consumer :: module(),
           data :: Nostrum.Struct.Event.MessageDelete.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def delete(consumer, data, _ws_state, _context) do
+  def delete(data, _ws_state, context) do
+    consumer = context.consumer
+
     case AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(consumer) do
       {:ok, message_resource} ->
         require Ash.Query
@@ -121,12 +124,13 @@ defmodule AshDiscord.Consumer.Handler.Message do
   end
 
   @spec bulk(
-          consumer :: module(),
           data :: Nostrum.Struct.Event.MessageDeleteBulk.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def bulk(consumer, data, _ws_state, _context) do
+  def bulk(data, _ws_state, context) do
+    consumer = context.consumer
+
     case AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(consumer) do
       {:ok, message_resource} ->
         # Handle empty IDs list gracefully
@@ -161,12 +165,11 @@ defmodule AshDiscord.Consumer.Handler.Message do
   end
 
   @spec ack(
-          consumer :: module(),
           data :: map(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def ack(_consumer, _data, _ws_state, _context) do
+  def ack(_data, _ws_state, _context) do
     :ok
   end
 end

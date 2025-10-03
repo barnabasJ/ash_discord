@@ -20,6 +20,7 @@ defmodule TestApp.TestConsumer do
   The signature is: handle_interaction_create(payload, ws_state) - 2 args
   But we call the handler with (consumer, payload, ws_state) - 3 args
   """
+  @impl AshDiscord.Consumer
   def handle_interaction_create(interaction, ws_state) do
     # Log for testing verification before calling handler
     Process.put(:last_interaction, interaction)

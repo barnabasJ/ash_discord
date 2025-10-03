@@ -88,12 +88,16 @@ defmodule AshDiscord.Consumer do
   ## Parameters
 
   - `message` - The Discord message struct from Nostrum
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_message_create(message :: map()) :: :ok | {:error, any()}
+  @callback handle_message_create(
+              message :: Nostrum.Struct.Message.t(),
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling GUILD_CREATE events from Discord.
@@ -103,12 +107,16 @@ defmodule AshDiscord.Consumer do
   ## Parameters
 
   - `guild` - The Discord guild struct from Nostrum
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_guild_create(guild :: map()) :: :ok | {:error, any()}
+  @callback handle_guild_create(
+              guild :: Nostrum.Struct.Guild.t(),
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling GUILD_UPDATE events from Discord.
@@ -118,12 +126,16 @@ defmodule AshDiscord.Consumer do
   ## Parameters
 
   - `guild` - The updated Discord guild struct from Nostrum
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_guild_update(guild :: map()) :: :ok | {:error, any()}
+  @callback handle_guild_update(
+              {old_guild :: Nostrum.Struct.Guild.t(), new_guild :: Nostrum.Struct.Guild.t()},
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling GUILD_DELETE events from Discord.
@@ -133,12 +145,16 @@ defmodule AshDiscord.Consumer do
   ## Parameters
 
   - `data` - Guild delete data containing guild ID and unavailable flag
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_guild_delete(data :: map()) :: :ok | {:error, any()}
+  @callback handle_guild_delete(
+              {old_guild :: Nostrum.Struct.Guild.t(), unavailable :: boolean},
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling READY events from Discord.
@@ -149,12 +165,16 @@ defmodule AshDiscord.Consumer do
   ## Parameters
 
   - `data` - The ready event data from Discord
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_ready(data :: map()) :: :ok | {:error, any()}
+  @callback handle_ready(
+              data :: Nostrum.Struct.Event.Ready.t(),
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling INTERACTION_CREATE events from Discord.
@@ -165,28 +185,36 @@ defmodule AshDiscord.Consumer do
   ## Parameters
 
   - `interaction` - The Discord interaction struct from Nostrum
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_interaction_create(interaction :: map()) :: :ok | {:error, any()}
+  @callback handle_interaction_create(
+              interaction :: Nostrum.Struct.Interaction.t(),
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling application command interactions specifically.
 
-  Called for slash command interactions after `handle_interaction_create/1`.
+  Called for slash command interactions after `handle_interaction_create/2`.
   The default implementation routes the command to the appropriate Ash action.
 
   ## Parameters
 
   - `interaction` - The Discord application command interaction struct
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_application_command(interaction :: map()) :: :ok | {:error, any()}
+  @callback handle_application_command(
+              interaction :: Nostrum.Struct.Interaction.t(),
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling GUILD_ROLE_CREATE events from Discord.
@@ -195,13 +223,17 @@ defmodule AshDiscord.Consumer do
 
   ## Parameters
 
-  - `role` - The Discord role struct from Nostrum
+  - `data` - Tuple of {guild_id, new_role}
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_guild_role_create(role :: map()) :: :ok | {:error, any()}
+  @callback handle_guild_role_create(
+              {guild_id :: integer, new_role :: Nostrum.Struct.Guild.Role.t()},
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling GUILD_ROLE_UPDATE events from Discord.
@@ -210,13 +242,18 @@ defmodule AshDiscord.Consumer do
 
   ## Parameters
 
-  - `role` - The updated Discord role struct from Nostrum
+  - `data` - Tuple of {guild_id, old_role | nil, new_role}
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_guild_role_update(role :: map()) :: :ok | {:error, any()}
+  @callback handle_guild_role_update(
+              {guild_id :: integer, old_role :: Nostrum.Struct.Guild.Role.t() | nil,
+               new_role :: Nostrum.Struct.Guild.Role.t()},
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling GUILD_ROLE_DELETE events from Discord.
@@ -225,13 +262,17 @@ defmodule AshDiscord.Consumer do
 
   ## Parameters
 
-  - `data` - The role deletion data (contains role_id and guild_id)
+  - `data` - Tuple of {guild_id, old_role}
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_guild_role_delete(data :: map()) :: :ok | {:error, any()}
+  @callback handle_guild_role_delete(
+              {guild_id :: integer, old_role :: Nostrum.Struct.Guild.Role.t()},
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling GUILD_MEMBER_ADD events from Discord.
@@ -240,14 +281,17 @@ defmodule AshDiscord.Consumer do
 
   ## Parameters
 
-  - `member` - The Discord guild member struct from Nostrum
+  - `data` - Tuple of {guild_id, new_member}
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_guild_member_add(guild_id :: integer(), member :: map()) ::
-              :ok | {:error, any()}
+  @callback handle_guild_member_add(
+              {guild_id :: integer, new_member :: Nostrum.Struct.Guild.Member.t()},
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling GUILD_MEMBER_UPDATE events from Discord.
@@ -256,14 +300,18 @@ defmodule AshDiscord.Consumer do
 
   ## Parameters
 
-  - `member` - The updated Discord guild member struct from Nostrum
+  - `data` - Tuple of {guild_id, old_member | nil, new_member}
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_guild_member_update(guild_id :: integer(), member :: map()) ::
-              :ok | {:error, any()}
+  @callback handle_guild_member_update(
+              {guild_id :: integer, old_member :: Nostrum.Struct.Guild.Member.t() | nil,
+               new_member :: Nostrum.Struct.Guild.Member.t()},
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling GUILD_MEMBER_REMOVE events from Discord.
@@ -272,14 +320,17 @@ defmodule AshDiscord.Consumer do
 
   ## Parameters
 
-  - `data` - The member removal data (contains user and guild_id)
+  - `data` - Tuple of {guild_id, old_member}
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_guild_member_remove(guild_id :: integer(), member :: map()) ::
-              :ok | {:error, any()}
+  @callback handle_guild_member_remove(
+              {guild_id :: integer, old_member :: Nostrum.Struct.Guild.Member.t()},
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling CHANNEL_CREATE events from Discord.
@@ -289,12 +340,16 @@ defmodule AshDiscord.Consumer do
   ## Parameters
 
   - `channel` - The Discord channel struct from Nostrum
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_channel_create(channel :: map()) :: :ok | {:error, any()}
+  @callback handle_channel_create(
+              channel :: Nostrum.Struct.Channel.t(),
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling CHANNEL_UPDATE events from Discord.
@@ -303,13 +358,18 @@ defmodule AshDiscord.Consumer do
 
   ## Parameters
 
-  - `channel` - The Discord channel struct from Nostrum
+  - `data` - Tuple of {old_channel | nil, new_channel}
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_channel_update(channel :: map()) :: :ok | {:error, any()}
+  @callback handle_channel_update(
+              {old_channel :: Nostrum.Struct.Channel.t() | nil,
+               new_channel :: Nostrum.Struct.Channel.t()},
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling CHANNEL_DELETE events from Discord.
@@ -319,12 +379,16 @@ defmodule AshDiscord.Consumer do
   ## Parameters
 
   - `channel` - The Discord channel struct from Nostrum
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_channel_delete(channel :: map()) :: :ok | {:error, any()}
+  @callback handle_channel_delete(
+              channel :: Nostrum.Struct.Channel.t(),
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling MESSAGE_UPDATE events from Discord.
@@ -333,13 +397,18 @@ defmodule AshDiscord.Consumer do
 
   ## Parameters
 
-  - `message` - The updated Discord message struct from Nostrum
+  - `data` - Tuple of {old_message | nil, updated_message}
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_message_update(message :: map()) :: :ok | {:error, any()}
+  @callback handle_message_update(
+              {old_message :: Nostrum.Struct.Message.t() | nil,
+               updated_message :: Nostrum.Struct.Message.t()},
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling MESSAGE_DELETE events from Discord.
@@ -349,12 +418,16 @@ defmodule AshDiscord.Consumer do
   ## Parameters
 
   - `data` - The message delete data (contains message_id, channel_id, guild_id)
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_message_delete(data :: map()) :: :ok | {:error, any()}
+  @callback handle_message_delete(
+              data :: Nostrum.Struct.Event.MessageDelete.t(),
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling MESSAGE_DELETE_BULK events from Discord.
@@ -364,12 +437,16 @@ defmodule AshDiscord.Consumer do
   ## Parameters
 
   - `data` - The bulk delete data (contains ids list, channel_id, guild_id)
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_message_delete_bulk(data :: map()) :: :ok | {:error, any()}
+  @callback handle_message_delete_bulk(
+              data :: Nostrum.Struct.Event.MessageDeleteBulk.t(),
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling MESSAGE_REACTION_ADD events from Discord.
@@ -379,12 +456,16 @@ defmodule AshDiscord.Consumer do
   ## Parameters
 
   - `data` - The reaction add data (contains user_id, message_id, channel_id, guild_id, emoji)
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_message_reaction_add(data :: map()) :: :ok | {:error, any()}
+  @callback handle_message_reaction_add(
+              data :: Nostrum.Struct.Event.MessageReactionAdd.t(),
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling MESSAGE_REACTION_REMOVE events from Discord.
@@ -394,12 +475,16 @@ defmodule AshDiscord.Consumer do
   ## Parameters
 
   - `data` - The reaction remove data (contains user_id, message_id, channel_id, guild_id, emoji)
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_message_reaction_remove(data :: map()) :: :ok | {:error, any()}
+  @callback handle_message_reaction_remove(
+              data :: Nostrum.Struct.Event.MessageReactionRemove.t(),
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling MESSAGE_REACTION_REMOVE_ALL events from Discord.
@@ -409,12 +494,16 @@ defmodule AshDiscord.Consumer do
   ## Parameters
 
   - `data` - The reaction remove all data (contains message_id, channel_id, guild_id)
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_message_reaction_remove_all(data :: map()) :: :ok | {:error, any()}
+  @callback handle_message_reaction_remove_all(
+              data :: Nostrum.Struct.Event.MessageReactionRemoveAll.t(),
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling VOICE_STATE_UPDATE events from Discord.
@@ -424,12 +513,16 @@ defmodule AshDiscord.Consumer do
   ## Parameters
 
   - `voice_state` - The Discord voice state struct from Nostrum
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_voice_state_update(voice_state :: map()) :: :ok | {:error, any()}
+  @callback handle_voice_state_update(
+              voice_state :: Nostrum.Struct.Event.VoiceState.t(),
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling TYPING_START events from Discord.
@@ -439,12 +532,16 @@ defmodule AshDiscord.Consumer do
   ## Parameters
 
   - `typing_data` - The Discord typing event data from Nostrum
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_typing_start(typing_data :: map()) :: :ok | {:error, any()}
+  @callback handle_typing_start(
+              typing_data :: Nostrum.Struct.Event.TypingStart.t(),
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling INVITE_CREATE events from Discord.
@@ -454,12 +551,16 @@ defmodule AshDiscord.Consumer do
   ## Parameters
 
   - `invite` - The Discord invite struct from Nostrum
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_invite_create(invite :: map()) :: :ok | {:error, any()}
+  @callback handle_invite_create(
+              invite :: Nostrum.Struct.Event.InviteCreate.t(),
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling INVITE_DELETE events from Discord.
@@ -469,12 +570,16 @@ defmodule AshDiscord.Consumer do
   ## Parameters
 
   - `invite_data` - The Discord invite deletion data from Nostrum
+  - `ws_state` - The WebSocket state from Nostrum
 
   ## Returns
 
   Should return `:ok` on success or `{:error, reason}` on failure.
   """
-  @callback handle_invite_delete(invite_data :: map()) :: :ok | {:error, any()}
+  @callback handle_invite_delete(
+              invite_data :: Nostrum.Struct.Event.InviteDelete.t(),
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling unknown or unhandled Discord events.
@@ -509,45 +614,60 @@ defmodule AshDiscord.Consumer do
   @callback create_user_from_discord(discord_user :: map()) ::
               any() | {:ok, any()} | {:error, any()} | nil
 
-  @callback handle_presence_update(data :: map()) :: :ok | {:error, any()}
-  @callback handle_user_update(user :: map()) :: :ok | {:error, any()}
-  @callback handle_guild_unavailable(user :: map()) :: :ok | {:error, any()}
-  @callback handle_guild_available(user :: map()) :: :ok | {:error, any()}
+  @callback handle_presence_update(
+              {guild_id :: integer, old_presence :: map | nil, new_presence :: map},
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
+
+  @callback handle_user_update(
+              {old_user :: Nostrum.Struct.User.t() | nil, new_user :: Nostrum.Struct.User.t()},
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
+
+  @callback handle_guild_unavailable(
+              guild :: Nostrum.Struct.Guild.t(),
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
+
+  @callback handle_guild_available(
+              guild :: Nostrum.Struct.Guild.t(),
+              ws_state :: Nostrum.Struct.WSState.t()
+            ) :: :ok | {:error, any()}
 
   # Make all callbacks optional with default implementations
   @optional_callbacks [
     create_user_from_discord: 1,
-    handle_application_command: 1,
-    handle_channel_create: 1,
-    handle_channel_delete: 1,
-    handle_channel_update: 1,
-    handle_guild_create: 1,
-    handle_guild_delete: 1,
+    handle_application_command: 2,
+    handle_channel_create: 2,
+    handle_channel_delete: 2,
+    handle_channel_update: 2,
+    handle_guild_create: 2,
+    handle_guild_delete: 2,
     handle_guild_member_add: 2,
     handle_guild_member_remove: 2,
     handle_guild_member_update: 2,
-    handle_guild_role_create: 1,
-    handle_guild_role_delete: 1,
-    handle_guild_role_update: 1,
-    handle_guild_update: 1,
-    handle_guild_unavailable: 1,
-    handle_guild_available: 1,
-    handle_interaction_create: 1,
-    handle_invite_create: 1,
-    handle_invite_delete: 1,
-    handle_message_create: 1,
-    handle_message_delete: 1,
-    handle_message_delete_bulk: 1,
-    handle_message_reaction_add: 1,
-    handle_message_reaction_remove: 1,
-    handle_message_reaction_remove_all: 1,
-    handle_message_update: 1,
-    handle_presence_update: 1,
-    handle_ready: 1,
-    handle_typing_start: 1,
+    handle_guild_role_create: 2,
+    handle_guild_role_delete: 2,
+    handle_guild_role_update: 2,
+    handle_guild_update: 2,
+    handle_guild_unavailable: 2,
+    handle_guild_available: 2,
+    handle_interaction_create: 2,
+    handle_invite_create: 2,
+    handle_invite_delete: 2,
+    handle_message_create: 2,
+    handle_message_delete: 2,
+    handle_message_delete_bulk: 2,
+    handle_message_reaction_add: 2,
+    handle_message_reaction_remove: 2,
+    handle_message_reaction_remove_all: 2,
+    handle_message_update: 2,
+    handle_presence_update: 2,
+    handle_ready: 2,
+    handle_typing_start: 2,
     handle_unknown_event: 1,
-    handle_user_update: 1,
-    handle_voice_state_update: 1
+    handle_user_update: 2,
+    handle_voice_state_update: 2
   ]
 
   def collect_commands(domains) do

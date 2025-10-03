@@ -22,8 +22,8 @@ defmodule AshDiscord.IntegrationTest do
       domains([TestApp.Discord])
     end
 
-    @impl true
-    def handle_interaction_create(interaction) do
+    @impl AshDiscord.Consumer
+    def handle_interaction_create(interaction, _ws_state) do
       # Override to test integration
       command = find_command(String.to_atom(interaction.data.name))
 
@@ -40,8 +40,8 @@ defmodule AshDiscord.IntegrationTest do
       end
     end
 
-    @impl true
-    def handle_message_create(message) do
+    @impl AshDiscord.Consumer
+    def handle_message_create(message, _ws_state) do
       # Create message using from_discord action
       case TestApp.Discord.Message.from_discord(%{discord_struct: message}) do
         {:ok, created_message} ->
@@ -69,7 +69,8 @@ defmodule AshDiscord.IntegrationTest do
       end)
 
       # Process the interaction
-      result = IntegrationTestConsumer.handle_interaction_create(interaction)
+      ws_state = %Nostrum.Struct.WSState{}
+      result = IntegrationTestConsumer.handle_interaction_create(interaction, ws_state)
 
       assert result == :ok
 
@@ -112,7 +113,8 @@ defmodule AshDiscord.IntegrationTest do
           author: user(%{id: user_id})
         })
 
-      result = IntegrationTestConsumer.handle_message_create(message_data)
+      ws_state = %Nostrum.Struct.WSState{}
+      result = IntegrationTestConsumer.handle_message_create(message_data, ws_state)
 
       assert result == :ok
 
@@ -178,9 +180,11 @@ defmodule AshDiscord.IntegrationTest do
         {:ok, %{}}
       end)
 
+      ws_state = %Nostrum.Struct.WSState{}
+
       {result, log} =
         ExUnit.CaptureLog.with_log(fn ->
-          IntegrationTestConsumer.handle_interaction_create(invalid_interaction)
+          IntegrationTestConsumer.handle_interaction_create(invalid_interaction, ws_state)
         end)
 
       assert log =~ "command is nil"
@@ -197,7 +201,8 @@ defmodule AshDiscord.IntegrationTest do
         content: "Test message"
       }
 
-      result = IntegrationTestConsumer.handle_message_create(invalid_message_data)
+      ws_state = %Nostrum.Struct.WSState{}
+      result = IntegrationTestConsumer.handle_message_create(invalid_message_data, ws_state)
 
       assert result == :ok
 

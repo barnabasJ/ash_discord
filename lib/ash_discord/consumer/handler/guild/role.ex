@@ -15,9 +15,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.Role do
            |> Ash.Changeset.for_create(
              :from_discord,
              %{
-               discord_id: role.id,
-               guild_discord_id: guild_id,
-               discord_struct: role
+               discord_struct: role,
+               guild_id: guild_id
              },
              context: %{
                private: %{ash_discord?: true},
@@ -55,9 +54,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.Role do
            |> Ash.Changeset.for_create(
              :from_discord,
              %{
-               discord_id: role.id,
-               guild_discord_id: guild_id,
-               discord_struct: role
+               discord_struct: role,
+               guild_id: guild_id
              },
              context: %{
                private: %{ash_discord?: true},

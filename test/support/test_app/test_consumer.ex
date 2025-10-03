@@ -9,8 +9,14 @@ defmodule TestApp.TestConsumer do
     domains([TestApp.Discord])
     user_resource(TestApp.Discord.User)
     guild_resource(TestApp.Discord.Guild)
-    guild_member_resource(TestApp.Discord.Guild)
+    guild_member_resource(TestApp.Discord.GuildMember)
     message_resource(TestApp.Discord.Message)
+    channel_resource(TestApp.Discord.Channel)
+    role_resource(TestApp.Discord.Role)
+    invite_resource(TestApp.Discord.Invite)
+    typing_indicator_resource(TestApp.Discord.TypingIndicator)
+    voice_state_resource(TestApp.Discord.VoiceState)
+    message_reaction_resource(TestApp.Discord.MessageReaction)
   end
 
   @doc """

@@ -20,8 +20,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
             |> Ash.Changeset.for_create(
               :from_discord,
               %{
-                user_discord_id: user_discord_id,
-                guild_discord_id: guild_id,
+                guild_id: guild_id,
                 discord_struct: member
               },
               context: %{
@@ -64,8 +63,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
              |> Ash.Changeset.for_create(
                :from_discord,
                %{
-                 user_discord_id: user_discord_id,
-                 guild_discord_id: guild_id,
+                 guild_id: guild_id,
                  discord_struct: member
                },
                context: %{
@@ -105,7 +103,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
 
         query =
           resource
-          |> Ash.Query.filter(user_discord_id: user_discord_id, guild_id: guild_id)
+          |> Ash.Query.filter(user_id: user_discord_id, guild_id: guild_id)
 
         case Ash.bulk_destroy!(query, :destroy, %{},
                context: %{

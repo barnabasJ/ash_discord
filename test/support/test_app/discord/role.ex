@@ -69,6 +69,10 @@ defmodule TestApp.Discord.Role do
     end
   end
 
+  code_interface do
+    define(:read)
+  end
+
   actions do
     defaults([:read, :destroy])
 
@@ -80,6 +84,18 @@ defmodule TestApp.Discord.Role do
         allow_nil?: false,
         description: "Discord role struct to transform"
       )
+
+      argument(:guild_id, :integer,
+        allow_nil?: true,
+        description: "Guild ID this role belongs to"
+      )
+
+      change(fn changeset, _context ->
+        case Ash.Changeset.get_argument(changeset, :guild_id) do
+          nil -> changeset
+          guild_id -> Ash.Changeset.force_change_attribute(changeset, :guild_id, guild_id)
+        end
+      end)
 
       change({AshDiscord.Changes.FromDiscord, type: :role})
 

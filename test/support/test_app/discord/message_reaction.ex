@@ -99,8 +99,7 @@ defmodule TestApp.Discord.MessageReaction do
   end
 
   code_interface do
-    define(:read!, action: :read)
-    define(:by_id, action: :read, get_by: [:id])
+    define(:read)
   end
 
   actions do

@@ -30,7 +30,7 @@ defmodule TestApp.Discord.GuildMember do
   end
 
   actions do
-    defaults([:read])
+    defaults([:read, :destroy])
 
     create :create do
       primary?(true)

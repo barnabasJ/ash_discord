@@ -16,10 +16,10 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
           :from_discord,
           %{
             discord_struct: data,
-            user_discord_id: data.user_id,
-            message_discord_id: data.message_id,
-            channel_discord_id: data.channel_id,
-            guild_discord_id: data.guild_id
+            user_id: data.user_id,
+            message_id: data.message_id,
+            channel_id: data.channel_id,
+            guild_id: data.guild_id
           },
           context: %{
             private: %{ash_discord?: true},
@@ -63,8 +63,8 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
         query =
           resource
           |> Ash.Query.new()
-          |> Ash.Query.filter(user_discord_id: user_id)
-          |> Ash.Query.filter(message_discord_id: message_id)
+          |> Ash.Query.filter(user_id: user_id)
+          |> Ash.Query.filter(message_id: message_id)
           |> Ash.Query.filter(emoji_name: emoji_name)
           |> then(fn q ->
             if is_nil(emoji_id) do
@@ -115,10 +115,11 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
       {:ok, resource} ->
         Logger.info("AshDiscord: Found message reaction resource: #{inspect(resource)}")
 
-        # Get the message_id and emoji from the data
+        # Get the message_id from the data
+        # Note: MessageReactionRemoveAll doesn't have emoji field, it removes ALL reactions
         message_id = Map.get(data, :message_id)
-        emoji_name = get_in(data, [:emoji, :name])
-        emoji_id = get_in(data, [:emoji, :id])
+        emoji_name = nil
+        emoji_id = nil
 
         Logger.info(
           "AshDiscord: Removing all reactions for message_id=#{message_id}, emoji_name=#{emoji_name}, emoji_id=#{inspect(emoji_id)}"
@@ -129,7 +130,7 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
           if emoji_name || emoji_id do
             resource
             |> Ash.Query.new()
-            |> Ash.Query.filter(message_discord_id: message_id)
+            |> Ash.Query.filter(message_id: message_id)
             |> Ash.Query.filter(emoji_name: emoji_name)
             |> then(fn q ->
               if is_nil(emoji_id) do
@@ -145,7 +146,7 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
           else
             resource
             |> Ash.Query.new()
-            |> Ash.Query.filter(message_discord_id: message_id)
+            |> Ash.Query.filter(message_id: message_id)
             |> Ash.Query.set_context(%{
               private: %{ash_discord?: true},
               shared: %{private: %{ash_discord?: true}}

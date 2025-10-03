@@ -33,7 +33,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.RoleTest do
       created_role = hd(roles)
       assert created_role.discord_id == role_data.id
       assert created_role.name == role_data.name
-      assert created_role.guild_discord_id == guild_id
+      assert created_role.guild_id == guild_id
     end
   end
 
@@ -65,7 +65,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.RoleTest do
       updated_role = hd(roles)
       assert updated_role.discord_id == new_role.id
       assert updated_role.name == "New Role"
-      assert updated_role.guild_discord_id == guild_id
+      assert updated_role.guild_id == guild_id
     end
   end
 

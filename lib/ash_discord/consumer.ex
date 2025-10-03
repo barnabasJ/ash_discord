@@ -89,6 +89,7 @@ defmodule AshDiscord.Consumer do
 
   - `message` - The Discord message struct from Nostrum
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -96,7 +97,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_message_create(
               message :: Nostrum.Struct.Message.t(),
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -108,6 +110,7 @@ defmodule AshDiscord.Consumer do
 
   - `guild` - The Discord guild struct from Nostrum
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -115,7 +118,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_guild_create(
               guild :: Nostrum.Struct.Guild.t(),
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -127,6 +131,7 @@ defmodule AshDiscord.Consumer do
 
   - `guild` - The updated Discord guild struct from Nostrum
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -134,7 +139,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_guild_update(
               {old_guild :: Nostrum.Struct.Guild.t(), new_guild :: Nostrum.Struct.Guild.t()},
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -146,6 +152,7 @@ defmodule AshDiscord.Consumer do
 
   - `data` - Guild delete data containing guild ID and unavailable flag
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -153,7 +160,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_guild_delete(
               {old_guild :: Nostrum.Struct.Guild.t(), unavailable :: boolean},
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -166,6 +174,7 @@ defmodule AshDiscord.Consumer do
 
   - `data` - The ready event data from Discord
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -173,7 +182,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_ready(
               data :: Nostrum.Struct.Event.Ready.t(),
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -186,6 +196,7 @@ defmodule AshDiscord.Consumer do
 
   - `interaction` - The Discord interaction struct from Nostrum
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -193,19 +204,21 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_interaction_create(
               interaction :: Nostrum.Struct.Interaction.t(),
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
   Callback for handling application command interactions specifically.
 
-  Called for slash command interactions after `handle_interaction_create/2`.
+  Called for slash command interactions after `handle_interaction_create/3`.
   The default implementation routes the command to the appropriate Ash action.
 
   ## Parameters
 
   - `interaction` - The Discord application command interaction struct
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -213,7 +226,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_application_command(
               interaction :: Nostrum.Struct.Interaction.t(),
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -225,6 +239,7 @@ defmodule AshDiscord.Consumer do
 
   - `data` - Tuple of {guild_id, new_role}
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -232,7 +247,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_guild_role_create(
               {guild_id :: integer, new_role :: Nostrum.Struct.Guild.Role.t()},
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -244,6 +260,7 @@ defmodule AshDiscord.Consumer do
 
   - `data` - Tuple of {guild_id, old_role | nil, new_role}
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -252,7 +269,8 @@ defmodule AshDiscord.Consumer do
   @callback handle_guild_role_update(
               {guild_id :: integer, old_role :: Nostrum.Struct.Guild.Role.t() | nil,
                new_role :: Nostrum.Struct.Guild.Role.t()},
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -264,6 +282,7 @@ defmodule AshDiscord.Consumer do
 
   - `data` - Tuple of {guild_id, old_role}
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -271,7 +290,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_guild_role_delete(
               {guild_id :: integer, old_role :: Nostrum.Struct.Guild.Role.t()},
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -283,6 +303,7 @@ defmodule AshDiscord.Consumer do
 
   - `data` - Tuple of {guild_id, new_member}
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -290,7 +311,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_guild_member_add(
               {guild_id :: integer, new_member :: Nostrum.Struct.Guild.Member.t()},
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -302,6 +324,7 @@ defmodule AshDiscord.Consumer do
 
   - `data` - Tuple of {guild_id, old_member | nil, new_member}
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -310,7 +333,8 @@ defmodule AshDiscord.Consumer do
   @callback handle_guild_member_update(
               {guild_id :: integer, old_member :: Nostrum.Struct.Guild.Member.t() | nil,
                new_member :: Nostrum.Struct.Guild.Member.t()},
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -322,6 +346,7 @@ defmodule AshDiscord.Consumer do
 
   - `data` - Tuple of {guild_id, old_member}
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -329,7 +354,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_guild_member_remove(
               {guild_id :: integer, old_member :: Nostrum.Struct.Guild.Member.t()},
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -341,6 +367,7 @@ defmodule AshDiscord.Consumer do
 
   - `channel` - The Discord channel struct from Nostrum
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -348,7 +375,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_channel_create(
               channel :: Nostrum.Struct.Channel.t(),
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -360,6 +388,7 @@ defmodule AshDiscord.Consumer do
 
   - `data` - Tuple of {old_channel | nil, new_channel}
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -368,7 +397,8 @@ defmodule AshDiscord.Consumer do
   @callback handle_channel_update(
               {old_channel :: Nostrum.Struct.Channel.t() | nil,
                new_channel :: Nostrum.Struct.Channel.t()},
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -380,6 +410,7 @@ defmodule AshDiscord.Consumer do
 
   - `channel` - The Discord channel struct from Nostrum
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -387,7 +418,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_channel_delete(
               channel :: Nostrum.Struct.Channel.t(),
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -399,6 +431,7 @@ defmodule AshDiscord.Consumer do
 
   - `data` - Tuple of {old_message | nil, updated_message}
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -407,7 +440,8 @@ defmodule AshDiscord.Consumer do
   @callback handle_message_update(
               {old_message :: Nostrum.Struct.Message.t() | nil,
                updated_message :: Nostrum.Struct.Message.t()},
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -419,6 +453,7 @@ defmodule AshDiscord.Consumer do
 
   - `data` - The message delete data (contains message_id, channel_id, guild_id)
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -426,7 +461,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_message_delete(
               data :: Nostrum.Struct.Event.MessageDelete.t(),
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -438,6 +474,7 @@ defmodule AshDiscord.Consumer do
 
   - `data` - The bulk delete data (contains ids list, channel_id, guild_id)
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -445,7 +482,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_message_delete_bulk(
               data :: Nostrum.Struct.Event.MessageDeleteBulk.t(),
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -457,6 +495,7 @@ defmodule AshDiscord.Consumer do
 
   - `data` - The reaction add data (contains user_id, message_id, channel_id, guild_id, emoji)
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -464,7 +503,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_message_reaction_add(
               data :: Nostrum.Struct.Event.MessageReactionAdd.t(),
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -476,6 +516,7 @@ defmodule AshDiscord.Consumer do
 
   - `data` - The reaction remove data (contains user_id, message_id, channel_id, guild_id, emoji)
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -483,7 +524,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_message_reaction_remove(
               data :: Nostrum.Struct.Event.MessageReactionRemove.t(),
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -495,6 +537,7 @@ defmodule AshDiscord.Consumer do
 
   - `data` - The reaction remove all data (contains message_id, channel_id, guild_id)
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -502,7 +545,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_message_reaction_remove_all(
               data :: Nostrum.Struct.Event.MessageReactionRemoveAll.t(),
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -514,6 +558,7 @@ defmodule AshDiscord.Consumer do
 
   - `voice_state` - The Discord voice state struct from Nostrum
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -521,7 +566,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_voice_state_update(
               voice_state :: Nostrum.Struct.Event.VoiceState.t(),
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -533,6 +579,7 @@ defmodule AshDiscord.Consumer do
 
   - `typing_data` - The Discord typing event data from Nostrum
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -540,7 +587,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_typing_start(
               typing_data :: Nostrum.Struct.Event.TypingStart.t(),
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -552,6 +600,7 @@ defmodule AshDiscord.Consumer do
 
   - `invite` - The Discord invite struct from Nostrum
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -559,7 +608,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_invite_create(
               invite :: Nostrum.Struct.Event.InviteCreate.t(),
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -571,6 +621,7 @@ defmodule AshDiscord.Consumer do
 
   - `invite_data` - The Discord invite deletion data from Nostrum
   - `ws_state` - The WebSocket state from Nostrum
+  - `context` - The Ash.Context struct for this operation
 
   ## Returns
 
@@ -578,7 +629,8 @@ defmodule AshDiscord.Consumer do
   """
   @callback handle_invite_delete(
               invite_data :: Nostrum.Struct.Event.InviteDelete.t(),
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -616,58 +668,62 @@ defmodule AshDiscord.Consumer do
 
   @callback handle_presence_update(
               {guild_id :: integer, old_presence :: map | nil, new_presence :: map},
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @callback handle_user_update(
               {old_user :: Nostrum.Struct.User.t() | nil, new_user :: Nostrum.Struct.User.t()},
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @callback handle_guild_unavailable(
               guild :: Nostrum.Struct.Guild.t(),
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   @callback handle_guild_available(
               guild :: Nostrum.Struct.Guild.t(),
-              ws_state :: Nostrum.Struct.WSState.t()
+              ws_state :: Nostrum.Struct.WSState.t(),
+              context :: AshDiscord.Consumer.Context.t()
             ) :: :ok | {:error, any()}
 
   # Make all callbacks optional with default implementations
   @optional_callbacks [
     create_user_from_discord: 1,
-    handle_application_command: 2,
-    handle_channel_create: 2,
-    handle_channel_delete: 2,
-    handle_channel_update: 2,
-    handle_guild_create: 2,
-    handle_guild_delete: 2,
-    handle_guild_member_add: 2,
-    handle_guild_member_remove: 2,
-    handle_guild_member_update: 2,
-    handle_guild_role_create: 2,
-    handle_guild_role_delete: 2,
-    handle_guild_role_update: 2,
-    handle_guild_update: 2,
-    handle_guild_unavailable: 2,
-    handle_guild_available: 2,
-    handle_interaction_create: 2,
-    handle_invite_create: 2,
-    handle_invite_delete: 2,
-    handle_message_create: 2,
-    handle_message_delete: 2,
-    handle_message_delete_bulk: 2,
-    handle_message_reaction_add: 2,
-    handle_message_reaction_remove: 2,
-    handle_message_reaction_remove_all: 2,
-    handle_message_update: 2,
-    handle_presence_update: 2,
-    handle_ready: 2,
-    handle_typing_start: 2,
+    handle_application_command: 3,
+    handle_channel_create: 3,
+    handle_channel_delete: 3,
+    handle_channel_update: 3,
+    handle_guild_create: 3,
+    handle_guild_delete: 3,
+    handle_guild_member_add: 3,
+    handle_guild_member_remove: 3,
+    handle_guild_member_update: 3,
+    handle_guild_role_create: 3,
+    handle_guild_role_delete: 3,
+    handle_guild_role_update: 3,
+    handle_guild_update: 3,
+    handle_guild_unavailable: 3,
+    handle_guild_available: 3,
+    handle_interaction_create: 3,
+    handle_invite_create: 3,
+    handle_invite_delete: 3,
+    handle_message_create: 3,
+    handle_message_delete: 3,
+    handle_message_delete_bulk: 3,
+    handle_message_reaction_add: 3,
+    handle_message_reaction_remove: 3,
+    handle_message_reaction_remove_all: 3,
+    handle_message_update: 3,
+    handle_presence_update: 3,
+    handle_ready: 3,
+    handle_typing_start: 3,
     handle_unknown_event: 1,
-    handle_user_update: 2,
-    handle_voice_state_update: 2
+    handle_user_update: 3,
+    handle_voice_state_update: 3
   ]
 
   def collect_commands(domains) do

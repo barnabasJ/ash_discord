@@ -7,10 +7,11 @@ defmodule AshDiscord.Consumer.Handler do
 
   @spec handle_event(consumer :: module(), event_payload_ws :: Nostrum.Consumer.event()) :: any()
   def handle_event(consumer, {event, payload, ws_state}) do
-    callback = callback(event)
-    context = AshDiscord.Context.from_payload(consumer, payload, ws_state)
+    callback = callback_name(event)
 
     if function_exported?(consumer, callback, 3) do
+      # User-defined callback exists, build minimal context
+      context = build_context(consumer, nil, payload)
       Logger.info("Handling #{event} with #{consumer}.#{callback}/3")
 
       case apply(consumer, callback, [payload, ws_state, context]) do
@@ -23,45 +24,71 @@ defmodule AshDiscord.Consumer.Handler do
           other
       end
     else
-      {mod, fun} = handler_mf(event)
-      Logger.info("Handling #{event} with #{mod}.#{fun}/4")
+      # Use default handler from EventMap
+      {handler_mod, handler_fun, resource_type} = AshDiscord.Consumer.EventMap.handler_for(event)
 
-      case apply(mod, fun, [consumer, payload, ws_state, context]) do
-        {:error, _} = error ->
-          Logger.error("Error handling #{event} in #{mod}.#{fun}/4: #{inspect(error)}")
-          error
+      # Look up the configured resource for this event type
+      resource = get_resource(consumer, resource_type)
 
-        other ->
-          Logger.info("Successfully handled #{event} in #{mod}.#{fun}/4")
-          other
+      # Only call handler if resource is configured
+      if resource do
+        # Build context with consumer and resource
+        context = build_context(consumer, resource, payload)
+
+        Logger.info("Handling #{event} with #{handler_mod}.#{handler_fun}/3")
+
+        case apply(handler_mod, handler_fun, [payload, ws_state, context]) do
+          {:error, _} = error ->
+            Logger.error(
+              "Error handling #{event} in #{handler_mod}.#{handler_fun}/3: #{inspect(error)}"
+            )
+
+            error
+
+          other ->
+            Logger.info("Successfully handled #{event} in #{handler_mod}.#{handler_fun}/3")
+            other
+        end
+      else
+        Logger.debug("Skipping #{event} - no #{resource_type} configured")
+        :ok
       end
     end
   end
 
-  @spec callback(event :: atom()) :: atom()
-  def callback(event) do
+  @spec callback_name(event :: atom()) :: atom()
+  defp callback_name(event) do
     String.to_existing_atom("handle_" <> String.downcase(Atom.to_string(event)))
   end
 
-  @spec handler_mf(event :: atom()) :: {module(), atom()}
-  defp handler_mf(event) when is_atom(event) do
-    String.split(Atom.to_string(event), "_")
-    |> handler_mf([])
+  @spec get_resource(consumer :: module(), resource_type :: atom()) :: Ash.Resource.t() | nil
+  defp get_resource(consumer, resource_type) do
+    info_function = String.to_existing_atom("ash_discord_consumer_#{resource_type}")
+
+    case apply(AshDiscord.Consumer.Info, info_function, [consumer]) do
+      {:ok, resource} -> resource
+      :error -> nil
+    end
+  rescue
+    _ -> nil
   end
 
-  @spec handler_mf(parts :: [String.t()], module_parts :: [String.t()]) :: {module(), atom()}
-  defp handler_mf([function | []], module) do
-    {
-      module
-      |> Enum.reverse()
-      |> Enum.map(&String.capitalize/1)
-      |> then(&["AshDiscord", "Consumer", "Handler" | &1])
-      |> Module.concat(),
-      String.to_existing_atom(String.downcase(function))
+  @spec build_context(
+          consumer :: module(),
+          resource :: Ash.Resource.t() | nil,
+          payload :: AshDiscord.Consumer.Payload.t()
+        ) :: AshDiscord.Context.t()
+  defp build_context(consumer, resource, payload) do
+    user = AshDiscord.Context.extract_user(payload)
+    user_id = AshDiscord.Context.extract_user_id(payload, user)
+    guild_id = AshDiscord.Context.extract_guild_id(payload)
+
+    %AshDiscord.Context{
+      consumer: consumer,
+      resource: resource,
+      user: user,
+      user_id: user_id,
+      guild_id: guild_id
     }
-  end
-
-  defp handler_mf([part | rest], module) do
-    handler_mf(rest, [part | module])
   end
 end

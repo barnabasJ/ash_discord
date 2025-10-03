@@ -4,9 +4,10 @@ defmodule AshDiscord.Consumer.Handler.Ready do
   @spec ready(
           consumer :: module(),
           data :: Nostrum.Struct.Event.Ready.t(),
-          ws_state :: Nostrum.Struct.WSState.t()
+          ws_state :: Nostrum.Struct.WSState.t(),
+          context :: AshDiscord.Consumer.Context.t()
         ) :: any()
-  def ready(consumer, _data, _ws_state) do
+  def ready(consumer, _data, _ws_state, _context) do
     # Register Discord commands when bot is ready
     with {:ok, domains} <- AshDiscord.Consumer.Info.ash_discord_consumer_domains(consumer) do
       commands = AshDiscord.Consumer.collect_commands(domains)

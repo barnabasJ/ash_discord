@@ -4,9 +4,10 @@ defmodule AshDiscord.Consumer.Handler.Voice do
   @spec state(
           consumer :: module(),
           voice_state :: Nostrum.Struct.Event.VoiceState.t(),
-          ws_state :: Nostrum.Struct.WSState.t()
+          ws_state :: Nostrum.Struct.WSState.t(),
+          context :: AshDiscord.Consumer.Context.t()
         ) :: any()
-  def state(consumer, voice_state, _ws_state) do
+  def state(consumer, voice_state, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_voice_state_resource(consumer) do
       {:ok, resource} ->
         Logger.debug("AshDiscord: Creating voice state: #{inspect(voice_state)}")
@@ -41,36 +42,40 @@ defmodule AshDiscord.Consumer.Handler.Voice do
   @spec ready(
           consumer :: module(),
           data :: Nostrum.Struct.Event.VoiceReady.t(),
-          ws_state :: Nostrum.Struct.VoiceWSState.t()
+          ws_state :: Nostrum.Struct.VoiceWSState.t(),
+          context :: AshDiscord.Consumer.Context.t()
         ) :: any()
-  def ready(_consumer, _data, _ws_state) do
+  def ready(_consumer, _data, _ws_state, _context) do
     :ok
   end
 
   @spec speaking(
           consumer :: module(),
           data :: Nostrum.Struct.Event.SpeakingUpdate.t(),
-          ws_state :: Nostrum.Struct.VoiceWSState.t()
+          ws_state :: Nostrum.Struct.VoiceWSState.t(),
+          context :: AshDiscord.Consumer.Context.t()
         ) :: any()
-  def speaking(_consumer, _data, _ws_state) do
+  def speaking(_consumer, _data, _ws_state, _context) do
     :ok
   end
 
   @spec incoming(
           consumer :: module(),
           data :: Nostrum.Voice.rtp_opus(),
-          ws_state :: Nostrum.Struct.VoiceWSState.t()
+          ws_state :: Nostrum.Struct.VoiceWSState.t(),
+          context :: AshDiscord.Consumer.Context.t()
         ) :: any()
-  def incoming(_consumer, _data, _ws_state) do
+  def incoming(_consumer, _data, _ws_state, _context) do
     :ok
   end
 
   @spec server(
           consumer :: module(),
           data :: Nostrum.Struct.Event.VoiceServerUpdate.t(),
-          ws_state :: Nostrum.Struct.WSState.t()
+          ws_state :: Nostrum.Struct.WSState.t(),
+          context :: AshDiscord.Consumer.Context.t()
         ) :: any()
-  def server(_consumer, _data, _ws_state) do
+  def server(_consumer, _data, _ws_state, _context) do
     :ok
   end
 end

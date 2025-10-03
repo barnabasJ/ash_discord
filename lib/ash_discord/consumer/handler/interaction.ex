@@ -4,9 +4,10 @@ defmodule AshDiscord.Consumer.Handler.Interaction do
   @spec create(
           consumer :: module(),
           interaction :: Nostrum.Struct.Interaction.t(),
-          ws_state :: Nostrum.Struct.WSState.t()
+          ws_state :: Nostrum.Struct.WSState.t(),
+          context :: AshDiscord.Consumer.Context.t()
         ) :: any()
-  def create(consumer, interaction, _ws_state) do
+  def create(consumer, interaction, _ws_state, _context) do
     Logger.debug("Processing Discord interaction: #{interaction.id}")
 
     case interaction.type do

@@ -4,9 +4,10 @@ defmodule AshDiscord.Consumer.Handler.Guild.Role do
   @spec create(
           consumer :: module(),
           {guild_id :: integer(), new_role :: Nostrum.Struct.Guild.Role.t()},
-          ws_state :: Nostrum.Struct.WSState.t()
+          ws_state :: Nostrum.Struct.WSState.t(),
+          context :: AshDiscord.Consumer.Context.t()
         ) :: any()
-  def create(consumer, {guild_id, role}, _ws_state) do
+  def create(consumer, {guild_id, role}, _ws_state, _context) do
     with {:ok, resource} <-
            AshDiscord.Consumer.Info.ash_discord_consumer_role_resource(consumer),
          {:ok, _role} <-
@@ -41,9 +42,10 @@ defmodule AshDiscord.Consumer.Handler.Guild.Role do
           consumer :: module(),
           {guild_id :: integer(), old_role :: Nostrum.Struct.Guild.Role.t() | nil,
            new_role :: Nostrum.Struct.Guild.Role.t()},
-          ws_state :: Nostrum.Struct.WSState.t()
+          ws_state :: Nostrum.Struct.WSState.t(),
+          context :: AshDiscord.Consumer.Context.t()
         ) :: any()
-  def update(consumer, {guild_id, _old_role, role}, _ws_state) do
+  def update(consumer, {guild_id, _old_role, role}, _ws_state, _context) do
     Logger.debug("AshDiscord: Handling guild role update for role #{role.id}")
 
     with {:ok, resource} <-
@@ -79,9 +81,10 @@ defmodule AshDiscord.Consumer.Handler.Guild.Role do
   @spec delete(
           consumer :: module(),
           {guild_id :: integer(), old_role :: Nostrum.Struct.Guild.Role.t()},
-          ws_state :: Nostrum.Struct.WSState.t()
+          ws_state :: Nostrum.Struct.WSState.t(),
+          context :: AshDiscord.Consumer.Context.t()
         ) :: any()
-  def delete(_consumer, _data, _ws_state) do
+  def delete(_consumer, _data, _ws_state, _context) do
     # Role deletion not yet implemented
     # TODO: Implement role deletion when needed
     :ok

@@ -5,9 +5,10 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
   @spec add(
           consumer :: module(),
           data :: Nostrum.Struct.Event.MessageReactionAdd.t(),
-          ws_state :: Nostrum.Struct.WSState.t()
+          ws_state :: Nostrum.Struct.WSState.t(),
+          context :: AshDiscord.Consumer.Context.t()
         ) :: any()
-  def add(consumer, data, _ws_state) do
+  def add(consumer, data, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_message_reaction_resource(consumer) do
       {:ok, resource} ->
         resource
@@ -38,9 +39,10 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
   @spec remove(
           consumer :: module(),
           data :: Nostrum.Struct.Event.MessageReactionRemove.t(),
-          ws_state :: Nostrum.Struct.WSState.t()
+          ws_state :: Nostrum.Struct.WSState.t(),
+          context :: AshDiscord.Consumer.Context.t()
         ) :: any()
-  def remove(consumer, %Nostrum.Struct.Event.MessageReactionRemove{} = data, _ws_state) do
+  def remove(consumer, %Nostrum.Struct.Event.MessageReactionRemove{} = data, _ws_state, _context) do
     Logger.info("AshDiscord: Message reaction removal requested")
 
     case AshDiscord.Consumer.Info.ash_discord_consumer_message_reaction_resource(consumer) do
@@ -103,9 +105,10 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
   @spec all(
           consumer :: module(),
           data :: Nostrum.Struct.Event.MessageReactionRemoveAll.t(),
-          ws_state :: Nostrum.Struct.WSState.t()
+          ws_state :: Nostrum.Struct.WSState.t(),
+          context :: AshDiscord.Consumer.Context.t()
         ) :: any()
-  def all(consumer, data, _ws_state) do
+  def all(consumer, data, _ws_state, _context) do
     Logger.info("AshDiscord: Message reaction remove all requested")
 
     case AshDiscord.Consumer.Info.ash_discord_consumer_message_reaction_resource(consumer) do
@@ -196,9 +199,10 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
   @spec emoji(
           consumer :: module(),
           data :: Nostrum.Struct.Event.MessageReactionRemoveEmoji.t(),
-          ws_state :: Nostrum.Struct.WSState.t()
+          ws_state :: Nostrum.Struct.WSState.t(),
+          context :: AshDiscord.Consumer.Context.t()
         ) :: any()
-  def emoji(_consumer, _data, _ws_state) do
+  def emoji(_consumer, _data, _ws_state, _context) do
     :ok
   end
 end

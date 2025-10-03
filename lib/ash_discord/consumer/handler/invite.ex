@@ -5,9 +5,10 @@ defmodule AshDiscord.Consumer.Handler.Invite do
   @spec create(
           consumer :: module(),
           invite :: map(),
-          ws_state :: Nostrum.Struct.WSState.t()
+          ws_state :: Nostrum.Struct.WSState.t(),
+          context :: AshDiscord.Consumer.Context.t()
         ) :: any()
-  def create(consumer, invite, _ws_state) do
+  def create(consumer, invite, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_invite_resource(consumer) do
       {:ok, resource} ->
         case resource
@@ -40,9 +41,10 @@ defmodule AshDiscord.Consumer.Handler.Invite do
   @spec delete(
           consumer :: module(),
           invite_data :: map(),
-          ws_state :: Nostrum.Struct.WSState.t()
+          ws_state :: Nostrum.Struct.WSState.t(),
+          context :: AshDiscord.Consumer.Context.t()
         ) :: any()
-  def delete(consumer, invite_data, _ws_state) do
+  def delete(consumer, invite_data, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_invite_resource(consumer) do
       {:ok, resource} ->
         # Try to find and delete the invite by code

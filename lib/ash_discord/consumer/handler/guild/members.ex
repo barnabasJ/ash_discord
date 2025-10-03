@@ -2,7 +2,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.Members do
   @spec chunk(
           consumer :: module(),
           data :: map(),
-          ws_state :: Nostrum.Struct.WSState.t()
+          ws_state :: Nostrum.Struct.WSState.t(),
+          context :: AshDiscord.Consumer.Context.t()
         ) :: any()
-  def chunk(_consumer, _data, _ws_state), do: :ok
+  def chunk(_consumer, _data, _ws_state, _context), do: :ok
 end

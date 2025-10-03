@@ -9,12 +9,16 @@ defmodule AshDiscord.Context do
   """
 
   defstruct [
+    :consumer,
+    :resource,
     :user,
     :user_id,
     :guild_id
   ]
 
   @type t :: %__MODULE__{
+          consumer: module(),
+          resource: Ash.Resource.t(),
           user: Nostrum.Struct.User.t() | nil,
           user_id: Nostrum.Snowflake.t() | nil,
           guild_id: Nostrum.Snowflake.t() | nil
@@ -44,132 +48,22 @@ defmodule AshDiscord.Context do
   end
 
   @doc """
-  Extracts context information from various Discord event payloads.
-  Pattern matches on different event structures to extract user and guild info.
+  Extracts user information from various Discord event payloads.
+  Handles both struct-based payloads and tuple-based payloads.
   """
-  @spec from_payload(
-          consumer :: module(),
-          payload :: AshDiscord.Consumer.Payload.t(),
-          ws_state :: Nostrum.Struct.WSState.t()
-        ) :: t()
-
-  # Message events (MESSAGE_CREATE, MESSAGE_UPDATE) - has author field
-  def from_payload(
-        _consumer,
-        %{author: %Nostrum.Struct.User{} = user, guild_id: guild_id},
-        _ws_state
-      ) do
-    %__MODULE__{
-      user: user,
-      user_id: user.id,
-      guild_id: guild_id
-    }
+  @spec extract_user(payload :: AshDiscord.Consumer.Payload.t()) :: Nostrum.Struct.User.t() | nil
+  def extract_user(payload) when is_tuple(payload) do
+    # Handle tuple payloads like {guild_id, user} or {guild_id, old, new}
+    case payload do
+      {_guild_id, %Nostrum.Struct.User{} = user} -> user
+      {_guild_id, %Nostrum.Struct.Guild.Member{}} -> nil
+      {_guild_id, _old, %Nostrum.Struct.Guild.Member{}} -> nil
+      {%Nostrum.Struct.User{} = old_user, _new_user} -> old_user
+      _ -> nil
+    end
   end
 
-  # Interaction events (INTERACTION_CREATE) - has user field
-  def from_payload(
-        _consumer,
-        %Nostrum.Struct.Interaction{user: user, guild_id: guild_id},
-        _ws_state
-      ) do
-    %__MODULE__{
-      user: user,
-      user_id: user.id,
-      guild_id: guild_id
-    }
-  end
-
-  # Voice State events - has user_id but not full user struct
-  def from_payload(
-        _consumer,
-        %Nostrum.Struct.Event.VoiceState{user_id: user_id, guild_id: guild_id},
-        _ws_state
-      ) do
-    %__MODULE__{
-      user: nil,
-      user_id: user_id,
-      guild_id: guild_id
-    }
-  end
-
-  # Message Reaction Add events - only has user_id
-  def from_payload(
-        _consumer,
-        %Nostrum.Struct.Event.MessageReactionAdd{user_id: user_id, guild_id: guild_id},
-        _ws_state
-      ) do
-    %__MODULE__{
-      user: nil,
-      user_id: user_id,
-      guild_id: guild_id
-    }
-  end
-
-  # Message Reaction Remove events - only has user_id
-  def from_payload(
-        _consumer,
-        %Nostrum.Struct.Event.MessageReactionRemove{user_id: user_id, guild_id: guild_id},
-        _ws_state
-      ) do
-    %__MODULE__{
-      user: nil,
-      user_id: user_id,
-      guild_id: guild_id
-    }
-  end
-
-  # Guild Member events - tuple with {guild_id, member}
-  def from_payload(
-        _consumer,
-        {guild_id, %Nostrum.Struct.Guild.Member{user_id: user_id}},
-        _ws_state
-      )
-      when is_integer(guild_id) do
-    %__MODULE__{
-      user: nil,
-      user_id: user_id,
-      guild_id: guild_id
-    }
-  end
-
-  # Guild Member Update - tuple with {guild_id, old_member, new_member}
-  def from_payload(
-        _consumer,
-        {guild_id, _old, %Nostrum.Struct.Guild.Member{user_id: user_id}},
-        _ws_state
-      )
-      when is_integer(guild_id) do
-    %__MODULE__{
-      user: nil,
-      user_id: user_id,
-      guild_id: guild_id
-    }
-  end
-
-  # Thread events may have member field with user info
-  def from_payload(_consumer, %{member: %{user: user}, guild_id: guild_id}, _ws_state) do
-    %__MODULE__{
-      user: user,
-      user_id: user.id,
-      guild_id: guild_id
-    }
-  end
-
-  # Generic fallback - try to extract whatever we can find
-  def from_payload(_consumer, payload, _ws_state) do
-    user = extract_user(payload)
-    user_id = extract_user_id(payload, user)
-    guild_id = extract_guild_id(payload)
-
-    %__MODULE__{
-      user: user,
-      user_id: user_id,
-      guild_id: guild_id
-    }
-  end
-
-  # Helper functions for generic extraction
-  defp extract_user(payload) do
+  def extract_user(payload) when is_map(payload) do
     cond do
       Map.has_key?(payload, :user) && is_struct(payload.user, Nostrum.Struct.User) ->
         payload.user
@@ -177,7 +71,8 @@ defmodule AshDiscord.Context do
       Map.has_key?(payload, :author) && is_struct(payload.author, Nostrum.Struct.User) ->
         payload.author
 
-      Map.has_key?(payload, :member) && Map.has_key?(payload.member, :user) ->
+      Map.has_key?(payload, :member) && is_map(payload.member) &&
+          Map.has_key?(payload.member, :user) ->
         payload.member.user
 
       true ->
@@ -185,7 +80,29 @@ defmodule AshDiscord.Context do
     end
   end
 
-  defp extract_user_id(payload, user) do
+  def extract_user(_payload), do: nil
+
+  @doc """
+  Extracts user ID from various Discord event payloads.
+  Prefers the user struct's ID if available, otherwise extracts from payload fields.
+  """
+  @spec extract_user_id(
+          payload :: AshDiscord.Consumer.Payload.t(),
+          user :: Nostrum.Struct.User.t() | nil
+        ) :: Nostrum.Snowflake.t() | nil
+  def extract_user_id(payload, user) when is_tuple(payload) do
+    if user != nil do
+      user.id
+    else
+      case payload do
+        {_guild_id, %Nostrum.Struct.Guild.Member{user_id: user_id}} -> user_id
+        {_guild_id, _old, %Nostrum.Struct.Guild.Member{user_id: user_id}} -> user_id
+        _ -> nil
+      end
+    end
+  end
+
+  def extract_user_id(payload, user) when is_map(payload) do
     cond do
       user != nil ->
         user.id
@@ -193,7 +110,8 @@ defmodule AshDiscord.Context do
       Map.has_key?(payload, :user_id) ->
         payload.user_id
 
-      Map.has_key?(payload, :member) && Map.has_key?(payload.member, :user_id) ->
+      Map.has_key?(payload, :member) && is_map(payload.member) &&
+          Map.has_key?(payload.member, :user_id) ->
         payload.member.user_id
 
       true ->
@@ -201,7 +119,26 @@ defmodule AshDiscord.Context do
     end
   end
 
-  defp extract_guild_id(payload) do
+  def extract_user_id(_payload, user) when user != nil, do: user.id
+  def extract_user_id(_payload, _user), do: nil
+
+  @doc """
+  Extracts guild ID from Discord event payloads.
+  Handles both struct-based payloads and tuple-based payloads.
+  """
+  @spec extract_guild_id(payload :: AshDiscord.Consumer.Payload.t()) ::
+          Nostrum.Snowflake.t() | nil
+  def extract_guild_id(payload) when is_tuple(payload) do
+    case payload do
+      {guild_id, _} when is_integer(guild_id) -> guild_id
+      {guild_id, _, _} when is_integer(guild_id) -> guild_id
+      _ -> nil
+    end
+  end
+
+  def extract_guild_id(payload) when is_map(payload) do
     Map.get(payload, :guild_id)
   end
+
+  def extract_guild_id(_payload), do: nil
 end

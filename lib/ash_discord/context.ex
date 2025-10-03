@@ -53,13 +53,34 @@ defmodule AshDiscord.Context do
   """
   @spec extract_user(payload :: AshDiscord.Consumer.Payload.t()) :: Nostrum.Struct.User.t() | nil
   def extract_user(payload) when is_tuple(payload) do
-    # Handle tuple payloads like {guild_id, user} or {guild_id, old, new}
+    # Handle tuple payloads
     case payload do
-      {_guild_id, %Nostrum.Struct.User{} = user} -> user
-      {_guild_id, %Nostrum.Struct.Guild.Member{}} -> nil
-      {_guild_id, _old, %Nostrum.Struct.Guild.Member{}} -> nil
-      {%Nostrum.Struct.User{} = old_user, _new_user} -> old_user
-      _ -> nil
+      # {guild_id, user} - e.g., guild_member_remove
+      {_guild_id, %Nostrum.Struct.User{} = user} ->
+        user
+
+      # {guild_id, member} - e.g., guild_member_add
+      {_guild_id, %Nostrum.Struct.Guild.Member{}} ->
+        nil
+
+      # {guild_id, old_member, new_member} - e.g., guild_member_update
+      {_guild_id, _old, %Nostrum.Struct.Guild.Member{}} ->
+        nil
+
+      # {old_user, new_user} - e.g., user_update
+      {%Nostrum.Struct.User{} = _old_user, %Nostrum.Struct.User{} = new_user} ->
+        new_user
+
+      # {old_message, new_message} - e.g., message_update
+      {_old_message, new_message} when is_map(new_message) ->
+        extract_user(new_message)
+
+      # {old_guild, new_guild} - e.g., guild_update
+      {_old, new} when is_map(new) ->
+        extract_user(new)
+
+      _ ->
+        nil
     end
   end
 
@@ -130,9 +151,20 @@ defmodule AshDiscord.Context do
           Nostrum.Snowflake.t() | nil
   def extract_guild_id(payload) when is_tuple(payload) do
     case payload do
-      {guild_id, _} when is_integer(guild_id) -> guild_id
-      {guild_id, _, _} when is_integer(guild_id) -> guild_id
-      _ -> nil
+      # {guild_id, ...} - most guild-related events
+      {guild_id, _} when is_integer(guild_id) ->
+        guild_id
+
+      # {guild_id, old, new} - updates
+      {guild_id, _, _} when is_integer(guild_id) ->
+        guild_id
+
+      # {old, new} where new has guild_id - e.g., message_update, guild_update
+      {_old, new} when is_map(new) ->
+        extract_guild_id(new)
+
+      _ ->
+        nil
     end
   end
 

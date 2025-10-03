@@ -5,7 +5,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.Stickers do
             {guild_id :: integer(), old_stickers :: [Nostrum.Struct.Sticker.t()],
              new_stickers :: [Nostrum.Struct.Sticker.t()]},
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def update(_consumer, _data, _ws_state, _context), do: :ok
 end

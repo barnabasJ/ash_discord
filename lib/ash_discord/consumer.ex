@@ -98,7 +98,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_message_create(
               message :: Nostrum.Struct.Message.t(),
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -119,7 +119,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_guild_create(
               guild :: Nostrum.Struct.Guild.t(),
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -140,7 +140,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_guild_update(
               {old_guild :: Nostrum.Struct.Guild.t(), new_guild :: Nostrum.Struct.Guild.t()},
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -161,7 +161,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_guild_delete(
               {old_guild :: Nostrum.Struct.Guild.t(), unavailable :: boolean},
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -183,7 +183,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_ready(
               data :: Nostrum.Struct.Event.Ready.t(),
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -205,7 +205,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_interaction_create(
               interaction :: Nostrum.Struct.Interaction.t(),
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -227,7 +227,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_application_command(
               interaction :: Nostrum.Struct.Interaction.t(),
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -248,7 +248,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_guild_role_create(
               {guild_id :: integer, new_role :: Nostrum.Struct.Guild.Role.t()},
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -270,7 +270,7 @@ defmodule AshDiscord.Consumer do
               {guild_id :: integer, old_role :: Nostrum.Struct.Guild.Role.t() | nil,
                new_role :: Nostrum.Struct.Guild.Role.t()},
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -291,7 +291,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_guild_role_delete(
               {guild_id :: integer, old_role :: Nostrum.Struct.Guild.Role.t()},
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -312,7 +312,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_guild_member_add(
               {guild_id :: integer, new_member :: Nostrum.Struct.Guild.Member.t()},
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -334,7 +334,7 @@ defmodule AshDiscord.Consumer do
               {guild_id :: integer, old_member :: Nostrum.Struct.Guild.Member.t() | nil,
                new_member :: Nostrum.Struct.Guild.Member.t()},
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -355,7 +355,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_guild_member_remove(
               {guild_id :: integer, old_member :: Nostrum.Struct.Guild.Member.t()},
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -376,7 +376,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_channel_create(
               channel :: Nostrum.Struct.Channel.t(),
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -398,7 +398,7 @@ defmodule AshDiscord.Consumer do
               {old_channel :: Nostrum.Struct.Channel.t() | nil,
                new_channel :: Nostrum.Struct.Channel.t()},
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -419,7 +419,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_channel_delete(
               channel :: Nostrum.Struct.Channel.t(),
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -441,7 +441,7 @@ defmodule AshDiscord.Consumer do
               {old_message :: Nostrum.Struct.Message.t() | nil,
                updated_message :: Nostrum.Struct.Message.t()},
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -462,7 +462,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_message_delete(
               data :: Nostrum.Struct.Event.MessageDelete.t(),
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -483,7 +483,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_message_delete_bulk(
               data :: Nostrum.Struct.Event.MessageDeleteBulk.t(),
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -504,7 +504,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_message_reaction_add(
               data :: Nostrum.Struct.Event.MessageReactionAdd.t(),
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -525,7 +525,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_message_reaction_remove(
               data :: Nostrum.Struct.Event.MessageReactionRemove.t(),
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -546,7 +546,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_message_reaction_remove_all(
               data :: Nostrum.Struct.Event.MessageReactionRemoveAll.t(),
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -567,7 +567,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_voice_state_update(
               voice_state :: Nostrum.Struct.Event.VoiceState.t(),
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -588,7 +588,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_typing_start(
               typing_data :: Nostrum.Struct.Event.TypingStart.t(),
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -609,7 +609,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_invite_create(
               invite :: Nostrum.Struct.Event.InviteCreate.t(),
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -630,7 +630,7 @@ defmodule AshDiscord.Consumer do
   @callback handle_invite_delete(
               invite_data :: Nostrum.Struct.Event.InviteDelete.t(),
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @doc """
@@ -669,25 +669,25 @@ defmodule AshDiscord.Consumer do
   @callback handle_presence_update(
               {guild_id :: integer, old_presence :: map | nil, new_presence :: map},
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @callback handle_user_update(
               {old_user :: Nostrum.Struct.User.t() | nil, new_user :: Nostrum.Struct.User.t()},
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @callback handle_guild_unavailable(
               guild :: Nostrum.Struct.Guild.t(),
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   @callback handle_guild_available(
               guild :: Nostrum.Struct.Guild.t(),
               ws_state :: Nostrum.Struct.WSState.t(),
-              context :: AshDiscord.Consumer.Context.t()
+              context :: AshDiscord.Context.t()
             ) :: :ok | {:error, any()}
 
   # Make all callbacks optional with default implementations

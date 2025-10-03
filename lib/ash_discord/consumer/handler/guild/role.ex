@@ -5,7 +5,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.Role do
           consumer :: module(),
           {guild_id :: integer(), new_role :: Nostrum.Struct.Guild.Role.t()},
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def create(consumer, {guild_id, role}, _ws_state, _context) do
     with {:ok, resource} <-
@@ -43,7 +43,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.Role do
           {guild_id :: integer(), old_role :: Nostrum.Struct.Guild.Role.t() | nil,
            new_role :: Nostrum.Struct.Guild.Role.t()},
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def update(consumer, {guild_id, _old_role, role}, _ws_state, _context) do
     Logger.debug("AshDiscord: Handling guild role update for role #{role.id}")
@@ -82,7 +82,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.Role do
           consumer :: module(),
           {guild_id :: integer(), old_role :: Nostrum.Struct.Guild.Role.t()},
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def delete(_consumer, _data, _ws_state, _context) do
     # Role deletion not yet implemented

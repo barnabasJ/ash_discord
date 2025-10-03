@@ -6,7 +6,7 @@ defmodule AshDiscord.Consumer.Handler.Invite do
           consumer :: module(),
           invite :: map(),
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def create(consumer, invite, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_invite_resource(consumer) do
@@ -42,7 +42,7 @@ defmodule AshDiscord.Consumer.Handler.Invite do
           consumer :: module(),
           invite_data :: map(),
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def delete(consumer, invite_data, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_invite_resource(consumer) do

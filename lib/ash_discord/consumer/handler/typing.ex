@@ -5,7 +5,7 @@ defmodule AshDiscord.Consumer.Handler.Typing do
           consumer :: module(),
           typing_data :: Nostrum.Struct.Event.TypingStart.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def start(consumer, typing_data, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_typing_indicator_resource(consumer) do

@@ -6,7 +6,7 @@ defmodule AshDiscord.Consumer.Handler.Channel do
           consumer :: module(),
           channel :: Nostrum.Struct.Channel.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def create(consumer, channel, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_channel_resource(consumer) do
@@ -38,7 +38,7 @@ defmodule AshDiscord.Consumer.Handler.Channel do
           {old_channel :: Nostrum.Struct.Channel.t() | nil,
            new_channel :: Nostrum.Struct.Channel.t()},
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def update(consumer, {_old_channel, channel}, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_channel_resource(consumer) do
@@ -69,7 +69,7 @@ defmodule AshDiscord.Consumer.Handler.Channel do
           consumer :: module(),
           channel :: Nostrum.Struct.Channel.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def delete(consumer, channel, _ws_state, _context) do
     Logger.debug("AshDiscord: handle_channel_delete called with channel: #{inspect(channel)}")

@@ -1,4 +1,4 @@
-defmodule AshDiscord.Consumer.Context do
+defmodule AshDiscord.Context do
   @moduledoc """
   Discord event context for passing through Ash operations.
 

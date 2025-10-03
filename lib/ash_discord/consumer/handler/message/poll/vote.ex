@@ -3,7 +3,7 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.Vote do
           consumer :: module(),
           data :: Nostrum.Struct.Event.PollVoteChange.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def add(_consumer, _data, _ws_state, _context) do
     :ok
@@ -13,7 +13,7 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.Vote do
           consumer :: module(),
           data :: Nostrum.Struct.Event.PollVoteChange.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def remove(_consumer, _data, _ws_state, _context) do
     :ok

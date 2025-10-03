@@ -6,7 +6,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
           consumer :: module(),
           new_guild :: Nostrum.Struct.Guild.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def create(consumer, guild, _ws_state, _context) do
     register_commands(consumer, guild)
@@ -56,7 +56,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
             new_guild :: Nostrum.Struct.Guild.t()
           },
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def update(consumer, {_old_guild, new_guild}, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_guild_resource(consumer) do
@@ -96,7 +96,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
             unavailable :: boolean()
           },
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def delete(consumer, {old_guild, unavailable}, _ws_state, _context) do
     Logger.debug(
@@ -166,7 +166,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
           consumer :: module(),
           new_guild :: Nostrum.Struct.Guild.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def available(consumer, guild, _ws_state, context) do
     # When a guild becomes available, treat it like a create
@@ -177,7 +177,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
           consumer :: module(),
           unavailable_guild :: Nostrum.Struct.Guild.UnavailableGuild.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def unavailable(_consumer, _guild, _ws_state, _context) do
     :ok

@@ -3,7 +3,7 @@ defmodule AshDiscord.Consumer.Handler do
   @spec handle_event(consumer :: module(), event_payload_ws :: Nostrum.Consumer.event()) :: any()
   def handle_event(consumer, {event, payload, ws_state}) do
     callback = callback(event)
-    context = AshDiscord.Consumer.Context.from_payload(consumer, payload, ws_state)
+    context = AshDiscord.Context.from_payload(consumer, payload, ws_state)
 
     if function_exported?(consumer, callback, 3) do
       Logger.info("Handling #{event} with #{consumer}.#{callback}/3")

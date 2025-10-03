@@ -5,7 +5,7 @@ defmodule AshDiscord.Consumer.Handler.Voice do
           consumer :: module(),
           voice_state :: Nostrum.Struct.Event.VoiceState.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def state(consumer, voice_state, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_voice_state_resource(consumer) do
@@ -43,7 +43,7 @@ defmodule AshDiscord.Consumer.Handler.Voice do
           consumer :: module(),
           data :: Nostrum.Struct.Event.VoiceReady.t(),
           ws_state :: Nostrum.Struct.VoiceWSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def ready(_consumer, _data, _ws_state, _context) do
     :ok
@@ -53,7 +53,7 @@ defmodule AshDiscord.Consumer.Handler.Voice do
           consumer :: module(),
           data :: Nostrum.Struct.Event.SpeakingUpdate.t(),
           ws_state :: Nostrum.Struct.VoiceWSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def speaking(_consumer, _data, _ws_state, _context) do
     :ok
@@ -63,7 +63,7 @@ defmodule AshDiscord.Consumer.Handler.Voice do
           consumer :: module(),
           data :: Nostrum.Voice.rtp_opus(),
           ws_state :: Nostrum.Struct.VoiceWSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def incoming(_consumer, _data, _ws_state, _context) do
     :ok
@@ -73,7 +73,7 @@ defmodule AshDiscord.Consumer.Handler.Voice do
           consumer :: module(),
           data :: Nostrum.Struct.Event.VoiceServerUpdate.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def server(_consumer, _data, _ws_state, _context) do
     :ok

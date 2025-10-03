@@ -6,7 +6,7 @@ defmodule AshDiscord.Consumer.Handler.Message do
           consumer :: module(),
           message :: Nostrum.Struct.Message.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def create(consumer, message, _ws_state, _context) do
     with {:ok, message_resource} <-
@@ -53,7 +53,7 @@ defmodule AshDiscord.Consumer.Handler.Message do
             {old_message :: Nostrum.Struct.Message.t() | nil,
              updated_message :: Nostrum.Struct.Message.t()},
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def update(consumer, {_old_message, message}, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(consumer) do
@@ -90,7 +90,7 @@ defmodule AshDiscord.Consumer.Handler.Message do
           consumer :: module(),
           data :: Nostrum.Struct.Event.MessageDelete.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def delete(consumer, data, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(consumer) do
@@ -126,7 +126,7 @@ defmodule AshDiscord.Consumer.Handler.Message do
           consumer :: module(),
           data :: Nostrum.Struct.Event.MessageDeleteBulk.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def bulk(consumer, data, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(consumer) do
@@ -166,7 +166,7 @@ defmodule AshDiscord.Consumer.Handler.Message do
           consumer :: module(),
           data :: map(),
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def ack(_consumer, _data, _ws_state, _context) do
     :ok

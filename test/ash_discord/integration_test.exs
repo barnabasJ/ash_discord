@@ -70,7 +70,7 @@ defmodule AshDiscord.IntegrationTest do
 
       # Process the interaction
       ws_state = %Nostrum.Struct.WSState{}
-      result = IntegrationTestConsumer.handle_interaction_create(interaction, ws_state, %AshDiscord.Consumer.Context{})
+      result = IntegrationTestConsumer.handle_interaction_create(interaction, ws_state, %AshDiscord.Context{})
 
       assert result == :ok
 
@@ -114,7 +114,7 @@ defmodule AshDiscord.IntegrationTest do
         })
 
       ws_state = %Nostrum.Struct.WSState{}
-      result = IntegrationTestConsumer.handle_message_create(message_data, ws_state, %AshDiscord.Consumer.Context{})
+      result = IntegrationTestConsumer.handle_message_create(message_data, ws_state, %AshDiscord.Context{})
 
       assert result == :ok
 
@@ -184,7 +184,7 @@ defmodule AshDiscord.IntegrationTest do
 
       {result, log} =
         ExUnit.CaptureLog.with_log(fn ->
-          IntegrationTestConsumer.handle_interaction_create(invalid_interaction, ws_state, %AshDiscord.Consumer.Context{})
+          IntegrationTestConsumer.handle_interaction_create(invalid_interaction, ws_state, %AshDiscord.Context{})
         end)
 
       assert log =~ "command is nil"
@@ -202,7 +202,7 @@ defmodule AshDiscord.IntegrationTest do
       }
 
       ws_state = %Nostrum.Struct.WSState{}
-      result = IntegrationTestConsumer.handle_message_create(invalid_message_data, ws_state, %AshDiscord.Consumer.Context{})
+      result = IntegrationTestConsumer.handle_message_create(invalid_message_data, ws_state, %AshDiscord.Context{})
 
       assert result == :ok
 

@@ -6,7 +6,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
           consumer :: module(),
           {guild_id :: integer(), new_member :: Nostrum.Struct.Guild.Member.t()},
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def add(consumer, {guild_id, member}, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_guild_member_resource(consumer) do
@@ -53,7 +53,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
           {guild_id :: integer(), old_member :: Nostrum.Struct.Guild.Member.t() | nil,
            new_member :: Nostrum.Struct.Guild.Member.t()},
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def update(consumer, {guild_id, _old_member, member}, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_guild_member_resource(consumer) do
@@ -96,7 +96,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
           consumer :: module(),
           {guild_id :: integer(), old_member :: Nostrum.Struct.Guild.Member.t()},
           ws_state :: Nostrum.Struct.WSState.t(),
-          context :: AshDiscord.Consumer.Context.t()
+          context :: AshDiscord.Context.t()
         ) :: any()
   def remove(consumer, {guild_id, member}, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_guild_member_resource(consumer) do

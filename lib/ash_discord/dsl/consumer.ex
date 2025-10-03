@@ -80,6 +80,14 @@ defmodule AshDiscord.Dsl.Consumer do
         type: :atom,
         doc: "Ash resource for Discord invites"
       ],
+      interaction_resource: [
+        type: :atom,
+        doc: "Ash resource for Discord interactions"
+      ],
+      presence_resource: [
+        type: :atom,
+        doc: "Ash resource for Discord presence updates"
+      ],
       store_bot_messages: [
         type: :boolean,
         default: false,

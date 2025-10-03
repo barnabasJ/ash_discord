@@ -52,14 +52,86 @@ defmodule AshDiscord.Consumer.Handler do
 
   @spec get_resource(consumer :: module(), resource_type :: atom()) :: Ash.Resource.t() | nil
   defp get_resource(consumer, resource_type) do
-    info_function = String.to_existing_atom("ash_discord_consumer_#{resource_type}")
+    case resource_type do
+      :channel_resource ->
+        case AshDiscord.Consumer.Info.ash_discord_consumer_channel_resource(consumer) do
+          {:ok, resource} -> resource
+          :error -> nil
+        end
 
-    case apply(AshDiscord.Consumer.Info, info_function, [consumer]) do
-      {:ok, resource} -> resource
-      :error -> nil
+      :guild_member_resource ->
+        case AshDiscord.Consumer.Info.ash_discord_consumer_guild_member_resource(consumer) do
+          {:ok, resource} -> resource
+          :error -> nil
+        end
+
+      :guild_resource ->
+        case AshDiscord.Consumer.Info.ash_discord_consumer_guild_resource(consumer) do
+          {:ok, resource} -> resource
+          :error -> nil
+        end
+
+      :invite_resource ->
+        case AshDiscord.Consumer.Info.ash_discord_consumer_invite_resource(consumer) do
+          {:ok, resource} -> resource
+          :error -> nil
+        end
+
+      :interaction_resource ->
+        case AshDiscord.Consumer.Info.ash_discord_consumer_interaction_resource(consumer) do
+          {:ok, resource} -> resource
+          :error -> nil
+        end
+
+      :presence_resource ->
+        case AshDiscord.Consumer.Info.ash_discord_consumer_presence_resource(consumer) do
+          {:ok, resource} -> resource
+          :error -> nil
+        end
+
+      :message_reaction_resource ->
+        case AshDiscord.Consumer.Info.ash_discord_consumer_message_reaction_resource(consumer) do
+          {:ok, resource} -> resource
+          :error -> nil
+        end
+
+      :message_resource ->
+        case AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(consumer) do
+          {:ok, resource} -> resource
+          :error -> nil
+        end
+
+      :role_resource ->
+        case AshDiscord.Consumer.Info.ash_discord_consumer_role_resource(consumer) do
+          {:ok, resource} -> resource
+          :error -> nil
+        end
+
+      :typing_indicator_resource ->
+        case AshDiscord.Consumer.Info.ash_discord_consumer_typing_indicator_resource(consumer) do
+          {:ok, resource} -> resource
+          :error -> nil
+        end
+
+      :user_resource ->
+        case AshDiscord.Consumer.Info.ash_discord_consumer_user_resource(consumer) do
+          {:ok, resource} -> resource
+          :error -> nil
+        end
+
+      :voice_state_resource ->
+        case AshDiscord.Consumer.Info.ash_discord_consumer_voice_state_resource(consumer) do
+          {:ok, resource} -> resource
+          :error -> nil
+        end
+
+      :ready_resource ->
+        # Ready is a special case with no associated resource
+        nil
+
+      _ ->
+        nil
     end
-  rescue
-    _ -> nil
   end
 
   @spec build_context(

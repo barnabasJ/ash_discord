@@ -174,9 +174,9 @@ defmodule AshDiscord.CommandRegistrationTest do
 
       # Override to capture interaction processing
       @impl AshDiscord.Consumer
-      def handle_interaction_create(interaction, ws_state) do
+      def handle_interaction_create(interaction, ws_state, context) do
         send(self(), {:interaction_processed, interaction})
-        AshDiscord.Consumer.Handler.Interaction.create(__MODULE__, interaction, ws_state)
+        AshDiscord.Consumer.Handler.Interaction.create(__MODULE__, interaction, ws_state, context)
       end
     end
 

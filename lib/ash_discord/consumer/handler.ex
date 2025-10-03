@@ -7,7 +7,7 @@ defmodule AshDiscord.Consumer.Handler do
     if function_exported?(consumer, String.to_existing_atom(callback), 3) do
       Logger.info("Handling #{event} with #{consumer}.#{callback}/3")
 
-      case apply(consumer, callback, [ payload, ws_state]) do
+      case apply(consumer, callback, [payload, ws_state]) do
         {:error, _} = error ->
           Logger.error("Error handling #{event} in #{consumer}.#{callback}/3: #{inspect(error)}")
           error

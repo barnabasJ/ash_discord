@@ -11,7 +11,6 @@ defmodule AshDiscord.Consumer.Handler do
       AshDiscord.Consumer.EventMap.handler_for(event)
 
     if function_exported?(consumer, callback, 3) do
-      # User-defined callback exists, build minimal context
       context = build_context(consumer, nil, payload)
       Logger.info("Handling #{event} with #{consumer}.#{callback}/3")
 
@@ -25,13 +24,9 @@ defmodule AshDiscord.Consumer.Handler do
           other
       end
     else
-      # Use default handler - info already retrieved from EventMap above
-      # Look up the configured resource for this event type
       resource = get_resource(consumer, resource_type)
 
-      # Only call handler if resource is configured
       if resource do
-        # Build context with consumer and resource
         context = build_context(consumer, resource, payload)
 
         Logger.info("Handling #{event} with #{handler_mod}.#{handler_fun}/3")
@@ -74,15 +69,13 @@ defmodule AshDiscord.Consumer.Handler do
         ) :: AshDiscord.Context.t()
   defp build_context(consumer, resource, payload) do
     user = AshDiscord.Context.extract_user(payload)
-    user_id = AshDiscord.Context.extract_user_id(payload, user)
-    guild_id = AshDiscord.Context.extract_guild_id(payload)
+    guild = AshDiscord.Context.extract_guild(payload)
 
     %AshDiscord.Context{
       consumer: consumer,
       resource: resource,
-      user: user,
-      user_id: user_id,
-      guild_id: guild_id
+      guild: guild,
+      user: user
     }
   end
 end

@@ -47,6 +47,11 @@ defmodule AshDiscord.Context do
   Extracts context information from various Discord event payloads.
   Pattern matches on different event structures to extract user and guild info.
   """
+  @spec from_payload(
+          consumer :: module(),
+          payload :: AshDiscord.Consumer.Payload.t(),
+          ws_state :: Nostrum.Struct.WSState.t()
+        ) :: t()
 
   # Message events (MESSAGE_CREATE, MESSAGE_UPDATE) - has author field
   def from_payload(

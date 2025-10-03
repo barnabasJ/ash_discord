@@ -1,5 +1,10 @@
 defmodule AshDiscord.Consumer.Handler do
+  @moduledoc """
+  Main event handler for routing Discord events to callbacks or handler modules.
+  """
+
   require Logger
+
   @spec handle_event(consumer :: module(), event_payload_ws :: Nostrum.Consumer.event()) :: any()
   def handle_event(consumer, {event, payload, ws_state}) do
     callback = callback(event)
@@ -33,15 +38,18 @@ defmodule AshDiscord.Consumer.Handler do
     end
   end
 
+  @spec callback(event :: atom()) :: atom()
   def callback(event) do
     String.to_existing_atom("handle_" <> String.downcase(Atom.to_string(event)))
   end
 
+  @spec handler_mf(event :: atom()) :: {module(), atom()}
   defp handler_mf(event) when is_atom(event) do
     String.split(Atom.to_string(event), "_")
     |> handler_mf([])
   end
 
+  @spec handler_mf(parts :: [String.t()], module_parts :: [String.t()]) :: {module(), atom()}
   defp handler_mf([function | []], module) do
     {
       module

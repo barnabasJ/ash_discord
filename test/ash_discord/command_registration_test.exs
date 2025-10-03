@@ -199,7 +199,7 @@ defmodule AshDiscord.CommandRegistrationTest do
         # CHANNEL_MESSAGE_WITH_SOURCE
         assert response.type == 4
         assert String.contains?(response.data.content, "Unknown command")
-        {:ok, %{}}
+        {:ok}
       end)
 
       # Call the event handler - this will:

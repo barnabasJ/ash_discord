@@ -42,6 +42,7 @@ defmodule AshDiscord.InteractionRouterTest do
           data: %{
             name: "create_message",
             options: [
+              option(%{name: "discord_id", type: 3, value: "#{generate_snowflake()}"}),
               option(%{name: "message", type: 3, value: "Hello world"}),
               option(%{name: "channel", type: 3, value: "#{generate_snowflake()}"})
             ]

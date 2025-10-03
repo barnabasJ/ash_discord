@@ -139,11 +139,10 @@ defmodule AshDiscord.Consumer.Payload do
 
   @type auto_moderation_rule_delete :: Nostrum.Struct.AutoModerationRule.t()
 
-  @type auto_moderation_action_execution ::
-          Nostrum.Struct.Event.AutoModerationActionExecution.t()
+  @type auto_moderation_action_execution :: Nostrum.Struct.Event.AutoModerationRuleExecute.t()
 
-  # Audit log events
-  @type guild_audit_log_entry_create :: Nostrum.Struct.Event.GuildAuditLogEntryCreate.t()
+  # Audit log events (not exposed as event struct in Nostrum)
+  @type guild_audit_log_entry_create :: map()
 
   # Other events
   @type ready :: Nostrum.Struct.Event.Ready.t()
@@ -152,9 +151,9 @@ defmodule AshDiscord.Consumer.Payload do
 
   @type typing_start :: Nostrum.Struct.Event.TypingStart.t()
 
-  @type message_poll_vote_add :: Nostrum.Struct.Event.MessagePollVoteAdd.t()
+  @type message_poll_vote_add :: Nostrum.Struct.Event.PollVoteChange.t()
 
-  @type message_poll_vote_remove :: Nostrum.Struct.Event.MessagePollVoteRemove.t()
+  @type message_poll_vote_remove :: Nostrum.Struct.Event.PollVoteChange.t()
 
   @type webhooks_update :: map()
 

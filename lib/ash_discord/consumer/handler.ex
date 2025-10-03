@@ -7,7 +7,8 @@ defmodule AshDiscord.Consumer.Handler do
 
   @spec handle_event(consumer :: module(), event_payload_ws :: Nostrum.Consumer.event()) :: any()
   def handle_event(consumer, {event, payload, ws_state}) do
-    callback = callback_name(event)
+    {handler_mod, handler_fun, resource_type, callback} =
+      AshDiscord.Consumer.EventMap.handler_for(event)
 
     if function_exported?(consumer, callback, 3) do
       # User-defined callback exists, build minimal context
@@ -24,9 +25,7 @@ defmodule AshDiscord.Consumer.Handler do
           other
       end
     else
-      # Use default handler from EventMap
-      {handler_mod, handler_fun, resource_type} = AshDiscord.Consumer.EventMap.handler_for(event)
-
+      # Use default handler - info already retrieved from EventMap above
       # Look up the configured resource for this event type
       resource = get_resource(consumer, resource_type)
 
@@ -54,11 +53,6 @@ defmodule AshDiscord.Consumer.Handler do
         :ok
       end
     end
-  end
-
-  @spec callback_name(event :: atom()) :: atom()
-  defp callback_name(event) do
-    String.to_existing_atom("handle_" <> String.downcase(Atom.to_string(event)))
   end
 
   @spec get_resource(consumer :: module(), resource_type :: atom()) :: Ash.Resource.t() | nil

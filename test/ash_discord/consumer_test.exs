@@ -29,7 +29,7 @@ defmodule AshDiscord.ConsumerTest do
 
       # Mock the interaction response to avoid rate limiter issues
       expect(Nostrum.Api.Interaction, :create_response, fn _interaction_id, _token, _response ->
-        {:ok, %{}}
+        {:ok}
       end)
 
       ws_state = %Nostrum.Struct.WSState{}
@@ -37,7 +37,7 @@ defmodule AshDiscord.ConsumerTest do
 
       # Verify interaction was stored
       assert Process.get(:last_interaction) == interaction
-      assert Process.get(:last_interaction_result) == {:ok, %{}}
+      assert {:ok, _response} = Process.get(:last_interaction_result)
     end
 
     test "application command routing works" do
@@ -51,7 +51,7 @@ defmodule AshDiscord.ConsumerTest do
 
       # Mock the interaction response to avoid rate limiter issues
       expect(Nostrum.Api.Interaction, :create_response, fn _interaction_id, _token, _response ->
-        {:ok, %{}}
+        {:ok}
       end)
 
       ws_state = %Nostrum.Struct.WSState{}

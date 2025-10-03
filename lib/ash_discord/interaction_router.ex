@@ -34,7 +34,14 @@ defmodule AshDiscord.InteractionRouter do
              {:ok, input} <- transform_input(interaction, command),
              {:ok, action_result} <- execute_action(command, input, actor, interaction),
              {:ok, response} <- format_response(action_result, interaction, command) do
-          Nostrum.Api.Interaction.create_response(interaction.id, interaction.token, response)
+          case Nostrum.Api.Interaction.create_response(
+                 interaction.id,
+                 interaction.token,
+                 response
+               ) do
+            {:ok} -> {:ok, response}
+            {:error, _} = error -> error
+          end
         else
           {:error, reason} ->
             AshLogger.log_interaction(:error, "Failed to route interaction", interaction, %{
@@ -346,7 +353,10 @@ defmodule AshDiscord.InteractionRouter do
       }
     }
 
-    Nostrum.Api.Interaction.create_response(interaction.id, interaction.token, response)
+    case Nostrum.Api.Interaction.create_response(interaction.id, interaction.token, response) do
+      {:ok} -> {:ok, response}
+      {:error, _} = error -> error
+    end
   end
 
   defp send_error_response(interaction, _reason) do
@@ -358,7 +368,10 @@ defmodule AshDiscord.InteractionRouter do
       }
     }
 
-    Nostrum.Api.Interaction.create_response(interaction.id, interaction.token, response)
+    case Nostrum.Api.Interaction.create_response(interaction.id, interaction.token, response) do
+      {:ok} -> {:ok, response}
+      {:error, _} = error -> error
+    end
   end
 
   defp filter_input_for_action(action, input) do

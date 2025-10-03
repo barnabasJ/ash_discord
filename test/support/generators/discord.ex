@@ -902,6 +902,81 @@ defmodule AshDiscord.Test.Generators.Discord do
     struct(Nostrum.Struct.Event.TypingStart, merge_attrs(defaults, attrs))
   end
 
+  @doc """
+  Generates a Discord MessageDelete event struct.
+
+  ## Options
+
+  - `:id` - Message ID (defaults to generated snowflake)
+  - `:channel_id` - Channel ID (defaults to generated snowflake)
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+
+  ## Examples
+
+      iex> event = message_delete_event(%{id: 123456})
+      iex> event.id
+      123456
+  """
+  def message_delete_event(attrs \\ %{}) do
+    defaults = %{
+      id: generate_snowflake(),
+      channel_id: generate_snowflake(),
+      guild_id: generate_snowflake()
+    }
+
+    struct(Nostrum.Struct.Event.MessageDelete, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
+  Generates a Discord MessageDeleteBulk event struct.
+
+  ## Options
+
+  - `:ids` - List of message IDs (defaults to list of generated snowflakes)
+  - `:channel_id` - Channel ID (defaults to generated snowflake)
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+
+  ## Examples
+
+      iex> event = message_delete_bulk_event(%{ids: [123, 456]})
+      iex> event.ids
+      [123, 456]
+  """
+  def message_delete_bulk_event(attrs \\ %{}) do
+    defaults = %{
+      ids: Enum.map(1..Faker.random_between(2, 10), fn _ -> generate_snowflake() end),
+      channel_id: generate_snowflake(),
+      guild_id: generate_snowflake()
+    }
+
+    struct(Nostrum.Struct.Event.MessageDeleteBulk, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
+  Generates a Discord UnavailableGuild struct.
+
+  ## Options
+
+  - `:id` - Guild ID (defaults to generated snowflake)
+  - `:unavailable` - Whether guild is unavailable (defaults to true)
+
+  ## Examples
+
+      iex> unavailable = unavailable_guild(%{id: 123456})
+      iex> unavailable.id
+      123456
+      iex> unavailable.unavailable
+      true
+  """
+  def unavailable_guild(attrs \\ %{}) do
+    defaults = %{
+      id: generate_snowflake(),
+      unavailable: true
+    }
+
+    struct(Nostrum.Struct.Guild.UnavailableGuild, merge_attrs(defaults, attrs))
+  end
+
   # Private helper functions
 
   defp merge_attrs(defaults, overrides) when is_map(overrides) do

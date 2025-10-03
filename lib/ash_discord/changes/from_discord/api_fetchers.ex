@@ -6,20 +6,69 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
   via the struct-first pattern. It uses Nostrum API calls to fetch Discord
   entities when only a Discord ID is available.
 
+  Returns TypedStruct payloads instead of raw Nostrum structs.
+
   ## Usage
 
-  This module is used internally by `AshDiscord.Changes.FromDiscord` when no
-  `:discord_struct` argument is provided. It attempts to extract Discord ID
-  from changeset attributes and fetch the entity from Discord's API.
+  This module is used internally by `AshDiscord.Changes.FromDiscord.*` modules
+  to fetch entities from Discord's API using identity values.
 
   ## Supported Entities
 
   Currently supports fetching:
   - Users via `Nostrum.Api.User.get/1`
   - Guilds via `Nostrum.Api.Guild.get/1`
+  - And more...
   """
 
   require Logger
+
+  alias AshDiscord.Consumer.Payloads
+
+  @doc """
+  Fetches a Discord user by ID and returns a TypedStruct.
+  """
+  def fetch_user(discord_id) when is_integer(discord_id) do
+    fetch_from_nostrum_api(:user, discord_id)
+  end
+
+  @doc """
+  Fetches a Discord guild by ID and returns a TypedStruct.
+  """
+  def fetch_guild(discord_id) when is_integer(discord_id) do
+    fetch_from_nostrum_api(:guild, discord_id)
+  end
+
+  @doc """
+  Fetches a Discord channel by ID and returns a TypedStruct.
+  """
+  def fetch_channel(discord_id) when is_integer(discord_id) do
+    fetch_from_nostrum_api(:channel, discord_id)
+  end
+
+  @doc """
+  Fetches a Discord guild member by guild and user ID and returns a TypedStruct.
+  """
+  def fetch_member(%{guild_id: guild_id, user_id: user_id}) do
+    case Nostrum.Api.Guild.member(guild_id, user_id) do
+      {:ok, nostrum_member} -> {:ok, Payloads.Member.new(nostrum_member)}
+      error -> error
+    end
+  rescue
+    ArgumentError -> {:error, :api_unavailable}
+  end
+
+  @doc """
+  Fetches a Discord message by channel and message ID and returns a TypedStruct.
+  """
+  def fetch_message(%{channel_id: channel_id, message_id: message_id}) do
+    case Nostrum.Api.Message.get(channel_id, message_id) do
+      {:ok, nostrum_message} -> {:ok, Payloads.Message.new(nostrum_message)}
+      error -> error
+    end
+  rescue
+    ArgumentError -> {:error, :api_unavailable}
+  end
 
   @doc """
   Attempts to fetch Discord entity data from Nostrum cache based on changeset and type.
@@ -139,15 +188,19 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
 
   @doc """
   Fetches Discord entity from Nostrum API based on type and ID.
+  Returns TypedStruct payloads.
   """
   def fetch_from_nostrum_api(type, discord_id, changeset \\ nil) do
     case type do
-      :user -> fetch_simple_entity(&Nostrum.Api.User.get/1, discord_id)
-      :guild -> fetch_simple_entity(&Nostrum.Api.Guild.get/1, discord_id)
-      :channel -> fetch_simple_entity(&Nostrum.Api.Channel.get/1, discord_id)
-      :webhook -> fetch_simple_entity(&Nostrum.Api.Webhook.get/1, discord_id)
-      :invite -> fetch_simple_entity(&Nostrum.Api.Invite.get/1, discord_id)
-      :sticker -> fetch_simple_entity(&Nostrum.Api.Sticker.get/1, discord_id)
+      :user -> fetch_simple_entity(&Nostrum.Api.User.get/1, discord_id, :user)
+      :guild -> fetch_simple_entity(&Nostrum.Api.Guild.get/1, discord_id, :guild)
+      :channel -> fetch_simple_entity(&Nostrum.Api.Channel.get/1, discord_id, :channel)
+      # TODO: Add Webhook TypedStruct
+      :webhook -> {:error, :not_implemented}
+      # TODO: Add Invite TypedStruct
+      :invite -> {:error, :not_implemented}
+      :sticker -> fetch_simple_entity(&Nostrum.Api.Sticker.get/1, discord_id, :sticker)
+      # Emoji requires guild context
       :emoji -> {:error, :requires_guild_id}
       :role -> fetch_role_entity(changeset, discord_id)
       :guild_member -> fetch_guild_member_entity(changeset)
@@ -156,10 +209,13 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
     end
   end
 
-  # Fetches a simple entity that only requires an ID
-  defp fetch_simple_entity(api_function, discord_id) do
+  # Fetches a simple entity that only requires an ID and wraps in TypedStruct
+  defp fetch_simple_entity(api_function, discord_id, type) do
     try do
-      api_function.(discord_id)
+      case api_function.(discord_id) do
+        {:ok, nostrum_struct} -> {:ok, wrap_in_typed_struct(type, nostrum_struct)}
+        error -> error
+      end
     rescue
       ArgumentError -> {:error, :api_unavailable}
     end
@@ -188,7 +244,10 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
 
       if guild_discord_id && user_discord_id do
         try do
-          Nostrum.Api.Guild.member(guild_discord_id, user_discord_id)
+          case Nostrum.Api.Guild.member(guild_discord_id, user_discord_id) do
+            {:ok, nostrum_member} -> {:ok, Payloads.Member.new(nostrum_member)}
+            error -> error
+          end
         rescue
           ArgumentError -> {:error, :api_unavailable}
         end
@@ -208,7 +267,10 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
 
       if channel_id && message_id do
         try do
-          Nostrum.Api.Message.get(channel_id, message_id)
+          case Nostrum.Api.Message.get(channel_id, message_id) do
+            {:ok, nostrum_message} -> {:ok, Payloads.Message.new(nostrum_message)}
+            error -> error
+          end
         rescue
           ArgumentError -> {:error, :api_unavailable}
         end
@@ -285,11 +347,26 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
             {:error, "Role #{role_discord_id} not found in guild #{guild_discord_id}"}
 
           role_data ->
-            {:ok, role_data}
+            {:ok, Payloads.Role.new(role_data)}
         end
 
       {:error, reason} ->
         {:error, "Failed to fetch roles for guild #{guild_discord_id}: #{inspect(reason)}"}
+    end
+  end
+
+  # Wraps Nostrum structs in appropriate TypedStruct payloads
+  defp wrap_in_typed_struct(type, nostrum_struct) do
+    case type do
+      :user -> Payloads.User.new(nostrum_struct)
+      :guild -> Payloads.Guild.new(nostrum_struct)
+      :channel -> Payloads.Channel.new(nostrum_struct)
+      :message -> Payloads.Message.new(nostrum_struct)
+      :role -> Payloads.Role.new(nostrum_struct)
+      :member -> Payloads.Member.new(nostrum_struct)
+      :sticker -> Payloads.Sticker.new(nostrum_struct)
+      :emoji -> Payloads.Emoji.new(nostrum_struct)
+      _ -> nostrum_struct
     end
   end
 end

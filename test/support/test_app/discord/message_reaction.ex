@@ -109,37 +109,12 @@ defmodule TestApp.Discord.MessageReaction do
       description("Create message reaction from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :struct,
-        allow_nil?: false,
-        description: "Discord message reaction struct to transform"
-      )
-
-      argument(:discord_id, :integer,
+      argument(:data, AshDiscord.Consumer.Payloads.MessageReactionAddEvent,
         allow_nil?: true,
-        description: "Discord message reaction ID for API fallback"
+        description: "Discord message reaction TypedStruct data"
       )
 
-      argument(:user_id, :integer,
-        allow_nil?: true,
-        description: "ID of user who reacted"
-      )
-
-      argument(:message_id, :integer,
-        allow_nil?: true,
-        description: "ID of message that was reacted to"
-      )
-
-      argument(:channel_id, :integer,
-        allow_nil?: true,
-        description: "ID of channel containing the message"
-      )
-
-      argument(:guild_id, :integer,
-        allow_nil?: true,
-        description: "ID of guild (null for DM reactions)"
-      )
-
-      change({AshDiscord.Changes.FromDiscord, type: :message_reaction})
+      change(AshDiscord.Changes.FromDiscord.MessageReaction)
 
       upsert?(true)
       upsert_identity(:reaction_identity)

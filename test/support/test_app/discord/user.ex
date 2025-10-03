@@ -36,12 +36,12 @@ defmodule TestApp.Discord.User do
 
       accept([:discord_id])
 
-      argument(:discord_struct, :map,
+      argument(:data, AshDiscord.Consumer.Payloads.User,
         allow_nil?: true,
-        description: "Discord user data to transform"
+        description: "Discord user TypedStruct payload"
       )
 
-      argument(:discord_id, :integer,
+      argument(:identity, :integer,
         allow_nil?: true,
         description: "Discord user ID for API fallback"
       )
@@ -50,7 +50,7 @@ defmodule TestApp.Discord.User do
       upsert_identity(:discord_id)
       upsert_fields([:discord_username, :discord_avatar])
 
-      change({AshDiscord.Changes.FromDiscord, type: :user})
+      change(AshDiscord.Changes.FromDiscord.User)
     end
 
     update :update do

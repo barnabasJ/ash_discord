@@ -63,17 +63,12 @@ defmodule TestApp.Discord.MessageAttachment do
       description("Create message attachment from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :struct,
+      argument(:data, AshDiscord.Consumer.Payloads.MessageAttachment,
         allow_nil?: true,
-        description: "Discord message attachment struct to transform"
+        description: "Discord message attachment TypedStruct data"
       )
 
-      argument(:discord_id, :integer,
-        allow_nil?: true,
-        description: "Discord message attachment ID for API fallback"
-      )
-
-      change({AshDiscord.Changes.FromDiscord, type: :message_attachment})
+      change(AshDiscord.Changes.FromDiscord.MessageAttachment)
 
       upsert?(true)
       upsert_identity(:discord_id)

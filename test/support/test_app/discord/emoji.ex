@@ -62,12 +62,12 @@ defmodule TestApp.Discord.Emoji do
       description("Create emoji from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :struct,
-        allow_nil?: false,
-        description: "Discord emoji struct to transform"
+      argument(:data, AshDiscord.Consumer.Payloads.Emoji,
+        allow_nil?: true,
+        description: "Discord emoji TypedStruct data"
       )
 
-      change({AshDiscord.Changes.FromDiscord, type: :emoji})
+      change(AshDiscord.Changes.FromDiscord.Emoji)
 
       upsert?(true)
       upsert_identity(:discord_id)

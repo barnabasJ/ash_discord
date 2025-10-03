@@ -89,17 +89,17 @@ defmodule TestApp.Discord.Channel do
       description("Create channel from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :struct,
+      argument(:data, AshDiscord.Consumer.Payloads.Channel,
         allow_nil?: true,
-        description: "Discord channel struct to transform"
+        description: "Discord channel TypedStruct data"
       )
 
-      argument(:discord_id, :integer,
+      argument(:identity, :integer,
         allow_nil?: true,
         description: "Discord channel ID for API fallback"
       )
 
-      change({AshDiscord.Changes.FromDiscord, type: :channel})
+      change(AshDiscord.Changes.FromDiscord.Channel)
 
       upsert?(true)
       upsert_identity(:discord_id)

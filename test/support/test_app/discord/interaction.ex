@@ -88,17 +88,12 @@ defmodule TestApp.Discord.Interaction do
       description("Create interaction from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :struct,
+      argument(:data, AshDiscord.Consumer.Payloads.Interaction,
         allow_nil?: true,
-        description: "Discord interaction struct to transform"
+        description: "Discord interaction TypedStruct data"
       )
 
-      argument(:discord_id, :integer,
-        allow_nil?: true,
-        description: "Discord interaction ID for API fallback"
-      )
-
-      change({AshDiscord.Changes.FromDiscord, type: :interaction})
+      change(AshDiscord.Changes.FromDiscord.Interaction)
 
       upsert?(true)
       upsert_identity(:discord_id)

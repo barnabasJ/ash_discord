@@ -58,17 +58,17 @@ defmodule TestApp.Discord.Webhook do
       description("Create webhook from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :struct,
+      argument(:data, AshDiscord.Consumer.Payloads.Webhook,
         allow_nil?: true,
-        description: "Discord webhook struct to transform"
+        description: "Discord webhook TypedStruct data"
       )
 
-      argument(:discord_id, :integer,
+      argument(:identity, :integer,
         allow_nil?: true,
         description: "Discord webhook ID for API fallback"
       )
 
-      change({AshDiscord.Changes.FromDiscord, type: :webhook})
+      change(AshDiscord.Changes.FromDiscord.Webhook)
 
       upsert?(true)
       upsert_identity(:discord_id)

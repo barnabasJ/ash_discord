@@ -118,17 +118,17 @@ defmodule TestApp.Discord.Invite do
       description("Create invite from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :struct,
+      argument(:data, AshDiscord.Consumer.Payloads.Invite,
         allow_nil?: true,
-        description: "Discord invite struct to transform"
+        description: "Discord invite TypedStruct data"
       )
 
-      argument(:discord_id, :string,
+      argument(:identity, :string,
         allow_nil?: true,
         description: "Discord invite code for API fallback"
       )
 
-      change({AshDiscord.Changes.FromDiscord, type: :invite})
+      change(AshDiscord.Changes.FromDiscord.Invite)
 
       upsert?(true)
       upsert_identity(:code)

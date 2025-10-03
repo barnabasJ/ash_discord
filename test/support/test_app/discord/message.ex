@@ -85,24 +85,17 @@ defmodule TestApp.Discord.Message do
         :pinned
       ])
 
-      argument(:discord_struct, :struct, description: "Discord message data to transform")
-
-      argument(:channel_discord_id, :integer,
+      argument(:data, AshDiscord.Consumer.Payloads.Message,
         allow_nil?: true,
-        description: "Channel ID for API fallback"
+        description: "Discord message TypedStruct data"
       )
 
-      argument(:message_discord_id, :integer,
+      argument(:identity, :map,
         allow_nil?: true,
-        description: "Message ID for API fallback"
+        description: "Map with channel_id and message_id for API fallback"
       )
 
-      argument(:guild_discord_id, :integer,
-        allow_nil?: true,
-        description: "Guild ID for API fallback"
-      )
-
-      change({AshDiscord.Changes.FromDiscord, type: :message})
+      change(AshDiscord.Changes.FromDiscord.Message)
     end
 
     read :search do

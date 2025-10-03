@@ -67,19 +67,31 @@ defmodule TestApp.Discord.GuildMember do
         :communication_disabled_until
       ])
 
-      argument(:discord_struct, :struct, description: "Discord guild member data to transform")
-      argument(:discord_id, :integer, description: "Discord guild member ID for API fallback")
-      argument(:guild_id, :integer, description: "Guild ID this member belongs to")
+      argument(:data, AshDiscord.Consumer.Payloads.Member,
+        allow_nil?: true,
+        description: "Discord guild member TypedStruct payload"
+      )
+
+      argument(:identity, :map,
+        allow_nil?: true,
+        description: "Map with guild_id and user_id for API fallback"
+      )
 
       change(fn changeset, _context ->
+        # Set guild_id and user_id from identity or data
+        identity = Ash.Changeset.get_argument(changeset, :identity)
+        data = Ash.Changeset.get_argument(changeset, :data)
+
         changeset =
-          case Ash.Changeset.get_argument(changeset, :guild_id) do
-            nil -> changeset
-            guild_id -> Ash.Changeset.force_change_attribute(changeset, :guild_id, guild_id)
+          case {identity, data} do
+            {%{guild_id: guild_id}, _} when not is_nil(guild_id) ->
+              Ash.Changeset.force_change_attribute(changeset, :guild_id, guild_id)
+
+            _ ->
+              changeset
           end
 
-        # Also set user_id from discord_struct for upsert identity
-        case Ash.Changeset.get_argument(changeset, :discord_struct) do
+        case data do
           %{user_id: user_id} when not is_nil(user_id) ->
             Ash.Changeset.force_change_attribute(changeset, :user_id, user_id)
 
@@ -88,7 +100,7 @@ defmodule TestApp.Discord.GuildMember do
         end
       end)
 
-      change({AshDiscord.Changes.FromDiscord, type: :guild_member})
+      change(AshDiscord.Changes.FromDiscord.GuildMember)
     end
 
     update :update do

@@ -2,18 +2,17 @@ defmodule AshDiscord.Consumer.Handler.Interaction do
   require Logger
 
   @spec create(
-          consumer :: module(),
           interaction :: AshDiscord.Consumer.Payload.interaction_create(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def create(consumer, interaction, _ws_state, _context) do
+  def create(interaction, _ws_state, context) do
     Logger.debug("Processing Discord interaction: #{interaction.id}")
 
     case interaction.type do
       # Application command
       2 ->
-        handle_application_command(consumer, interaction)
+        handle_application_command(context.consumer, interaction)
 
       # Other interaction types (buttons, select menus, etc.)
       _ ->
@@ -83,8 +82,8 @@ defmodule AshDiscord.Consumer.Handler.Interaction do
       }
     }
 
-    case Nostrum.Api.create_interaction_response(interaction, response) do
-      {:ok, _} ->
+    case Nostrum.Api.Interaction.create_response(interaction.id, interaction.token, response) do
+      {:ok} ->
         :ok
 
       {:error, error} ->

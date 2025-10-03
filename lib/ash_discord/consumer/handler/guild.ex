@@ -3,15 +3,14 @@ defmodule AshDiscord.Consumer.Handler.Guild do
   require Ash.Query
 
   @spec create(
-          consumer :: module(),
           new_guild :: Nostrum.Struct.Guild.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def create(consumer, guild, _ws_state, _context) do
-    register_commands(consumer, guild)
+  def create(guild, _ws_state, context) do
+    register_commands(context.consumer, guild)
 
-    resource(consumer)
+    context.resource
     |> Ash.Changeset.for_create(:from_discord, %{
       discord_id: guild.id,
       discord_struct: guild
@@ -50,7 +49,6 @@ defmodule AshDiscord.Consumer.Handler.Guild do
   end
 
   @spec update(
-          consumer :: module(),
           {
             old_guild :: Nostrum.Struct.Guild.t(),
             new_guild :: Nostrum.Struct.Guild.t()
@@ -58,39 +56,31 @@ defmodule AshDiscord.Consumer.Handler.Guild do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def update(consumer, {_old_guild, new_guild}, _ws_state, _context) do
-    case AshDiscord.Consumer.Info.ash_discord_consumer_guild_resource(consumer) do
-      {:ok, guild_resource} ->
-        case guild_resource
-             |> Ash.Changeset.for_create(:from_discord, %{
-               discord_id: new_guild.id,
-               discord_struct: new_guild
-             })
-             |> Ash.Changeset.set_context(%{
-               private: %{ash_discord?: true},
-               shared: %{private: %{ash_discord?: true}}
-             })
-             |> Ash.create() do
-          {:ok, _guild_record} ->
-            :ok
+  def update({_old_guild, new_guild}, _ws_state, context) do
+    case context.resource
+         |> Ash.Changeset.for_create(:from_discord, %{
+           discord_id: new_guild.id,
+           discord_struct: new_guild
+         })
+         |> Ash.Changeset.set_context(%{
+           private: %{ash_discord?: true},
+           shared: %{private: %{ash_discord?: true}}
+         })
+         |> Ash.create() do
+      {:ok, _guild_record} ->
+        :ok
 
-          {:error, error} ->
-            Logger.error(
-              "Failed to update guild #{new_guild.name} (#{new_guild.id}): #{inspect(error)}"
-            )
+      {:error, error} ->
+        Logger.error(
+          "Failed to update guild #{new_guild.name} (#{new_guild.id}): #{inspect(error)}"
+        )
 
-            # Don't crash the consumer
-            :ok
-        end
-
-      :error ->
-        # No guild resource configured
+        # Don't crash the consumer
         :ok
     end
   end
 
   @spec delete(
-          consumer :: module(),
           {
             old_guild :: Nostrum.Struct.Guild.t(),
             unavailable :: boolean()
@@ -98,92 +88,58 @@ defmodule AshDiscord.Consumer.Handler.Guild do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def delete(consumer, {old_guild, unavailable}, _ws_state, _context) do
-    Logger.debug(
-      "AshDiscord: handle_guild_delete called with data: #{inspect({old_guild, unavailable})}"
-    )
+  def delete({old_guild, unavailable}, _ws_state, context) do
+    case unavailable do
+      unavailable when unavailable in [nil, false] ->
+        # Permanent deletion - unavailable=nil or false means guild was actually deleted
+        guild_discord_id = old_guild.id
 
-    case AshDiscord.Consumer.Info.ash_discord_consumer_guild_resource(consumer) do
-      {:ok, resource} ->
-        Logger.info("AshDiscord: Guild resource found: #{inspect(resource)}")
+        case context.resource
+             |> Ash.Query.for_read(:read)
+             |> Ash.Query.filter(discord_id == ^guild_discord_id)
+             |> Ash.Query.set_context(%{
+               private: %{ash_discord?: true},
+               shared: %{private: %{ash_discord?: true}}
+             })
+             |> Ash.read() do
+          {:ok, [guild]} ->
+            guild |> Ash.destroy(actor: %{role: :bot})
 
-        case unavailable do
-          unavailable when unavailable in [nil, false] ->
-            # Permanent deletion - unavailable=nil or false means guild was actually deleted
-            guild_discord_id = old_guild.id
-            Logger.info("AshDiscord: Deleting guild #{guild_discord_id} (permanent removal)")
+          {:ok, []} ->
+            Logger.info("Guild #{guild_discord_id} not found, nothing to delete")
+            :ok
 
-            case resource
-                 |> Ash.Query.for_read(:read)
-                 |> Ash.Query.filter(discord_id: guild_discord_id)
-                 |> Ash.Query.set_context(%{
-                   private: %{ash_discord?: true},
-                   shared: %{private: %{ash_discord?: true}}
-                 })
-                 |> Ash.read() do
-              {:ok, [guild]} ->
-                Logger.info("AshDiscord: Found guild to delete: #{inspect(guild)}")
+          {:error, error} ->
+            Logger.error(
+              "Failed to find guild #{guild_discord_id} for deletion: #{inspect(error)}"
+            )
 
-                case guild |> Ash.destroy(actor: %{role: :bot}) do
-                  :ok ->
-                    Logger.info("AshDiscord: Guild #{guild_discord_id} deleted successfully")
-                    :ok
-
-                  {:error, error} ->
-                    Logger.error(
-                      "AshDiscord: Failed to delete guild #{guild_discord_id}: #{inspect(error)}"
-                    )
-
-                    :ok
-                end
-
-              {:ok, []} ->
-                Logger.info("AshDiscord: Guild #{guild_discord_id} not found, nothing to delete")
-
-                :ok
-
-              {:error, error} ->
-                Logger.error(
-                  "AshDiscord: Failed to find guild #{guild_discord_id} for deletion: #{inspect(error)}"
-                )
-
-                :ok
-            end
-
-          true ->
-            # Temporary unavailability - guild still exists but bot can't access it
-            Logger.info("AshDiscord: Guild #{old_guild.id} became unavailable (temporary)")
             :ok
         end
 
-      :error ->
-        Logger.info("AshDiscord: No guild resource configured")
+      true ->
+        # Temporary unavailability - guild still exists but bot can't access it
+        Logger.info("Guild #{old_guild.id} became unavailable (temporary)")
         :ok
     end
   end
 
   @spec available(
-          consumer :: module(),
           new_guild :: Nostrum.Struct.Guild.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def available(consumer, guild, _ws_state, context) do
+  def available(guild, ws_state, context) do
     # When a guild becomes available, treat it like a create
-    create(consumer, guild, nil, context)
+    create(guild, ws_state, context)
   end
 
   @spec unavailable(
-          consumer :: module(),
           unavailable_guild :: Nostrum.Struct.Guild.UnavailableGuild.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def unavailable(_consumer, _guild, _ws_state, _context) do
+  def unavailable(_guild, _ws_state, _context) do
     :ok
-  end
-
-  defp resource(consumer) do
-    AshDiscord.Consumer.Info.ash_discord_consumer_guild_resource!(consumer)
   end
 end

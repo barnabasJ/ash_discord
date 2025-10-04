@@ -211,11 +211,17 @@ defmodule AshDiscord.IntegrationTest do
     end
 
     test "handles message creation errors" do
-      invalid_message_data = %{
-        # Invalid - should cause error
-        discord_id: nil,
-        content: "Test message"
-      }
+      # Create a proper Nostrum struct but with missing required relationships
+      # This will cause a validation error when trying to create the message
+      invalid_message_data =
+        message(%{
+          id: generate_snowflake(),
+          content: "Test message",
+          channel_id: 999_999_999,
+          # Non-existent channel/guild IDs will cause relationship errors
+          guild_id: 888_888_888,
+          author: user(%{id: 777_777_777})
+        })
 
       ws_state = %Nostrum.Struct.WSState{}
 

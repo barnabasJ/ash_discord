@@ -25,7 +25,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReaction do
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_transaction(changeset, fn changeset ->
-      case Ash.Changeset.get_argument(changeset, :data) do
+      case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
         %Payloads.MessageReactionAddEvent{} = reaction_data ->
           transform_message_reaction(changeset, reaction_data)
 
@@ -50,11 +50,8 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReaction do
 
     changeset
     |> maybe_set_attribute(:emoji_id, get_nested_id(emoji_data))
-    |> maybe_set_attribute(:emoji_name, emoji_data && (emoji_data[:name] || emoji_data["name"]))
-    |> maybe_set_attribute(
-      :emoji_animated,
-      emoji_data && (emoji_data[:animated] || emoji_data["animated"])
-    )
+    |> maybe_set_attribute(:emoji_name, emoji_data && emoji_data.name)
+    |> maybe_set_attribute(:emoji_animated, emoji_data && emoji_data.animated)
     |> maybe_set_attribute(:count, 1)
     |> maybe_set_attribute(:me, false)
     |> set_message_reaction_id_fields(reaction_data)
@@ -70,7 +67,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReaction do
   end
 
   defp set_id_field(changeset, data, field) do
-    id_value = data[field] || data[to_string(field)]
+    id_value = Map.get(data, field)
 
     if is_nil(id_value) do
       changeset
@@ -117,6 +114,5 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReaction do
 
   defp get_nested_id(nil), do: nil
   defp get_nested_id(%{id: id}), do: id
-  defp get_nested_id(map) when is_map(map), do: map[:id] || map["id"]
   defp get_nested_id(_), do: nil
 end

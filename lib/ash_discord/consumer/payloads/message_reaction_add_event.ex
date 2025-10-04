@@ -32,7 +32,13 @@ defmodule AshDiscord.Consumer.Payloads.MessageReactionAddEvent do
   Create a MessageReactionAddEvent TypedStruct from a Nostrum MessageReactionAdd event struct.
 
   Accepts a `Nostrum.Struct.Event.MessageReactionAdd.t()` and creates an AshDiscord MessageReactionAddEvent TypedStruct.
+  If already a MessageReactionAddEvent struct, returns it as-is.
   """
+  def new(%__MODULE__{} = event) do
+    # Already converted, return as-is
+    {:ok, event}
+  end
+
   def new(%Nostrum.Struct.Event.MessageReactionAdd{} = nostrum_event) do
     super(Map.from_struct(nostrum_event))
   end

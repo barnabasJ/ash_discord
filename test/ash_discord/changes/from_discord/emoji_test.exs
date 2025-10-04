@@ -118,7 +118,7 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for emoji entity"
+      assert error_message =~ "Emoji requires data argument"
     end
   end
 
@@ -205,7 +205,7 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Invalid value provided for discord_struct"
+      assert error_message =~ "Invalid value provided for data"
     end
 
     test "handles missing required fields in discord_struct" do
@@ -216,7 +216,7 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "is required"
+      assert error_message =~ "value must not be nil"
     end
 
     test "handles malformed emoji data" do

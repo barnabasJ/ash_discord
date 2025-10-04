@@ -5,6 +5,7 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
   import Mimic
 
   alias AshDiscord.Consumer.Handler.Message
+  alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 
   setup do
@@ -101,7 +102,15 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
         user: nil
       }
 
-      assert :ok = Message.update({nil, message_data}, %Nostrum.Struct.WSState{}, context)
+      # Create MessageUpdate payload
+      {:ok, message_payload} = Payloads.Message.new(message_data)
+
+      message_update = %Payloads.MessageUpdate{
+        old_message: nil,
+        updated_message: message_payload
+      }
+
+      assert :ok = Message.update(message_update, %Nostrum.Struct.WSState{}, context)
 
       messages = TestApp.Discord.Message.read!()
       assert length(messages) == 1
@@ -131,7 +140,6 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
       {:ok, _created} =
         TestApp.Discord.Message
         |> Ash.Changeset.for_create(:from_discord, %{
-          discord_id: message_data.id,
           data: message_data
         })
         |> Ash.create()
@@ -180,7 +188,6 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
       {:ok, _} =
         TestApp.Discord.Message
         |> Ash.Changeset.for_create(:from_discord, %{
-          discord_id: message1_data.id,
           data: message1_data
         })
         |> Ash.create()
@@ -188,7 +195,6 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
       {:ok, _} =
         TestApp.Discord.Message
         |> Ash.Changeset.for_create(:from_discord, %{
-          discord_id: message2_data.id,
           data: message2_data
         })
         |> Ash.create()

@@ -84,7 +84,13 @@ defmodule AshDiscord.Consumer.Payloads.Guild do
   Create a Guild TypedStruct from a Nostrum Guild struct.
 
   Accepts a `Nostrum.Struct.Guild.t()` and creates an AshDiscord Guild TypedStruct.
+  If already a Payloads.Guild struct, returns it as-is.
   """
+  def new(%__MODULE__{} = guild) do
+    # Already converted, return as-is
+    {:ok, guild}
+  end
+
   def new(%Nostrum.Struct.Guild{} = nostrum_guild) do
     super(Map.from_struct(nostrum_guild))
   end

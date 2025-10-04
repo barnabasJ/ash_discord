@@ -23,7 +23,7 @@ defmodule AshDiscord.Consumer.Handler.GuildTest do
     test "creates guild from Discord event" do
       guild_data = guild()
       # Transform to TypedStruct
-      typed_guild = Payloads.Guild.new(guild_data)
+      {:ok, typed_guild} = Payloads.Guild.new(guild_data)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -44,7 +44,7 @@ defmodule AshDiscord.Consumer.Handler.GuildTest do
     test "registers guild commands on create" do
       guild_data = guild()
       # Transform to TypedStruct
-      typed_guild = Payloads.Guild.new(guild_data)
+      {:ok, typed_guild} = Payloads.Guild.new(guild_data)
 
       expect(Nostrum.Api.ApplicationCommand, :bulk_overwrite_guild_commands, fn guild_id,
                                                                                 commands ->
@@ -70,7 +70,7 @@ defmodule AshDiscord.Consumer.Handler.GuildTest do
       new_guild = guild(%{id: old_guild.id, name: "New Name"})
 
       # Transform to TypedStruct GuildUpdate payload
-      guild_update = Payloads.GuildUpdate.new({old_guild, new_guild})
+      {:ok, guild_update} = Payloads.GuildUpdate.new({old_guild, new_guild})
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -113,7 +113,7 @@ defmodule AshDiscord.Consumer.Handler.GuildTest do
       }
 
       # Transform to TypedStruct GuildDelete payload
-      guild_delete = Payloads.GuildDelete.new({guild_data, false})
+      {:ok, guild_delete} = Payloads.GuildDelete.new({guild_data, false})
 
       Guild.delete(guild_delete, %Nostrum.Struct.WSState{}, context)
 
@@ -142,7 +142,7 @@ defmodule AshDiscord.Consumer.Handler.GuildTest do
       }
 
       # Transform to TypedStruct GuildDelete payload
-      guild_delete = Payloads.GuildDelete.new({guild_data, true})
+      {:ok, guild_delete} = Payloads.GuildDelete.new({guild_data, true})
 
       assert :ok = Guild.delete(guild_delete, %Nostrum.Struct.WSState{}, context)
 

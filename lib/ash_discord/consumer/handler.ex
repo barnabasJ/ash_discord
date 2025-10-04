@@ -11,7 +11,7 @@ defmodule AshDiscord.Consumer.Handler do
       AshDiscord.Consumer.EventMap.handler_for(event)
 
     # Transform Nostrum payload to AshDiscord TypedStruct
-    transformed_payload = payload_module.new(payload)
+    {:ok, transformed_payload} = payload_module.new(payload)
 
     if function_exported?(consumer, callback, 3) do
       context = build_context(consumer, nil, transformed_payload)

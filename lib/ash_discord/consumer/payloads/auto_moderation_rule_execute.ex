@@ -1,6 +1,6 @@
-defmodule AshDiscord.Consumer.Payloads.AutoModerationActionExecutionEvent do
+defmodule AshDiscord.Consumer.Payloads.AutoModerationRuleExecute do
   @moduledoc """
-  TypedStruct wrapper for Discord AUTO_MODERATION_ACTION_EXECUTION event data.
+  TypedStruct wrapper for Discord AUTO_MODERATION_RULE_EXECUTE event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.AutoModerationRuleExecute.t()`.
   """
@@ -44,9 +44,9 @@ defmodule AshDiscord.Consumer.Payloads.AutoModerationActionExecutionEvent do
   end
 
   @doc """
-  Create an AutoModerationActionExecutionEvent TypedStruct from a Nostrum AutoModerationRuleExecute event struct.
+  Create an AutoModerationRuleExecute TypedStruct from a Nostrum AutoModerationRuleExecute event struct.
 
-  Accepts a `Nostrum.Struct.Event.AutoModerationRuleExecute.t()` and creates an AshDiscord AutoModerationActionExecutionEvent TypedStruct.
+  Accepts a `Nostrum.Struct.Event.AutoModerationRuleExecute.t()` and creates an AshDiscord AutoModerationRuleExecute TypedStruct.
   """
   def new(%Nostrum.Struct.Event.AutoModerationRuleExecute{} = nostrum_event) do
     super(Map.from_struct(nostrum_event))

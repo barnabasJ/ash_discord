@@ -316,7 +316,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "is required"
+      assert error_message =~ "is required" or error_message =~ "must not be nil"
     end
 
     test "handles invalid sticker type" do

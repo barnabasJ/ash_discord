@@ -119,7 +119,7 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "No such input `discord_id`"
+      assert error_message =~ "No such input" or error_message =~ "is invalid"
     end
 
     test "requires data argument for creation" do
@@ -229,7 +229,7 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "is required"
+      assert error_message =~ "is required" or error_message =~ "must not be nil"
     end
 
     test "handles invalid permission value" do

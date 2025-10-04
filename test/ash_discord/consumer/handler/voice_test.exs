@@ -7,21 +7,20 @@ defmodule AshDiscord.Consumer.Handler.VoiceTest do
   alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 
-  describe "update/4" do
+  describe "update/3" do
     test "creates voice state in database" do
       voice_state_data = voice_state()
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.VoiceState,
         guild: nil,
         user: nil
       }
 
       {:ok, voice_state_event} = Payloads.VoiceStateEvent.new(voice_state_data)
 
-      assert :ok =
-               Voice.update(TestConsumer, voice_state_event, %Nostrum.Struct.WSState{}, context)
+      assert :ok = Voice.update(voice_state_event, %Nostrum.Struct.WSState{}, context)
 
       # Verify voice state was created in database
       voice_states = TestApp.Discord.VoiceState.read!()

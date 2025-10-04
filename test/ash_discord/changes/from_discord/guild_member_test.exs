@@ -9,6 +9,12 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
   import AshDiscord.Test.Generators.Discord
   import Mimic
 
+  # Helper to convert ISO8601 to Unix timestamp in milliseconds
+  defp to_unix_ms(iso8601_string) do
+    {:ok, datetime, 0} = DateTime.from_iso8601(iso8601_string)
+    DateTime.to_unix(datetime, :millisecond)
+  end
+
   setup do
     copy(Nostrum.Api.User)
     copy(Nostrum.Api.Guild)
@@ -36,7 +42,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
         guild_member(%{
           user_id: 123_456_789,
           nick: "TestNick",
-          joined_at: "2023-01-15T10:30:00Z",
+          joined_at: to_unix_ms("2023-01-15T10:30:00Z"),
           deaf: false,
           mute: false
         })
@@ -44,7 +50,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       result =
         TestApp.Discord.guild_member_from_discord(%{
           data: member_struct,
-          guild_id: 555_666_777
+          identity: %{guild_id: 555_666_777}
         })
 
       assert {:ok, created_member} = result
@@ -61,7 +67,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
         guild_member(%{
           user_id: 987_654_321,
           nick: nil,
-          joined_at: "2023-02-20T15:45:00Z",
+          joined_at: to_unix_ms("2023-02-20T15:45:00Z"),
           deaf: false,
           mute: false
         })
@@ -69,7 +75,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       result =
         TestApp.Discord.guild_member_from_discord(%{
           data: member_struct,
-          guild_id: 555_666_777
+          identity: %{guild_id: 555_666_777}
         })
 
       assert {:ok, created_member} = result
@@ -83,7 +89,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
         guild_member(%{
           user_id: 111_222_333,
           nick: "DeafUser",
-          joined_at: "2023-03-10T08:15:00Z",
+          joined_at: to_unix_ms("2023-03-10T08:15:00Z"),
           deaf: true,
           mute: false
         })
@@ -91,7 +97,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       result =
         TestApp.Discord.guild_member_from_discord(%{
           data: member_struct,
-          guild_id: 555_666_777
+          identity: %{guild_id: 555_666_777}
         })
 
       assert {:ok, created_member} = result
@@ -105,7 +111,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
         guild_member(%{
           user_id: 777_888_999,
           nick: "MuteUser",
-          joined_at: "2023-04-05T12:00:00Z",
+          joined_at: to_unix_ms("2023-04-05T12:00:00Z"),
           deaf: false,
           mute: true
         })
@@ -113,7 +119,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       result =
         TestApp.Discord.guild_member_from_discord(%{
           data: member_struct,
-          guild_id: 555_666_777
+          identity: %{guild_id: 555_666_777}
         })
 
       assert {:ok, created_member} = result
@@ -127,7 +133,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
         guild_member(%{
           user_id: 333_444_555,
           nick: "SilentUser",
-          joined_at: "2023-05-12T18:30:00Z",
+          joined_at: to_unix_ms("2023-05-12T18:30:00Z"),
           deaf: true,
           mute: true
         })
@@ -135,7 +141,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       result =
         TestApp.Discord.guild_member_from_discord(%{
           data: member_struct,
-          guild_id: 555_666_777
+          identity: %{guild_id: 555_666_777}
         })
 
       assert {:ok, created_member} = result
@@ -176,7 +182,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
         guild_member(%{
           user_id: user_id,
           nick: "OriginalNick",
-          joined_at: "2023-01-01T00:00:00Z",
+          joined_at: to_unix_ms("2023-01-01T00:00:00Z"),
           deaf: false,
           mute: false
         })
@@ -184,7 +190,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       {:ok, original_member} =
         TestApp.Discord.guild_member_from_discord(%{
           data: initial_struct,
-          guild_id: guild_id
+          identity: %{guild_id: guild_id}
         })
 
       # Update same member with new data
@@ -192,7 +198,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
         guild_member(%{
           user_id: user_id,
           nick: "UpdatedNick",
-          joined_at: "2023-01-01T00:00:00Z",
+          joined_at: to_unix_ms("2023-01-01T00:00:00Z"),
           deaf: true,
           mute: true
         })
@@ -200,7 +206,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       {:ok, updated_member} =
         TestApp.Discord.guild_member_from_discord(%{
           data: updated_struct,
-          guild_id: guild_id
+          identity: %{guild_id: guild_id}
         })
 
       # Should be same record (same Ash ID)
@@ -223,7 +229,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
         guild_member(%{
           user_id: user_id,
           nick: "OldNick",
-          joined_at: "2023-06-01T12:00:00Z",
+          joined_at: to_unix_ms("2023-06-01T12:00:00Z"),
           deaf: false,
           mute: false
         })
@@ -231,7 +237,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       {:ok, original_member} =
         TestApp.Discord.guild_member_from_discord(%{
           data: initial_struct,
-          guild_id: guild_id
+          identity: %{guild_id: guild_id}
         })
 
       # Remove nickname
@@ -239,7 +245,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
         guild_member(%{
           user_id: user_id,
           nick: nil,
-          joined_at: "2023-06-01T12:00:00Z",
+          joined_at: to_unix_ms("2023-06-01T12:00:00Z"),
           deaf: false,
           mute: false
         })
@@ -247,7 +253,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       {:ok, updated_member} =
         TestApp.Discord.guild_member_from_discord(%{
           data: updated_struct,
-          guild_id: guild_id
+          identity: %{guild_id: guild_id}
         })
 
       # Should be same record
@@ -266,7 +272,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Invalid value provided for discord_struct"
+      assert error_message =~ "Invalid value provided for data"
     end
 
     test "handles missing required fields in discord_struct" do
@@ -276,7 +282,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       result =
         TestApp.Discord.guild_member_from_discord(%{
           data: invalid_struct,
-          guild_id: 555_666_777
+          identity: %{guild_id: 555_666_777}
         })
 
       assert {:error, error} = result
@@ -298,7 +304,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       result =
         TestApp.Discord.guild_member_from_discord(%{
           data: member_struct,
-          guild_id: 555_666_777
+          identity: %{guild_id: 555_666_777}
         })
 
       # This might succeed with nil joined_at or fail with validation error
@@ -319,7 +325,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       invalid_struct = %{
         # Missing user field
         nick: "TestNick",
-        joined_at: "2023-01-01T00:00:00Z"
+        joined_at: to_unix_ms("2023-01-01T00:00:00Z")
       }
 
       result = TestApp.Discord.guild_member_from_discord(%{data: invalid_struct})

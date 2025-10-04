@@ -371,7 +371,8 @@ defmodule AshDiscord.Test.Generators.Discord do
       user_id: member_user.id,
       nick: if(Faker.Util.pick([true, false, false]), do: Faker.Person.first_name(), else: nil),
       roles: [],
-      joined_at: Faker.DateTime.backward(365) |> DateTime.to_iso8601(),
+      # joined_at is Unix timestamp in milliseconds - convert from DateTime
+      joined_at: Faker.DateTime.backward(365) |> DateTime.to_unix(:millisecond),
       premium_since: nil,
       deaf: false,
       mute: false,

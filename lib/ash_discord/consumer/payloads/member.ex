@@ -32,7 +32,13 @@ defmodule AshDiscord.Consumer.Payloads.Member do
   Create a Member TypedStruct from a Nostrum Guild.Member struct.
 
   Accepts a `Nostrum.Struct.Guild.Member.t()` and creates an AshDiscord Member TypedStruct.
+  If already a Payloads.Member struct, returns it as-is.
   """
+  def new(%__MODULE__{} = member) do
+    # Already converted, return as-is
+    {:ok, member}
+  end
+
   def new(%Nostrum.Struct.Guild.Member{} = nostrum_member) do
     super(Map.from_struct(nostrum_member))
   end

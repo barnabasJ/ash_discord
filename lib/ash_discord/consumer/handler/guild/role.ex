@@ -56,7 +56,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.Role do
   def delete(%Payloads.GuildRoleDelete{guild_id: guild_id, role: role}, _ws_state, context) do
     query =
       context.resource
-      |> Ash.Query.filter(discord_id: role.id, guild_id: guild_id)
+      |> Ash.Query.filter(discord_id == ^role.id and guild_id == ^guild_id)
 
     case Ash.bulk_destroy(query, :destroy, %{},
            context: %{

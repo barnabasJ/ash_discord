@@ -6,19 +6,18 @@ defmodule AshDiscord.Consumer.Handler.TypingTest do
   alias AshDiscord.Consumer.Handler.Typing
   alias TestApp.TestConsumer
 
-  describe "start/4" do
+  describe "start/3" do
     test "creates typing indicator in database" do
       typing_data = typing_indicator()
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.TypingIndicator,
         guild: nil,
         user: nil
       }
 
-      assert :ok =
-               Typing.start(TestConsumer, typing_data, %Nostrum.Struct.WSState{}, context)
+      assert :ok = Typing.start(typing_data, %Nostrum.Struct.WSState{}, context)
 
       # Verify typing indicator was created in database
       indicators = TestApp.Discord.TypingIndicator.read!()

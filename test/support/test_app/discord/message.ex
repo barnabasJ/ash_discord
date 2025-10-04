@@ -57,19 +57,6 @@ defmodule TestApp.Discord.Message do
     end
 
     create :from_discord do
-      accept([
-        :discord_id,
-        :content,
-        :channel_id,
-        :author_id,
-        :guild_id,
-        :timestamp,
-        :edited_timestamp,
-        :tts,
-        :mention_everyone,
-        :pinned
-      ])
-
       upsert?(true)
       upsert_identity(:unique_discord_id)
 

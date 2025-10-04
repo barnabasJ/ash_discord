@@ -38,20 +38,6 @@ defmodule TestApp.Discord.GuildMember do
     end
 
     create :from_discord do
-      accept([
-        :guild_id,
-        :user_id,
-        :nick,
-        :roles,
-        :joined_at,
-        :premium_since,
-        :deaf,
-        :mute,
-        :pending,
-        :avatar,
-        :communication_disabled_until
-      ])
-
       upsert?(true)
       upsert_identity(:unique_member)
 

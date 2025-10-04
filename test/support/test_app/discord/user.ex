@@ -34,7 +34,8 @@ defmodule TestApp.Discord.User do
     create :from_discord do
       description("Create or update a user from Discord API data or struct")
 
-      accept([:discord_id])
+      # Don't accept discord_id - it will be set by the change based on data or API fetch
+      accept([])
 
       argument(:data, AshDiscord.Consumer.Payloads.User,
         allow_nil?: true,

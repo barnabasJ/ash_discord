@@ -31,7 +31,6 @@ defmodule TestApp.Discord.Guild do
     end
 
     create :from_discord do
-      accept([:discord_id, :name, :description, :icon])
       upsert?(true)
       upsert_identity(:discord_id)
       upsert_fields([:name, :description, :icon])

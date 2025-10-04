@@ -28,6 +28,8 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
   @doc """
   Fetches a Discord user by ID and returns a TypedStruct.
   """
+  def fetch_user(nil), do: {:error, "User ID is required for API fallback"}
+
   def fetch_user(discord_id) when is_integer(discord_id) do
     fetch_from_nostrum_api(:user, discord_id)
   end
@@ -35,6 +37,8 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
   @doc """
   Fetches a Discord guild by ID and returns a TypedStruct.
   """
+  def fetch_guild(nil), do: {:error, "Guild ID is required for API fallback"}
+
   def fetch_guild(discord_id) when is_integer(discord_id) do
     fetch_from_nostrum_api(:guild, discord_id)
   end
@@ -42,6 +46,8 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
   @doc """
   Fetches a Discord channel by ID and returns a TypedStruct.
   """
+  def fetch_channel(nil), do: {:error, "Channel ID is required for API fallback"}
+
   def fetch_channel(discord_id) when is_integer(discord_id) do
     fetch_from_nostrum_api(:channel, discord_id)
   end
@@ -213,8 +219,14 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
   defp fetch_simple_entity(api_function, discord_id, type) do
     try do
       case api_function.(discord_id) do
-        {:ok, nostrum_struct} -> {:ok, wrap_in_typed_struct(type, nostrum_struct)}
-        error -> error
+        {:ok, nostrum_struct} ->
+          case wrap_in_typed_struct(type, nostrum_struct) do
+            {:error, _} = error -> error
+            typed_struct -> {:ok, typed_struct}
+          end
+
+        error ->
+          error
       end
     rescue
       ArgumentError -> {:error, :api_unavailable}
@@ -356,17 +368,24 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
   end
 
   # Wraps Nostrum structs in appropriate TypedStruct payloads
+  # Note: Payloads.*.new/1 returns {:ok, struct} or {:error, error}, so we unwrap it
   defp wrap_in_typed_struct(type, nostrum_struct) do
-    case type do
-      :user -> Payloads.User.new(nostrum_struct)
-      :guild -> Payloads.Guild.new(nostrum_struct)
-      :channel -> Payloads.Channel.new(nostrum_struct)
-      :message -> Payloads.Message.new(nostrum_struct)
-      :role -> Payloads.Role.new(nostrum_struct)
-      :member -> Payloads.Member.new(nostrum_struct)
-      :sticker -> Payloads.Sticker.new(nostrum_struct)
-      :emoji -> Payloads.Emoji.new(nostrum_struct)
-      _ -> nostrum_struct
+    result =
+      case type do
+        :user -> Payloads.User.new(nostrum_struct)
+        :guild -> Payloads.Guild.new(nostrum_struct)
+        :channel -> Payloads.Channel.new(nostrum_struct)
+        :message -> Payloads.Message.new(nostrum_struct)
+        :role -> Payloads.Role.new(nostrum_struct)
+        :member -> Payloads.Member.new(nostrum_struct)
+        :sticker -> Payloads.Sticker.new(nostrum_struct)
+        :emoji -> Payloads.Emoji.new(nostrum_struct)
+        _ -> {:ok, nostrum_struct}
+      end
+
+    case result do
+      {:ok, typed_struct} -> typed_struct
+      {:error, _} = error -> error
     end
   end
 end

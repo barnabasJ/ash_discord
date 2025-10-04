@@ -26,7 +26,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceState do
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_transaction(changeset, fn changeset ->
-      case Ash.Changeset.get_argument(changeset, :data) do
+      case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
         %Payloads.VoiceState{} = voice_state_data ->
           transform_voice_state(changeset, voice_state_data)
 

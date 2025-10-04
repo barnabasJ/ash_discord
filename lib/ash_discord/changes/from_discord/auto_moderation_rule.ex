@@ -30,10 +30,10 @@ defmodule AshDiscord.Changes.FromDiscord.AutoModerationRule do
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_transaction(changeset, fn changeset ->
       # API calls happen here, OUTSIDE transaction
-      case Ash.Changeset.get_argument(changeset, :data) do
+      case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
         nil ->
           # No data provided, fetch from API using identity
-          identity = Ash.Changeset.get_argument(changeset, :identity)
+          identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
 
           case fetch_auto_moderation_rule(identity) do
             {:ok, %Payloads.AutoModerationRule{} = rule_data} ->
@@ -45,7 +45,7 @@ defmodule AshDiscord.Changes.FromDiscord.AutoModerationRule do
 
         %Payloads.AutoModerationRule{} = rule_data ->
           # Data provided directly, use it
-          identity = Ash.Changeset.get_argument(changeset, :identity)
+          identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
           transform_auto_moderation_rule(changeset, rule_data, identity)
 
         other ->

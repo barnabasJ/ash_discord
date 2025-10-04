@@ -25,9 +25,9 @@ defmodule AshDiscord.Changes.FromDiscord.Sticker do
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_transaction(changeset, fn changeset ->
-      case Ash.Changeset.get_argument(changeset, :data) do
+      case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
         nil ->
-          identity = Ash.Changeset.get_argument(changeset, :identity)
+          identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
 
           case ApiFetchers.fetch_from_nostrum_api(:sticker, identity) do
             {:ok, %Payloads.Sticker{} = sticker_data} ->

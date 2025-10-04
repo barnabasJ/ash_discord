@@ -25,7 +25,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachment do
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_transaction(changeset, fn changeset ->
-      case Ash.Changeset.get_argument(changeset, :data) do
+      case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
         %Payloads.MessageAttachment{} = attachment_data ->
           transform_message_attachment(changeset, attachment_data)
 

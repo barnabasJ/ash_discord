@@ -25,7 +25,7 @@ defmodule AshDiscord.Changes.FromDiscord.Interaction do
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_transaction(changeset, fn changeset ->
-      case Ash.Changeset.get_argument(changeset, :data) do
+      case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
         %Payloads.Interaction{} = interaction_data ->
           transform_interaction(changeset, interaction_data)
 

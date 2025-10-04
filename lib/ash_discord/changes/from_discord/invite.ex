@@ -30,10 +30,10 @@ defmodule AshDiscord.Changes.FromDiscord.Invite do
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_transaction(changeset, fn changeset ->
       # API calls happen here, OUTSIDE transaction
-      case Ash.Changeset.get_argument(changeset, :data) do
+      case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
         nil ->
           # No data provided, fetch from API using identity
-          identity = Ash.Changeset.get_argument(changeset, :identity)
+          identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
 
           case fetch_invite(identity) do
             {:ok, %Payloads.Invite{} = invite_data} ->

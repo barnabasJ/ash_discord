@@ -26,7 +26,7 @@ defmodule AshDiscord.Changes.FromDiscord.ThreadMember do
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_transaction(changeset, fn changeset ->
-      case Ash.Changeset.get_argument(changeset, :data) do
+      case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
         %Payloads.ThreadMember{} = thread_member_data ->
           transform_thread_member(changeset, thread_member_data)
 

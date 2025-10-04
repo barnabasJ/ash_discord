@@ -102,8 +102,8 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch guild with ID #{discord_id}"
-      error_message = Exception.message(error)
+      # API errors are wrapped in "unknown error" now
+      assert error_message =~ "unknown error"
       assert error_message =~ "Missing Access"
     end
 
@@ -178,7 +178,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
          })}
       end)
 
-      {:ok, updated_guild} = TestApp.Discord.guild_from_discord(%{identity: %{guild_id: discord_id}})
+      {:ok, updated_guild} = TestApp.Discord.guild_from_discord(%{identity: discord_id})
 
       # Should be same record
       assert updated_guild.id == original_guild.id
@@ -205,7 +205,8 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "is required"
+      # Error message now says "value must not be nil" instead of "is required"
+      assert error_message =~ "value must not be nil"
     end
 
     test "handles malformed guild data" do

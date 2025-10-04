@@ -43,7 +43,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
         {:ok, user(%{id: 987_654_321, username: "test_user"})}
       end)
 
-      result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
+      result = TestApp.Discord.message_from_discord(%{data: message_struct})
 
       assert {:ok, created_message} = result
       assert created_message.discord_id == message_struct.id
@@ -92,7 +92,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
         {:ok, user(%{id: 123_456_789, username: "editor"})}
       end)
 
-      result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
+      result = TestApp.Discord.message_from_discord(%{data: message_struct})
 
       assert {:ok, created_message} = result
       assert created_message.discord_id == message_struct.id
@@ -134,7 +134,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
         {:ok, user(%{id: 444_555_666, username: "tts_user"})}
       end)
 
-      result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
+      result = TestApp.Discord.message_from_discord(%{data: message_struct})
 
       assert {:ok, created_message} = result
       assert created_message.discord_id == message_struct.id
@@ -174,7 +174,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
         {:ok, user(%{id: 666_777_888, username: "announcer"})}
       end)
 
-      result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
+      result = TestApp.Discord.message_from_discord(%{data: message_struct})
 
       assert {:ok, created_message} = result
       assert created_message.discord_id == message_struct.id
@@ -214,7 +214,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
         {:ok, user(%{id: 888_999_111, username: "pinner"})}
       end)
 
-      result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
+      result = TestApp.Discord.message_from_discord(%{data: message_struct})
 
       assert {:ok, created_message} = result
       assert created_message.discord_id == message_struct.id
@@ -254,7 +254,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
         {:ok, user(%{id: 111_222_333, username: "empty_user"})}
       end)
 
-      result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
+      result = TestApp.Discord.message_from_discord(%{data: message_struct})
 
       assert {:ok, created_message} = result
       assert created_message.discord_id == message_struct.id
@@ -321,7 +321,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
         })
 
       {:ok, original_message} =
-        TestApp.Discord.message_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.message_from_discord(%{data: initial_struct})
 
       # Update same message with edited content
       updated_struct =
@@ -338,7 +338,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
         })
 
       {:ok, updated_message} =
-        TestApp.Discord.message_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.message_from_discord(%{data: updated_struct})
 
       # Should be same record (same Ash ID)
       assert updated_message.id == original_message.id
@@ -385,7 +385,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
         })
 
       {:ok, original_message} =
-        TestApp.Discord.message_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.message_from_discord(%{data: initial_struct})
 
       # Pin the message
       updated_struct =
@@ -401,7 +401,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
         })
 
       {:ok, updated_message} =
-        TestApp.Discord.message_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.message_from_discord(%{data: updated_struct})
 
       # Should be same record
       assert updated_message.id == original_message.id
@@ -414,7 +414,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
 
   describe "error handling" do
     test "handles invalid discord_struct format" do
-      result = TestApp.Discord.message_from_discord(%{discord_struct: "not_a_map"})
+      result = TestApp.Discord.message_from_discord(%{data: "not_a_map"})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -425,7 +425,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       # Missing required fields
       invalid_struct = message(%{id: nil, name: nil})
 
-      result = TestApp.Discord.message_from_discord(%{discord_struct: invalid_struct})
+      result = TestApp.Discord.message_from_discord(%{data: invalid_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -446,7 +446,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
           pinned: false
         })
 
-      result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
+      result = TestApp.Discord.message_from_discord(%{data: message_struct})
 
       # This might succeed with nil timestamp or fail with validation error
       # Either is acceptable behavior
@@ -471,7 +471,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
         timestamp: "2023-01-01T00:00:00Z"
       }
 
-      result = TestApp.Discord.message_from_discord(%{discord_struct: invalid_struct})
+      result = TestApp.Discord.message_from_discord(%{data: invalid_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)

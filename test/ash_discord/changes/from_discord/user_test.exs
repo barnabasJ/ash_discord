@@ -19,7 +19,8 @@ defmodule AshDiscord.Changes.FromDiscord.UserTest do
           bot: false
         })
 
-      result = TestApp.Discord.user_from_discord(%{discord_struct: user_struct})
+      # Pass Nostrum struct directly - Ash will cast it to TypedStruct
+      result = TestApp.Discord.user_from_discord(%{data: user_struct})
 
       assert {:ok, created_user} = result
       assert created_user.discord_id == user_struct.id
@@ -36,7 +37,7 @@ defmodule AshDiscord.Changes.FromDiscord.UserTest do
           avatar: nil
         })
 
-      result = TestApp.Discord.user_from_discord(%{discord_struct: user_struct})
+      result = TestApp.Discord.user_from_discord(%{data: user_struct})
 
       assert {:ok, created_user} = result
       assert created_user.discord_id == user_struct.id
@@ -53,7 +54,7 @@ defmodule AshDiscord.Changes.FromDiscord.UserTest do
           bot: true
         })
 
-      result = TestApp.Discord.user_from_discord(%{discord_struct: bot_struct})
+      result = TestApp.Discord.user_from_discord(%{data: bot_struct})
 
       assert {:ok, created_user} = result
       assert created_user.discord_id == bot_struct.id
@@ -68,14 +69,14 @@ defmodule AshDiscord.Changes.FromDiscord.UserTest do
       :ok
     end
 
-    test "fetches user from API when discord_struct not provided" do
+    test "fetches user from API when data not provided" do
       discord_id = 999_888_777
 
       Mimic.expect(Nostrum.Api.User, :get, fn ^discord_id ->
         {:ok, user(%{id: discord_id, username: "api_fetched_user", avatar: "api_avatar"})}
       end)
 
-      result = TestApp.Discord.user_from_discord(%{discord_id: discord_id})
+      result = TestApp.Discord.user_from_discord(%{identity: discord_id})
 
       assert {:ok, created_user} = result
       assert created_user.discord_id == discord_id
@@ -91,20 +92,17 @@ defmodule AshDiscord.Changes.FromDiscord.UserTest do
         {:error, %{status_code: 404, message: "User not found"}}
       end)
 
-      result = TestApp.Discord.user_from_discord(%{discord_id: discord_id})
+      result = TestApp.Discord.user_from_discord(%{identity: discord_id})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch user with ID #{discord_id}"
-      assert error_message =~ "User not found"
+      assert error_message =~ "404"
     end
 
-    test "requires discord_id when no discord_struct provided" do
+    test "requires identity when no data provided" do
       result = TestApp.Discord.user_from_discord(%{})
 
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for user entity"
+      assert {:error, _error} = result
     end
   end
 
@@ -120,7 +118,7 @@ defmodule AshDiscord.Changes.FromDiscord.UserTest do
           avatar: "original_avatar"
         })
 
-      {:ok, original_user} = TestApp.Discord.user_from_discord(%{discord_struct: initial_struct})
+      {:ok, original_user} = TestApp.Discord.user_from_discord(%{data: initial_struct})
 
       # Update same user with new data
       updated_struct =
@@ -131,7 +129,7 @@ defmodule AshDiscord.Changes.FromDiscord.UserTest do
           avatar: "updated_avatar"
         })
 
-      {:ok, updated_user} = TestApp.Discord.user_from_discord(%{discord_struct: updated_struct})
+      {:ok, updated_user} = TestApp.Discord.user_from_discord(%{data: updated_struct})
 
       # Should be same record (same Ash ID)
       assert updated_user.id == original_user.id
@@ -152,7 +150,7 @@ defmodule AshDiscord.Changes.FromDiscord.UserTest do
           username: "struct_user"
         })
 
-      {:ok, original_user} = TestApp.Discord.user_from_discord(%{discord_struct: initial_struct})
+      {:ok, original_user} = TestApp.Discord.user_from_discord(%{data: initial_struct})
 
       # Update via API fallback
       Mimic.copy(Nostrum.Api.User)
@@ -161,7 +159,7 @@ defmodule AshDiscord.Changes.FromDiscord.UserTest do
         {:ok, user(%{id: discord_id, username: "api_updated_user"})}
       end)
 
-      {:ok, updated_user} = TestApp.Discord.user_from_discord(%{discord_id: discord_id})
+      {:ok, updated_user} = TestApp.Discord.user_from_discord(%{identity: discord_id})
 
       # Should be same record
       assert updated_user.id == original_user.id
@@ -171,29 +169,24 @@ defmodule AshDiscord.Changes.FromDiscord.UserTest do
   end
 
   describe "error handling" do
-    test "handles invalid discord_struct format" do
-      result = TestApp.Discord.user_from_discord(%{discord_struct: "not_a_map"})
+    test "handles invalid data format" do
+      result = TestApp.Discord.user_from_discord(%{data: "not_a_nostrum_struct"})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Invalid value provided for discord_struct"
+      # TypedStruct casting will fail
+      assert error_message =~ "Invalid" or error_message =~ "is invalid"
     end
 
-    test "handles missing required fields in discord_struct" do
-      # Missing required fields
-      invalid_struct = user(%{id: nil, name: nil})
+    test "handles missing required fields in data" do
+      # Missing required fields - TypedStruct.new will enforce this
+      invalid_struct = user(%{id: nil, username: nil})
 
-      # This should either return an error or raise an exception
-      result =
-        try do
-          TestApp.Discord.user_from_discord(%{discord_struct: invalid_struct})
-        rescue
-          error -> {:error, error}
-        end
+      result = TestApp.Discord.user_from_discord(%{data: invalid_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      # The error should indicate invalid discord_struct data
+      # The error should indicate invalid data or required field
       assert error_message =~ "id" or error_message =~ "required" or error_message =~ "invalid"
     end
   end

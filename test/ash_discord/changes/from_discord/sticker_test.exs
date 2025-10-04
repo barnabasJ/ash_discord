@@ -22,7 +22,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           guild_id: 555_666_777
         })
 
-      result = TestApp.Discord.sticker_from_discord(%{discord_struct: sticker_struct})
+      result = TestApp.Discord.sticker_from_discord(%{data: sticker_struct})
 
       assert {:ok, created_sticker} = result
       assert created_sticker.discord_id == sticker_struct.id
@@ -50,7 +50,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           guild_id: nil
         })
 
-      result = TestApp.Discord.sticker_from_discord(%{discord_struct: sticker_struct})
+      result = TestApp.Discord.sticker_from_discord(%{data: sticker_struct})
 
       assert {:ok, created_sticker} = result
       assert created_sticker.discord_id == sticker_struct.id
@@ -73,7 +73,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           guild_id: 777_888_999
         })
 
-      result = TestApp.Discord.sticker_from_discord(%{discord_struct: sticker_struct})
+      result = TestApp.Discord.sticker_from_discord(%{data: sticker_struct})
 
       assert {:ok, created_sticker} = result
       assert created_sticker.discord_id == sticker_struct.id
@@ -94,7 +94,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           guild_id: 333_444_555
         })
 
-      result = TestApp.Discord.sticker_from_discord(%{discord_struct: sticker_struct})
+      result = TestApp.Discord.sticker_from_discord(%{data: sticker_struct})
 
       assert {:ok, created_sticker} = result
       assert created_sticker.discord_id == sticker_struct.id
@@ -115,7 +115,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           guild_id: 999_111_222
         })
 
-      result = TestApp.Discord.sticker_from_discord(%{discord_struct: sticker_struct})
+      result = TestApp.Discord.sticker_from_discord(%{data: sticker_struct})
 
       assert {:ok, created_sticker} = result
       assert created_sticker.discord_id == sticker_struct.id
@@ -135,7 +135,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           guild_id: 222_333_444
         })
 
-      result = TestApp.Discord.sticker_from_discord(%{discord_struct: sticker_struct})
+      result = TestApp.Discord.sticker_from_discord(%{data: sticker_struct})
 
       assert {:ok, created_sticker} = result
       assert created_sticker.discord_id == sticker_struct.id
@@ -155,7 +155,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           guild_id: 666_777_888
         })
 
-      result = TestApp.Discord.sticker_from_discord(%{discord_struct: sticker_struct})
+      result = TestApp.Discord.sticker_from_discord(%{data: sticker_struct})
 
       assert {:ok, created_sticker} = result
       assert created_sticker.discord_id == sticker_struct.id
@@ -175,7 +175,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           guild_id: 888_999_111
         })
 
-      result = TestApp.Discord.sticker_from_discord(%{discord_struct: sticker_struct})
+      result = TestApp.Discord.sticker_from_discord(%{data: sticker_struct})
 
       assert {:ok, created_sticker} = result
       assert created_sticker.discord_id == sticker_struct.id
@@ -223,7 +223,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
         })
 
       {:ok, original_sticker} =
-        TestApp.Discord.sticker_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.sticker_from_discord(%{data: initial_struct})
 
       # Update same sticker with new data
       updated_struct =
@@ -240,7 +240,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
         })
 
       {:ok, updated_sticker} =
-        TestApp.Discord.sticker_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.sticker_from_discord(%{data: updated_struct})
 
       # Should be same record (same Ash ID)
       assert updated_sticker.id == original_sticker.id
@@ -271,7 +271,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
         })
 
       {:ok, original_sticker} =
-        TestApp.Discord.sticker_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.sticker_from_discord(%{data: initial_struct})
 
       # Mark as unavailable
       updated_struct =
@@ -288,7 +288,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
         })
 
       {:ok, updated_sticker} =
-        TestApp.Discord.sticker_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.sticker_from_discord(%{data: updated_struct})
 
       # Should be same record
       assert updated_sticker.id == original_sticker.id
@@ -301,7 +301,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
 
   describe "error handling" do
     test "handles invalid discord_struct format" do
-      result = TestApp.Discord.sticker_from_discord(%{discord_struct: "not_a_map"})
+      result = TestApp.Discord.sticker_from_discord(%{data: "not_a_map"})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -312,7 +312,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
       # Missing required fields
       invalid_struct = sticker(%{id: nil, name: nil})
 
-      result = TestApp.Discord.sticker_from_discord(%{discord_struct: invalid_struct})
+      result = TestApp.Discord.sticker_from_discord(%{data: invalid_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -333,7 +333,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           guild_id: 555_666_777
         })
 
-      result = TestApp.Discord.sticker_from_discord(%{discord_struct: sticker_struct})
+      result = TestApp.Discord.sticker_from_discord(%{data: sticker_struct})
 
       # This might succeed with normalized type or fail with validation error
       # Either is acceptable behavior
@@ -363,7 +363,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           guild_id: 555_666_777
         })
 
-      result = TestApp.Discord.sticker_from_discord(%{discord_struct: sticker_struct})
+      result = TestApp.Discord.sticker_from_discord(%{data: sticker_struct})
 
       # This might succeed with normalized format_type or fail with validation error
       # Either is acceptable behavior
@@ -387,7 +387,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
         type: "not_an_integer"
       }
 
-      result = TestApp.Discord.sticker_from_discord(%{discord_struct: malformed_struct})
+      result = TestApp.Discord.sticker_from_discord(%{data: malformed_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)

@@ -18,7 +18,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
         })
 
       result =
-        TestApp.Discord.message_reaction_from_discord(%{discord_struct: reaction_struct})
+        TestApp.Discord.message_reaction_from_discord(%{data: reaction_struct})
 
       assert {:ok, created_reaction} = result
       assert created_reaction.emoji_id == nil
@@ -38,7 +38,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       result =
         TestApp.Discord.message_reaction_from_discord(%{
-          discord_struct: reaction_struct,
+          data: reaction_struct,
           user_id: 111_222_333,
           message_id: 444_555_666,
           channel_id: 777_888_999,
@@ -63,7 +63,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       result =
         TestApp.Discord.message_reaction_from_discord(%{
-          discord_struct: reaction_struct,
+          data: reaction_struct,
           user_id: 777_888_999,
           message_id: 111_222_333,
           channel_id: 444_555_666,
@@ -87,7 +87,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       result =
         TestApp.Discord.message_reaction_from_discord(%{
-          discord_struct: reaction_struct,
+          data: reaction_struct,
           user_id: 333_444_555,
           message_id: 666_777_888,
           channel_id: 999_111_222,
@@ -110,7 +110,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       result =
         TestApp.Discord.message_reaction_from_discord(%{
-          discord_struct: reaction_struct,
+          data: reaction_struct,
           user_id: 888_999_111,
           message_id: 222_333_444,
           channel_id: 555_666_777,
@@ -132,7 +132,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       result =
         TestApp.Discord.message_reaction_from_discord(%{
-          discord_struct: reaction_struct,
+          data: reaction_struct,
           user_id: 444_555_666,
           message_id: 777_888_999,
           channel_id: 111_222_333,
@@ -185,7 +185,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       {:ok, original_reaction} =
         TestApp.Discord.message_reaction_from_discord(%{
-          discord_struct: initial_struct,
+          data: initial_struct,
           user_id: user_id,
           message_id: message_id,
           channel_id: 444_555_666,
@@ -202,7 +202,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       {:ok, updated_reaction} =
         TestApp.Discord.message_reaction_from_discord(%{
-          discord_struct: updated_struct,
+          data: updated_struct,
           user_id: user_id,
           message_id: message_id,
           channel_id: 444_555_666,
@@ -235,7 +235,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       {:ok, original_reaction} =
         TestApp.Discord.message_reaction_from_discord(%{
-          discord_struct: initial_struct,
+          data: initial_struct,
           user_id: user_id,
           message_id: message_id,
           channel_id: 555_666_777,
@@ -252,7 +252,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       {:ok, updated_reaction} =
         TestApp.Discord.message_reaction_from_discord(%{
-          discord_struct: updated_struct,
+          data: updated_struct,
           user_id: user_id,
           message_id: message_id,
           channel_id: 555_666_777,
@@ -286,7 +286,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       {:ok, original_reaction} =
         TestApp.Discord.message_reaction_from_discord(%{
-          discord_struct: initial_struct,
+          data: initial_struct,
           user_id: user_id,
           message_id: message_id,
           channel_id: 999_111_222,
@@ -303,7 +303,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       {:ok, updated_reaction} =
         TestApp.Discord.message_reaction_from_discord(%{
-          discord_struct: updated_struct,
+          data: updated_struct,
           user_id: user_id,
           message_id: message_id,
           channel_id: 999_111_222,
@@ -325,7 +325,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
   describe "error handling" do
     test "handles invalid discord_struct format" do
-      result = TestApp.Discord.message_reaction_from_discord(%{discord_struct: "not_a_map"})
+      result = TestApp.Discord.message_reaction_from_discord(%{data: "not_a_map"})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -336,7 +336,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
       # Message reactions have defaults for most fields, so this should succeed with defaults
       invalid_struct = message_reaction(%{count: nil, emoji: nil})
 
-      result = TestApp.Discord.message_reaction_from_discord(%{discord_struct: invalid_struct})
+      result = TestApp.Discord.message_reaction_from_discord(%{data: invalid_struct})
 
       assert {:ok, created_reaction} = result
       # default value
@@ -354,7 +354,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       result =
         TestApp.Discord.message_reaction_from_discord(%{
-          discord_struct: invalid_struct,
+          data: invalid_struct,
           user_id: 123_456_789,
           message_id: 555_666_777
         })
@@ -375,7 +375,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       result =
         TestApp.Discord.message_reaction_from_discord(%{
-          discord_struct: reaction_struct,
+          data: reaction_struct,
           user_id: 123_456_789,
           message_id: 555_666_777,
           channel_id: 111_222_333
@@ -405,7 +405,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       result =
         TestApp.Discord.message_reaction_from_discord(%{
-          discord_struct: malformed_struct,
+          data: malformed_struct,
           user_id: 123_456_789,
           message_id: 555_666_777
         })

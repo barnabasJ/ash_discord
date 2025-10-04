@@ -23,7 +23,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
           suppress: false
         })
 
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: voice_state_struct})
+      result = TestApp.Discord.voice_state_from_discord(%{data: voice_state_struct})
 
       assert {:ok, created_voice_state} = result
       assert created_voice_state.user_id == voice_state_struct.user_id
@@ -51,7 +51,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
           suppress: false
         })
 
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: voice_state_struct})
+      result = TestApp.Discord.voice_state_from_discord(%{data: voice_state_struct})
 
       assert {:ok, created_voice_state} = result
       assert created_voice_state.user_id == voice_state_struct.user_id
@@ -73,7 +73,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
           suppress: false
         })
 
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: voice_state_struct})
+      result = TestApp.Discord.voice_state_from_discord(%{data: voice_state_struct})
 
       assert {:ok, created_voice_state} = result
       assert created_voice_state.user_id == voice_state_struct.user_id
@@ -95,7 +95,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
           suppress: false
         })
 
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: voice_state_struct})
+      result = TestApp.Discord.voice_state_from_discord(%{data: voice_state_struct})
 
       assert {:ok, created_voice_state} = result
       assert created_voice_state.user_id == voice_state_struct.user_id
@@ -117,7 +117,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
           suppress: false
         })
 
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: voice_state_struct})
+      result = TestApp.Discord.voice_state_from_discord(%{data: voice_state_struct})
 
       assert {:ok, created_voice_state} = result
       assert created_voice_state.user_id == voice_state_struct.user_id
@@ -139,7 +139,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
           suppress: true
         })
 
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: voice_state_struct})
+      result = TestApp.Discord.voice_state_from_discord(%{data: voice_state_struct})
 
       assert {:ok, created_voice_state} = result
       assert created_voice_state.user_id == voice_state_struct.user_id
@@ -161,7 +161,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
           suppress: false
         })
 
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: voice_state_struct})
+      result = TestApp.Discord.voice_state_from_discord(%{data: voice_state_struct})
 
       assert {:ok, created_voice_state} = result
       assert created_voice_state.user_id == voice_state_struct.user_id
@@ -210,7 +210,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
         })
 
       {:ok, original_voice_state} =
-        TestApp.Discord.voice_state_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.voice_state_from_discord(%{data: initial_struct})
 
       # Update same user's voice state
       updated_struct =
@@ -227,7 +227,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
         })
 
       {:ok, updated_voice_state} =
-        TestApp.Discord.voice_state_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.voice_state_from_discord(%{data: updated_struct})
 
       # Should be same record (same Ash ID)
       assert updated_voice_state.id == original_voice_state.id
@@ -260,7 +260,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
         })
 
       {:ok, original_voice_state} =
-        TestApp.Discord.voice_state_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.voice_state_from_discord(%{data: initial_struct})
 
       # Move to different channel
       updated_struct =
@@ -274,7 +274,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
         })
 
       {:ok, updated_voice_state} =
-        TestApp.Discord.voice_state_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.voice_state_from_discord(%{data: updated_struct})
 
       # Should be same record
       assert updated_voice_state.id == original_voice_state.id
@@ -288,7 +288,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
 
   describe "error handling" do
     test "handles invalid discord_struct format" do
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: "not_a_map"})
+      result = TestApp.Discord.voice_state_from_discord(%{data: "not_a_map"})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -299,7 +299,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
       # Missing required fields
       invalid_struct = voice_state(%{user_id: nil, session_id: nil})
 
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: invalid_struct})
+      result = TestApp.Discord.voice_state_from_discord(%{data: invalid_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -315,7 +315,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
         session_id: "session_test"
       }
 
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: invalid_struct})
+      result = TestApp.Discord.voice_state_from_discord(%{data: invalid_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)

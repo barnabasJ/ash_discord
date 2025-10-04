@@ -35,7 +35,7 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
           guild_locale: "en-US"
         })
 
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: interaction_struct})
+      result = TestApp.Discord.interaction_from_discord(%{data: interaction_struct})
 
       assert {:ok, created_interaction} = result
       assert created_interaction.discord_id == interaction_struct.id
@@ -75,7 +75,7 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
           version: 1
         })
 
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: interaction_struct})
+      result = TestApp.Discord.interaction_from_discord(%{data: interaction_struct})
 
       assert {:ok, created_interaction} = result
       assert created_interaction.discord_id == interaction_struct.id
@@ -107,7 +107,7 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
           }
         })
 
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: interaction_struct})
+      result = TestApp.Discord.interaction_from_discord(%{data: interaction_struct})
 
       assert {:ok, created_interaction} = result
       assert created_interaction.discord_id == interaction_struct.id
@@ -146,7 +146,7 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
           version: 1
         })
 
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: interaction_struct})
+      result = TestApp.Discord.interaction_from_discord(%{data: interaction_struct})
 
       assert {:ok, created_interaction} = result
       assert created_interaction.discord_id == interaction_struct.id
@@ -175,7 +175,7 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
           locale: "en-US"
         })
 
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: interaction_struct})
+      result = TestApp.Discord.interaction_from_discord(%{data: interaction_struct})
 
       assert {:ok, created_interaction} = result
       assert created_interaction.discord_id == interaction_struct.id
@@ -205,7 +205,7 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
           app_permissions: "8"
         })
 
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: interaction_struct})
+      result = TestApp.Discord.interaction_from_discord(%{data: interaction_struct})
 
       assert {:ok, created_interaction} = result
       assert created_interaction.discord_id == interaction_struct.id
@@ -236,7 +236,7 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
           guild_locale: "en-US"
         })
 
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: interaction_struct})
+      result = TestApp.Discord.interaction_from_discord(%{data: interaction_struct})
 
       assert {:ok, created_interaction} = result
       assert created_interaction.discord_id == interaction_struct.id
@@ -294,7 +294,7 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
         })
 
       {:ok, original_interaction} =
-        TestApp.Discord.interaction_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.interaction_from_discord(%{data: initial_struct})
 
       # Update same interaction with new data (hypothetical update)
       updated_struct =
@@ -320,7 +320,7 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
         })
 
       {:ok, updated_interaction} =
-        TestApp.Discord.interaction_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.interaction_from_discord(%{data: updated_struct})
 
       # Should be same record (same Ash ID)
       assert updated_interaction.id == original_interaction.id
@@ -357,7 +357,7 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
         })
 
       {:ok, original_interaction} =
-        TestApp.Discord.interaction_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.interaction_from_discord(%{data: initial_struct})
 
       # Update with app permissions
       updated_struct =
@@ -383,7 +383,7 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
         })
 
       {:ok, updated_interaction} =
-        TestApp.Discord.interaction_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.interaction_from_discord(%{data: updated_struct})
 
       # Should be same record
       assert updated_interaction.id == original_interaction.id
@@ -396,7 +396,7 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
 
   describe "error handling" do
     test "handles invalid discord_struct format" do
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: "not_a_map"})
+      result = TestApp.Discord.interaction_from_discord(%{data: "not_a_map"})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -407,7 +407,7 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
       # Missing required fields
       invalid_struct = interaction(%{id: nil, name: nil})
 
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: invalid_struct})
+      result = TestApp.Discord.interaction_from_discord(%{data: invalid_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -432,7 +432,7 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
           version: 1
         })
 
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: interaction_struct})
+      result = TestApp.Discord.interaction_from_discord(%{data: interaction_struct})
 
       # This might succeed with normalized type or fail with validation error
       # Either is acceptable behavior
@@ -457,7 +457,7 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
         token: nil
       }
 
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: malformed_struct})
+      result = TestApp.Discord.interaction_from_discord(%{data: malformed_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -475,7 +475,7 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
         channel_id: 444_555_666
       }
 
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: invalid_struct})
+      result = TestApp.Discord.interaction_from_discord(%{data: invalid_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)

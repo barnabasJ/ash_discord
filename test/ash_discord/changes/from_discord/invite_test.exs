@@ -47,7 +47,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
           created_at: "2023-01-15T10:30:00Z"
         })
 
-      result = TestApp.Discord.invite_from_discord(%{discord_struct: invite_struct})
+      result = TestApp.Discord.invite_from_discord(%{data: invite_struct})
 
       assert {:ok, created_invite} = result
       assert created_invite.code == invite_struct.code
@@ -81,7 +81,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
           created_at: "2023-02-01T12:00:00Z"
         })
 
-      result = TestApp.Discord.invite_from_discord(%{discord_struct: invite_struct})
+      result = TestApp.Discord.invite_from_discord(%{data: invite_struct})
 
       assert {:ok, created_invite} = result
       assert created_invite.code == invite_struct.code
@@ -106,7 +106,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
           created_at: "2023-03-10T15:30:00Z"
         })
 
-      result = TestApp.Discord.invite_from_discord(%{discord_struct: invite_struct})
+      result = TestApp.Discord.invite_from_discord(%{data: invite_struct})
 
       assert {:ok, created_invite} = result
       assert created_invite.code == invite_struct.code
@@ -132,7 +132,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
           created_at: "2023-04-05T09:00:00Z"
         })
 
-      result = TestApp.Discord.invite_from_discord(%{discord_struct: invite_struct})
+      result = TestApp.Discord.invite_from_discord(%{data: invite_struct})
 
       assert {:ok, created_invite} = result
       assert created_invite.code == invite_struct.code
@@ -158,7 +158,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
           created_at: "2023-05-12T14:20:00Z"
         })
 
-      result = TestApp.Discord.invite_from_discord(%{discord_struct: invite_struct})
+      result = TestApp.Discord.invite_from_discord(%{data: invite_struct})
 
       assert {:ok, created_invite} = result
       assert created_invite.code == invite_struct.code
@@ -182,7 +182,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
           created_at: "2023-06-01T18:45:00Z"
         })
 
-      result = TestApp.Discord.invite_from_discord(%{discord_struct: invite_struct})
+      result = TestApp.Discord.invite_from_discord(%{data: invite_struct})
 
       assert {:ok, created_invite} = result
       assert created_invite.code == invite_struct.code
@@ -230,7 +230,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
         })
 
       {:ok, original_invite} =
-        TestApp.Discord.invite_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.invite_from_discord(%{data: initial_struct})
 
       # Update same invite with new usage data
       updated_struct =
@@ -248,7 +248,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
         })
 
       {:ok, updated_invite} =
-        TestApp.Discord.invite_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.invite_from_discord(%{data: updated_struct})
 
       # Should be same record (same Ash ID)
       assert updated_invite.id == original_invite.id
@@ -276,7 +276,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
         })
 
       {:ok, original_invite} =
-        TestApp.Discord.invite_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.invite_from_discord(%{data: initial_struct})
 
       # Update to permanent invite
       updated_struct =
@@ -294,7 +294,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
         })
 
       {:ok, updated_invite} =
-        TestApp.Discord.invite_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.invite_from_discord(%{data: updated_struct})
 
       # Should be same record
       assert updated_invite.id == original_invite.id
@@ -309,7 +309,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
 
   describe "error handling" do
     test "handles invalid discord_struct format" do
-      result = TestApp.Discord.invite_from_discord(%{discord_struct: "not_a_map"})
+      result = TestApp.Discord.invite_from_discord(%{data: "not_a_map"})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -320,7 +320,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
       # Missing required fields - code is required for invites
       invalid_struct = invite(%{code: nil})
 
-      result = TestApp.Discord.invite_from_discord(%{discord_struct: invalid_struct})
+      result = TestApp.Discord.invite_from_discord(%{data: invalid_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -342,7 +342,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
           created_at: "not_a_datetime"
         })
 
-      result = TestApp.Discord.invite_from_discord(%{discord_struct: invite_struct})
+      result = TestApp.Discord.invite_from_discord(%{data: invite_struct})
 
       # This might succeed with nil created_at or fail with validation error
       # Either is acceptable behavior
@@ -366,7 +366,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
         uses: "not_an_integer"
       }
 
-      result = TestApp.Discord.invite_from_discord(%{discord_struct: malformed_struct})
+      result = TestApp.Discord.invite_from_discord(%{data: malformed_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)

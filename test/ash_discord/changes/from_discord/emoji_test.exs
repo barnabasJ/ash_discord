@@ -19,7 +19,7 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
           require_colons: true
         })
 
-      result = TestApp.Discord.emoji_from_discord(%{discord_struct: emoji_struct})
+      result = TestApp.Discord.emoji_from_discord(%{data: emoji_struct})
 
       assert {:ok, created_emoji} = result
       assert created_emoji.discord_id == emoji_struct.id
@@ -39,7 +39,7 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
           require_colons: true
         })
 
-      result = TestApp.Discord.emoji_from_discord(%{discord_struct: emoji_struct})
+      result = TestApp.Discord.emoji_from_discord(%{data: emoji_struct})
 
       assert {:ok, created_emoji} = result
       assert created_emoji.discord_id == emoji_struct.id
@@ -57,7 +57,7 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
           require_colons: true
         })
 
-      result = TestApp.Discord.emoji_from_discord(%{discord_struct: emoji_struct})
+      result = TestApp.Discord.emoji_from_discord(%{data: emoji_struct})
 
       assert {:ok, created_emoji} = result
       assert created_emoji.discord_id == emoji_struct.id
@@ -75,7 +75,7 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
           require_colons: true
         })
 
-      result = TestApp.Discord.emoji_from_discord(%{discord_struct: emoji_struct})
+      result = TestApp.Discord.emoji_from_discord(%{data: emoji_struct})
 
       assert {:ok, created_emoji} = result
       assert created_emoji.discord_id == emoji_struct.id
@@ -92,7 +92,7 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
           require_colons: false
         })
 
-      result = TestApp.Discord.emoji_from_discord(%{discord_struct: emoji_struct})
+      result = TestApp.Discord.emoji_from_discord(%{data: emoji_struct})
 
       assert {:ok, created_emoji} = result
       assert created_emoji.discord_id == emoji_struct.id
@@ -136,7 +136,7 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
         })
 
       {:ok, original_emoji} =
-        TestApp.Discord.emoji_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.emoji_from_discord(%{data: initial_struct})
 
       # Update same emoji with new data
       updated_struct =
@@ -150,7 +150,7 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
         })
 
       {:ok, updated_emoji} =
-        TestApp.Discord.emoji_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.emoji_from_discord(%{data: updated_struct})
 
       # Should be same record (same Ash ID)
       assert updated_emoji.id == original_emoji.id
@@ -176,7 +176,7 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
         })
 
       {:ok, original_emoji} =
-        TestApp.Discord.emoji_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.emoji_from_discord(%{data: initial_struct})
 
       # Mark as unavailable
       updated_struct =
@@ -189,7 +189,7 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
         })
 
       {:ok, updated_emoji} =
-        TestApp.Discord.emoji_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.emoji_from_discord(%{data: updated_struct})
 
       # Should be same record
       assert updated_emoji.id == original_emoji.id
@@ -201,7 +201,7 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
 
   describe "error handling" do
     test "handles invalid discord_struct format" do
-      result = TestApp.Discord.emoji_from_discord(%{discord_struct: "not_a_map"})
+      result = TestApp.Discord.emoji_from_discord(%{data: "not_a_map"})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -212,7 +212,7 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
       # Missing required fields
       invalid_struct = emoji(%{id: nil, name: nil})
 
-      result = TestApp.Discord.emoji_from_discord(%{discord_struct: invalid_struct})
+      result = TestApp.Discord.emoji_from_discord(%{data: invalid_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -227,7 +227,7 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
         animated: "not_a_boolean"
       }
 
-      result = TestApp.Discord.emoji_from_discord(%{discord_struct: malformed_struct})
+      result = TestApp.Discord.emoji_from_discord(%{data: malformed_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)

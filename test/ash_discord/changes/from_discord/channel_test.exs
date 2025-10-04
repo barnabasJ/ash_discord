@@ -24,7 +24,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
           guild_id: 555_666_777
         })
 
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: channel_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: channel_struct})
 
       assert {:ok, created_channel} = result
       assert created_channel.discord_id == channel_struct.id
@@ -53,7 +53,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
           ]
         })
 
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: channel_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: channel_struct})
 
       assert {:ok, created_channel} = result
       assert created_channel.discord_id == channel_struct.id
@@ -85,7 +85,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
           permission_overwrites: nil
         })
 
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: channel_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: channel_struct})
 
       assert {:ok, created_channel} = result
       assert created_channel.permission_overwrites == []
@@ -102,7 +102,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
           guild_id: 111_222_333
         })
 
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: voice_channel_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: voice_channel_struct})
 
       assert {:ok, created_channel} = result
       assert created_channel.discord_id == voice_channel_struct.id
@@ -121,7 +121,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
           position: 0
         })
 
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: category_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: category_struct})
 
       assert {:ok, created_channel} = result
       assert created_channel.discord_id == category_struct.id
@@ -166,7 +166,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
         })
 
       {:ok, original_channel} =
-        TestApp.Discord.channel_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.channel_from_discord(%{data: initial_struct})
 
       # Update same channel with new data
       updated_struct =
@@ -181,7 +181,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
         })
 
       {:ok, updated_channel} =
-        TestApp.Discord.channel_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.channel_from_discord(%{data: updated_struct})
 
       # Should be same record (same Ash ID)
       assert updated_channel.id == original_channel.id
@@ -209,7 +209,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
         })
 
       {:ok, original_channel} =
-        TestApp.Discord.channel_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.channel_from_discord(%{data: initial_struct})
 
       # Update with different permissions
       updated_struct =
@@ -227,7 +227,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
         })
 
       {:ok, updated_channel} =
-        TestApp.Discord.channel_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.channel_from_discord(%{data: updated_struct})
 
       # Should be same record
       assert updated_channel.id == original_channel.id
@@ -251,7 +251,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
 
   describe "error handling" do
     test "handles invalid discord_struct format" do
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: "not_a_map"})
+      result = TestApp.Discord.channel_from_discord(%{data: "not_a_map"})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -262,7 +262,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       # Missing required fields
       invalid_struct = channel(%{id: nil, name: nil})
 
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: invalid_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: invalid_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -281,7 +281,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
         })
 
       # The transformation should handle this gracefully
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: channel_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: channel_struct})
 
       # This might succeed with empty permissions or fail with validation error
       # Either is acceptable behavior

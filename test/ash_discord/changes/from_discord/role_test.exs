@@ -23,7 +23,7 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
           guild_id: 555_666_777
         })
 
-      result = TestApp.Discord.role_from_discord(%{discord_struct: role_struct})
+      result = TestApp.Discord.role_from_discord(%{data: role_struct})
 
       assert {:ok, created_role} = result
       assert created_role.discord_id == role_struct.id
@@ -54,7 +54,7 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
           guild_id: guild_id
         })
 
-      result = TestApp.Discord.role_from_discord(%{discord_struct: role_struct})
+      result = TestApp.Discord.role_from_discord(%{data: role_struct})
 
       assert {:ok, created_role} = result
       assert created_role.discord_id == guild_id
@@ -78,7 +78,7 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
           guild_id: 111_222_333
         })
 
-      result = TestApp.Discord.role_from_discord(%{discord_struct: role_struct})
+      result = TestApp.Discord.role_from_discord(%{data: role_struct})
 
       assert {:ok, created_role} = result
       assert created_role.discord_id == role_struct.id
@@ -101,7 +101,7 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
           mentionable: true
         })
 
-      result = TestApp.Discord.role_from_discord(%{discord_struct: role_struct})
+      result = TestApp.Discord.role_from_discord(%{data: role_struct})
 
       assert {:ok, created_role} = result
       assert created_role.discord_id == role_struct.id
@@ -146,7 +146,7 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
           permissions: 1024
         })
 
-      {:ok, original_role} = TestApp.Discord.role_from_discord(%{discord_struct: initial_struct})
+      {:ok, original_role} = TestApp.Discord.role_from_discord(%{data: initial_struct})
 
       # Update same role with new data
       updated_struct =
@@ -161,7 +161,7 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
           mentionable: true
         })
 
-      {:ok, updated_role} = TestApp.Discord.role_from_discord(%{discord_struct: updated_struct})
+      {:ok, updated_role} = TestApp.Discord.role_from_discord(%{data: updated_struct})
 
       # Should be same record (same Ash ID)
       assert updated_role.id == original_role.id
@@ -188,7 +188,7 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
           managed: false
         })
 
-      {:ok, original_role} = TestApp.Discord.role_from_discord(%{discord_struct: initial_struct})
+      {:ok, original_role} = TestApp.Discord.role_from_discord(%{data: initial_struct})
 
       # Update with admin permissions
       updated_struct =
@@ -201,7 +201,7 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
           managed: false
         })
 
-      {:ok, updated_role} = TestApp.Discord.role_from_discord(%{discord_struct: updated_struct})
+      {:ok, updated_role} = TestApp.Discord.role_from_discord(%{data: updated_struct})
 
       # Should be same record
       assert updated_role.id == original_role.id
@@ -214,7 +214,7 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
 
   describe "error handling" do
     test "handles invalid discord_struct format" do
-      result = TestApp.Discord.role_from_discord(%{discord_struct: "not_a_map"})
+      result = TestApp.Discord.role_from_discord(%{data: "not_a_map"})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -225,7 +225,7 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
       # Missing required fields
       invalid_struct = role(%{id: nil, name: nil})
 
-      result = TestApp.Discord.role_from_discord(%{discord_struct: invalid_struct})
+      result = TestApp.Discord.role_from_discord(%{data: invalid_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -241,7 +241,7 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
           permissions: "not_an_integer"
         })
 
-      result = TestApp.Discord.role_from_discord(%{discord_struct: role_struct})
+      result = TestApp.Discord.role_from_discord(%{data: role_struct})
 
       # This might succeed with normalized permissions or fail with validation error
       # Either is acceptable behavior

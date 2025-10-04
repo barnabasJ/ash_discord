@@ -43,7 +43,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
       result =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: member_struct,
+          data: member_struct,
           guild_id: 555_666_777
         })
 
@@ -68,7 +68,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
       result =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: member_struct,
+          data: member_struct,
           guild_id: 555_666_777
         })
 
@@ -90,7 +90,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
       result =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: member_struct,
+          data: member_struct,
           guild_id: 555_666_777
         })
 
@@ -112,7 +112,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
       result =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: member_struct,
+          data: member_struct,
           guild_id: 555_666_777
         })
 
@@ -134,7 +134,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
       result =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: member_struct,
+          data: member_struct,
           guild_id: 555_666_777
         })
 
@@ -183,7 +183,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
       {:ok, original_member} =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: initial_struct,
+          data: initial_struct,
           guild_id: guild_id
         })
 
@@ -199,7 +199,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
       {:ok, updated_member} =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: updated_struct,
+          data: updated_struct,
           guild_id: guild_id
         })
 
@@ -230,7 +230,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
       {:ok, original_member} =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: initial_struct,
+          data: initial_struct,
           guild_id: guild_id
         })
 
@@ -246,7 +246,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
       {:ok, updated_member} =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: updated_struct,
+          data: updated_struct,
           guild_id: guild_id
         })
 
@@ -262,7 +262,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
   describe "error handling" do
     test "handles invalid discord_struct format" do
-      result = TestApp.Discord.guild_member_from_discord(%{discord_struct: "not_a_map"})
+      result = TestApp.Discord.guild_member_from_discord(%{data: "not_a_map"})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -275,7 +275,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
       result =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: invalid_struct,
+          data: invalid_struct,
           guild_id: 555_666_777
         })
 
@@ -297,7 +297,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
       result =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: member_struct,
+          data: member_struct,
           guild_id: 555_666_777
         })
 
@@ -322,7 +322,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
         joined_at: "2023-01-01T00:00:00Z"
       }
 
-      result = TestApp.Discord.guild_member_from_discord(%{discord_struct: invalid_struct})
+      result = TestApp.Discord.guild_member_from_discord(%{data: invalid_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)

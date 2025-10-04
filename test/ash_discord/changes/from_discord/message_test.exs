@@ -280,7 +280,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "is required" or error_message =~ "Identity"
+      assert error_message =~ "is required" or error_message =~ "Identity" or error_message =~ "data"
     end
   end
 

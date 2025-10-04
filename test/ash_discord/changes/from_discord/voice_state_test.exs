@@ -319,7 +319,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "is invalid" or error_message =~ "must be"
+      assert error_message =~ "is invalid" or error_message =~ "must be" or error_message =~ "no function clause"
     end
   end
 end

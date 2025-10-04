@@ -64,4 +64,8 @@ defmodule AshDiscord.Consumer.Payloads.VoiceState do
   def new(%Nostrum.Struct.Event.VoiceState{} = nostrum_event) do
     super(Map.from_struct(nostrum_event))
   end
+
+  def new(value) do
+    super(value)
+  end
 end

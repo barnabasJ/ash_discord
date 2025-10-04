@@ -93,7 +93,7 @@ defmodule TestApp.Discord.MessageReaction do
   identities do
     # Use user_id, message_id, and either emoji_id (for custom) or emoji_name (for standard)
     # We'll exclude emoji_id from the identity and handle uniqueness through a combination
-    identity :reaction_identity, [:user_id, :message_id, :emoji_name] do
+    identity :discord_id, [:user_id, :message_id, :emoji_name] do
       pre_check_with(TestApp.Discord)
     end
   end
@@ -117,7 +117,7 @@ defmodule TestApp.Discord.MessageReaction do
       change(AshDiscord.Changes.FromDiscord.MessageReaction)
 
       upsert?(true)
-      upsert_identity(:reaction_identity)
+      upsert_identity(:discord_id)
 
       upsert_fields([
         :emoji_id,

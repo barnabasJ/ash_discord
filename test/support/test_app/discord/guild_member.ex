@@ -26,7 +26,7 @@ defmodule TestApp.Discord.GuildMember do
   end
 
   identities do
-    identity(:unique_member, [:guild_id, :user_id], pre_check_with: TestApp.Domain)
+    identity(:discord_id, [:guild_id, :user_id], pre_check_with: TestApp.Domain)
   end
 
   actions do
@@ -39,7 +39,7 @@ defmodule TestApp.Discord.GuildMember do
 
     create :from_discord do
       upsert?(true)
-      upsert_identity(:unique_member)
+      upsert_identity(:discord_id)
 
       upsert_fields([
         :nick,

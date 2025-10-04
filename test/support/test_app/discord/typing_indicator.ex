@@ -36,7 +36,7 @@ defmodule TestApp.Discord.TypingIndicator do
   end
 
   identities do
-    identity :user_channel, [:user_id, :channel_id] do
+    identity :discord_id, [:user_id, :channel_id] do
       pre_check_with(TestApp.Discord)
     end
   end
@@ -60,7 +60,7 @@ defmodule TestApp.Discord.TypingIndicator do
       change(AshDiscord.Changes.FromDiscord.TypingIndicator)
 
       upsert?(true)
-      upsert_identity(:user_channel)
+      upsert_identity(:discord_id)
       upsert_fields([:guild_id, :timestamp])
     end
 

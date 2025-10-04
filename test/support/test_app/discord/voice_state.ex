@@ -83,7 +83,7 @@ defmodule TestApp.Discord.VoiceState do
   end
 
   identities do
-    identity :user_guild, [:user_id, :guild_id] do
+    identity :discord_id, [:user_id, :guild_id] do
       pre_check_with(TestApp.Discord)
     end
   end
@@ -107,7 +107,7 @@ defmodule TestApp.Discord.VoiceState do
       change(AshDiscord.Changes.FromDiscord.VoiceState)
 
       upsert?(true)
-      upsert_identity(:user_guild)
+      upsert_identity(:discord_id)
 
       upsert_fields([
         :channel_id,

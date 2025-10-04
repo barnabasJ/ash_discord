@@ -76,6 +76,10 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
     ArgumentError -> {:error, :api_unavailable}
   end
 
+  def fetch_message(_invalid_identity) do
+    {:error, :requires_channel_and_message_ids}
+  end
+
   @doc """
   Attempts to fetch Discord entity data from Nostrum cache based on changeset and type.
 

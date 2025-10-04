@@ -9,7 +9,7 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
           reaction_add :: Payloads.MessageReactionAddEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def add(consumer, reaction_add, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_message_reaction_resource(consumer) do
       {:ok, resource} ->
@@ -39,7 +39,7 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
           reaction_remove :: Payloads.MessageReactionRemoveEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def remove(consumer, reaction_remove, _ws_state, _context) do
     Logger.info("AshDiscord: Message reaction removal requested")
 
@@ -105,7 +105,7 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
           reaction_remove_all :: Payloads.MessageReactionRemoveAllEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def remove_all(consumer, reaction_remove_all, _ws_state, _context) do
     Logger.info("AshDiscord: Message reaction remove all requested")
 
@@ -200,7 +200,7 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
           reaction_remove_emoji :: Payloads.MessageReactionRemoveEmojiEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def remove_emoji(_consumer, _reaction_remove_emoji, _ws_state, _context) do
     :ok
   end

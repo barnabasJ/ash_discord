@@ -4,7 +4,7 @@ defmodule AshDiscord.Consumer.Handler.Thread do
           thread :: Nostrum.Struct.Channel.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def create(_consumer, _thread, _ws_state, _context), do: :ok
 
   @spec delete(
@@ -12,7 +12,7 @@ defmodule AshDiscord.Consumer.Handler.Thread do
           thread :: Nostrum.Struct.Channel.t() | :noop,
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def delete(_consumer, _thread, _ws_state, _context), do: :ok
 
   @spec update(
@@ -22,7 +22,7 @@ defmodule AshDiscord.Consumer.Handler.Thread do
              new_thread :: Nostrum.Struct.Channel.t()},
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def update(_consumer, _data, _ws_state, _context), do: :ok
 
   @spec list(
@@ -30,6 +30,6 @@ defmodule AshDiscord.Consumer.Handler.Thread do
           data :: Nostrum.Struct.Event.ThreadListSync.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def list(_consumer, _data, _ws_state, _context), do: :ok
 end

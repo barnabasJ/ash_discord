@@ -4,7 +4,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.Ban do
           data :: Nostrum.Struct.Event.GuildBanAdd.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def add(_consumer, _data, _ws_state, _context), do: :ok
 
   @spec remove(
@@ -12,6 +12,6 @@ defmodule AshDiscord.Consumer.Handler.Guild.Ban do
           data :: Nostrum.Struct.Event.GuildBanRemove.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def remove(_consumer, _data, _ws_state, _context), do: :ok
 end

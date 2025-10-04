@@ -4,7 +4,7 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.Rule do
           rule :: Nostrum.Struct.AutoModerationRule.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def create(_consumer, _rule, _ws_state, _context), do: :ok
 
   @spec delete(
@@ -12,7 +12,7 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.Rule do
           rule :: Nostrum.Struct.AutoModerationRule.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def delete(_consumer, _rule, _ws_state, _context), do: :ok
 
   @spec update(
@@ -20,7 +20,7 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.Rule do
           rule :: Nostrum.Struct.AutoModerationRule.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def update(_consumer, _rule, _ws_state, _context), do: :ok
 
   @spec execute(
@@ -28,6 +28,6 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.Rule do
           data :: Nostrum.Struct.Event.AutoModerationRuleExecute.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def execute(_consumer, _data, _ws_state, _context), do: :ok
 end

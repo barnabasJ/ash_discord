@@ -8,7 +8,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
           new_guild :: Payloads.Guild.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: {:ok, Ash.Resource.record()} | {:error, term()}
   def create(guild, _ws_state, context) do
     register_commands(context.consumer, guild)
 
@@ -53,7 +53,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
           guild_update :: Payloads.GuildUpdate.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def update(%Payloads.GuildUpdate{new_guild: new_guild}, _ws_state, context) do
     case context.resource
          |> Ash.Changeset.for_create(:from_discord, %{
@@ -72,8 +72,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
           "Failed to update guild #{new_guild.name} (#{new_guild.id}): #{inspect(error)}"
         )
 
-        # Don't crash the consumer
-        :ok
+        {:error, error}
     end
   end
 
@@ -81,7 +80,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
           guild_delete :: Payloads.GuildDelete.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def delete(%Payloads.GuildDelete{old_guild: old_guild, unavailable: unavailable}, _ws_state, context) do
     case unavailable do
       unavailable when unavailable in [nil, false] ->
@@ -97,7 +96,10 @@ defmodule AshDiscord.Consumer.Handler.Guild do
              })
              |> Ash.read() do
           {:ok, [guild]} ->
-            guild |> Ash.destroy(actor: %{role: :bot})
+            case guild |> Ash.destroy(actor: %{role: :bot}) do
+              :ok -> :ok
+              {:error, error} -> {:error, error}
+            end
 
           {:ok, []} ->
             Logger.info("Guild #{guild_discord_id} not found, nothing to delete")
@@ -108,7 +110,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
               "Failed to find guild #{guild_discord_id} for deletion: #{inspect(error)}"
             )
 
-            :ok
+            {:error, error}
         end
 
       true ->
@@ -122,7 +124,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
           guild :: Payloads.Guild.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: {:ok, Ash.Resource.record()} | {:error, term()}
   def available(guild, ws_state, context) do
     # When a guild becomes available, treat it like a create
     create(guild, ws_state, context)
@@ -132,7 +134,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
           guild :: Payloads.Guild.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok
   def unavailable(_guild, _ws_state, _context) do
     :ok
   end

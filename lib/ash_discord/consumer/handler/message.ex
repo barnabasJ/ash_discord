@@ -8,7 +8,7 @@ defmodule AshDiscord.Consumer.Handler.Message do
           message :: Payloads.Message.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def create(message, _ws_state, context) do
     consumer = context.consumer
 
@@ -51,7 +51,7 @@ defmodule AshDiscord.Consumer.Handler.Message do
           message_update :: Payloads.MessageUpdate.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def update(%Payloads.MessageUpdate{updated_message: message}, _ws_state, context) do
     consumer = context.consumer
 
@@ -86,7 +86,7 @@ defmodule AshDiscord.Consumer.Handler.Message do
           message_delete :: Payloads.MessageDeleteEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def delete(message_delete, _ws_state, context) do
     consumer = context.consumer
 
@@ -123,7 +123,7 @@ defmodule AshDiscord.Consumer.Handler.Message do
           message_delete_bulk :: Payloads.MessageDeleteBulkEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def delete_bulk(message_delete_bulk, _ws_state, context) do
     consumer = context.consumer
 
@@ -164,7 +164,7 @@ defmodule AshDiscord.Consumer.Handler.Message do
           data :: map(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def ack(_data, _ws_state, _context) do
     :ok
   end

@@ -9,7 +9,7 @@ defmodule AshDiscord.Consumer.Handler.Invite do
           invite_create :: Payloads.InviteCreateEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def create(consumer, invite, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_invite_resource(consumer) do
       {:ok, resource} ->
@@ -45,7 +45,7 @@ defmodule AshDiscord.Consumer.Handler.Invite do
           invite_delete :: Payloads.InviteDeleteEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def delete(consumer, invite_delete, _ws_state, _context) do
     code = invite_delete.code
 

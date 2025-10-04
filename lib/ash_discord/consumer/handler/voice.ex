@@ -8,7 +8,7 @@ defmodule AshDiscord.Consumer.Handler.Voice do
           voice_state_event :: Payloads.VoiceStateEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def update(consumer, voice_state, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_voice_state_resource(consumer) do
       {:ok, resource} ->
@@ -46,7 +46,7 @@ defmodule AshDiscord.Consumer.Handler.Voice do
           data :: Nostrum.Struct.Event.VoiceReady.t(),
           ws_state :: Nostrum.Struct.VoiceWSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def ready(_consumer, _data, _ws_state, _context) do
     :ok
   end
@@ -56,7 +56,7 @@ defmodule AshDiscord.Consumer.Handler.Voice do
           data :: Nostrum.Struct.Event.SpeakingUpdate.t(),
           ws_state :: Nostrum.Struct.VoiceWSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def speaking(_consumer, _data, _ws_state, _context) do
     :ok
   end
@@ -66,7 +66,7 @@ defmodule AshDiscord.Consumer.Handler.Voice do
           data :: Nostrum.Voice.rtp_opus(),
           ws_state :: Nostrum.Struct.VoiceWSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def incoming(_consumer, _data, _ws_state, _context) do
     :ok
   end
@@ -76,7 +76,7 @@ defmodule AshDiscord.Consumer.Handler.Voice do
           data :: Nostrum.Struct.Event.VoiceServerUpdate.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: any()
+        ) :: :ok | {:error, term()}
   def server(_consumer, _data, _ws_state, _context) do
     :ok
   end

@@ -84,10 +84,12 @@ defmodule AshDiscord.InteractionRouter do
   end
 
   defp create_or_find_user(user_resource, discord_user, interaction) do
+    # Convert Nostrum User to Payload
+    {:ok, user_payload} = AshDiscord.Consumer.Payloads.User.new(discord_user)
+
     case user_resource
          |> Ash.Changeset.for_create(:from_discord, %{
-           discord_id: discord_user.id,
-           discord_struct: discord_user
+           data: user_payload
          })
          |> Ash.Changeset.set_context(%{
            shared: %{private: %{ash_discord?: true}},

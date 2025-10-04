@@ -165,10 +165,13 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
 
   """
   def manage_guild_relationship(changeset, guild_id) when not is_nil(guild_id) do
-    Ash.Changeset.manage_relationship(changeset, :guild, guild_id,
+    # Pass both discord_id (for lookup) and identity (for API fetch if not found)
+    Ash.Changeset.manage_relationship(
+      changeset,
+      :guild,
+      %{discord_id: guild_id, identity: guild_id},
       type: :append_and_remove,
       use_identities: [:discord_id],
-      value_is_key: :discord_id,
       on_no_match: {:create, :from_discord}
     )
   end
@@ -201,10 +204,13 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
   def manage_user_relationship(changeset, user_id, relationship_name \\ :user)
 
   def manage_user_relationship(changeset, user_id, relationship_name) when not is_nil(user_id) do
-    Ash.Changeset.manage_relationship(changeset, relationship_name, user_id,
+    # Pass both discord_id (for lookup) and identity (for API fetch if not found)
+    Ash.Changeset.manage_relationship(
+      changeset,
+      relationship_name,
+      %{discord_id: user_id, identity: user_id},
       type: :append_and_remove,
       use_identities: [:discord_id],
-      value_is_key: :discord_id,
       on_no_match: {:create, :from_discord}
     )
   end
@@ -233,10 +239,13 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
 
   """
   def manage_channel_relationship(changeset, channel_id) when not is_nil(channel_id) do
-    Ash.Changeset.manage_relationship(changeset, :channel, channel_id,
+    # Pass both discord_id (for lookup) and identity (for API fetch if not found)
+    Ash.Changeset.manage_relationship(
+      changeset,
+      :channel,
+      %{discord_id: channel_id, identity: channel_id},
       type: :append_and_remove,
       use_identities: [:discord_id],
-      value_is_key: :discord_id,
       on_no_match: {:create, :from_discord}
     )
   end
@@ -265,10 +274,13 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
 
   """
   def manage_message_relationship(changeset, message_id) when not is_nil(message_id) do
-    Ash.Changeset.manage_relationship(changeset, :message, message_id,
+    # Pass both discord_id (for lookup) and identity (for API fetch if not found)
+    Ash.Changeset.manage_relationship(
+      changeset,
+      :message,
+      %{discord_id: message_id, identity: message_id},
       type: :append_and_remove,
       use_identities: [:discord_id],
-      value_is_key: :discord_id,
       on_no_match: {:create, :from_discord}
     )
   end
@@ -346,9 +358,17 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
   defp parse_datetime(%DateTime{} = datetime), do: {:ok, datetime}
 
   defp parse_datetime(timestamp) when is_integer(timestamp) do
-    case DateTime.from_unix(timestamp, :second) do
-      {:ok, datetime} -> {:ok, datetime}
-      {:error, reason} -> {:error, "Invalid Unix timestamp: #{reason}"}
+    # Try milliseconds first (Discord API typically uses milliseconds)
+    case DateTime.from_unix(timestamp, :millisecond) do
+      {:ok, datetime} ->
+        {:ok, datetime}
+
+      {:error, _} ->
+        # Fallback to seconds for compatibility
+        case DateTime.from_unix(timestamp, :second) do
+          {:ok, datetime} -> {:ok, datetime}
+          {:error, reason} -> {:error, "Invalid Unix timestamp: #{reason}"}
+        end
     end
   end
 

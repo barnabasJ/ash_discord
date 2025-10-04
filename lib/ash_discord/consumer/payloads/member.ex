@@ -45,4 +45,9 @@ defmodule AshDiscord.Consumer.Payloads.Member do
   def new(%Nostrum.Struct.Guild.Member{} = nostrum_member) do
     super(Map.from_struct(nostrum_member))
   end
+
+  # Handle plain maps (for testing/edge cases)
+  def new(attrs) when is_map(attrs) do
+    super(attrs)
+  end
 end

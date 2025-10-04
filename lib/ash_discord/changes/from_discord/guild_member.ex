@@ -35,12 +35,23 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMember do
           # No data provided, fetch from API using identity
           identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
 
-          case ApiFetchers.fetch_member(identity) do
-            {:ok, %Payloads.Member{} = member_data} ->
-              transform_guild_member(changeset, member_data, identity)
+          # Validate identity has required fields for API fetch
+          case identity do
+            %{guild_id: guild_id, user_id: user_id}
+            when not is_nil(guild_id) and not is_nil(user_id) ->
+              case ApiFetchers.fetch_member(identity) do
+                {:ok, %Payloads.Member{} = member_data} ->
+                  transform_guild_member(changeset, member_data, identity)
 
-            {:error, reason} ->
-              Ash.Changeset.add_error(changeset, reason)
+                {:error, reason} ->
+                  Ash.Changeset.add_error(changeset, reason)
+              end
+
+            _ ->
+              Ash.Changeset.add_error(
+                changeset,
+                "GuildMember requires data argument with Member payload, or identity argument with %{guild_id: integer, user_id: integer}"
+              )
           end
 
         %Payloads.Member{} = member_data ->
@@ -62,6 +73,14 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMember do
     # Get guild_discord_id from identity map
     guild_discord_id = identity[:guild_id] || identity["guild_id"]
     user_discord_id = member_data.user_id
+
+    # Validate required fields
+    changeset =
+      if is_nil(user_discord_id) do
+        Ash.Changeset.add_error(changeset, field: :user_id, message: "is required")
+      else
+        changeset
+      end
 
     changeset
     |> maybe_set_attribute(:nick, member_data.nick)

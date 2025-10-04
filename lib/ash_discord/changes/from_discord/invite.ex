@@ -141,11 +141,14 @@ defmodule AshDiscord.Changes.FromDiscord.Invite do
 
   defp maybe_manage_channel_relationship(changeset, channel_discord_id) do
     if Ash.Resource.Info.relationship(changeset.resource, :channel) do
-      Ash.Changeset.manage_relationship(changeset, :channel, channel_discord_id,
+      # Pass both discord_id (for lookup) and identity (for API fetch if not found)
+      Ash.Changeset.manage_relationship(
+        changeset,
+        :channel,
+        %{discord_id: channel_discord_id, identity: channel_discord_id},
         type: :append_and_remove,
-        on_no_match: {:create, :from_discord},
         use_identities: [:discord_id],
-        value_is_key: :discord_id
+        on_no_match: {:create, :from_discord}
       )
     else
       changeset

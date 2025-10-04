@@ -23,7 +23,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicator do
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_transaction(changeset, fn changeset ->
-      case Ash.Changeset.get_argument(changeset, :data) do
+      case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
         data when is_map(data) ->
           transform_typing_indicator(changeset, data)
 
@@ -44,17 +44,14 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicator do
 
   defp transform_typing_indicator(changeset, typing_data) do
     changeset
-    |> maybe_set_attribute(:user_discord_id, typing_data[:user_id] || typing_data["user_id"])
-    |> maybe_set_attribute(:user_id, typing_data[:user_id] || typing_data["user_id"])
-    |> maybe_set_attribute(
-      :channel_discord_id,
-      typing_data[:channel_id] || typing_data["channel_id"]
-    )
-    |> maybe_set_attribute(:channel_id, typing_data[:channel_id] || typing_data["channel_id"])
-    |> maybe_set_attribute(:guild_discord_id, typing_data[:guild_id] || typing_data["guild_id"])
-    |> maybe_set_attribute(:guild_id, typing_data[:guild_id] || typing_data["guild_id"])
+    |> maybe_set_attribute(:user_discord_id, typing_data.user_id)
+    |> maybe_set_attribute(:user_id, typing_data.user_id)
+    |> maybe_set_attribute(:channel_discord_id, typing_data.channel_id)
+    |> maybe_set_attribute(:channel_id, typing_data.channel_id)
+    |> maybe_set_attribute(:guild_discord_id, typing_data.guild_id)
+    |> maybe_set_attribute(:guild_id, typing_data.guild_id)
     |> set_typing_timestamp(typing_data)
-    |> maybe_set_attribute(:member, typing_data[:member] || typing_data["member"])
+    |> maybe_set_attribute(:member, typing_data.member)
   end
 
   # Handle timestamp setting for typing indicators

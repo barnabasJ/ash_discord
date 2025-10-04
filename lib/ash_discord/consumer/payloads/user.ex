@@ -25,7 +25,13 @@ defmodule AshDiscord.Consumer.Payloads.User do
   Create a User TypedStruct from a Nostrum User struct.
 
   Accepts a `Nostrum.Struct.User.t()` and creates an AshDiscord User TypedStruct.
+  If already a Payloads.User struct, returns it as-is.
   """
+  def new(%__MODULE__{} = user) do
+    # Already converted, return as-is
+    {:ok, user}
+  end
+
   def new(%Nostrum.Struct.User{} = nostrum_user) do
     super(Map.from_struct(nostrum_user))
   end

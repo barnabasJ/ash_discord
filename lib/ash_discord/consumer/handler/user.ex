@@ -1,10 +1,13 @@
 defmodule AshDiscord.Consumer.Handler.User do
+  alias AshDiscord.Consumer.Payloads
+
   @spec update(
-          {old_user :: Nostrum.Struct.User.t() | nil, new_user :: Nostrum.Struct.User.t()},
+          user_update :: Payloads.UserUpdate.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def update(_user_data, _ws_state, _context) do
+  def update(_user_update, _ws_state, _context) do
+    # TODO: Implement user update logic when user resource is configured
     :ok
   end
 

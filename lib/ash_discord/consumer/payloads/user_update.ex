@@ -23,9 +23,10 @@ defmodule AshDiscord.Consumer.Payloads.UserUpdate do
   Accepts a tuple `{old_user, new_user}` where each is a `Nostrum.Struct.User.t()`.
   """
   def new({old_user, %Nostrum.Struct.User{} = new_user}) do
+    # Pass Nostrum structs directly - super() will cast them using User.cast_input/2
     super(%{
-      old_user: old_user && AshDiscord.Consumer.Payloads.User.new(old_user),
-      new_user: AshDiscord.Consumer.Payloads.User.new(new_user)
+      old_user: old_user,
+      new_user: new_user
     })
   end
 end

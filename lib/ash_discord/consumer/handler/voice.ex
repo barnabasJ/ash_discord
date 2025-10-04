@@ -9,7 +9,7 @@ defmodule AshDiscord.Consumer.Handler.Voice do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def update(consumer, %Payloads.VoiceStateEvent{voice_state: voice_state}, _ws_state, _context) do
+  def update(consumer, voice_state, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_voice_state_resource(consumer) do
       {:ok, resource} ->
         Logger.debug("AshDiscord: Creating voice state: #{inspect(voice_state)}")

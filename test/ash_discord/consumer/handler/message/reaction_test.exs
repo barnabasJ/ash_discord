@@ -39,11 +39,7 @@ defmodule AshDiscord.Consumer.Handler.Message.ReactionTest do
       {:ok, _created} =
         TestApp.Discord.MessageReaction
         |> Ash.Changeset.for_create(:from_discord, %{
-          data: reaction_event,
-          user_id: reaction_event.user_id,
-          message_id: reaction_event.message_id,
-          channel_id: reaction_event.channel_id,
-          guild_id: reaction_event.guild_id
+          data: reaction_event
         })
         |> Ash.create()
 
@@ -95,22 +91,14 @@ defmodule AshDiscord.Consumer.Handler.Message.ReactionTest do
       {:ok, _} =
         TestApp.Discord.MessageReaction
         |> Ash.Changeset.for_create(:from_discord, %{
-          data: reaction_event1,
-          user_id: reaction_event1.user_id,
-          message_id: reaction_event1.message_id,
-          channel_id: reaction_event1.channel_id,
-          guild_id: reaction_event1.guild_id
+          data: reaction_event1
         })
         |> Ash.create()
 
       {:ok, _} =
         TestApp.Discord.MessageReaction
         |> Ash.Changeset.for_create(:from_discord, %{
-          data: reaction_event2,
-          user_id: reaction_event2.user_id,
-          message_id: reaction_event2.message_id,
-          channel_id: reaction_event2.channel_id,
-          guild_id: reaction_event2.guild_id
+          data: reaction_event2
         })
         |> Ash.create()
 
@@ -128,7 +116,12 @@ defmodule AshDiscord.Consumer.Handler.Message.ReactionTest do
       }
 
       assert :ok =
-               Reaction.all(TestConsumer, remove_all_event, %Nostrum.Struct.WSState{}, context)
+               Reaction.remove_all(
+                 TestConsumer,
+                 remove_all_event,
+                 %Nostrum.Struct.WSState{},
+                 context
+               )
 
       # Verify all reactions were deleted from database
       reactions_after = TestApp.Discord.MessageReaction.read!()
@@ -147,11 +140,16 @@ defmodule AshDiscord.Consumer.Handler.Message.ReactionTest do
 
       # Should not crash when no reactions exist
       assert :ok =
-               Reaction.all(TestConsumer, remove_all_event, %Nostrum.Struct.WSState{}, context)
+               Reaction.remove_all(
+                 TestConsumer,
+                 remove_all_event,
+                 %Nostrum.Struct.WSState{},
+                 context
+               )
     end
   end
 
-  describe "emoji/4" do
+  describe "remove_emoji/4" do
     test "returns :ok without side effects" do
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -161,7 +159,8 @@ defmodule AshDiscord.Consumer.Handler.Message.ReactionTest do
       }
 
       # This is a no-op handler
-      assert :ok = Reaction.emoji(TestConsumer, %{}, %Nostrum.Struct.WSState{}, context)
+      assert :ok =
+               Reaction.remove_emoji(TestConsumer, %{}, %Nostrum.Struct.WSState{}, context)
     end
   end
 end

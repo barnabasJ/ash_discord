@@ -5,6 +5,7 @@ defmodule AshDiscord.Consumer.Handler.GuildTest do
   import Mimic
 
   alias AshDiscord.Consumer.Handler.Guild
+  alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 
   setup do
@@ -21,6 +22,8 @@ defmodule AshDiscord.Consumer.Handler.GuildTest do
   describe "create/3" do
     test "creates guild from Discord event" do
       guild_data = guild()
+      # Transform to TypedStruct
+      typed_guild = Payloads.Guild.new(guild_data)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -29,7 +32,7 @@ defmodule AshDiscord.Consumer.Handler.GuildTest do
         user: nil
       }
 
-      assert {:ok, created_guild} = Guild.create(guild_data, %Nostrum.Struct.WSState{}, context)
+      assert {:ok, created_guild} = Guild.create(typed_guild, %Nostrum.Struct.WSState{}, context)
 
       guilds = TestApp.Discord.Guild.read!()
       assert length(guilds) == 1
@@ -40,6 +43,8 @@ defmodule AshDiscord.Consumer.Handler.GuildTest do
 
     test "registers guild commands on create" do
       guild_data = guild()
+      # Transform to TypedStruct
+      typed_guild = Payloads.Guild.new(guild_data)
 
       expect(Nostrum.Api.ApplicationCommand, :bulk_overwrite_guild_commands, fn guild_id,
                                                                                 commands ->
@@ -55,7 +60,7 @@ defmodule AshDiscord.Consumer.Handler.GuildTest do
         user: nil
       }
 
-      assert {:ok, _created} = Guild.create(guild_data, %Nostrum.Struct.WSState{}, context)
+      assert {:ok, _created} = Guild.create(typed_guild, %Nostrum.Struct.WSState{}, context)
     end
   end
 
@@ -64,6 +69,9 @@ defmodule AshDiscord.Consumer.Handler.GuildTest do
       old_guild = guild(%{name: "Old Name"})
       new_guild = guild(%{id: old_guild.id, name: "New Name"})
 
+      # Transform to TypedStruct GuildUpdate payload
+      guild_update = Payloads.GuildUpdate.new({old_guild, new_guild})
+
       context = %AshDiscord.Context{
         consumer: TestConsumer,
         resource: TestApp.Discord.Guild,
@@ -71,7 +79,7 @@ defmodule AshDiscord.Consumer.Handler.GuildTest do
         user: nil
       }
 
-      assert :ok = Guild.update({old_guild, new_guild}, %Nostrum.Struct.WSState{}, context)
+      assert :ok = Guild.update(guild_update, %Nostrum.Struct.WSState{}, context)
 
       guilds = TestApp.Discord.Guild.read!()
       assert length(guilds) == 1
@@ -86,11 +94,10 @@ defmodule AshDiscord.Consumer.Handler.GuildTest do
     test "deletes guild when unavailable is false" do
       guild_data = guild()
 
-      # First create the guild
+      # First create the guild - pass Nostrum struct directly
       {:ok, _created} =
         TestApp.Discord.Guild
         |> Ash.Changeset.for_create(:from_discord, %{
-          discord_id: guild_data.id,
           data: guild_data
         })
         |> Ash.create()
@@ -105,7 +112,10 @@ defmodule AshDiscord.Consumer.Handler.GuildTest do
         user: nil
       }
 
-      Guild.delete({guild_data, false}, %Nostrum.Struct.WSState{}, context)
+      # Transform to TypedStruct GuildDelete payload
+      guild_delete = Payloads.GuildDelete.new({guild_data, false})
+
+      Guild.delete(guild_delete, %Nostrum.Struct.WSState{}, context)
 
       guilds_after = TestApp.Discord.Guild.read!()
       assert length(guilds_after) == 0
@@ -117,7 +127,6 @@ defmodule AshDiscord.Consumer.Handler.GuildTest do
       {:ok, _created} =
         TestApp.Discord.Guild
         |> Ash.Changeset.for_create(:from_discord, %{
-          discord_id: guild_data.id,
           data: guild_data
         })
         |> Ash.create()
@@ -132,7 +141,10 @@ defmodule AshDiscord.Consumer.Handler.GuildTest do
         user: nil
       }
 
-      assert :ok = Guild.delete({guild_data, true}, %Nostrum.Struct.WSState{}, context)
+      # Transform to TypedStruct GuildDelete payload
+      guild_delete = Payloads.GuildDelete.new({guild_data, true})
+
+      assert :ok = Guild.delete(guild_delete, %Nostrum.Struct.WSState{}, context)
 
       guilds_after = TestApp.Discord.Guild.read!()
       assert length(guilds_after) == 1

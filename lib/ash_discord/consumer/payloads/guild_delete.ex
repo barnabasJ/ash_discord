@@ -24,8 +24,9 @@ defmodule AshDiscord.Consumer.Payloads.GuildDelete do
   Accepts a tuple `{old_guild, unavailable}` where old_guild is a `Nostrum.Struct.Guild.t()` and unavailable is a boolean.
   """
   def new({%Nostrum.Struct.Guild{} = old_guild, unavailable}) when is_boolean(unavailable) do
+    # Pass Nostrum struct directly - super() will cast it using Guild.cast_input/2
     super(%{
-      old_guild: AshDiscord.Consumer.Payloads.Guild.new(old_guild),
+      old_guild: old_guild,
       unavailable: unavailable
     })
   end

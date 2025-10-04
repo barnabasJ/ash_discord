@@ -7,10 +7,12 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
   require Ash.Query
 
   alias AshDiscord.Consumer.Handler.Guild.Member
+  alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 
   setup do
     copy(Nostrum.Api.User)
+    copy(Nostrum.Api.Guild)
     :ok
   end
 
@@ -19,9 +21,13 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
       guild_id = generate_snowflake()
       member_data = member()
 
-      # Mock user API call for relationship - return user with matching ID
+      # Mock API calls for relationships
       expect(Nostrum.Api.User, :get, fn user_id ->
         {:ok, user(%{id: user_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id})}
       end)
 
       context = %AshDiscord.Context{
@@ -31,10 +37,18 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
         user: nil
       }
 
+      # Create GuildMemberAdd payload
+      {:ok, member_payload} = Payloads.Member.new(member_data)
+
+      guild_member_add = %Payloads.GuildMemberAdd{
+        guild_id: guild_id,
+        member: member_payload
+      }
+
       assert :ok =
                Member.add(
                  TestConsumer,
-                 {guild_id, member_data},
+                 guild_member_add,
                  %Nostrum.Struct.WSState{},
                  context
                )
@@ -59,9 +73,13 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
       old_member = member(%{nick: "Old Nick"})
       new_member = member(%{user_id: old_member.user_id, nick: "New Nick"})
 
-      # Mock user API call for relationship - return user with matching ID
+      # Mock API calls for relationships
       expect(Nostrum.Api.User, :get, fn user_id ->
         {:ok, user(%{id: user_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id})}
       end)
 
       context = %AshDiscord.Context{
@@ -71,10 +89,19 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
         user: nil
       }
 
+      # Create GuildMemberUpdate payload
+      {:ok, new_member_payload} = Payloads.Member.new(new_member)
+
+      guild_member_update = %Payloads.GuildMemberUpdate{
+        guild_id: guild_id,
+        old_member: nil,
+        new_member: new_member_payload
+      }
+
       assert :ok =
                Member.update(
                  TestConsumer,
-                 {guild_id, old_member, new_member},
+                 guild_member_update,
                  %Nostrum.Struct.WSState{},
                  context
                )
@@ -99,17 +126,21 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
       guild_id = generate_snowflake()
       member_data = member()
 
-      # Mock user API call for relationship - return user with matching ID
+      # Mock API calls for relationships
       expect(Nostrum.Api.User, :get, fn user_id ->
         {:ok, user(%{id: user_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id})}
       end)
 
       # First create the guild member
       {:ok, _created} =
         TestApp.Discord.GuildMember
         |> Ash.Changeset.for_create(:from_discord, %{
-          guild_id: guild_id,
-          data: member_data
+          data: member_data,
+          identity: %{guild_id: guild_id}
         })
         |> Ash.create()
 
@@ -128,10 +159,18 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
         user: nil
       }
 
+      # Create GuildMemberRemove payload
+      {:ok, member_payload} = Payloads.Member.new(member_data)
+
+      guild_member_remove = %Payloads.GuildMemberRemove{
+        guild_id: guild_id,
+        member: member_payload
+      }
+
       assert :ok =
                Member.remove(
                  TestConsumer,
-                 {guild_id, member_data},
+                 guild_member_remove,
                  %Nostrum.Struct.WSState{},
                  context
                )
@@ -156,11 +195,19 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
         user: nil
       }
 
+      # Create GuildMemberRemove payload
+      {:ok, member_payload} = Payloads.Member.new(member_data)
+
+      guild_member_remove = %Payloads.GuildMemberRemove{
+        guild_id: guild_id,
+        member: member_payload
+      }
+
       # Should not crash when member doesn't exist
       assert :ok =
                Member.remove(
                  TestConsumer,
-                 {guild_id, member_data},
+                 guild_member_remove,
                  %Nostrum.Struct.WSState{},
                  context
                )

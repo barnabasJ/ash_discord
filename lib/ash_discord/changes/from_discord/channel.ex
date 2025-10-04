@@ -65,6 +65,7 @@ defmodule AshDiscord.Changes.FromDiscord.Channel do
     |> maybe_set_attribute(:topic, channel_data.topic)
     |> maybe_set_attribute(:nsfw, channel_data.nsfw)
     |> maybe_set_attribute(:parent_id, channel_data.parent_id)
+    |> maybe_set_attribute(:guild_id, channel_data.guild_id)
     |> maybe_set_attribute(
       :permission_overwrites,
       Transformations.transform_permission_overwrites(channel_data.permission_overwrites)

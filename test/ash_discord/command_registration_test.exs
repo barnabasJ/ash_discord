@@ -212,8 +212,9 @@ defmodule AshDiscord.CommandRegistrationTest do
       # Should handle the unknown command gracefully (returns :ok)
       assert result == :ok
 
-      # Should have processed the interaction
-      assert_receive {:interaction_processed, ^interaction}
+      # Should have processed the interaction (receives Payload, not Nostrum struct)
+      assert_receive {:interaction_processed, %AshDiscord.Consumer.Payloads.Interaction{id: interaction_id}}
+      assert interaction_id == interaction.id
     end
 
     test "find_command returns nil for unknown commands" do

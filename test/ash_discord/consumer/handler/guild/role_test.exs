@@ -7,14 +7,14 @@ defmodule AshDiscord.Consumer.Handler.Guild.RoleTest do
   alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 
-  describe "create/4" do
+  describe "create/3" do
     test "creates role in database" do
       guild_id = generate_snowflake()
       role_data = role()
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.Role,
         guild: nil,
         user: nil
       }
@@ -28,7 +28,6 @@ defmodule AshDiscord.Consumer.Handler.Guild.RoleTest do
 
       assert :ok =
                Role.create(
-                 TestConsumer,
                  guild_role_create,
                  %Nostrum.Struct.WSState{},
                  context
@@ -45,7 +44,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.RoleTest do
     end
   end
 
-  describe "update/4" do
+  describe "update/3" do
     test "updates existing role in database" do
       guild_id = generate_snowflake()
       old_role = role(%{name: "Old Role"})
@@ -53,7 +52,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.RoleTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.Role,
         guild: nil,
         user: nil
       }
@@ -69,7 +68,6 @@ defmodule AshDiscord.Consumer.Handler.Guild.RoleTest do
 
       assert :ok =
                Role.update(
-                 TestConsumer,
                  guild_role_update,
                  %Nostrum.Struct.WSState{},
                  context
@@ -86,14 +84,57 @@ defmodule AshDiscord.Consumer.Handler.Guild.RoleTest do
     end
   end
 
-  describe "delete/4" do
-    test "returns :ok - delete not yet implemented" do
+  describe "delete/3" do
+    test "deletes role from database" do
+      guild_id = generate_snowflake()
+      role_data = role()
+
+      # First create the role
+      {:ok, role_payload} = Payloads.Role.new(role_data)
+
+      {:ok, _created} =
+        TestApp.Discord.Role
+        |> Ash.Changeset.for_create(:from_discord, %{
+          data: role_payload,
+          identity: %{role_id: role_data.id, guild_id: guild_id}
+        })
+        |> Ash.create()
+
+      # Verify role exists
+      roles_before = TestApp.Discord.Role.read!()
+      assert length(roles_before) == 1
+
+      context = %AshDiscord.Context{
+        consumer: TestConsumer,
+        resource: TestApp.Discord.Role,
+        guild: nil,
+        user: nil
+      }
+
+      guild_role_delete = %Payloads.GuildRoleDelete{
+        guild_id: guild_id,
+        role: role_payload
+      }
+
+      assert :ok =
+               Role.delete(
+                 guild_role_delete,
+                 %Nostrum.Struct.WSState{},
+                 context
+               )
+
+      # Verify role was deleted from database
+      roles_after = TestApp.Discord.Role.read!()
+      assert length(roles_after) == 0
+    end
+
+    test "handles missing role gracefully" do
       guild_id = generate_snowflake()
       role_data = role()
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.Role,
         guild: nil,
         user: nil
       }
@@ -105,10 +146,9 @@ defmodule AshDiscord.Consumer.Handler.Guild.RoleTest do
         role: role_payload
       }
 
-      # Delete is TODO - currently returns :ok without side effects
+      # Should not crash when role doesn't exist
       assert :ok =
                Role.delete(
-                 TestConsumer,
                  guild_role_delete,
                  %Nostrum.Struct.WSState{},
                  context

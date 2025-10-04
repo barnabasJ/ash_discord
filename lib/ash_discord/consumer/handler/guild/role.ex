@@ -1,91 +1,74 @@
 defmodule AshDiscord.Consumer.Handler.Guild.Role do
+  require Ash.Query
   require Logger
 
   alias AshDiscord.Consumer.Payloads
 
   @spec create(
-          consumer :: module(),
           role_create :: Payloads.GuildRoleCreate.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def create(consumer, %Payloads.GuildRoleCreate{guild_id: guild_id, role: role}, _ws_state, _context) do
-    with {:ok, resource} <-
-           AshDiscord.Consumer.Info.ash_discord_consumer_role_resource(consumer),
-         {:ok, _role} <-
-           resource
-           |> Ash.Changeset.for_create(
-             :from_discord,
-             %{
-               data: role,
-               identity: %{guild_id: guild_id}
-             },
-             context: %{
-               private: %{ash_discord?: true},
-               shared: %{private: %{ash_discord?: true}}
-             }
-           )
-           |> Ash.create() do
-      :ok
-    else
-      {:error, error} ->
-        Logger.warning("Failed to create role #{role.id} in guild #{guild_id}: #{inspect(error)}")
-
-        :ok
-
-      :error ->
-        # No role resource configured
-        :ok
+  def create(%Payloads.GuildRoleCreate{guild_id: guild_id, role: role}, _ws_state, context) do
+    context.resource
+    |> Ash.Changeset.for_create(:from_discord, %{
+      data: role,
+      identity: %{role_id: role.id, guild_id: guild_id}
+    })
+    |> Ash.Changeset.set_context(%{
+      private: %{ash_discord?: true},
+      shared: %{private: %{ash_discord?: true}}
+    })
+    |> Ash.create()
+    |> case do
+      {:ok, _role_record} -> :ok
+      {:error, _error} = error -> error
     end
   end
 
   @spec update(
-          consumer :: module(),
           role_update :: Payloads.GuildRoleUpdate.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def update(consumer, %Payloads.GuildRoleUpdate{guild_id: guild_id, new_role: role}, _ws_state, _context) do
-    Logger.debug("AshDiscord: Handling guild role update for role #{role.id}")
-
-    with {:ok, resource} <-
-           AshDiscord.Consumer.Info.ash_discord_consumer_role_resource(consumer),
-         {:ok, _role} <-
-           resource
-           |> Ash.Changeset.for_create(
-             :from_discord,
-             %{
-               data: role,
-               identity: %{guild_id: guild_id}
-             },
-             context: %{
-               private: %{ash_discord?: true},
-               shared: %{private: %{ash_discord?: true}}
-             }
-           )
-           |> Ash.create() do
-      :ok
-    else
-      {:error, error} ->
-        Logger.warning("Failed to update role #{role.id} in guild #{guild_id}: #{inspect(error)}")
-
-        :ok
-
-      :error ->
-        # No role resource configured
-        :ok
+  def update(%Payloads.GuildRoleUpdate{guild_id: guild_id, new_role: role}, _ws_state, context) do
+    context.resource
+    |> Ash.Changeset.for_create(:from_discord, %{
+      data: role,
+      identity: %{role_id: role.id, guild_id: guild_id}
+    })
+    |> Ash.Changeset.set_context(%{
+      private: %{ash_discord?: true},
+      shared: %{private: %{ash_discord?: true}}
+    })
+    |> Ash.create()
+    |> case do
+      {:ok, _role_record} -> :ok
+      {:error, _error} = error -> error
     end
   end
 
   @spec delete(
-          consumer :: module(),
           role_delete :: Payloads.GuildRoleDelete.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def delete(_consumer, _role_delete, _ws_state, _context) do
-    # Role deletion not yet implemented
-    # TODO: Implement role deletion when needed
-    :ok
+  def delete(%Payloads.GuildRoleDelete{guild_id: guild_id, role: role}, _ws_state, context) do
+    query =
+      context.resource
+      |> Ash.Query.filter(discord_id: role.id, guild_id: guild_id)
+
+    case Ash.bulk_destroy(query, :destroy, %{},
+           context: %{
+             private: %{ash_discord?: true},
+             shared: %{private: %{ash_discord?: true}}
+           }
+         ) do
+      %Ash.BulkResult{status: :success} ->
+        :ok
+
+      result ->
+        {:error, result}
+    end
   end
 end

@@ -37,7 +37,12 @@ defmodule AshDiscord.Consumer.Payloads.Role do
   Create a Role TypedStruct from a Nostrum Guild.Role struct.
 
   Accepts a `Nostrum.Struct.Guild.Role.t()` and creates an AshDiscord Role TypedStruct.
+  Also handles being passed a Role payload (no-op for already-converted payloads).
   """
+  def new(%__MODULE__{} = role_payload) do
+    {:ok, role_payload}
+  end
+
   def new(%Nostrum.Struct.Guild.Role{} = nostrum_role) do
     super(Map.from_struct(nostrum_role))
   end

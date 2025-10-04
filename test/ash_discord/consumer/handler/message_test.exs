@@ -38,7 +38,9 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
         user: nil
       }
 
-      assert :ok = Message.create(message_data, %Nostrum.Struct.WSState{}, context)
+      {:ok, message_payload} = Payloads.Message.new(message_data)
+
+      assert :ok = Message.create(message_payload, %Nostrum.Struct.WSState{}, context)
 
       messages = TestApp.Discord.Message.read!()
       assert length(messages) == 1
@@ -59,7 +61,9 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
         user: nil
       }
 
-      assert :ok = Message.create(message_data, %Nostrum.Struct.WSState{}, context)
+      {:ok, message_payload} = Payloads.Message.new(message_data)
+
+      assert :ok = Message.create(message_payload, %Nostrum.Struct.WSState{}, context)
 
       messages = TestApp.Discord.Message.read!()
       assert length(messages) == 0
@@ -75,7 +79,9 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
         user: nil
       }
 
-      assert :ok = Message.create(message_data, %Nostrum.Struct.WSState{}, context)
+      {:ok, message_payload} = Payloads.Message.new(message_data)
+
+      assert :ok = Message.create(message_payload, %Nostrum.Struct.WSState{}, context)
     end
   end
 
@@ -216,7 +222,7 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
         user: nil
       }
 
-      assert :ok = Message.bulk(bulk_event, %Nostrum.Struct.WSState{}, context)
+      assert :ok = Message.delete_bulk(bulk_event, %Nostrum.Struct.WSState{}, context)
 
       messages_after = TestApp.Discord.Message.read!()
       assert length(messages_after) == 0
@@ -232,7 +238,7 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
         user: nil
       }
 
-      assert :ok = Message.bulk(bulk_event, %Nostrum.Struct.WSState{}, context)
+      assert :ok = Message.delete_bulk(bulk_event, %Nostrum.Struct.WSState{}, context)
     end
   end
 

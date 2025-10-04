@@ -4,6 +4,7 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
   import AshDiscord.Test.Generators.Discord
 
   alias AshDiscord.Consumer.Handler.Channel
+  alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 
   describe "create/4" do
@@ -17,7 +18,9 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
         user: nil
       }
 
-      assert :ok = Channel.create(TestConsumer, channel_data, %Nostrum.Struct.WSState{}, context)
+      {:ok, channel_payload} = Payloads.Channel.new(channel_data)
+
+      assert :ok = Channel.create(TestConsumer, channel_payload, %Nostrum.Struct.WSState{}, context)
 
       # Verify channel was created in database
       channels = TestApp.Discord.Channel.read!()
@@ -41,10 +44,18 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
         user: nil
       }
 
+      {:ok, old_channel_payload} = Payloads.Channel.new(old_channel)
+      {:ok, new_channel_payload} = Payloads.Channel.new(new_channel)
+
+      channel_update = %Payloads.ChannelUpdate{
+        old_channel: old_channel_payload,
+        new_channel: new_channel_payload
+      }
+
       assert :ok =
                Channel.update(
                  TestConsumer,
-                 {old_channel, new_channel},
+                 channel_update,
                  %Nostrum.Struct.WSState{},
                  context
                )
@@ -64,11 +75,12 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
       channel_data = channel()
 
       # First create the channel
+      {:ok, channel_payload} = Payloads.Channel.new(channel_data)
+
       {:ok, _created} =
         TestApp.Discord.Channel
         |> Ash.Changeset.for_create(:from_discord, %{
-          discord_id: channel_data.id,
-          data: channel_data
+          data: channel_payload
         })
         |> Ash.create()
 
@@ -84,7 +96,7 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
       }
 
       assert :ok =
-               Channel.delete(TestConsumer, channel_data, %Nostrum.Struct.WSState{}, context)
+               Channel.delete(TestConsumer, channel_payload, %Nostrum.Struct.WSState{}, context)
 
       # Verify channel was deleted from database
       channels_after = TestApp.Discord.Channel.read!()
@@ -101,9 +113,11 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
         user: nil
       }
 
+      {:ok, channel_payload} = Payloads.Channel.new(channel_data)
+
       # Should not crash when channel doesn't exist
       assert :ok =
-               Channel.delete(TestConsumer, channel_data, %Nostrum.Struct.WSState{}, context)
+               Channel.delete(TestConsumer, channel_payload, %Nostrum.Struct.WSState{}, context)
     end
   end
 end

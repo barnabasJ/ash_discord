@@ -61,7 +61,12 @@ defmodule AshDiscord.Consumer.Payloads.Message do
   Create a Message TypedStruct from a Nostrum Message struct.
 
   Accepts a `Nostrum.Struct.Message.t()` and creates an AshDiscord Message TypedStruct.
+  Also handles being passed a Message payload (no-op for already-converted payloads).
   """
+  def new(%__MODULE__{} = message_payload) do
+    {:ok, message_payload}
+  end
+
   def new(%Nostrum.Struct.Message{} = nostrum_message) do
     super(Map.from_struct(nostrum_message))
   end

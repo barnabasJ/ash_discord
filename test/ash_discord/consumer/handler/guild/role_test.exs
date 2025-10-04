@@ -4,6 +4,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.RoleTest do
   import AshDiscord.Test.Generators.Discord
 
   alias AshDiscord.Consumer.Handler.Guild.Role
+  alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 
   describe "create/4" do
@@ -18,10 +19,17 @@ defmodule AshDiscord.Consumer.Handler.Guild.RoleTest do
         user: nil
       }
 
+      {:ok, role_payload} = Payloads.Role.new(role_data)
+
+      guild_role_create = %Payloads.GuildRoleCreate{
+        guild_id: guild_id,
+        role: role_payload
+      }
+
       assert :ok =
                Role.create(
                  TestConsumer,
-                 {guild_id, role_data},
+                 guild_role_create,
                  %Nostrum.Struct.WSState{},
                  context
                )
@@ -50,10 +58,19 @@ defmodule AshDiscord.Consumer.Handler.Guild.RoleTest do
         user: nil
       }
 
+      {:ok, old_role_payload} = Payloads.Role.new(old_role)
+      {:ok, new_role_payload} = Payloads.Role.new(new_role)
+
+      guild_role_update = %Payloads.GuildRoleUpdate{
+        guild_id: guild_id,
+        old_role: old_role_payload,
+        new_role: new_role_payload
+      }
+
       assert :ok =
                Role.update(
                  TestConsumer,
-                 {guild_id, old_role, new_role},
+                 guild_role_update,
                  %Nostrum.Struct.WSState{},
                  context
                )
@@ -81,11 +98,18 @@ defmodule AshDiscord.Consumer.Handler.Guild.RoleTest do
         user: nil
       }
 
+      {:ok, role_payload} = Payloads.Role.new(role_data)
+
+      guild_role_delete = %Payloads.GuildRoleDelete{
+        guild_id: guild_id,
+        role: role_payload
+      }
+
       # Delete is TODO - currently returns :ok without side effects
       assert :ok =
                Role.delete(
                  TestConsumer,
-                 {guild_id, role_data},
+                 guild_role_delete,
                  %Nostrum.Struct.WSState{},
                  context
                )

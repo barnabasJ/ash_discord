@@ -83,7 +83,12 @@ defmodule AshDiscord.Consumer.Payloads.Channel do
   Create a Channel TypedStruct from a Nostrum Channel struct.
 
   Accepts a `Nostrum.Struct.Channel.t()` and creates an AshDiscord Channel TypedStruct.
+  Also handles being passed a Channel payload (no-op for already-converted payloads).
   """
+  def new(%__MODULE__{} = channel_payload) do
+    {:ok, channel_payload}
+  end
+
   def new(%Nostrum.Struct.Channel{} = nostrum_channel) do
     super(Map.from_struct(nostrum_channel))
   end

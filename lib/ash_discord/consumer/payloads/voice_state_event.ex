@@ -57,7 +57,12 @@ defmodule AshDiscord.Consumer.Payloads.VoiceStateEvent do
   Create a VoiceStateEvent TypedStruct from a Nostrum VoiceState event struct.
 
   Accepts a `Nostrum.Struct.Event.VoiceState.t()` and creates an AshDiscord VoiceStateEvent TypedStruct.
+  Also handles being passed a VoiceStateEvent payload (no-op for already-converted payloads).
   """
+  def new(%__MODULE__{} = voice_state_payload) do
+    {:ok, voice_state_payload}
+  end
+
   def new(%Nostrum.Struct.Event.VoiceState{} = nostrum_event) do
     super(Map.from_struct(nostrum_event))
   end

@@ -12,7 +12,7 @@ defmodule AshDiscord do
 
       defmodule MyApp.Chat do
         use Ash.Domain, extensions: [AshDiscord]
-        
+
         discord do
           command :chat, MyApp.Chat.Conversation, :create do
             description "Start an AI conversation"

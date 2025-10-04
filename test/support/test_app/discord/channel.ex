@@ -71,21 +71,35 @@ defmodule TestApp.Discord.Channel do
   actions do
     defaults([:read, :destroy])
 
+    create :create do
+      accept([
+        :discord_id,
+        :name,
+        :type,
+        :position,
+        :topic,
+        :nsfw,
+        :parent_id,
+        :permission_overwrites,
+        :guild_id
+      ])
+    end
+
     create :from_discord do
       description("Create channel from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :struct,
+      argument(:data, AshDiscord.Consumer.Payloads.Channel,
         allow_nil?: true,
-        description: "Discord channel struct to transform"
+        description: "Discord channel TypedStruct data"
       )
 
-      argument(:discord_id, :integer,
+      argument(:identity, :integer,
         allow_nil?: true,
         description: "Discord channel ID for API fallback"
       )
 
-      change({AshDiscord.Changes.FromDiscord, type: :channel})
+      change(AshDiscord.Changes.FromDiscord.Channel)
 
       upsert?(true)
       upsert_identity(:discord_id)
@@ -116,5 +130,12 @@ defmodule TestApp.Discord.Channel do
         :guild_id
       ])
     end
+  end
+
+  code_interface do
+    define(:create)
+    define(:from_discord)
+    define(:update)
+    define(:read)
   end
 end

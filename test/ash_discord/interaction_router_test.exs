@@ -3,8 +3,8 @@ defmodule AshDiscord.InteractionRouterTest do
 
   import AshDiscord.Test.Generators.Discord
 
-  alias AshDiscord.InteractionRouter
   alias AshDiscord.Info
+  alias AshDiscord.InteractionRouter
   alias TestApp.Discord
 
   setup do
@@ -22,7 +22,7 @@ defmodule AshDiscord.InteractionRouterTest do
       interaction =
         interaction(%{
           data: %{name: "hello", options: []},
-          member: %{user: user()}
+          member: %{user_id: user().id}
         })
 
       result =
@@ -42,11 +42,12 @@ defmodule AshDiscord.InteractionRouterTest do
           data: %{
             name: "create_message",
             options: [
+              option(%{name: "discord_id", type: 3, value: "#{generate_snowflake()}"}),
               option(%{name: "message", type: 3, value: "Hello world"}),
               option(%{name: "channel", type: 3, value: "#{generate_snowflake()}"})
             ]
           },
-          member: %{user: user()}
+          member: %{user_id: user().id}
         })
 
       result =
@@ -70,7 +71,7 @@ defmodule AshDiscord.InteractionRouterTest do
               option(%{name: "limit", type: 4, value: 5})
             ]
           },
-          member: %{user: user()}
+          member: %{user_id: user().id}
         })
 
       result =
@@ -104,7 +105,7 @@ defmodule AshDiscord.InteractionRouterTest do
             ]
           },
           guild_id: guild_id,
-          member: %{user: user()}
+          member: %{user_id: user().id}
         })
 
       result =
@@ -129,7 +130,7 @@ defmodule AshDiscord.InteractionRouterTest do
       interaction =
         interaction(%{
           data: %{name: "unknown_command", options: []},
-          member: %{user: user()}
+          member: %{user_id: user().id}
         })
 
       result =
@@ -184,7 +185,7 @@ defmodule AshDiscord.InteractionRouterTest do
       interaction =
         interaction(%{
           data: %{name: "hello", options: []},
-          member: %{user: user()}
+          member: %{user_id: user().id}
         })
 
       command = find_command_for_test(TestApp.Discord, "hello")
@@ -278,7 +279,7 @@ defmodule AshDiscord.InteractionRouterTest do
         interaction(%{
           data: %{name: "hello", options: []},
           # Member pattern instead of direct user
-          member: %{user: user()}
+          member: %{user_id: user().id}
         })
 
       command = find_command_for_test(TestApp.Discord, "hello")

@@ -19,7 +19,7 @@ defmodule TestApp.Discord.Guild do
   end
 
   identities do
-    identity(:unique_discord_id, [:discord_id], pre_check_with: TestApp.Domain)
+    identity(:discord_id, [:discord_id], pre_check_with: TestApp.Domain)
   end
 
   actions do
@@ -31,22 +31,21 @@ defmodule TestApp.Discord.Guild do
     end
 
     create :from_discord do
-      accept([:discord_id, :name, :description, :icon])
       upsert?(true)
-      upsert_identity(:unique_discord_id)
+      upsert_identity(:discord_id)
       upsert_fields([:name, :description, :icon])
 
-      argument(:discord_struct, :map,
+      argument(:data, AshDiscord.Consumer.Payloads.Guild,
         allow_nil?: true,
-        description: "Discord guild data to transform"
+        description: "Discord guild TypedStruct payload"
       )
 
-      argument(:discord_id, :integer,
+      argument(:identity, :integer,
         allow_nil?: true,
         description: "Discord guild ID for API fallback"
       )
 
-      change({AshDiscord.Changes.FromDiscord, type: :guild})
+      change(AshDiscord.Changes.FromDiscord.Guild)
     end
 
     update :update do

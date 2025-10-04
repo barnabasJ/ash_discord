@@ -14,8 +14,8 @@ defmodule AshDiscord.CommandRegistrationTest do
     :ok
   end
 
-  alias AshDiscord.Consumer
   alias AshDiscord.Command
+  alias AshDiscord.Consumer
 
   describe "command scope filtering" do
     test "filters global commands correctly" do
@@ -150,7 +150,7 @@ defmodule AshDiscord.CommandRegistrationTest do
       ]
 
       large_guild = %{id: 123_456_789, name: "Large Guild"}
-      small_guild = %{id: 12345, name: "Small Guild"}
+      small_guild = %{id: 12_345, name: "Small Guild"}
 
       # Large guild should get all commands
       large_filtered = TestFilter.filter_commands(commands, large_guild)
@@ -173,10 +173,10 @@ defmodule AshDiscord.CommandRegistrationTest do
       end
 
       # Override to capture interaction processing
-      @impl true
-      def handle_interaction_create(interaction) do
+      @impl AshDiscord.Consumer
+      def handle_interaction_create(interaction, ws_state, context) do
         send(self(), {:interaction_processed, interaction})
-        super(interaction)
+        AshDiscord.Consumer.Handler.Interaction.create(interaction, ws_state, context)
       end
     end
 
@@ -199,11 +199,11 @@ defmodule AshDiscord.CommandRegistrationTest do
         # CHANNEL_MESSAGE_WITH_SOURCE
         assert response.type == 4
         assert String.contains?(response.data.content, "Unknown command")
-        {:ok, %{}}
+        {:ok}
       end)
 
       # Call the event handler - this will:
-      # 1. Try to find the command using find_command("nonexistent_command")  
+      # 1. Try to find the command using find_command("nonexistent_command")
       # 2. Get nil back since the command doesn't exist
       # 3. Pass nil to InteractionRouter.route_interaction
       # 4. InteractionRouter should handle the nil command gracefully and send error response
@@ -212,8 +212,9 @@ defmodule AshDiscord.CommandRegistrationTest do
       # Should handle the unknown command gracefully (returns :ok)
       assert result == :ok
 
-      # Should have processed the interaction
-      assert_receive {:interaction_processed, ^interaction}
+      # Should have processed the interaction (receives Payload, not Nostrum struct)
+      assert_receive {:interaction_processed, %AshDiscord.Consumer.Payloads.Interaction{id: interaction_id}}
+      assert interaction_id == interaction.id
     end
 
     test "find_command returns nil for unknown commands" do
@@ -230,7 +231,7 @@ defmodule AshDiscord.CommandRegistrationTest do
       result = EmptyConsumer.find_command(:nonexistent_command)
       assert result == nil
 
-      # Should return nil for string command names too  
+      # Should return nil for string command names too
       result = EmptyConsumer.find_command("nonexistent_command")
       assert result == nil
     end

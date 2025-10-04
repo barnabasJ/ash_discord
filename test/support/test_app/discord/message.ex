@@ -57,19 +57,6 @@ defmodule TestApp.Discord.Message do
     end
 
     create :from_discord do
-      accept([
-        :discord_id,
-        :content,
-        :channel_id,
-        :author_id,
-        :guild_id,
-        :timestamp,
-        :edited_timestamp,
-        :tts,
-        :mention_everyone,
-        :pinned
-      ])
-
       upsert?(true)
       upsert_identity(:unique_discord_id)
 
@@ -85,9 +72,17 @@ defmodule TestApp.Discord.Message do
         :pinned
       ])
 
-      argument(:discord_struct, :struct, description: "Discord message data to transform")
+      argument(:data, AshDiscord.Consumer.Payloads.Message,
+        allow_nil?: true,
+        description: "Discord message TypedStruct data"
+      )
 
-      change({AshDiscord.Changes.FromDiscord, type: :message})
+      argument(:identity, :map,
+        allow_nil?: true,
+        description: "Map with channel_id and message_id for API fallback"
+      )
+
+      change(AshDiscord.Changes.FromDiscord.Message)
     end
 
     read :search do
@@ -121,9 +116,14 @@ defmodule TestApp.Discord.Message do
       source_attribute: :guild_id
     )
 
-    belongs_to(:user, TestApp.Discord.User,
+    belongs_to(:author, TestApp.Discord.User,
       destination_attribute: :discord_id,
       source_attribute: :author_id
+    )
+
+    belongs_to(:channel, TestApp.Discord.Channel,
+      destination_attribute: :discord_id,
+      source_attribute: :channel_id
     )
   end
 

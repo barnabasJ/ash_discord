@@ -69,17 +69,17 @@ defmodule TestApp.Discord.Sticker do
       description("Create sticker from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :struct,
+      argument(:data, AshDiscord.Consumer.Payloads.Sticker,
         allow_nil?: true,
-        description: "Discord sticker struct to transform"
+        description: "Discord sticker TypedStruct data"
       )
 
-      argument(:discord_id, :integer,
+      argument(:identity, :integer,
         allow_nil?: true,
         description: "Discord sticker ID for API fallback"
       )
 
-      change({AshDiscord.Changes.FromDiscord, type: :sticker})
+      change(AshDiscord.Changes.FromDiscord.Sticker)
 
       upsert?(true)
       upsert_identity(:discord_id)

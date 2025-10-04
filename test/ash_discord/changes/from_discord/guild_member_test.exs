@@ -7,6 +7,30 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
+  import Mimic
+
+  # Helper to convert ISO8601 to Unix timestamp in milliseconds
+  defp to_unix_ms(iso8601_string) do
+    {:ok, datetime, 0} = DateTime.from_iso8601(iso8601_string)
+    DateTime.to_unix(datetime, :millisecond)
+  end
+
+  setup do
+    copy(Nostrum.Api.User)
+    copy(Nostrum.Api.Guild)
+
+    # Mock user API calls for any user ID with basic user data
+    expect(Nostrum.Api.User, :get, fn user_id ->
+      {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
+    end)
+
+    # Mock guild API calls for any guild ID
+    expect(Nostrum.Api.Guild, :get, fn guild_id ->
+      {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+    end)
+
+    :ok
+  end
 
   describe "struct-first pattern" do
     test "creates guild member from discord struct with all attributes" do
@@ -14,15 +38,15 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
         guild_member(%{
           user_id: 123_456_789,
           nick: "TestNick",
-          joined_at: "2023-01-15T10:30:00Z",
+          joined_at: to_unix_ms("2023-01-15T10:30:00Z"),
           deaf: false,
           mute: false
         })
 
       result =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: member_struct,
-          guild_id: 555_666_777
+          data: member_struct,
+          identity: %{guild_id: 555_666_777}
         })
 
       assert {:ok, created_member} = result
@@ -37,17 +61,17 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
     test "handles member without nickname" do
       member_struct =
         guild_member(%{
-          user: user(%{id: 987_654_321, username: "no_nick_user"}),
+          user_id: 987_654_321,
           nick: nil,
-          joined_at: "2023-02-20T15:45:00Z",
+          joined_at: to_unix_ms("2023-02-20T15:45:00Z"),
           deaf: false,
           mute: false
         })
 
       result =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: member_struct,
-          guild_id: 555_666_777
+          data: member_struct,
+          identity: %{guild_id: 555_666_777}
         })
 
       assert {:ok, created_member} = result
@@ -59,17 +83,17 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
     test "handles deafened member" do
       member_struct =
         guild_member(%{
-          user: user(%{id: 111_222_333, username: "deaf_user"}),
+          user_id: 111_222_333,
           nick: "DeafUser",
-          joined_at: "2023-03-10T08:15:00Z",
+          joined_at: to_unix_ms("2023-03-10T08:15:00Z"),
           deaf: true,
           mute: false
         })
 
       result =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: member_struct,
-          guild_id: 555_666_777
+          data: member_struct,
+          identity: %{guild_id: 555_666_777}
         })
 
       assert {:ok, created_member} = result
@@ -81,17 +105,17 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
     test "handles muted member" do
       member_struct =
         guild_member(%{
-          user: user(%{id: 777_888_999, username: "mute_user"}),
+          user_id: 777_888_999,
           nick: "MuteUser",
-          joined_at: "2023-04-05T12:00:00Z",
+          joined_at: to_unix_ms("2023-04-05T12:00:00Z"),
           deaf: false,
           mute: true
         })
 
       result =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: member_struct,
-          guild_id: 555_666_777
+          data: member_struct,
+          identity: %{guild_id: 555_666_777}
         })
 
       assert {:ok, created_member} = result
@@ -103,17 +127,17 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
     test "handles member with both deaf and mute" do
       member_struct =
         guild_member(%{
-          user: user(%{id: 333_444_555, username: "silent_user"}),
+          user_id: 333_444_555,
           nick: "SilentUser",
-          joined_at: "2023-05-12T18:30:00Z",
+          joined_at: to_unix_ms("2023-05-12T18:30:00Z"),
           deaf: true,
           mute: true
         })
 
       result =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: member_struct,
-          guild_id: 555_666_777
+          data: member_struct,
+          identity: %{guild_id: 555_666_777}
         })
 
       assert {:ok, created_member} = result
@@ -124,25 +148,25 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
   end
 
   describe "API fallback pattern" do
-    test "guild member API fallback is not supported" do
-      # Guild members don't support direct API fetching in our implementation
-      discord_id = 999_888_777
+    test "guild member requires identity map for API fallback" do
+      # Guild members with API fallback would need both guild_id and user_id in identity map
+      # This test verifies proper error handling when identity is incomplete
 
-      result = TestApp.Discord.guild_member_from_discord(%{discord_id: discord_id})
+      result = TestApp.Discord.guild_member_from_discord(%{identity: %{guild_id: 999_888_777}})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch guild_member with ID #{discord_id}"
-      error_message = Exception.message(error)
-      assert error_message =~ ":unsupported_type"
+      # Should fail because user_id is missing from identity, so API fetch can't happen
+      assert error_message =~ "user_id" or error_message =~ "is required"
     end
 
-    test "requires discord_struct for guild member creation" do
+    test "requires data or identity for guild member creation" do
       result = TestApp.Discord.guild_member_from_discord(%{})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for guild_member entity"
+      # Should fail because both data and identity arguments are nil
+      assert error_message =~ "requires data argument" or error_message =~ "identity argument"
     end
   end
 
@@ -154,33 +178,33 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       # Create initial member
       initial_struct =
         guild_member(%{
-          user: user(%{id: user_id, username: "original_user"}),
+          user_id: user_id,
           nick: "OriginalNick",
-          joined_at: "2023-01-01T00:00:00Z",
+          joined_at: to_unix_ms("2023-01-01T00:00:00Z"),
           deaf: false,
           mute: false
         })
 
       {:ok, original_member} =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: initial_struct,
-          guild_id: guild_id
+          data: initial_struct,
+          identity: %{guild_id: guild_id}
         })
 
       # Update same member with new data
       updated_struct =
         guild_member(%{
-          user: user(%{id: user_id, username: "original_user"}),
+          user_id: user_id,
           nick: "UpdatedNick",
-          joined_at: "2023-01-01T00:00:00Z",
+          joined_at: to_unix_ms("2023-01-01T00:00:00Z"),
           deaf: true,
           mute: true
         })
 
       {:ok, updated_member} =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: updated_struct,
-          guild_id: guild_id
+          data: updated_struct,
+          identity: %{guild_id: guild_id}
         })
 
       # Should be same record (same Ash ID)
@@ -201,33 +225,33 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       # Create initial member with nickname
       initial_struct =
         guild_member(%{
-          user: user(%{id: user_id, username: "nick_user"}),
+          user_id: user_id,
           nick: "OldNick",
-          joined_at: "2023-06-01T12:00:00Z",
+          joined_at: to_unix_ms("2023-06-01T12:00:00Z"),
           deaf: false,
           mute: false
         })
 
       {:ok, original_member} =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: initial_struct,
-          guild_id: guild_id
+          data: initial_struct,
+          identity: %{guild_id: guild_id}
         })
 
       # Remove nickname
       updated_struct =
         guild_member(%{
-          user: user(%{id: user_id, username: "nick_user"}),
+          user_id: user_id,
           nick: nil,
-          joined_at: "2023-06-01T12:00:00Z",
+          joined_at: to_unix_ms("2023-06-01T12:00:00Z"),
           deaf: false,
           mute: false
         })
 
       {:ok, updated_member} =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: updated_struct,
-          guild_id: guild_id
+          data: updated_struct,
+          identity: %{guild_id: guild_id}
         })
 
       # Should be same record
@@ -242,32 +266,32 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
   describe "error handling" do
     test "handles invalid discord_struct format" do
-      result = TestApp.Discord.guild_member_from_discord(%{discord_struct: "not_a_map"})
+      result = TestApp.Discord.guild_member_from_discord(%{data: "not_a_map"})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Invalid value provided for discord_struct"
+      assert error_message =~ "Invalid value provided for data"
     end
 
     test "handles missing required fields in discord_struct" do
       # Missing required fields - user_id is required for guild members
-      invalid_struct = guild_member(%{user_id: nil, user: nil})
+      invalid_struct = guild_member(%{user_id: nil})
 
       result =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: invalid_struct,
-          guild_id: 555_666_777
+          data: invalid_struct,
+          identity: %{guild_id: 555_666_777}
         })
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "is required"
+      assert error_message =~ "is required" or error_message =~ "cannot be nil"
     end
 
     test "handles invalid joined_at format" do
       member_struct =
         guild_member(%{
-          user: user(%{id: 123_456_789, username: "test_user"}),
+          user_id: 123_456_789,
           nick: "TestUser",
           # Invalid datetime format
           joined_at: "not_a_datetime",
@@ -277,8 +301,8 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
       result =
         TestApp.Discord.guild_member_from_discord(%{
-          discord_struct: member_struct,
-          guild_id: 555_666_777
+          data: member_struct,
+          identity: %{guild_id: 555_666_777}
         })
 
       # This might succeed with nil joined_at or fail with validation error
@@ -299,10 +323,10 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       invalid_struct = %{
         # Missing user field
         nick: "TestNick",
-        joined_at: "2023-01-01T00:00:00Z"
+        joined_at: to_unix_ms("2023-01-01T00:00:00Z")
       }
 
-      result = TestApp.Discord.guild_member_from_discord(%{discord_struct: invalid_struct})
+      result = TestApp.Discord.guild_member_from_discord(%{data: invalid_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)

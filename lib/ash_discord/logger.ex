@@ -153,22 +153,15 @@ defmodule AshDiscord.Logger do
   @doc """
   Logs consumer event processing with callback filtering information.
   """
-  def log_consumer_event(event_type, callback_enabled, processing_result \\ nil, metadata \\ %{}) do
+  def log_consumer_event(event_type, processing_result \\ nil, metadata \\ %{}) do
     structured_metadata = %{
       event_type: event_type,
-      callback_enabled: callback_enabled,
       component: "consumer"
     }
 
     final_metadata = Map.merge(structured_metadata, metadata)
 
     cond do
-      not callback_enabled ->
-        Logger.debug(
-          "[AshDiscord.Consumer] Event #{event_type} skipped (callback disabled)",
-          final_metadata
-        )
-
       is_nil(processing_result) ->
         Logger.debug("[AshDiscord.Consumer] Processing event #{event_type}", final_metadata)
 

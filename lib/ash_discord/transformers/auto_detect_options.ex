@@ -15,14 +15,16 @@ defmodule AshDiscord.Transformers.AutoDetectOptions do
   alias Ash.Type.UtcDatetime
   alias Ash.Type.UtcDatetimeUsec
   alias Ash.Type.UUID
-  alias Spark.Dsl.Extension
-  alias Spark.Dsl.Transformer
   alias AshDiscord.Option
   alias AshDiscord.Transformers.EnhanceCommands
   alias AshDiscord.Transformers.ValidateCommands
+  alias Spark.Dsl.Extension
+  alias Spark.Dsl.Transformer
 
   require Logger
 
+  # TODO: we need to add the primary key ar maybe a configured identity as an option
+  # for commands that fetch or modify existing records
   @impl true
   def transform(dsl_state) do
     discord_commands = Extension.get_entities(dsl_state, [:discord])

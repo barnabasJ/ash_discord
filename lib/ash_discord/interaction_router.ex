@@ -34,7 +34,14 @@ defmodule AshDiscord.InteractionRouter do
              {:ok, input} <- transform_input(interaction, command),
              {:ok, action_result} <- execute_action(command, input, actor, interaction),
              {:ok, response} <- format_response(action_result, interaction, command) do
-          Nostrum.Api.Interaction.create_response(interaction.id, interaction.token, response)
+          case Nostrum.Api.Interaction.create_response(
+                 interaction.id,
+                 interaction.token,
+                 response
+               ) do
+            {:ok} -> {:ok, response}
+            {:error, _} = error -> error
+          end
         else
           {:error, reason} ->
             AshLogger.log_interaction(:error, "Failed to route interaction", interaction, %{
@@ -58,53 +65,69 @@ defmodule AshDiscord.InteractionRouter do
     discord_user = extract_discord_user(interaction)
 
     if discord_user do
-      case AshDiscord.Consumer.Info.ash_discord_consumer_user_resource(consumer_module) do
-        {:ok, user_resource} ->
-          case user_resource
-               |> Ash.Changeset.for_create(:from_discord, %{
-                 discord_id: discord_user.id,
-                 discord_struct: discord_user
-               })
-               |> Ash.Changeset.set_context(%{
-                 shared: %{private: %{ash_discord?: true}},
-                 private: %{ash_discord?: true}
-               })
-               |> Ash.create() do
-            {:ok, user} ->
-              AshLogger.log_interaction(
-                :debug,
-                "Resolved user actor via from_discord",
-                interaction,
-                %{
-                  actor_id: user.id,
-                  discord_user_id: discord_user.id
-                }
-              )
-
-              {:ok, user}
-
-            {:error, reason} ->
-              AshLogger.log_interaction(
-                :error,
-                "Failed to create/find user via from_discord",
-                interaction,
-                %{
-                  error: reason,
-                  discord_user_id: discord_user.id
-                }
-              )
-
-              {:error, :user_creation_failed}
-          end
-
-        # no user resource configured, continue with raw discord user
-        :error ->
-          {:ok, discord_user}
-      end
+      resolve_actor_with_user(discord_user, interaction, consumer_module)
     else
       Logger.debug("No discord user found, cannot proceed without user")
       {:error, "Authentication required - no Discord user found"}
     end
+  end
+
+  defp resolve_actor_with_user(discord_user, interaction, consumer_module) do
+    case AshDiscord.Consumer.Info.ash_discord_consumer_user_resource(consumer_module) do
+      {:ok, user_resource} ->
+        create_or_find_user(user_resource, discord_user, interaction)
+
+      # no user resource configured, continue with raw discord user
+      :error ->
+        {:ok, discord_user}
+    end
+  end
+
+  defp create_or_find_user(user_resource, discord_user, interaction) do
+    # Convert Nostrum User to Payload
+    {:ok, user_payload} = AshDiscord.Consumer.Payloads.User.new(discord_user)
+
+    case user_resource
+         |> Ash.Changeset.for_create(:from_discord, %{
+           data: user_payload
+         })
+         |> Ash.Changeset.set_context(%{
+           shared: %{private: %{ash_discord?: true}},
+           private: %{ash_discord?: true}
+         })
+         |> Ash.create() do
+      {:ok, user} ->
+        log_user_resolution_success(user, discord_user, interaction)
+        {:ok, user}
+
+      {:error, reason} ->
+        log_user_resolution_failure(reason, discord_user, interaction)
+        {:error, :user_creation_failed}
+    end
+  end
+
+  defp log_user_resolution_success(user, discord_user, interaction) do
+    AshLogger.log_interaction(
+      :debug,
+      "Resolved user actor via from_discord",
+      interaction,
+      %{
+        actor_id: user.id,
+        discord_user_id: discord_user.id
+      }
+    )
+  end
+
+  defp log_user_resolution_failure(reason, discord_user, interaction) do
+    AshLogger.log_interaction(
+      :error,
+      "Failed to create/find user via from_discord",
+      interaction,
+      %{
+        error: reason,
+        discord_user_id: discord_user.id
+      }
+    )
   end
 
   defp extract_discord_user(interaction) do
@@ -332,7 +355,10 @@ defmodule AshDiscord.InteractionRouter do
       }
     }
 
-    Nostrum.Api.Interaction.create_response(interaction.id, interaction.token, response)
+    case Nostrum.Api.Interaction.create_response(interaction.id, interaction.token, response) do
+      {:ok} -> {:ok, response}
+      {:error, _} = error -> error
+    end
   end
 
   defp send_error_response(interaction, _reason) do
@@ -344,7 +370,10 @@ defmodule AshDiscord.InteractionRouter do
       }
     }
 
-    Nostrum.Api.Interaction.create_response(interaction.id, interaction.token, response)
+    case Nostrum.Api.Interaction.create_response(interaction.id, interaction.token, response) do
+      {:ok} -> {:ok, response}
+      {:error, _} = error -> error
+    end
   end
 
   defp filter_input_for_action(action, input) do

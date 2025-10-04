@@ -79,22 +79,28 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
   end
 
   @doc """
-  Generates a Discord email address for a given Discord ID.
+  Generates a placeholder Discord email address for a given Discord ID.
 
-  Creates consistent email addresses for Discord users using the pattern:
-  `discord+{discord_id}@{domain}`
+  **Why we need this**: Discord's API does not provide email addresses when fetching
+  user data via `Nostrum.Api.User.get/1`. However, many applications require an email
+  field for user records. This function creates consistent placeholder email addresses
+  using the pattern: `discord+{discord_id}@{domain}`
 
-  The default domain is "discord.local" but can be customized via application
-  configuration or explicit parameter.
+  The default domain can be configured via application configuration to match your
+  application's needs (e.g., "steward.local" for Steward, "discord.local" for others).
 
   ## Parameters
 
   - `discord_id` - The Discord user ID (integer or string)
-  - `domain` - Optional custom domain (defaults to "discord.local")
+  - `domain` - Optional custom domain (defaults to configured or "discord.local")
+
+  ## Configuration
+
+      config :ash_discord, :email_domain, "steward.local"
 
   ## Returns
 
-  String email address in the format `discord+{discord_id}@{domain}`
+  String placeholder email address in the format `discord+{discord_id}@{domain}`
 
   ## Examples
 
@@ -105,30 +111,31 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
       "discord+987654321@custom.domain"
 
   """
-  def generate_discord_email(discord_id, domain \\ "discord.local") do
-    "discord+#{discord_id}@#{domain}"
+  def generate_discord_email(discord_id, domain \\ nil) do
+    email_domain = domain || Application.get_env(:ash_discord, :email_domain, "discord.local")
+    "discord+#{discord_id}@#{email_domain}"
   end
 
   @doc """
-  Sets the Discord email field on a changeset using the Discord ID.
+  Sets the Discord placeholder email field on a changeset using the Discord ID.
 
-  Convenience function that combines Discord email generation with changeset
-  modification. Extracts the Discord ID from the changeset attributes or
-  provided Discord data and generates the appropriate email address.
+  Convenience function that combines Discord placeholder email generation with changeset
+  modification. Since Discord's API doesn't provide email addresses for users, this
+  creates a consistent placeholder email that applications can use for user records.
 
   ## Parameters
 
   - `changeset` - The Ash changeset to modify
-  - `discord_id` - The Discord ID to use for email generation
+  - `discord_id` - The Discord ID to use for placeholder email generation
 
   ## Returns
 
-  Updated changeset with the email field set to the generated Discord email.
+  Updated changeset with the email field set to the generated placeholder Discord email.
 
   ## Examples
 
       changeset = set_discord_email(changeset, 123456789)
-      # Sets email to "discord+123456789@discord.local"
+      # Sets email to "discord+123456789@discord.local" (or configured domain)
 
   """
   def set_discord_email(changeset, discord_id) do
@@ -158,10 +165,13 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
 
   """
   def manage_guild_relationship(changeset, guild_id) when not is_nil(guild_id) do
-    Ash.Changeset.manage_relationship(changeset, :guild, %{discord_id: guild_id},
+    # Pass both discord_id (for lookup) and identity (for API fetch if not found)
+    Ash.Changeset.manage_relationship(
+      changeset,
+      :guild,
+      %{discord_id: guild_id, identity: guild_id},
       type: :append_and_remove,
       use_identities: [:discord_id],
-      value_is_key: :discord_id,
       on_no_match: {:create, :from_discord}
     )
   end
@@ -179,6 +189,7 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
 
   - `changeset` - The Ash changeset to modify
   - `user_id` - The Discord user ID to associate
+  - `relationship_name` - Optional relationship name (defaults to :user)
 
   ## Returns
 
@@ -187,18 +198,24 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
   ## Examples
 
       changeset = manage_user_relationship(changeset, discord_data.user_id)
+      changeset = manage_user_relationship(changeset, discord_data.author.id, :author)
 
   """
-  def manage_user_relationship(changeset, user_id) when not is_nil(user_id) do
-    Ash.Changeset.manage_relationship(changeset, :user, %{discord_id: user_id},
+  def manage_user_relationship(changeset, user_id, relationship_name \\ :user)
+
+  def manage_user_relationship(changeset, user_id, relationship_name) when not is_nil(user_id) do
+    # Pass both discord_id (for lookup) and identity (for API fetch if not found)
+    Ash.Changeset.manage_relationship(
+      changeset,
+      relationship_name,
+      %{discord_id: user_id, identity: user_id},
       type: :append_and_remove,
       use_identities: [:discord_id],
-      value_is_key: :discord_id,
       on_no_match: {:create, :from_discord}
     )
   end
 
-  def manage_user_relationship(changeset, _nil_user_id), do: changeset
+  def manage_user_relationship(changeset, _nil_user_id, _relationship_name), do: changeset
 
   @doc """
   Manages channel relationship with auto-creation capabilities.
@@ -222,15 +239,53 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
 
   """
   def manage_channel_relationship(changeset, channel_id) when not is_nil(channel_id) do
-    Ash.Changeset.manage_relationship(changeset, :channel, %{discord_id: channel_id},
+    # Pass both discord_id (for lookup) and identity (for API fetch if not found)
+    Ash.Changeset.manage_relationship(
+      changeset,
+      :channel,
+      %{discord_id: channel_id, identity: channel_id},
       type: :append_and_remove,
       use_identities: [:discord_id],
-      value_is_key: :discord_id,
       on_no_match: {:create, :from_discord}
     )
   end
 
   def manage_channel_relationship(changeset, _nil_channel_id), do: changeset
+
+  @doc """
+  Manages message relationship with auto-creation capabilities.
+
+  Sets up relationship management for message associations using Ash's
+  relationship management features with auto-creation when the related
+  message doesn't exist.
+
+  ## Parameters
+
+  - `changeset` - The Ash changeset to modify
+  - `message_id` - The Discord message ID to associate
+
+  ## Returns
+
+  Updated changeset with message relationship managed.
+
+  ## Examples
+
+      changeset = manage_message_relationship(changeset, discord_data.message_id)
+
+  """
+  def manage_message_relationship(changeset, message_id) when not is_nil(message_id) do
+    # Pass both discord_id (for lookup) and identity (for API fetch if not found)
+    Ash.Changeset.manage_relationship(
+      changeset,
+      :message,
+      %{discord_id: message_id, identity: message_id},
+      type: :append_and_remove,
+      use_identities: [:discord_id],
+      on_no_match: {:create, :from_discord}
+    )
+  end
+
+  def manage_message_relationship(changeset, _nil_message_id), do: changeset
 
   @doc """
   Transforms Discord permission overwrites to a standardized map format.
@@ -282,7 +337,7 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
   # Transforms a single permission overwrite to standardized format
   defp transform_single_overwrite(overwrite) do
     %{
-      "id" => to_string(overwrite.id || overwrite["id"]),
+      "id" => overwrite.id || overwrite["id"],
       "type" => overwrite.type || overwrite["type"] || 0,
       "allow" => to_string(overwrite.allow || overwrite["allow"] || 0),
       "deny" => to_string(overwrite.deny || overwrite["deny"] || 0)
@@ -303,9 +358,17 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
   defp parse_datetime(%DateTime{} = datetime), do: {:ok, datetime}
 
   defp parse_datetime(timestamp) when is_integer(timestamp) do
-    case DateTime.from_unix(timestamp, :second) do
-      {:ok, datetime} -> {:ok, datetime}
-      {:error, reason} -> {:error, "Invalid Unix timestamp: #{reason}"}
+    # Try milliseconds first (Discord API typically uses milliseconds)
+    case DateTime.from_unix(timestamp, :millisecond) do
+      {:ok, datetime} ->
+        {:ok, datetime}
+
+      {:error, _} ->
+        # Fallback to seconds for compatibility
+        case DateTime.from_unix(timestamp, :second) do
+          {:ok, datetime} -> {:ok, datetime}
+          {:error, reason} -> {:error, "Invalid Unix timestamp: #{reason}"}
+        end
     end
   end
 

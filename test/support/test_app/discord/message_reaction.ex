@@ -91,9 +91,15 @@ defmodule TestApp.Discord.MessageReaction do
   end
 
   identities do
-    identity :reaction_identity, [:message_id, :emoji_name] do
+    # Use user_id, message_id, and either emoji_id (for custom) or emoji_name (for standard)
+    # We'll exclude emoji_id from the identity and handle uniqueness through a combination
+    identity :reaction_identity, [:user_id, :message_id, :emoji_name] do
       pre_check_with(TestApp.Discord)
     end
+  end
+
+  code_interface do
+    define(:read)
   end
 
   actions do
@@ -103,41 +109,27 @@ defmodule TestApp.Discord.MessageReaction do
       description("Create message reaction from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :struct,
-        allow_nil?: false,
-        description: "Discord message reaction struct to transform"
-      )
-
-      argument(:discord_id, :integer,
+      argument(:data, AshDiscord.Consumer.Payloads.MessageReactionAddEvent,
         allow_nil?: true,
-        description: "Discord message reaction ID for API fallback"
+        description: "Discord message reaction TypedStruct data"
       )
 
-      argument(:user_id, :integer,
-        allow_nil?: true,
-        description: "ID of user who reacted"
-      )
-
-      argument(:message_id, :integer,
-        allow_nil?: true,
-        description: "ID of message that was reacted to"
-      )
-
-      argument(:channel_id, :integer,
-        allow_nil?: true,
-        description: "ID of channel containing the message"
-      )
-
-      argument(:guild_id, :integer,
-        allow_nil?: true,
-        description: "ID of guild (null for DM reactions)"
-      )
-
-      change({AshDiscord.Changes.FromDiscord, type: :message_reaction})
+      change(AshDiscord.Changes.FromDiscord.MessageReaction)
 
       upsert?(true)
       upsert_identity(:reaction_identity)
-      upsert_fields([:count, :me, :emoji_animated, :user_id, :message_id, :channel_id, :guild_id])
+
+      upsert_fields([
+        :emoji_id,
+        :emoji_name,
+        :count,
+        :me,
+        :emoji_animated,
+        :user_id,
+        :message_id,
+        :channel_id,
+        :guild_id
+      ])
     end
 
     update :update do

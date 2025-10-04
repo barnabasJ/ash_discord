@@ -30,6 +30,12 @@ defmodule TestApp.Discord.Emoji do
       default: false
     )
 
+    attribute(:custom, :boolean,
+      allow_nil?: true,
+      public?: true,
+      default: false
+    )
+
     attribute(:managed, :boolean,
       allow_nil?: true,
       public?: true,
@@ -56,21 +62,21 @@ defmodule TestApp.Discord.Emoji do
       description("Create emoji from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :struct,
-        allow_nil?: false,
-        description: "Discord emoji struct to transform"
+      argument(:data, AshDiscord.Consumer.Payloads.Emoji,
+        allow_nil?: true,
+        description: "Discord emoji TypedStruct data"
       )
 
-      change({AshDiscord.Changes.FromDiscord, type: :emoji})
+      change(AshDiscord.Changes.FromDiscord.Emoji)
 
       upsert?(true)
       upsert_identity(:discord_id)
-      upsert_fields([:name, :animated, :managed, :require_colons])
+      upsert_fields([:name, :animated, :custom, :managed, :require_colons])
     end
 
     update :update do
       primary?(true)
-      accept([:name, :animated, :managed, :require_colons])
+      accept([:name, :animated, :custom, :managed, :require_colons])
     end
   end
 end

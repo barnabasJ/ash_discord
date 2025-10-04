@@ -87,7 +87,6 @@
           # If you don't want TODO comments to cause `mix credo` to fail, just
           # set this value to 0 (zero).
           #
-          {Credo.Check.Design.TagTODO, [exit_status: 2]},
 
           #
           ## Readability Checks
@@ -202,7 +201,8 @@
           {Credo.Check.Warning.MapGetUnsafePass, []},
           {Credo.Check.Warning.MixEnv, []},
           {Credo.Check.Warning.UnsafeToAtom, []},
-          {Credo.Check.Design.AliasUsage, []}
+          {Credo.Check.Design.AliasUsage, []},
+          {Credo.Check.Design.TagTODO, []}
 
           # {Credo.Check.Refactor.MapInto, []},
 

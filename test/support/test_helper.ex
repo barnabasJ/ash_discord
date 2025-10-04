@@ -59,8 +59,8 @@ defmodule TestHelper do
        }}
     end)
 
-    stub(Nostrum.Api.Interaction, :create_response, fn _id, _token, response ->
-      {:ok, response}
+    stub(Nostrum.Api.Interaction, :create_response, fn _id, _token, _response ->
+      {:ok}
     end)
 
     :ok

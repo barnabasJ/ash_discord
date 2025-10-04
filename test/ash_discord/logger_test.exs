@@ -200,7 +200,7 @@ defmodule AshDiscord.LoggerTest do
     test "logs enabled callback processing" do
       log =
         capture_log(fn ->
-          AshLogger.log_consumer_event(:MESSAGE_CREATE, true, :ok, %{message_id: "msg_123"})
+          AshLogger.log_consumer_event(:MESSAGE_CREATE, :ok, %{message_id: "msg_123"})
         end)
 
       assert String.contains?(
@@ -209,23 +209,13 @@ defmodule AshDiscord.LoggerTest do
              )
 
       assert String.contains?(log, "event_type=MESSAGE_CREATE")
-      assert String.contains?(log, "callback_enabled=true")
       assert String.contains?(log, "message_id=msg_123")
-    end
-
-    test "logs disabled callback skipping" do
-      log =
-        capture_log(fn ->
-          AshLogger.log_consumer_event(:TYPING_START, false)
-        end)
-
-      assert String.contains?(log, "Event TYPING_START skipped (callback disabled)")
     end
 
     test "logs callback processing failures" do
       log =
         capture_log(fn ->
-          AshLogger.log_consumer_event(:GUILD_CREATE, true, {:error, "database error"})
+          AshLogger.log_consumer_event(:GUILD_CREATE, {:error, "database error"})
         end)
 
       assert String.contains?(log, "[error]")
@@ -260,7 +250,7 @@ defmodule AshDiscord.LoggerTest do
         {500, :debug},
         {2000, :info},
         {7000, :warning},
-        {12000, :error}
+        {12_000, :error}
       ]
 
       for {duration, expected_level} <- test_cases do

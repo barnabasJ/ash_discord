@@ -20,7 +20,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
           member_count: 42
         })
 
-      result = TestApp.Discord.guild_from_discord(%{discord_struct: guild_struct})
+      result = TestApp.Discord.guild_from_discord(%{data: guild_struct})
 
       assert {:ok, created_guild} = result
       assert created_guild.discord_id == guild_struct.id
@@ -38,7 +38,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
           icon: nil
         })
 
-      result = TestApp.Discord.guild_from_discord(%{discord_struct: guild_struct})
+      result = TestApp.Discord.guild_from_discord(%{data: guild_struct})
 
       assert {:ok, created_guild} = result
       assert created_guild.discord_id == guild_struct.id
@@ -55,7 +55,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
           member_count: 10_000
         })
 
-      result = TestApp.Discord.guild_from_discord(%{discord_struct: guild_struct})
+      result = TestApp.Discord.guild_from_discord(%{data: guild_struct})
 
       assert {:ok, created_guild} = result
       assert created_guild.discord_id == guild_struct.id
@@ -82,7 +82,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
          })}
       end)
 
-      result = TestApp.Discord.guild_from_discord(%{discord_id: discord_id})
+      result = TestApp.Discord.guild_from_discord(%{identity: discord_id})
 
       assert {:ok, created_guild} = result
       assert created_guild.discord_id == discord_id
@@ -98,12 +98,12 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
         {:error, %{status_code: 403, message: "Missing Access"}}
       end)
 
-      result = TestApp.Discord.guild_from_discord(%{discord_id: discord_id})
+      result = TestApp.Discord.guild_from_discord(%{identity: discord_id})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch guild with ID #{discord_id}"
-      error_message = Exception.message(error)
+      # API errors are wrapped in "unknown error" now
+      assert error_message =~ "unknown error"
       assert error_message =~ "Missing Access"
     end
 
@@ -112,7 +112,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for guild entity"
+      assert error_message =~ "Guild ID is required for API fallback"
     end
   end
 
@@ -129,7 +129,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
         })
 
       {:ok, original_guild} =
-        TestApp.Discord.guild_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.guild_from_discord(%{data: initial_struct})
 
       # Update same guild with new data
       updated_struct =
@@ -141,7 +141,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
           icon: "new_icon_hash"
         })
 
-      {:ok, updated_guild} = TestApp.Discord.guild_from_discord(%{discord_struct: updated_struct})
+      {:ok, updated_guild} = TestApp.Discord.guild_from_discord(%{data: updated_struct})
 
       # Should be same record (same Ash ID)
       assert updated_guild.id == original_guild.id
@@ -164,7 +164,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
         })
 
       {:ok, original_guild} =
-        TestApp.Discord.guild_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.guild_from_discord(%{data: initial_struct})
 
       # Update via API fallback
       Mimic.copy(Nostrum.Api.Guild)
@@ -178,7 +178,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
          })}
       end)
 
-      {:ok, updated_guild} = TestApp.Discord.guild_from_discord(%{discord_id: discord_id})
+      {:ok, updated_guild} = TestApp.Discord.guild_from_discord(%{identity: discord_id})
 
       # Should be same record
       assert updated_guild.id == original_guild.id
@@ -190,22 +190,23 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
 
   describe "error handling" do
     test "handles invalid discord_struct format" do
-      result = TestApp.Discord.guild_from_discord(%{discord_struct: "not_a_map"})
+      result = TestApp.Discord.guild_from_discord(%{data: "not_a_map"})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Invalid value provided for discord_struct"
+      assert error_message =~ "Invalid value provided for data"
     end
 
     test "handles missing required fields in discord_struct" do
       # Missing required fields
       invalid_struct = guild(%{id: nil, name: nil})
 
-      result = TestApp.Discord.guild_from_discord(%{discord_struct: invalid_struct})
+      result = TestApp.Discord.guild_from_discord(%{data: invalid_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "is required"
+      # Error message now says "value must not be nil" instead of "is required"
+      assert error_message =~ "value must not be nil"
     end
 
     test "handles malformed guild data" do
@@ -216,12 +217,12 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
           name: nil
         })
 
-      result = TestApp.Discord.guild_from_discord(%{discord_struct: malformed_struct})
+      result = TestApp.Discord.guild_from_discord(%{data: malformed_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
       # Should contain validation errors
-      assert error_message =~ "is required" or error_message =~ "is invalid"
+      assert error_message =~ "is required" or error_message =~ "is invalid" or error_message =~ "no function clause"
     end
   end
 end

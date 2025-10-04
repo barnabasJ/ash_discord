@@ -69,6 +69,10 @@ defmodule TestApp.Discord.Role do
     end
   end
 
+  code_interface do
+    define(:read)
+  end
+
   actions do
     defaults([:read, :destroy])
 
@@ -76,12 +80,27 @@ defmodule TestApp.Discord.Role do
       description("Create role from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :struct,
-        allow_nil?: false,
-        description: "Discord role struct to transform"
+      argument(:data, AshDiscord.Consumer.Payloads.Role,
+        allow_nil?: true,
+        description: "Discord role TypedStruct data"
       )
 
-      change({AshDiscord.Changes.FromDiscord, type: :role})
+      argument(:identity, :map,
+        allow_nil?: true,
+        description: "Map with guild_id and role_id for API fallback"
+      )
+
+      change(fn changeset, _context ->
+        case Ash.Changeset.get_argument(changeset, :identity) do
+          %{guild_id: guild_id} ->
+            Ash.Changeset.force_change_attribute(changeset, :guild_id, guild_id)
+
+          _ ->
+            changeset
+        end
+      end)
+
+      change(AshDiscord.Changes.FromDiscord.Role)
 
       upsert?(true)
       upsert_identity(:discord_id)

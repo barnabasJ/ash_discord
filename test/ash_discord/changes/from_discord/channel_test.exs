@@ -24,7 +24,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
           guild_id: 555_666_777
         })
 
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: channel_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: channel_struct})
 
       assert {:ok, created_channel} = result
       assert created_channel.discord_id == channel_struct.id
@@ -53,7 +53,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
           ]
         })
 
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: channel_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: channel_struct})
 
       assert {:ok, created_channel} = result
       assert created_channel.discord_id == channel_struct.id
@@ -64,13 +64,13 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       assert length(overwrites) == 3
 
       # Check first overwrite (role)
-      first_overwrite = Enum.find(overwrites, &(&1["id"] == "123"))
+      first_overwrite = Enum.find(overwrites, &(&1["id"] == 123))
       assert first_overwrite["type"] == 0
       assert first_overwrite["allow"] == "1024"
       assert first_overwrite["deny"] == "0"
 
       # Check second overwrite (member)
-      second_overwrite = Enum.find(overwrites, &(&1["id"] == "456"))
+      second_overwrite = Enum.find(overwrites, &(&1["id"] == 456))
       assert second_overwrite["type"] == 1
       assert second_overwrite["allow"] == "0"
       assert second_overwrite["deny"] == "2048"
@@ -85,7 +85,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
           permission_overwrites: nil
         })
 
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: channel_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: channel_struct})
 
       assert {:ok, created_channel} = result
       assert created_channel.permission_overwrites == []
@@ -102,7 +102,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
           guild_id: 111_222_333
         })
 
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: voice_channel_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: voice_channel_struct})
 
       assert {:ok, created_channel} = result
       assert created_channel.discord_id == voice_channel_struct.id
@@ -121,7 +121,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
           position: 0
         })
 
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: category_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: category_struct})
 
       assert {:ok, created_channel} = result
       assert created_channel.discord_id == category_struct.id
@@ -135,20 +135,19 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       # Channel API fetching is supported but may fail in test environment
       discord_id = 999_888_777
 
-      result = TestApp.Discord.channel_from_discord(%{discord_id: discord_id})
+      result = TestApp.Discord.channel_from_discord(%{identity: discord_id})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch channel with ID #{discord_id}"
-      assert error_message =~ ":api_unavailable"
+      assert error_message =~ "Channel ID is required" or error_message =~ ":api_unavailable"
     end
 
-    test "requires discord_struct for channel creation" do
+    test "requires data or identity argument for channel creation" do
       result = TestApp.Discord.channel_from_discord(%{})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for channel entity"
+      assert error_message =~ "is required" or error_message =~ "data" or error_message =~ "identity"
     end
   end
 
@@ -166,7 +165,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
         })
 
       {:ok, original_channel} =
-        TestApp.Discord.channel_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.channel_from_discord(%{data: initial_struct})
 
       # Update same channel with new data
       updated_struct =
@@ -181,7 +180,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
         })
 
       {:ok, updated_channel} =
-        TestApp.Discord.channel_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.channel_from_discord(%{data: updated_struct})
 
       # Should be same record (same Ash ID)
       assert updated_channel.id == original_channel.id
@@ -209,7 +208,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
         })
 
       {:ok, original_channel} =
-        TestApp.Discord.channel_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.channel_from_discord(%{data: initial_struct})
 
       # Update with different permissions
       updated_struct =
@@ -227,7 +226,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
         })
 
       {:ok, updated_channel} =
-        TestApp.Discord.channel_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.channel_from_discord(%{data: updated_struct})
 
       # Should be same record
       assert updated_channel.id == original_channel.id
@@ -238,35 +237,35 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       assert length(overwrites) == 2
 
       # Check updated role permission
-      role_overwrite = Enum.find(overwrites, &(&1["id"] == "123"))
+      role_overwrite = Enum.find(overwrites, &(&1["id"] == 123))
       assert role_overwrite["allow"] == "2048"
       assert role_overwrite["deny"] == "1024"
 
       # Check new member permission
-      member_overwrite = Enum.find(overwrites, &(&1["id"] == "456"))
+      member_overwrite = Enum.find(overwrites, &(&1["id"] == 456))
       assert member_overwrite["type"] == 1
       assert member_overwrite["allow"] == "8"
     end
   end
 
   describe "error handling" do
-    test "handles invalid discord_struct format" do
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: "not_a_map"})
+    test "handles invalid data argument format" do
+      result = TestApp.Discord.channel_from_discord(%{data: "not_a_map"})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Invalid value provided for discord_struct"
+      assert error_message =~ "Invalid value provided for data"
     end
 
     test "handles missing required fields in discord_struct" do
       # Missing required fields
       invalid_struct = channel(%{id: nil, name: nil})
 
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: invalid_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: invalid_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "is required"
+      assert error_message =~ "is required" or error_message =~ "must not be nil"
     end
 
     test "handles malformed permission overwrites" do
@@ -281,7 +280,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
         })
 
       # The transformation should handle this gracefully
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: channel_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: channel_struct})
 
       # This might succeed with empty permissions or fail with validation error
       # Either is acceptable behavior

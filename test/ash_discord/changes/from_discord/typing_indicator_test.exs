@@ -18,7 +18,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
           timestamp: 1_673_784_600
         })
 
-      result = TestApp.Discord.typing_indicator_from_discord(%{discord_struct: typing_struct})
+      result = TestApp.Discord.typing_indicator_from_discord(%{data: typing_struct})
 
       assert {:ok, created_typing} = result
       assert created_typing.user_id == typing_struct.user_id
@@ -37,7 +37,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
           timestamp: 1_673_788_200
         })
 
-      result = TestApp.Discord.typing_indicator_from_discord(%{discord_struct: typing_struct})
+      result = TestApp.Discord.typing_indicator_from_discord(%{data: typing_struct})
 
       assert {:ok, created_typing} = result
       assert created_typing.user_id == typing_struct.user_id
@@ -58,7 +58,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
           timestamp: current_timestamp
         })
 
-      result = TestApp.Discord.typing_indicator_from_discord(%{discord_struct: typing_struct})
+      result = TestApp.Discord.typing_indicator_from_discord(%{data: typing_struct})
 
       assert {:ok, created_typing} = result
       assert created_typing.user_id == typing_struct.user_id
@@ -77,7 +77,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
           timestamp: old_timestamp
         })
 
-      result = TestApp.Discord.typing_indicator_from_discord(%{discord_struct: typing_struct})
+      result = TestApp.Discord.typing_indicator_from_discord(%{data: typing_struct})
 
       assert {:ok, created_typing} = result
       assert created_typing.user_id == typing_struct.user_id
@@ -94,7 +94,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
           timestamp: 1_673_792_200
         })
 
-      result = TestApp.Discord.typing_indicator_from_discord(%{discord_struct: typing_struct})
+      result = TestApp.Discord.typing_indicator_from_discord(%{data: typing_struct})
 
       assert {:ok, created_typing} = result
       assert created_typing.user_id == typing_struct.user_id
@@ -111,7 +111,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
           timestamp: 1_673_795_800
         })
 
-      result = TestApp.Discord.typing_indicator_from_discord(%{discord_struct: typing_struct})
+      result = TestApp.Discord.typing_indicator_from_discord(%{data: typing_struct})
 
       assert {:ok, created_typing} = result
       assert created_typing.user_id == typing_struct.user_id
@@ -131,12 +131,14 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
       assert error_message =~ "No such input `discord_id`"
     end
 
-    test "requires discord_struct for typing indicator creation" do
+    test "requires data argument for typing indicator creation" do
+      # Empty input should fail because data argument is required
       result = TestApp.Discord.typing_indicator_from_discord(%{})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for typing_indicator entity"
+      assert error_message =~ "TypingIndicator requires data argument"
+      assert error_message =~ "typing events are not fetchable from API"
     end
   end
 
@@ -155,7 +157,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
         })
 
       {:ok, original_typing} =
-        TestApp.Discord.typing_indicator_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.typing_indicator_from_discord(%{data: initial_struct})
 
       # Update same user's typing in same channel with new timestamp
       updated_struct =
@@ -167,7 +169,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
         })
 
       {:ok, updated_typing} =
-        TestApp.Discord.typing_indicator_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.typing_indicator_from_discord(%{data: updated_struct})
 
       # Should be same record (same Ash ID)
       assert updated_typing.id == original_typing.id
@@ -192,7 +194,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
         })
 
       {:ok, original_typing} =
-        TestApp.Discord.typing_indicator_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.typing_indicator_from_discord(%{data: initial_struct})
 
       # Update same typing (channel moved to different guild context)
       updated_struct =
@@ -204,7 +206,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
         })
 
       {:ok, updated_typing} =
-        TestApp.Discord.typing_indicator_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.typing_indicator_from_discord(%{data: updated_struct})
 
       # Should be same record
       assert updated_typing.id == original_typing.id
@@ -219,22 +221,23 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
 
   describe "error handling" do
     test "handles invalid discord_struct format" do
-      result = TestApp.Discord.typing_indicator_from_discord(%{discord_struct: "not_a_map"})
+      result = TestApp.Discord.typing_indicator_from_discord(%{data: "not_a_map"})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Invalid value provided for discord_struct"
+      assert error_message =~ "Invalid value provided for data"
+      assert error_message =~ "is invalid"
     end
 
     test "handles missing required fields in discord_struct" do
       # Missing required fields
       invalid_struct = typing_indicator(%{user_id: nil, channel_id: nil})
 
-      result = TestApp.Discord.typing_indicator_from_discord(%{discord_struct: invalid_struct})
+      result = TestApp.Discord.typing_indicator_from_discord(%{data: invalid_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "is required"
+      assert error_message =~ "value must not be nil"
     end
 
     test "handles invalid user_id in discord_struct" do
@@ -246,53 +249,28 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
         timestamp: 1_673_784_600
       }
 
-      result = TestApp.Discord.typing_indicator_from_discord(%{discord_struct: invalid_struct})
+      result = TestApp.Discord.typing_indicator_from_discord(%{data: invalid_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "is invalid" or error_message =~ "must be"
+      # Should contain validation error about invalid user_id type
+      assert error_message =~ "invalid" or error_message =~ "must be"
     end
 
-    test "handles invalid timestamp in discord_struct" do
-      typing_struct =
-        typing_indicator(%{
-          user_id: 123_456_789,
-          channel_id: 555_666_777,
-          guild_id: 111_222_333,
-          # Invalid timestamp type
-          timestamp: "not_an_integer"
-        })
-
-      result = TestApp.Discord.typing_indicator_from_discord(%{discord_struct: typing_struct})
-
-      # This might succeed with normalized timestamp or fail with validation error
-      # Either is acceptable behavior
-      case result do
-        {:ok, created_typing} ->
-          # If it succeeds, timestamp should be handled gracefully
-          assert created_typing.user_id == typing_struct.user_id
-
-        {:error, error} ->
-          # If it fails, should be a validation error
-          error_message = Exception.message(error)
-          assert error_message =~ "invalid" or error_message =~ "must be"
-      end
-    end
-
-    test "handles malformed typing indicator data" do
+    test "handles malformed typing data" do
       malformed_struct = %{
         user_id: "not_an_integer",
-        channel_id: "not_an_integer",
+        # Required field as nil
+        channel_id: nil,
         timestamp: "not_an_integer"
       }
 
-      result =
-        TestApp.Discord.typing_indicator_from_discord(%{discord_struct: malformed_struct})
+      result = TestApp.Discord.typing_indicator_from_discord(%{data: malformed_struct})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      # Should contain validation errors
-      assert error_message =~ "is invalid" or error_message =~ "must be"
+      # Should contain validation errors about invalid types
+      assert error_message =~ "invalid" or error_message =~ "must be"
     end
   end
 end

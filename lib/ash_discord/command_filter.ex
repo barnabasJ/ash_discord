@@ -1,4 +1,11 @@
 defmodule AshDiscord.CommandFilter do
+  @moduledoc """
+  Behavior for filtering Discord commands based on guild context.
+
+  Implement this behavior to create custom command filtering logic
+  that determines which commands are available in specific guilds.
+  """
+
   @doc """
   Filters a list of commands for a specific guild.
 

@@ -41,6 +41,10 @@ defmodule TestApp.Discord.TypingIndicator do
     end
   end
 
+  code_interface do
+    define(:read)
+  end
+
   actions do
     defaults([:read, :destroy])
 
@@ -48,12 +52,12 @@ defmodule TestApp.Discord.TypingIndicator do
       description("Create typing indicator from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :struct,
-        allow_nil?: false,
-        description: "Discord typing indicator struct to transform"
+      argument(:data, AshDiscord.Consumer.Payloads.TypingStartEvent,
+        allow_nil?: true,
+        description: "Discord typing indicator TypedStruct data"
       )
 
-      change({AshDiscord.Changes.FromDiscord, type: :typing_indicator})
+      change(AshDiscord.Changes.FromDiscord.TypingIndicator)
 
       upsert?(true)
       upsert_identity(:user_channel)

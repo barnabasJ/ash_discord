@@ -88,6 +88,10 @@ defmodule TestApp.Discord.VoiceState do
     end
   end
 
+  code_interface do
+    define(:read)
+  end
+
   actions do
     defaults([:read, :destroy])
 
@@ -95,12 +99,12 @@ defmodule TestApp.Discord.VoiceState do
       description("Create voice state from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :struct,
-        allow_nil?: false,
-        description: "Discord voice state struct to transform"
+      argument(:data, AshDiscord.Consumer.Payloads.VoiceState,
+        allow_nil?: true,
+        description: "Discord voice state TypedStruct data"
       )
 
-      change({AshDiscord.Changes.FromDiscord, type: :voice_state})
+      change(AshDiscord.Changes.FromDiscord.VoiceState)
 
       upsert?(true)
       upsert_identity(:user_guild)

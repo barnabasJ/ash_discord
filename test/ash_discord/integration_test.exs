@@ -8,10 +8,9 @@ defmodule AshDiscord.IntegrationTest do
 
   setup do
     copy(Nostrum.Api.Interaction)
-
-    stub(Nostrum.Api.Interaction, :create_response, fn _id, _token, response ->
-      {:ok, response}
-    end)
+    copy(Nostrum.Api.User)
+    copy(Nostrum.Api.Guild)
+    copy(Nostrum.Api.Channel)
 
     :ok
   end
@@ -23,8 +22,8 @@ defmodule AshDiscord.IntegrationTest do
       domains([TestApp.Discord])
     end
 
-    @impl true
-    def handle_interaction_create(interaction) do
+    @impl AshDiscord.Consumer
+    def handle_interaction_create(interaction, _ws_state, _context) do
       # Override to test integration
       command = find_command(String.to_atom(interaction.data.name))
 
@@ -41,10 +40,10 @@ defmodule AshDiscord.IntegrationTest do
       end
     end
 
-    @impl true
-    def handle_message_create(message) do
+    @impl AshDiscord.Consumer
+    def handle_message_create(message, _ws_state, _context) do
       # Create message using from_discord action
-      case TestApp.Discord.Message.from_discord(%{discord_struct: message}) do
+      case TestApp.Discord.Message.from_discord(%{data: message}) do
         {:ok, created_message} ->
           send(self(), {:message_created, created_message})
           :ok
@@ -64,8 +63,20 @@ defmodule AshDiscord.IntegrationTest do
           user: user(%{username: "testuser"})
         })
 
+      # Mock the interaction response to avoid rate limiter issues
+      expect(Nostrum.Api.Interaction, :create_response, fn _interaction_id, _token, _response ->
+        {:ok}
+      end)
+
       # Process the interaction
-      result = IntegrationTestConsumer.handle_interaction_create(interaction)
+      ws_state = %Nostrum.Struct.WSState{}
+
+      result =
+        IntegrationTestConsumer.handle_interaction_create(
+          interaction,
+          ws_state,
+          %AshDiscord.Context{}
+        )
 
       assert result == :ok
 
@@ -75,14 +86,47 @@ defmodule AshDiscord.IntegrationTest do
     end
 
     test "consumer processes message events with from_discord actions" do
+      # Pre-create entities to avoid relationship management issues
+      guild_id = generate_snowflake()
+      channel_id = generate_snowflake()
+      user_id = generate_snowflake()
+
+      {:ok, _guild} =
+        TestApp.Discord.Guild.create(%{
+          discord_id: guild_id,
+          name: "Test Guild"
+        })
+
+      {:ok, _channel} =
+        TestApp.Discord.Channel.create(%{
+          discord_id: channel_id,
+          name: "test-channel",
+          type: 0,
+          guild_id: guild_id
+        })
+
+      {:ok, _user} =
+        TestApp.Discord.User.create(%{
+          discord_id: user_id,
+          discord_username: "testuser"
+        })
+
       message_data =
         message(%{
           content: "Test message content",
-          channel_id: generate_snowflake(),
-          guild_id: generate_snowflake()
+          channel_id: channel_id,
+          guild_id: guild_id,
+          author: user(%{id: user_id})
         })
 
-      result = IntegrationTestConsumer.handle_message_create(message_data)
+      ws_state = %Nostrum.Struct.WSState{}
+
+      result =
+        IntegrationTestConsumer.handle_message_create(
+          message_data,
+          ws_state,
+          %AshDiscord.Context{}
+        )
 
       assert result == :ok
 
@@ -136,14 +180,30 @@ defmodule AshDiscord.IntegrationTest do
   end
 
   describe "error handling" do
+    @tag :focus
     test "handles invalid interaction gracefully" do
       invalid_interaction =
         interaction(%{
           data: %{name: "nonexistent_command", options: []}
         })
 
-      result = IntegrationTestConsumer.handle_interaction_create(invalid_interaction)
+      # Mock the interaction response to avoid rate limiter issues
+      expect(Nostrum.Api.Interaction, :create_response, fn _interaction_id, _token, _response ->
+        {:ok}
+      end)
 
+      ws_state = %Nostrum.Struct.WSState{}
+
+      {result, log} =
+        ExUnit.CaptureLog.with_log(fn ->
+          IntegrationTestConsumer.handle_interaction_create(
+            invalid_interaction,
+            ws_state,
+            %AshDiscord.Context{}
+          )
+        end)
+
+      assert log =~ "command is nil"
       assert result == :ok
 
       # Should receive error notification
@@ -151,13 +211,26 @@ defmodule AshDiscord.IntegrationTest do
     end
 
     test "handles message creation errors" do
-      invalid_message_data = %{
-        # Invalid - should cause error
-        discord_id: nil,
-        content: "Test message"
-      }
+      # Create a proper Nostrum struct but with missing required relationships
+      # This will cause a validation error when trying to create the message
+      invalid_message_data =
+        message(%{
+          id: generate_snowflake(),
+          content: "Test message",
+          channel_id: 999_999_999,
+          # Non-existent channel/guild IDs will cause relationship errors
+          guild_id: 888_888_888,
+          author: user(%{id: 777_777_777})
+        })
 
-      result = IntegrationTestConsumer.handle_message_create(invalid_message_data)
+      ws_state = %Nostrum.Struct.WSState{}
+
+      result =
+        IntegrationTestConsumer.handle_message_create(
+          invalid_message_data,
+          ws_state,
+          %AshDiscord.Context{}
+        )
 
       assert result == :ok
 
@@ -168,58 +241,10 @@ defmodule AshDiscord.IntegrationTest do
 
   describe "consumer macro behavior" do
     test "consumer has all required callback functions" do
-      # Test that all callback functions were generated
-      callbacks = [
-        :handle_message_create,
-        :handle_message_update,
-        :handle_message_delete,
-        :handle_message_delete_bulk,
-        :handle_message_reaction_add,
-        :handle_message_reaction_remove,
-        :handle_message_reaction_remove_all,
-        :handle_guild_create,
-        :handle_guild_update,
-        :handle_guild_delete,
-        :handle_ready,
-        :handle_application_command,
-        :handle_guild_role_create,
-        :handle_guild_role_update,
-        :handle_guild_role_delete,
-        :handle_guild_member_add,
-        :handle_guild_member_update,
-        :handle_guild_member_remove,
-        :handle_channel_create,
-        :handle_channel_update,
-        :handle_channel_delete,
-        :handle_voice_state_update,
-        :handle_typing_start,
-        :handle_invite_create,
-        :handle_invite_delete,
-        :handle_interaction_create,
-        :handle_unknown_event
-      ]
-
-      # Test most callbacks with arity 1
-      arity_1_callbacks =
-        callbacks --
-          [:handle_guild_member_add, :handle_guild_member_update, :handle_guild_member_remove]
-
-      Enum.each(arity_1_callbacks, fn callback ->
-        assert function_exported?(IntegrationTestConsumer, callback, 1),
-               "Callback #{callback}/1 not exported"
-      end)
-
-      # Test guild member callbacks with arity 2
-      guild_member_callbacks = [
-        :handle_guild_member_add,
-        :handle_guild_member_update,
-        :handle_guild_member_remove
-      ]
-
-      Enum.each(guild_member_callbacks, fn callback ->
-        assert function_exported?(IntegrationTestConsumer, callback, 2),
-               "Callback #{callback}/2 not exported"
-      end)
+      # Test that handle_event callback was generated
+      # All events now go through handle_event/1
+      assert function_exported?(IntegrationTestConsumer, :handle_event, 1),
+             "Callback handle_event/1 not exported"
     end
 
     test "consumer has correct domains configured" do

@@ -7,20 +7,20 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
   alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 
-  describe "create/4" do
+  describe "create/3" do
     test "creates channel in database" do
       channel_data = channel()
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.Channel,
         guild: nil,
         user: nil
       }
 
       {:ok, channel_payload} = Payloads.Channel.new(channel_data)
 
-      assert :ok = Channel.create(TestConsumer, channel_payload, %Nostrum.Struct.WSState{}, context)
+      assert :ok = Channel.create(channel_payload, %Nostrum.Struct.WSState{}, context)
 
       # Verify channel was created in database
       channels = TestApp.Discord.Channel.read!()
@@ -32,14 +32,14 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
     end
   end
 
-  describe "update/4" do
+  describe "update/3" do
     test "updates existing channel in database" do
       old_channel = channel(%{name: "old-name"})
       new_channel = channel(%{id: old_channel.id, name: "new-name"})
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.Channel,
         guild: nil,
         user: nil
       }
@@ -54,7 +54,6 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
 
       assert :ok =
                Channel.update(
-                 TestConsumer,
                  channel_update,
                  %Nostrum.Struct.WSState{},
                  context
@@ -70,7 +69,7 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
     end
   end
 
-  describe "delete/4" do
+  describe "delete/3" do
     test "deletes channel from database" do
       channel_data = channel()
 
@@ -90,13 +89,13 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.Channel,
         guild: nil,
         user: nil
       }
 
       assert :ok =
-               Channel.delete(TestConsumer, channel_payload, %Nostrum.Struct.WSState{}, context)
+               Channel.delete(channel_payload, %Nostrum.Struct.WSState{}, context)
 
       # Verify channel was deleted from database
       channels_after = TestApp.Discord.Channel.read!()
@@ -108,7 +107,7 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.Channel,
         guild: nil,
         user: nil
       }
@@ -117,7 +116,7 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
 
       # Should not crash when channel doesn't exist
       assert :ok =
-               Channel.delete(TestConsumer, channel_payload, %Nostrum.Struct.WSState{}, context)
+               Channel.delete(channel_payload, %Nostrum.Struct.WSState{}, context)
     end
   end
 end

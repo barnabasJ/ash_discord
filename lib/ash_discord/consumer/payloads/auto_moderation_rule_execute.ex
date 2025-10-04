@@ -47,7 +47,12 @@ defmodule AshDiscord.Consumer.Payloads.AutoModerationRuleExecute do
   Create an AutoModerationRuleExecute TypedStruct from a Nostrum AutoModerationRuleExecute event struct.
 
   Accepts a `Nostrum.Struct.Event.AutoModerationRuleExecute.t()` and creates an AshDiscord AutoModerationRuleExecute TypedStruct.
+  Also handles being passed an AutoModerationRuleExecute payload (no-op for already-converted payloads).
   """
+  def new(%__MODULE__{} = execute_payload) do
+    {:ok, execute_payload}
+  end
+
   def new(%Nostrum.Struct.Event.AutoModerationRuleExecute{} = nostrum_event) do
     super(Map.from_struct(nostrum_event))
   end

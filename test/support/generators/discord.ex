@@ -1173,6 +1173,104 @@ defmodule AshDiscord.Test.Generators.Discord do
 
   # Private helper functions
 
+  @doc """
+  Generates a Discord AutoModerationRule struct.
+
+  ## Options
+
+  - `:id` - Rule ID (defaults to generated snowflake)
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+  - `:name` - Rule name (defaults to random name)
+  - `:creator_id` - Creator user ID (defaults to generated snowflake)
+  - `:event_type` - Event type (defaults to 1 = MESSAGE_SEND)
+  - `:trigger_type` - Trigger type (defaults to 1 = KEYWORD)
+  - `:trigger_metadata` - Trigger metadata map (defaults to keyword list)
+  - `:actions` - Actions to execute (defaults to list with block action)
+  - `:enabled` - Whether rule is enabled (defaults to true)
+  - `:exempt_roles` - Exempt role IDs (defaults to empty list)
+  - `:exempt_channels` - Exempt channel IDs (defaults to empty list)
+
+  ## Examples
+
+      iex> rule = auto_moderation_rule(%{name: "No Spam"})
+      iex> rule.name
+      "No Spam"
+  """
+  def auto_moderation_rule(attrs \\ %{}) do
+    defaults = %{
+      id: generate_snowflake(),
+      guild_id: generate_snowflake(),
+      name: Faker.Lorem.words(2..3) |> Enum.join(" "),
+      creator_id: generate_snowflake(),
+      event_type: 1,
+      trigger_type: 1,
+      trigger_metadata: %{
+        keyword_filter: ["spam", "badword"]
+      },
+      actions: [
+        %{
+          type: 1,
+          metadata: %{
+            channel_id: generate_snowflake()
+          }
+        }
+      ],
+      enabled: true,
+      exempt_roles: [],
+      exempt_channels: []
+    }
+
+    struct(Nostrum.Struct.AutoModerationRule, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
+  Generates a Discord AutoModerationRuleExecute event struct.
+
+  ## Options
+
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+  - `:action` - Action that was executed (defaults to block action)
+  - `:rule_id` - Rule ID (defaults to generated snowflake)
+  - `:rule_trigger_type` - Rule trigger type (defaults to 1 = KEYWORD)
+  - `:user_id` - User ID who triggered rule (defaults to generated snowflake)
+  - `:channel_id` - Channel ID (defaults to generated snowflake)
+  - `:message_id` - Message ID (defaults to generated snowflake)
+  - `:alert_system_message_id` - Alert message ID (defaults to nil)
+  - `:content` - Content that triggered rule (defaults to sample text)
+  - `:matched_keyword` - Matched keyword (defaults to "spam")
+  - `:matched_content` - Matched content substring (defaults to "spam")
+
+  ## Examples
+
+      iex> execute = auto_moderation_rule_execute(%{user_id: 123})
+      iex> execute.user_id
+      123
+  """
+  def auto_moderation_rule_execute(attrs \\ %{}) do
+    defaults = %{
+      guild_id: generate_snowflake(),
+      action: %{
+        type: 1,
+        metadata: %{
+          channel_id: generate_snowflake()
+        }
+      },
+      rule_id: generate_snowflake(),
+      rule_trigger_type: 1,
+      user_id: generate_snowflake(),
+      channel_id: generate_snowflake(),
+      message_id: generate_snowflake(),
+      alert_system_message_id: nil,
+      content: "This message contains spam content",
+      matched_keyword: "spam",
+      matched_content: "spam"
+    }
+
+    struct(Nostrum.Struct.Event.AutoModerationRuleExecute, merge_attrs(defaults, attrs))
+  end
+
+  # Private helper functions
+
   defp merge_attrs(defaults, overrides) when is_map(overrides) do
     Map.merge(defaults, overrides)
   end

@@ -49,7 +49,12 @@ defmodule AshDiscord.Consumer.Payloads.AutoModerationRule do
   Create an AutoModerationRule TypedStruct from a Nostrum AutoModerationRule struct.
 
   Accepts a `Nostrum.Struct.AutoModerationRule.t()` and creates an AshDiscord AutoModerationRule TypedStruct.
+  Also handles being passed an AutoModerationRule payload (no-op for already-converted payloads).
   """
+  def new(%__MODULE__{} = rule_payload) do
+    {:ok, rule_payload}
+  end
+
   def new(%Nostrum.Struct.AutoModerationRule{} = nostrum_auto_moderation_rule) do
     super(Map.from_struct(nostrum_auto_moderation_rule))
   end

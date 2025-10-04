@@ -16,7 +16,7 @@ defmodule AshDiscord.Consumer.Handler.Voice do
              |> Ash.Changeset.for_create(
                :from_discord,
                %{
-                 discord_struct: voice_state
+                 data: voice_state
                },
                context: %{
                  private: %{ash_discord?: true},

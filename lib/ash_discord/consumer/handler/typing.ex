@@ -14,7 +14,7 @@ defmodule AshDiscord.Consumer.Handler.Typing do
         |> Ash.Changeset.for_create(
           :from_discord,
           %{
-            discord_struct: typing_data
+            data: typing_data
           },
           context: %{
             private: %{ash_discord?: true},

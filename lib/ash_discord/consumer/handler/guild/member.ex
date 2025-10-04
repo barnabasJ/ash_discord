@@ -20,8 +20,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
             |> Ash.Changeset.for_create(
               :from_discord,
               %{
-                guild_id: guild_id,
-                discord_struct: member
+                data: member,
+                identity: %{guild_id: guild_id, user_id: user_discord_id}
               },
               context: %{
                 private: %{ash_discord?: true},
@@ -63,8 +63,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
              |> Ash.Changeset.for_create(
                :from_discord,
                %{
-                 guild_id: guild_id,
-                 discord_struct: member
+                 data: member,
+                 identity: %{guild_id: guild_id, user_id: user_discord_id}
                },
                context: %{
                  private: %{ash_discord?: true},

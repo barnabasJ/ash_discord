@@ -22,10 +22,7 @@ defmodule AshDiscord.Consumer.Handler.Message do
       else
         case message_resource
              |> Ash.Changeset.for_create(:from_discord, %{
-               discord_struct: message,
-               channel_discord_id: message.channel_id,
-               guild_discord_id: message.guild_id,
-               discord_id: message.id
+               data: message
              })
              |> Ash.Changeset.set_context(%{
                private: %{ash_discord?: true},
@@ -61,10 +58,7 @@ defmodule AshDiscord.Consumer.Handler.Message do
         # Update the existing message - provide channel and guild IDs from the message struct
         case message_resource
              |> Ash.Changeset.for_create(:from_discord, %{
-               discord_struct: message,
-               channel_discord_id: message.channel_id,
-               guild_discord_id: message.guild_id,
-               discord_id: message.id
+               data: message
              })
              |> Ash.Changeset.set_context(%{
                private: %{ash_discord?: true},

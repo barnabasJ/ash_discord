@@ -12,8 +12,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
 
     context.resource
     |> Ash.Changeset.for_create(:from_discord, %{
-      discord_id: guild.id,
-      discord_struct: guild
+      data: guild
     })
     |> Ash.Changeset.set_context(%{
       private: %{ash_discord?: true},
@@ -59,8 +58,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
   def update({_old_guild, new_guild}, _ws_state, context) do
     case context.resource
          |> Ash.Changeset.for_create(:from_discord, %{
-           discord_id: new_guild.id,
-           discord_struct: new_guild
+           data: new_guild
          })
          |> Ash.Changeset.set_context(%{
            private: %{ash_discord?: true},

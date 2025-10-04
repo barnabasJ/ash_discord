@@ -15,7 +15,7 @@ defmodule AshDiscord.Consumer.Handler.Invite do
              |> Ash.Changeset.for_create(
                :from_discord,
                %{
-                 discord_struct: invite
+                 data: invite
                },
                context: %{
                  private: %{ash_discord?: true},

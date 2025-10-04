@@ -15,11 +15,7 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
         |> Ash.Changeset.for_create(
           :from_discord,
           %{
-            discord_struct: data,
-            user_id: data.user_id,
-            message_id: data.message_id,
-            channel_id: data.channel_id,
-            guild_id: data.guild_id
+            data: data
           },
           context: %{
             private: %{ash_discord?: true},

@@ -15,8 +15,7 @@ defmodule AshDiscord.Consumer.Handler.Channel do
         |> Ash.Changeset.for_create(
           :from_discord,
           %{
-            discord_id: channel.id,
-            discord_struct: channel
+            data: channel
           },
           context: %{
             private: %{ash_discord?: true},
@@ -47,8 +46,7 @@ defmodule AshDiscord.Consumer.Handler.Channel do
         |> Ash.Changeset.for_create(
           :from_discord,
           %{
-            discord_id: channel.id,
-            discord_struct: channel
+            data: channel
           },
           context: %{
             private: %{ash_discord?: true},

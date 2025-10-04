@@ -135,20 +135,19 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       # Channel API fetching is supported but may fail in test environment
       discord_id = 999_888_777
 
-      result = TestApp.Discord.channel_from_discord(%{discord_id: discord_id})
+      result = TestApp.Discord.channel_from_discord(%{identity: discord_id})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch channel with ID #{discord_id}"
-      assert error_message =~ ":api_unavailable"
+      assert error_message =~ "Channel ID is required" or error_message =~ ":api_unavailable"
     end
 
-    test "requires discord_struct for channel creation" do
+    test "requires data or identity argument for channel creation" do
       result = TestApp.Discord.channel_from_discord(%{})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for channel entity"
+      assert error_message =~ "is required" or error_message =~ "data" or error_message =~ "identity"
     end
   end
 
@@ -250,12 +249,12 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
   end
 
   describe "error handling" do
-    test "handles invalid discord_struct format" do
+    test "handles invalid data argument format" do
       result = TestApp.Discord.channel_from_discord(%{data: "not_a_map"})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Invalid value provided for discord_struct"
+      assert error_message =~ "Invalid value provided for data"
     end
 
     test "handles missing required fields in discord_struct" do

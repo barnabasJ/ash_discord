@@ -174,7 +174,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
       # Voice states don't support direct API fetching in our implementation
       discord_id = 999_888_777
 
-      result = TestApp.Discord.voice_state_from_discord(%{discord_id: discord_id})
+      result = TestApp.Discord.voice_state_from_discord(%{identity: discord_id})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -287,12 +287,12 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
   end
 
   describe "error handling" do
-    test "handles invalid discord_struct format" do
+    test "handles invalid data argument format" do
       result = TestApp.Discord.voice_state_from_discord(%{data: "not_a_map"})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Invalid value provided for discord_struct"
+      assert error_message =~ "Invalid value provided for data"
     end
 
     test "handles missing required fields in discord_struct" do

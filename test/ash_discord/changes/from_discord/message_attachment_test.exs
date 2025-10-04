@@ -156,7 +156,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
       # Trying to pass discord_id (old pattern) should fail with "No such input" error
       discord_id = 999_888_777
 
-      result = TestApp.Discord.message_attachment_from_discord(%{discord_id: discord_id})
+      result = TestApp.Discord.message_attachment_from_discord(%{identity: discord_id})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
@@ -266,7 +266,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
   end
 
   describe "error handling" do
-    test "handles invalid discord_struct format" do
+    test "handles invalid data argument format" do
       result =
         TestApp.Discord.message_attachment_from_discord(%{data: "not_a_map"})
 

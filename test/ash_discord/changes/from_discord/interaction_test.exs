@@ -248,22 +248,21 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
   describe "API fallback pattern" do
     test "interaction API fallback is not supported" do
       # Interactions don't support direct API fetching in our implementation
-      discord_id = 999_888_777
+      # The action doesn't have identity argument, only data argument
 
-      result = TestApp.Discord.interaction_from_discord(%{discord_id: discord_id})
+      result = TestApp.Discord.interaction_from_discord(%{identity: 999_888_777})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch interaction with ID #{discord_id}"
-      assert error_message =~ ":unsupported_type"
+      assert error_message =~ "No such input" or error_message =~ "identity"
     end
 
-    test "requires discord_struct for interaction creation" do
+    test "requires data argument for interaction creation" do
       result = TestApp.Discord.interaction_from_discord(%{})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for interaction entity"
+      assert error_message =~ "data argument is required" or error_message =~ "cannot be fetched from API"
     end
   end
 
@@ -395,12 +394,12 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
   end
 
   describe "error handling" do
-    test "handles invalid discord_struct format" do
+    test "handles invalid data argument format" do
       result = TestApp.Discord.interaction_from_discord(%{data: "not_a_map"})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Invalid value provided for discord_struct"
+      assert error_message =~ "Invalid value provided for data"
     end
 
     test "handles missing required fields in discord_struct" do

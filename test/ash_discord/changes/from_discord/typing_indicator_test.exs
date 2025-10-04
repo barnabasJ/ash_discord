@@ -138,7 +138,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
       assert {:error, error} = result
       error_message = Exception.message(error)
       assert error_message =~ "TypingIndicator requires data argument"
-      assert error_message =~ "typing events are not independently fetchable from API"
+      assert error_message =~ "typing events are not fetchable from API"
     end
   end
 

@@ -29,8 +29,35 @@ defmodule AshDiscord.Consumer.Payloads.TypingStartEvent do
   Create a TypingStartEvent TypedStruct from a Nostrum TypingStart event struct.
 
   Accepts a `Nostrum.Struct.Event.TypingStart.t()` and creates an AshDiscord TypingStartEvent TypedStruct.
+  If already a TypingStartEvent struct, returns it as-is.
   """
-  def new(%Nostrum.Struct.Event.TypingStart{} = nostrum_event) do
-    super(Map.from_struct(nostrum_event))
+  # TODO: This clause shouldn't be necessary - Ash's type system should handle this.
+  # When we pass %TypingStartEvent{} to Ash.Changeset.for_create(..., %{data: event}),
+  # Ash calls cast_input/2 which calls .new() again. This should be a no-op for
+  # already-typed data. Investigate if Ash.TypedStruct can handle this automatically.
+  def new(%__MODULE__{} = event) do
+    {:ok, event}
   end
+
+  def new(%Nostrum.Struct.Event.TypingStart{} = nostrum_event) do
+    attrs = nostrum_event |> Map.from_struct() |> convert_timestamp()
+    super(attrs)
+  end
+
+  # Handle plain maps (for testing/edge cases)
+  def new(attrs) when is_map(attrs) do
+    attrs = convert_timestamp(attrs)
+    super(attrs)
+  end
+
+  # Convert Unix timestamp (integer seconds) to DateTime
+  defp convert_timestamp(%{timestamp: timestamp} = attrs) when is_integer(timestamp) do
+    case DateTime.from_unix(timestamp, :second) do
+      {:ok, dt} -> %{attrs | timestamp: dt}
+      {:error, _} -> %{attrs | timestamp: DateTime.utc_now()}
+    end
+  end
+
+  defp convert_timestamp(%{timestamp: %DateTime{}} = attrs), do: attrs
+  defp convert_timestamp(attrs), do: attrs
 end

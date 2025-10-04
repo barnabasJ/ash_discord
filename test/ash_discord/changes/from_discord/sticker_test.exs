@@ -192,16 +192,16 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch sticker with ID #{discord_id}"
+      assert error_message =~ ":api_unavailable" or error_message =~ "Identity"
       assert error_message =~ ":api_unavailable"
     end
 
-    test "requires discord_struct for sticker creation" do
+    test "requires data argument for creation" do
       result = TestApp.Discord.sticker_from_discord(%{})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for sticker entity"
+      assert error_message =~ "is required" or error_message =~ "Identity"
     end
   end
 

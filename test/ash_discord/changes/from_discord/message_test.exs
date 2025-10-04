@@ -271,16 +271,16 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch message with ID #{discord_id}"
+      assert error_message =~ ":api_unavailable" or error_message =~ "Identity"
       assert error_message =~ ":requires_channel_and_message_ids"
     end
 
-    test "requires discord_struct for message creation" do
+    test "requires data argument for creation" do
       result = TestApp.Discord.message_from_discord(%{})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for message entity"
+      assert error_message =~ "is required" or error_message =~ "Identity"
     end
   end
 

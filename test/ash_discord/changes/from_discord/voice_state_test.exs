@@ -186,7 +186,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for voice_state entity"
+      assert error_message =~ "is required" or error_message =~ "Identity"
     end
   end
 

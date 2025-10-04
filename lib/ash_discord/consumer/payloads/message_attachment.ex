@@ -22,7 +22,12 @@ defmodule AshDiscord.Consumer.Payloads.MessageAttachment do
   Create a MessageAttachment TypedStruct from a Nostrum Message.Attachment struct.
 
   Accepts a `Nostrum.Struct.Message.Attachment.t()` and creates an AshDiscord MessageAttachment TypedStruct.
+  Also handles being passed a MessageAttachment payload (no-op for already-converted payloads).
   """
+  def new(%__MODULE__{} = attachment_payload) do
+    {:ok, attachment_payload}
+  end
+
   def new(%Nostrum.Struct.Message.Attachment{} = nostrum_attachment) do
     super(Map.from_struct(nostrum_attachment))
   end

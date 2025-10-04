@@ -37,7 +37,12 @@ defmodule AshDiscord.Consumer.Payloads.Invite do
   Create an Invite TypedStruct from a Nostrum Invite struct.
 
   Accepts a `Nostrum.Struct.Invite.t()` and creates an AshDiscord Invite TypedStruct.
+  Also handles being passed an Invite payload (no-op for already-converted payloads).
   """
+  def new(%__MODULE__{} = invite_payload) do
+    {:ok, invite_payload}
+  end
+
   def new(%Nostrum.Struct.Invite{} = nostrum_invite) do
     super(Map.from_struct(nostrum_invite))
   end

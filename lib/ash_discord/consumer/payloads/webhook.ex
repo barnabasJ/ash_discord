@@ -31,7 +31,12 @@ defmodule AshDiscord.Consumer.Payloads.Webhook do
   Create a Webhook TypedStruct from a Nostrum Webhook struct.
 
   Accepts a `Nostrum.Struct.Webhook.t()` and creates an AshDiscord Webhook TypedStruct.
+  Also handles being passed a Webhook payload (no-op for already-converted payloads) or a raw map for validation.
   """
+  def new(%__MODULE__{} = webhook_payload) do
+    {:ok, webhook_payload}
+  end
+
   def new(%Nostrum.Struct.Webhook{} = nostrum_webhook) do
     super(Map.from_struct(nostrum_webhook))
   end

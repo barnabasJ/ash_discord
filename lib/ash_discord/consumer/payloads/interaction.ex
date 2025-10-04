@@ -31,7 +31,12 @@ defmodule AshDiscord.Consumer.Payloads.Interaction do
   Create an Interaction TypedStruct from a Nostrum Interaction struct.
 
   Accepts a `Nostrum.Struct.Interaction.t()` and creates an AshDiscord Interaction TypedStruct.
+  Also handles being passed an Interaction payload (no-op for already-converted payloads).
   """
+  def new(%__MODULE__{} = interaction_payload) do
+    {:ok, interaction_payload}
+  end
+
   def new(%Nostrum.Struct.Interaction{} = nostrum_interaction) do
     super(Map.from_struct(nostrum_interaction))
   end

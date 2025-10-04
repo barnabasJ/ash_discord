@@ -31,7 +31,12 @@ defmodule AshDiscord.Consumer.Payloads.Sticker do
   Create a Sticker TypedStruct from a Nostrum Sticker struct.
 
   Accepts a `Nostrum.Struct.Sticker.t()` and creates an AshDiscord Sticker TypedStruct.
+  Also handles being passed a Sticker payload (no-op for already-converted payloads) or a raw map for validation.
   """
+  def new(%__MODULE__{} = sticker_payload) do
+    {:ok, sticker_payload}
+  end
+
   def new(%Nostrum.Struct.Sticker{} = nostrum_sticker) do
     super(Map.from_struct(nostrum_sticker))
   end

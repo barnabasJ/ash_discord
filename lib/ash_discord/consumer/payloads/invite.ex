@@ -46,4 +46,8 @@ defmodule AshDiscord.Consumer.Payloads.Invite do
   def new(%Nostrum.Struct.Invite{} = nostrum_invite) do
     super(Map.from_struct(nostrum_invite))
   end
+
+  def new(value) do
+    super(value)
+  end
 end

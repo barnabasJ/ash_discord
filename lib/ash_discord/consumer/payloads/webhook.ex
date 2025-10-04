@@ -40,4 +40,8 @@ defmodule AshDiscord.Consumer.Payloads.Webhook do
   def new(%Nostrum.Struct.Webhook{} = nostrum_webhook) do
     super(Map.from_struct(nostrum_webhook))
   end
+
+  def new(value) do
+    super(value)
+  end
 end

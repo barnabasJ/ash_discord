@@ -31,4 +31,8 @@ defmodule AshDiscord.Consumer.Payloads.MessageAttachment do
   def new(%Nostrum.Struct.Message.Attachment{} = nostrum_attachment) do
     super(Map.from_struct(nostrum_attachment))
   end
+
+  def new(value) do
+    super(value)
+  end
 end

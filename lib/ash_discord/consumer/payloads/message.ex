@@ -70,4 +70,8 @@ defmodule AshDiscord.Consumer.Payloads.Message do
   def new(%Nostrum.Struct.Message{} = nostrum_message) do
     super(Map.from_struct(nostrum_message))
   end
+
+  def new(value) do
+    super(value)
+  end
 end

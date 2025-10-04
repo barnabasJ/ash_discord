@@ -40,4 +40,8 @@ defmodule AshDiscord.Consumer.Payloads.Interaction do
   def new(%Nostrum.Struct.Interaction{} = nostrum_interaction) do
     super(Map.from_struct(nostrum_interaction))
   end
+
+  def new(value) do
+    super(value)
+  end
 end

@@ -40,4 +40,8 @@ defmodule AshDiscord.Consumer.Payloads.Sticker do
   def new(%Nostrum.Struct.Sticker{} = nostrum_sticker) do
     super(Map.from_struct(nostrum_sticker))
   end
+
+  def new(value) do
+    super(value)
+  end
 end

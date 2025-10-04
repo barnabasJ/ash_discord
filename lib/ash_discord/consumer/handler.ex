@@ -7,14 +7,17 @@ defmodule AshDiscord.Consumer.Handler do
 
   @spec handle_event(consumer :: module(), event_payload_ws :: Nostrum.Consumer.event()) :: any()
   def handle_event(consumer, {event, payload, ws_state}) do
-    {handler_mod, handler_fun, resource_type, callback} =
+    {handler_mod, handler_fun, resource_type, callback, payload_module} =
       AshDiscord.Consumer.EventMap.handler_for(event)
 
+    # Transform Nostrum payload to AshDiscord TypedStruct
+    transformed_payload = payload_module.new(payload)
+
     if function_exported?(consumer, callback, 3) do
-      context = build_context(consumer, nil, payload)
+      context = build_context(consumer, nil, transformed_payload)
       Logger.info("Handling #{event} with #{consumer}.#{callback}/3")
 
-      case apply(consumer, callback, [payload, ws_state, context]) do
+      case apply(consumer, callback, [transformed_payload, ws_state, context]) do
         {:error, _} = error ->
           Logger.error("Error handling #{event} in #{consumer}.#{callback}/3: #{inspect(error)}")
           error
@@ -27,11 +30,11 @@ defmodule AshDiscord.Consumer.Handler do
       resource = get_resource(consumer, resource_type)
 
       if resource do
-        context = build_context(consumer, resource, payload)
+        context = build_context(consumer, resource, transformed_payload)
 
         Logger.info("Handling #{event} with #{handler_mod}.#{handler_fun}/3")
 
-        case apply(handler_mod, handler_fun, [payload, ws_state, context]) do
+        case apply(handler_mod, handler_fun, [transformed_payload, ws_state, context]) do
           {:error, _} = error ->
             Logger.error(
               "Error handling #{event} in #{handler_mod}.#{handler_fun}/3: #{inspect(error)}"

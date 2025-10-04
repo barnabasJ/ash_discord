@@ -2,9 +2,11 @@ defmodule AshDiscord.Consumer.Handler.Channel do
   require Logger
   require Ash.Query
 
+  alias AshDiscord.Consumer.Payloads
+
   @spec create(
           consumer :: module(),
-          channel :: Nostrum.Struct.Channel.t(),
+          channel :: Payloads.Channel.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
@@ -34,12 +36,11 @@ defmodule AshDiscord.Consumer.Handler.Channel do
 
   @spec update(
           consumer :: module(),
-          {old_channel :: Nostrum.Struct.Channel.t() | nil,
-           new_channel :: Nostrum.Struct.Channel.t()},
+          channel_update :: Payloads.ChannelUpdate.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def update(consumer, {_old_channel, channel}, _ws_state, _context) do
+  def update(consumer, %Payloads.ChannelUpdate{new_channel: channel}, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_channel_resource(consumer) do
       {:ok, resource} ->
         resource
@@ -65,7 +66,7 @@ defmodule AshDiscord.Consumer.Handler.Channel do
 
   @spec delete(
           consumer :: module(),
-          channel :: Nostrum.Struct.Channel.t(),
+          channel :: Payloads.Channel.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()

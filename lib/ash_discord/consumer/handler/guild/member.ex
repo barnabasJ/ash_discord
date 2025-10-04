@@ -2,13 +2,15 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
   require Logger
   require Ash.Query
 
+  alias AshDiscord.Consumer.Payloads
+
   @spec add(
           consumer :: module(),
-          {guild_id :: integer(), new_member :: Nostrum.Struct.Guild.Member.t()},
+          member_add :: Payloads.GuildMemberAdd.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def add(consumer, {guild_id, member}, _ws_state, _context) do
+  def add(consumer, %Payloads.GuildMemberAdd{guild_id: guild_id, member: member}, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_guild_member_resource(consumer) do
       {:ok, resource} ->
         # Extract user_id from member struct
@@ -49,12 +51,11 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
 
   @spec update(
           consumer :: module(),
-          {guild_id :: integer(), old_member :: Nostrum.Struct.Guild.Member.t() | nil,
-           new_member :: Nostrum.Struct.Guild.Member.t()},
+          member_update :: Payloads.GuildMemberUpdate.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def update(consumer, {guild_id, _old_member, member}, _ws_state, _context) do
+  def update(consumer, %Payloads.GuildMemberUpdate{guild_id: guild_id, new_member: member}, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_guild_member_resource(consumer) do
       {:ok, resource} ->
         user_discord_id = member.user_id
@@ -92,11 +93,11 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
 
   @spec remove(
           consumer :: module(),
-          {guild_id :: integer(), old_member :: Nostrum.Struct.Guild.Member.t()},
+          member_remove :: Payloads.GuildMemberRemove.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def remove(consumer, {guild_id, member}, _ws_state, _context) do
+  def remove(consumer, %Payloads.GuildMemberRemove{guild_id: guild_id, member: member}, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_guild_member_resource(consumer) do
       {:ok, resource} ->
         user_discord_id = member.user_id

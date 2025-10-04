@@ -2,20 +2,22 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
   require Logger
   require Ash.Query
 
+  alias AshDiscord.Consumer.Payloads
+
   @spec add(
           consumer :: module(),
-          data :: Nostrum.Struct.Event.MessageReactionAdd.t(),
+          reaction_add :: Payloads.MessageReactionAddEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def add(consumer, data, _ws_state, _context) do
+  def add(consumer, reaction_add, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_message_reaction_resource(consumer) do
       {:ok, resource} ->
         resource
         |> Ash.Changeset.for_create(
           :from_discord,
           %{
-            data: data
+            data: reaction_add
           },
           context: %{
             private: %{ash_discord?: true},
@@ -34,11 +36,11 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
 
   @spec remove(
           consumer :: module(),
-          data :: Nostrum.Struct.Event.MessageReactionRemove.t(),
+          reaction_remove :: Payloads.MessageReactionRemoveEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def remove(consumer, %Nostrum.Struct.Event.MessageReactionRemove{} = data, _ws_state, _context) do
+  def remove(consumer, reaction_remove, _ws_state, _context) do
     Logger.info("AshDiscord: Message reaction removal requested")
 
     case AshDiscord.Consumer.Info.ash_discord_consumer_message_reaction_resource(consumer) do
@@ -46,10 +48,10 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
         Logger.info("AshDiscord: Found message reaction resource: #{inspect(resource)}")
 
         # Find and destroy the reaction based on user_id, message_id, emoji_name, and emoji_id
-        user_id = data.user_id
-        message_id = data.message_id
-        emoji_name = data.emoji.name
-        emoji_id = data.emoji.id
+        user_id = reaction_remove.user_id
+        message_id = reaction_remove.message_id
+        emoji_name = reaction_remove.emoji.name
+        emoji_id = reaction_remove.emoji.id
 
         Logger.info(
           "AshDiscord: Looking for reaction with user_id=#{user_id}, message_id=#{message_id}, emoji_name=#{emoji_name}, emoji_id=#{inspect(emoji_id)}"
@@ -98,22 +100,22 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
     end
   end
 
-  @spec all(
+  @spec remove_all(
           consumer :: module(),
-          data :: Nostrum.Struct.Event.MessageReactionRemoveAll.t(),
+          reaction_remove_all :: Payloads.MessageReactionRemoveAllEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def all(consumer, data, _ws_state, _context) do
+  def remove_all(consumer, reaction_remove_all, _ws_state, _context) do
     Logger.info("AshDiscord: Message reaction remove all requested")
 
     case AshDiscord.Consumer.Info.ash_discord_consumer_message_reaction_resource(consumer) do
       {:ok, resource} ->
         Logger.info("AshDiscord: Found message reaction resource: #{inspect(resource)}")
 
-        # Get the message_id from the data
+        # Get the message_id from the reaction_remove_all
         # Note: MessageReactionRemoveAll doesn't have emoji field, it removes ALL reactions
-        message_id = Map.get(data, :message_id)
+        message_id = reaction_remove_all.message_id
         emoji_name = nil
         emoji_id = nil
 
@@ -193,13 +195,13 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
     end
   end
 
-  @spec emoji(
+  @spec remove_emoji(
           consumer :: module(),
-          data :: Nostrum.Struct.Event.MessageReactionRemoveEmoji.t(),
+          reaction_remove_emoji :: Payloads.MessageReactionRemoveEmojiEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def emoji(_consumer, _data, _ws_state, _context) do
+  def remove_emoji(_consumer, _reaction_remove_emoji, _ws_state, _context) do
     :ok
   end
 end

@@ -1,13 +1,15 @@
 defmodule AshDiscord.Consumer.Handler.Guild.Role do
   require Logger
 
+  alias AshDiscord.Consumer.Payloads
+
   @spec create(
           consumer :: module(),
-          {guild_id :: integer(), new_role :: Nostrum.Struct.Guild.Role.t()},
+          role_create :: Payloads.GuildRoleCreate.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def create(consumer, {guild_id, role}, _ws_state, _context) do
+  def create(consumer, %Payloads.GuildRoleCreate{guild_id: guild_id, role: role}, _ws_state, _context) do
     with {:ok, resource} <-
            AshDiscord.Consumer.Info.ash_discord_consumer_role_resource(consumer),
          {:ok, _role} <-
@@ -39,12 +41,11 @@ defmodule AshDiscord.Consumer.Handler.Guild.Role do
 
   @spec update(
           consumer :: module(),
-          {guild_id :: integer(), old_role :: Nostrum.Struct.Guild.Role.t() | nil,
-           new_role :: Nostrum.Struct.Guild.Role.t()},
+          role_update :: Payloads.GuildRoleUpdate.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def update(consumer, {guild_id, _old_role, role}, _ws_state, _context) do
+  def update(consumer, %Payloads.GuildRoleUpdate{guild_id: guild_id, new_role: role}, _ws_state, _context) do
     Logger.debug("AshDiscord: Handling guild role update for role #{role.id}")
 
     with {:ok, resource} <-
@@ -78,11 +79,11 @@ defmodule AshDiscord.Consumer.Handler.Guild.Role do
 
   @spec delete(
           consumer :: module(),
-          {guild_id :: integer(), old_role :: Nostrum.Struct.Guild.Role.t()},
+          role_delete :: Payloads.GuildRoleDelete.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def delete(_consumer, _data, _ws_state, _context) do
+  def delete(_consumer, _role_delete, _ws_state, _context) do
     # Role deletion not yet implemented
     # TODO: Implement role deletion when needed
     :ok

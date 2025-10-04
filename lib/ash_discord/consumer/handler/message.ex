@@ -2,8 +2,10 @@ defmodule AshDiscord.Consumer.Handler.Message do
   require Logger
   require Ash.Query
 
+  alias AshDiscord.Consumer.Payloads
+
   @spec create(
-          message :: AshDiscord.Consumer.Payload.message_create(),
+          message :: Payloads.Message.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
@@ -46,11 +48,11 @@ defmodule AshDiscord.Consumer.Handler.Message do
   end
 
   @spec update(
-          message_data :: AshDiscord.Consumer.Payload.message_update(),
+          message_update :: Payloads.MessageUpdate.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def update({_old_message, message}, _ws_state, context) do
+  def update(%Payloads.MessageUpdate{updated_message: message}, _ws_state, context) do
     consumer = context.consumer
 
     case AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(consumer) do
@@ -81,11 +83,11 @@ defmodule AshDiscord.Consumer.Handler.Message do
   end
 
   @spec delete(
-          data :: Nostrum.Struct.Event.MessageDelete.t(),
+          message_delete :: Payloads.MessageDeleteEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def delete(data, _ws_state, context) do
+  def delete(message_delete, _ws_state, context) do
     consumer = context.consumer
 
     case AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(consumer) do
@@ -95,7 +97,7 @@ defmodule AshDiscord.Consumer.Handler.Message do
         # Delete the message by discord_id
         query =
           message_resource
-          |> Ash.Query.filter(discord_id: data.id)
+          |> Ash.Query.filter(discord_id: message_delete.id)
 
         case Ash.bulk_destroy(query, :destroy, %{},
                context: %{
@@ -107,7 +109,7 @@ defmodule AshDiscord.Consumer.Handler.Message do
             :ok
 
           result ->
-            Logger.error("Failed to delete message #{data.id}: #{inspect(result)}")
+            Logger.error("Failed to delete message #{message_delete.id}: #{inspect(result)}")
             :ok
         end
 
@@ -117,25 +119,25 @@ defmodule AshDiscord.Consumer.Handler.Message do
     end
   end
 
-  @spec bulk(
-          data :: Nostrum.Struct.Event.MessageDeleteBulk.t(),
+  @spec delete_bulk(
+          message_delete_bulk :: Payloads.MessageDeleteBulkEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def bulk(data, _ws_state, context) do
+  def delete_bulk(message_delete_bulk, _ws_state, context) do
     consumer = context.consumer
 
     case AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(consumer) do
       {:ok, message_resource} ->
         # Handle empty IDs list gracefully
-        if data.ids == [] do
+        if message_delete_bulk.ids == [] do
           :ok
         else
           # Delete all messages by discord_id
           # We need to build a filter that checks if discord_id is in the list
           query =
             message_resource
-            |> Ash.Query.filter(discord_id in ^data.ids)
+            |> Ash.Query.filter(discord_id in ^message_delete_bulk.ids)
 
           case Ash.bulk_destroy(query, :destroy, %{},
                  context: %{

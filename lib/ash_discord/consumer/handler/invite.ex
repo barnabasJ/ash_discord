@@ -2,13 +2,15 @@ defmodule AshDiscord.Consumer.Handler.Invite do
   require Logger
   require Ash.Query
 
+  alias AshDiscord.Consumer.Payloads
+
   @spec create(
           consumer :: module(),
-          invite :: map(),
+          invite_create :: Payloads.InviteCreateEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def create(consumer, invite, _ws_state, _context) do
+  def create(consumer, %Payloads.InviteCreateEvent{invite: invite}, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_invite_resource(consumer) do
       {:ok, resource} ->
         case resource
@@ -40,17 +42,17 @@ defmodule AshDiscord.Consumer.Handler.Invite do
 
   @spec delete(
           consumer :: module(),
-          invite_data :: map(),
+          invite_delete :: Payloads.InviteDeleteEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def delete(consumer, invite_data, _ws_state, _context) do
+  def delete(consumer, %Payloads.InviteDeleteEvent{code: code}, _ws_state, _context) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_invite_resource(consumer) do
       {:ok, resource} ->
         # Try to find and delete the invite by code
         case resource
              |> Ash.Query.for_read(:read)
-             |> Ash.Query.filter(code: invite_data.code)
+             |> Ash.Query.filter(code: code)
              |> Ash.Query.set_context(%{
                private: %{ash_discord?: true},
                shared: %{private: %{ash_discord?: true}}
@@ -68,7 +70,7 @@ defmodule AshDiscord.Consumer.Handler.Invite do
             end
 
           {:ok, nil} ->
-            Logger.warning("AshDiscord: Invite not found for deletion: #{invite_data.code}")
+            Logger.warning("AshDiscord: Invite not found for deletion: #{code}")
             :ok
 
           {:error, error} ->

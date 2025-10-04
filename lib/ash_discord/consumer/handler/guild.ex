@@ -2,8 +2,10 @@ defmodule AshDiscord.Consumer.Handler.Guild do
   require Logger
   require Ash.Query
 
+  alias AshDiscord.Consumer.Payloads
+
   @spec create(
-          new_guild :: Nostrum.Struct.Guild.t(),
+          new_guild :: Payloads.Guild.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
@@ -48,14 +50,11 @@ defmodule AshDiscord.Consumer.Handler.Guild do
   end
 
   @spec update(
-          {
-            old_guild :: Nostrum.Struct.Guild.t(),
-            new_guild :: Nostrum.Struct.Guild.t()
-          },
+          guild_update :: Payloads.GuildUpdate.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def update({_old_guild, new_guild}, _ws_state, context) do
+  def update(%Payloads.GuildUpdate{new_guild: new_guild}, _ws_state, context) do
     case context.resource
          |> Ash.Changeset.for_create(:from_discord, %{
            data: new_guild
@@ -79,14 +78,11 @@ defmodule AshDiscord.Consumer.Handler.Guild do
   end
 
   @spec delete(
-          {
-            old_guild :: Nostrum.Struct.Guild.t(),
-            unavailable :: boolean()
-          },
+          guild_delete :: Payloads.GuildDelete.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
-  def delete({old_guild, unavailable}, _ws_state, context) do
+  def delete(%Payloads.GuildDelete{guild: old_guild, unavailable: unavailable}, _ws_state, context) do
     case unavailable do
       unavailable when unavailable in [nil, false] ->
         # Permanent deletion - unavailable=nil or false means guild was actually deleted
@@ -123,7 +119,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
   end
 
   @spec available(
-          new_guild :: Nostrum.Struct.Guild.t(),
+          guild :: Payloads.Guild.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()
@@ -133,7 +129,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
   end
 
   @spec unavailable(
-          unavailable_guild :: Nostrum.Struct.Guild.UnavailableGuild.t(),
+          guild :: Payloads.Guild.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: any()

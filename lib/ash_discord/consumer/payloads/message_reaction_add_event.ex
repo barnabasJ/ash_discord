@@ -34,8 +34,11 @@ defmodule AshDiscord.Consumer.Payloads.MessageReactionAddEvent do
   Accepts a `Nostrum.Struct.Event.MessageReactionAdd.t()` and creates an AshDiscord MessageReactionAddEvent TypedStruct.
   If already a MessageReactionAddEvent struct, returns it as-is.
   """
+  # TODO: This clause shouldn't be necessary - Ash's type system should handle this.
+  # When we pass %MessageReactionAddEvent{} to Ash.Changeset.for_create(..., %{data: event}),
+  # Ash calls cast_input/2 which calls .new() again. This should be a no-op for
+  # already-typed data. Investigate if Ash.TypedStruct can handle this automatically.
   def new(%__MODULE__{} = event) do
-    # Already converted, return as-is
     {:ok, event}
   end
 

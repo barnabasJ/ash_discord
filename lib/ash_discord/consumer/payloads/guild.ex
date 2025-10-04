@@ -86,8 +86,11 @@ defmodule AshDiscord.Consumer.Payloads.Guild do
   Accepts a `Nostrum.Struct.Guild.t()` and creates an AshDiscord Guild TypedStruct.
   If already a Payloads.Guild struct, returns it as-is.
   """
+  # TODO: This clause shouldn't be necessary - Ash's type system should handle this.
+  # When we pass %Payloads.Guild{} to Ash.Changeset.for_create(..., %{data: guild}),
+  # Ash calls cast_input/2 which calls .new() again. This should be a no-op for
+  # already-typed data. Investigate if Ash.TypedStruct can handle this automatically.
   def new(%__MODULE__{} = guild) do
-    # Already converted, return as-is
     {:ok, guild}
   end
 

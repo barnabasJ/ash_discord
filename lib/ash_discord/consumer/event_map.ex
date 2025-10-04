@@ -138,7 +138,8 @@ defmodule AshDiscord.Consumer.EventMap do
       {AshDiscord.Consumer.Handler.Interaction, :create, :interaction_resource, :handle_interaction_create, AshDiscord.Consumer.Payloads.Interaction}
   """
   @spec handler_for(event()) ::
-          {handler_module(), handler_function(), resource_type(), callback_name(), payload_module()}
+          {handler_module(), handler_function(), resource_type(), callback_name(),
+           payload_module()}
   alias AshDiscord.Consumer.Payloads
 
   def handler_for(:CHANNEL_CREATE),
@@ -290,4 +291,209 @@ defmodule AshDiscord.Consumer.EventMap do
     do:
       {AshDiscord.Consumer.Handler.Voice, :update, :voice_state_resource,
        :handle_voice_state_update, Payloads.VoiceStateEvent}
+
+  # TODO: Implement auto moderation handlers
+  def handler_for(:AUTO_MODERATION_RULE_CREATE),
+    do:
+      {AshDiscord.Consumer.Handler.Auto.Moderation.Rule, :create, :auto_moderation_rule_resource,
+       :handle_auto_moderation_rule_create, Payloads.AutoModerationRule}
+
+  def handler_for(:AUTO_MODERATION_RULE_DELETE),
+    do:
+      {AshDiscord.Consumer.Handler.Auto.Moderation.Rule, :delete, :auto_moderation_rule_resource,
+       :handle_auto_moderation_rule_delete, Payloads.AutoModerationRule}
+
+  def handler_for(:AUTO_MODERATION_RULE_UPDATE),
+    do:
+      {AshDiscord.Consumer.Handler.Auto.Moderation.Rule, :update, :auto_moderation_rule_resource,
+       :handle_auto_moderation_rule_update, Payloads.AutoModerationRule}
+
+  def handler_for(:AUTO_MODERATION_RULE_EXECUTE),
+    do:
+      {AshDiscord.Consumer.Handler.Auto.Moderation.Rule, :execute, :auto_moderation_rule_resource,
+       :handle_auto_moderation_rule_execute, Payloads.AutoModerationRuleExecute}
+
+  # TODO: Implement channel pins handlers
+  def handler_for(:CHANNEL_PINS_ACK),
+    do:
+      {AshDiscord.Consumer.Handler.Channel.Pins, :ack, :channel_resource,
+       :handle_channel_pins_ack, Payloads.ChannelPinsAck}
+
+  def handler_for(:CHANNEL_PINS_UPDATE),
+    do:
+      {AshDiscord.Consumer.Handler.Channel.Pins, :update, :channel_resource,
+       :handle_channel_pins_update, Payloads.ChannelPinsUpdate}
+
+  # TODO: Implement guild audit log handler
+  def handler_for(:GUILD_AUDIT_LOG_ENTRY_CREATE),
+    do:
+      {AshDiscord.Consumer.Handler.Guild.Audit.Log.Entry, :create,
+       :guild_audit_log_entry_resource, :handle_guild_audit_log_entry_create,
+       Payloads.GuildAuditLogEntryCreate}
+
+  # TODO: Implement guild ban handlers
+  def handler_for(:GUILD_BAN_ADD),
+    do:
+      {AshDiscord.Consumer.Handler.Guild.Ban, :add, :guild_ban_resource, :handle_guild_ban_add,
+       Payloads.GuildBanAdd}
+
+  def handler_for(:GUILD_BAN_REMOVE),
+    do:
+      {AshDiscord.Consumer.Handler.Guild.Ban, :remove, :guild_ban_resource,
+       :handle_guild_ban_remove, Payloads.GuildBanRemove}
+
+  # TODO: Implement guild emojis handler
+  def handler_for(:GUILD_EMOJIS_UPDATE),
+    do:
+      {AshDiscord.Consumer.Handler.Guild.Emojis, :update, :guild_emoji_resource,
+       :handle_guild_emojis_update, Payloads.GuildEmojisUpdate}
+
+  # TODO: Implement guild stickers handler
+  def handler_for(:GUILD_STICKERS_UPDATE),
+    do:
+      {AshDiscord.Consumer.Handler.Guild.Stickers, :update, :guild_sticker_resource,
+       :handle_guild_stickers_update, Payloads.GuildStickersUpdate}
+
+  # TODO: Implement guild integrations update handler
+  def handler_for(:GUILD_INTEGRATIONS_UPDATE),
+    do:
+      {AshDiscord.Consumer.Handler.Guild.Integrations, :update, :guild_integration_resource,
+       :handle_guild_integrations_update, Payloads.GuildIntegrationsUpdate}
+
+  # TODO: Implement guild members chunk handler
+  def handler_for(:GUILD_MEMBERS_CHUNK),
+    do:
+      {AshDiscord.Consumer.Handler.Guild.Members, :chunk, :guild_member_resource,
+       :handle_guild_members_chunk, Payloads.GuildMembersChunk}
+
+  # TODO: Implement guild scheduled event handlers
+  def handler_for(:GUILD_SCHEDULED_EVENT_CREATE),
+    do:
+      {AshDiscord.Consumer.Handler.Guild.ScheduledEvent, :create, :guild_scheduled_event_resource,
+       :handle_guild_scheduled_event_create, Payloads.GuildScheduledEvent}
+
+  def handler_for(:GUILD_SCHEDULED_EVENT_DELETE),
+    do:
+      {AshDiscord.Consumer.Handler.Guild.ScheduledEvent, :delete, :guild_scheduled_event_resource,
+       :handle_guild_scheduled_event_delete, Payloads.GuildScheduledEvent}
+
+  def handler_for(:GUILD_SCHEDULED_EVENT_UPDATE),
+    do:
+      {AshDiscord.Consumer.Handler.Guild.ScheduledEvent, :update, :guild_scheduled_event_resource,
+       :handle_guild_scheduled_event_update, Payloads.GuildScheduledEvent}
+
+  def handler_for(:GUILD_SCHEDULED_EVENT_USER_ADD),
+    do:
+      {AshDiscord.Consumer.Handler.Guild.ScheduledEvent, :user_add,
+       :guild_scheduled_event_resource, :handle_guild_scheduled_event_user_add,
+       Payloads.GuildScheduledEventUserAdd}
+
+  def handler_for(:GUILD_SCHEDULED_EVENT_USER_REMOVE),
+    do:
+      {AshDiscord.Consumer.Handler.Guild.ScheduledEvent, :user_remove,
+       :guild_scheduled_event_resource, :handle_guild_scheduled_event_user_remove,
+       Payloads.GuildScheduledEventUserRemove}
+
+  # TODO: Implement integration handlers
+  def handler_for(:INTEGRATION_CREATE),
+    do:
+      {AshDiscord.Consumer.Handler.Integration, :create, :integration_resource,
+       :handle_integration_create, Payloads.Integration}
+
+  def handler_for(:INTEGRATION_DELETE),
+    do:
+      {AshDiscord.Consumer.Handler.Integration, :delete, :integration_resource,
+       :handle_integration_delete, Payloads.IntegrationDelete}
+
+  def handler_for(:INTEGRATION_UPDATE),
+    do:
+      {AshDiscord.Consumer.Handler.Integration, :update, :integration_resource,
+       :handle_integration_update, Payloads.Integration}
+
+  # TODO: Implement message reaction remove emoji handler
+  def handler_for(:MESSAGE_REACTION_REMOVE_EMOJI),
+    do:
+      {AshDiscord.Consumer.Handler.Reaction, :remove_emoji, :message_reaction_resource,
+       :handle_message_reaction_remove_emoji, Payloads.MessageReactionRemoveEmoji}
+
+  # TODO: Implement message ack handler
+  def handler_for(:MESSAGE_ACK),
+    do:
+      {AshDiscord.Consumer.Handler.Message, :ack, :message_resource, :handle_message_ack,
+       Payloads.MessageAck}
+
+  # TODO: Implement message poll vote handlers
+  def handler_for(:MESSAGE_POLL_VOTE_ADD),
+    do:
+      {AshDiscord.Consumer.Handler.Message.Poll.Vote, :add, :message_poll_vote_resource,
+       :handle_message_poll_vote_add, Payloads.MessagePollVoteAdd}
+
+  def handler_for(:MESSAGE_POLL_VOTE_REMOVE),
+    do:
+      {AshDiscord.Consumer.Handler.Message.Poll.Vote, :remove, :message_poll_vote_resource,
+       :handle_message_poll_vote_remove, Payloads.MessagePollVoteRemove}
+
+  # TODO: Implement resumed handler
+  def handler_for(:RESUMED),
+    do:
+      {AshDiscord.Consumer.Handler.Resumed, :handle, :resumed_resource, :handle_resumed,
+       Payloads.Resumed}
+
+  # TODO: Implement thread handlers
+  def handler_for(:THREAD_CREATE),
+    do:
+      {AshDiscord.Consumer.Handler.Thread, :create, :thread_resource, :handle_thread_create,
+       Payloads.Thread}
+
+  def handler_for(:THREAD_DELETE),
+    do:
+      {AshDiscord.Consumer.Handler.Thread, :delete, :thread_resource, :handle_thread_delete,
+       Payloads.ThreadDelete}
+
+  def handler_for(:THREAD_UPDATE),
+    do:
+      {AshDiscord.Consumer.Handler.Thread, :update, :thread_resource, :handle_thread_update,
+       Payloads.ThreadUpdate}
+
+  def handler_for(:THREAD_LIST_SYNC),
+    do:
+      {AshDiscord.Consumer.Handler.Thread, :list_sync, :thread_resource, :handle_thread_list_sync,
+       Payloads.ThreadListSync}
+
+  def handler_for(:THREAD_MEMBER_UPDATE),
+    do:
+      {AshDiscord.Consumer.Handler.Thread.Member, :update, :thread_member_resource,
+       :handle_thread_member_update, Payloads.ThreadMember}
+
+  def handler_for(:THREAD_MEMBERS_UPDATE),
+    do:
+      {AshDiscord.Consumer.Handler.Thread.Members, :update, :thread_members_resource,
+       :handle_thread_members_update, Payloads.ThreadMembersUpdate}
+
+  # TODO: Implement voice handlers (already have voice.ex but missing these functions)
+  def handler_for(:VOICE_READY),
+    do:
+      {AshDiscord.Consumer.Handler.Voice, :ready, :voice_state_resource, :handle_voice_ready,
+       Payloads.VoiceReady}
+
+  def handler_for(:VOICE_SPEAKING_UPDATE),
+    do:
+      {AshDiscord.Consumer.Handler.Voice, :speaking, :voice_state_resource,
+       :handle_voice_speaking_update, Payloads.VoiceSpeakingUpdate}
+
+  def handler_for(:VOICE_INCOMING_PACKET),
+    do:
+      {AshDiscord.Consumer.Handler.Voice, :incoming, :voice_state_resource,
+       :handle_voice_incoming_packet, Payloads.VoiceIncomingPacket}
+
+  def handler_for(:VOICE_SERVER_UPDATE),
+    do:
+      {AshDiscord.Consumer.Handler.Voice, :server, :voice_state_resource,
+       :handle_voice_server_update, Payloads.VoiceServerUpdate}
+
+  # TODO: Implement webhooks handler
+  def handler_for(:WEBHOOKS_UPDATE),
+    do:
+      {AshDiscord.Consumer.Handler.Webhooks, :update, :webhooks_resource, :handle_webhooks_update,
+       Payloads.WebhooksUpdate}
 end

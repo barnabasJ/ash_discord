@@ -114,6 +114,12 @@ defmodule TestApp.Discord.MessageReaction do
         description: "Discord message reaction TypedStruct data"
       )
 
+      argument(:identity, :map,
+        allow_nil?: true,
+        description:
+          "Map with channel_id, message_id, emoji_name, emoji_id (optional), and user_id for API fallback"
+      )
+
       change(AshDiscord.Changes.FromDiscord.MessageReaction)
 
       upsert?(true)

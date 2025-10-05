@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.ChannelPinsUpdateEvent do
   TypedStruct wrapper for Discord CHANNEL_PINS_UPDATE event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.ChannelPinsUpdate.t()`.
+
+  ## References
+  - [Discord API - Channel Pins Update Event](https://discord.com/developers/docs/topics/gateway-events#channel-pins-update)
+  - [Nostrum - Event.ChannelPinsUpdate](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.ChannelPinsUpdate.html)
   """
 
   use Ash.TypedStruct

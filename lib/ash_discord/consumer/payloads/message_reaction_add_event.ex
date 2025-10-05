@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.MessageReactionAddEvent do
   TypedStruct wrapper for Discord MESSAGE_REACTION_ADD event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.MessageReactionAdd.t()`.
+
+  ## References
+  - [Discord API - Message Reaction Add Event](https://discord.com/developers/docs/topics/gateway-events#message-reaction-add)
+  - [Nostrum - Event.MessageReactionAdd](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.MessageReactionAdd.html)
   """
 
   use Ash.TypedStruct

@@ -4,6 +4,10 @@ defmodule AshDiscord.Consumer.Payloads.VoiceState do
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.VoiceState.t()`.
   This is an alias to VoiceStateEvent for consistency with other payload types.
+
+  ## References
+  - [Discord API - Voice State](https://discord.com/developers/docs/resources/voice#voice-state-object)
+  - [Nostrum - Event.VoiceState](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.VoiceState.html)
   """
 
   use Ash.TypedStruct

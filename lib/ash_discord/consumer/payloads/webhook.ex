@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.Webhook do
   TypedStruct wrapper for Discord Webhook data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Webhook.t()`.
+
+  ## References
+  - [Discord API - Webhook](https://discord.com/developers/docs/resources/webhook#webhook-object)
+  - [Nostrum - Webhook](https://hexdocs.pm/nostrum/Nostrum.Struct.Webhook.html)
   """
 
   use Ash.TypedStruct

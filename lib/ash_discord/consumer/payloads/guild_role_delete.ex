@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.GuildRoleDelete do
   TypedStruct for Discord GUILD_ROLE_DELETE event payload.
 
   Contains guild ID and deleted role data.
+
+  ## References
+  - [Discord API - Guild Role Delete Event](https://discord.com/developers/docs/topics/gateway-events#guild-role-delete)
+  - [Nostrum - Guild.Role](https://hexdocs.pm/nostrum/Nostrum.Struct.Guild.Role.html)
   """
 
   use Ash.TypedStruct

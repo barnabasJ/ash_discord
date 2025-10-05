@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.UserUpdate do
   TypedStruct for Discord USER_UPDATE event payload.
 
   Contains old and new user data.
+
+  ## References
+  - [Discord API - User Update Event](https://discord.com/developers/docs/topics/gateway-events#user-update)
+  - [Nostrum - User](https://hexdocs.pm/nostrum/Nostrum.Struct.User.html)
   """
 
   use Ash.TypedStruct

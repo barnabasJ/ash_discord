@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.MessageReactionRemoveEmojiEvent do
   TypedStruct wrapper for Discord MESSAGE_REACTION_REMOVE_EMOJI event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.MessageReactionRemoveEmoji.t()`.
+
+  ## References
+  - [Discord API - Message Reaction Remove Emoji Event](https://discord.com/developers/docs/topics/gateway-events#message-reaction-remove-emoji)
+  - [Nostrum - Event.MessageReactionRemoveEmoji](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.MessageReactionRemoveEmoji.html)
   """
 
   use Ash.TypedStruct

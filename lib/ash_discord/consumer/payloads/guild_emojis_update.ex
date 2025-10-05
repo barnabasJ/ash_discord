@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.GuildEmojisUpdate do
   TypedStruct for Discord GUILD_EMOJIS_UPDATE event payload.
 
   Contains guild ID and old/new emoji lists.
+
+  ## References
+  - [Discord API - Guild Emojis Update Event](https://discord.com/developers/docs/topics/gateway-events#guild-emojis-update)
+  - [Nostrum - Emoji](https://hexdocs.pm/nostrum/Nostrum.Struct.Emoji.html)
   """
 
   use Ash.TypedStruct

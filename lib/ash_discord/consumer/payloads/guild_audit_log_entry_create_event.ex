@@ -3,6 +3,9 @@ defmodule AshDiscord.Consumer.Payloads.GuildAuditLogEntryCreateEvent do
   TypedStruct wrapper for Discord GUILD_AUDIT_LOG_ENTRY_CREATE event data.
 
   Wraps map() to provide a unified AshDiscord type.
+
+  ## References
+  - [Discord API - Guild Audit Log Entry Create Event](https://discord.com/developers/docs/topics/gateway-events#guild-audit-log-entry-create)
   """
 
   use Ash.TypedStruct

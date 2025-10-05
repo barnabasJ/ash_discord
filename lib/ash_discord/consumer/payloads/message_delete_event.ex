@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.MessageDeleteEvent do
   TypedStruct wrapper for Discord MESSAGE_DELETE event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.MessageDelete.t()`.
+
+  ## References
+  - [Discord API - Message Delete Event](https://discord.com/developers/docs/topics/gateway-events#message-delete)
+  - [Nostrum - Event.MessageDelete](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.MessageDelete.html)
   """
 
   use Ash.TypedStruct

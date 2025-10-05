@@ -3,6 +3,9 @@ defmodule AshDiscord.Consumer.Payloads.VoiceIncomingPacket do
   TypedStruct wrapper for Discord voice incoming packet data.
 
   Wraps binary packet data to provide a unified AshDiscord type.
+
+  ## References
+  - [Discord API - Voice](https://discord.com/developers/docs/topics/voice-connections)
   """
 
   use Ash.TypedStruct

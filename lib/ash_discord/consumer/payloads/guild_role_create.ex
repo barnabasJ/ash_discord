@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.GuildRoleCreate do
   TypedStruct for Discord GUILD_ROLE_CREATE event payload.
 
   Contains guild ID and new role data.
+
+  ## References
+  - [Discord API - Guild Role Create Event](https://discord.com/developers/docs/topics/gateway-events#guild-role-create)
+  - [Nostrum - Guild.Role](https://hexdocs.pm/nostrum/Nostrum.Struct.Guild.Role.html)
   """
 
   use Ash.TypedStruct

@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.ThreadMember do
   TypedStruct wrapper for Discord ThreadMember data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.ThreadMember.t()`.
+
+  ## References
+  - [Discord API - Thread Member](https://discord.com/developers/docs/resources/channel#thread-member-object)
+  - [Nostrum - ThreadMember](https://hexdocs.pm/nostrum/Nostrum.Struct.ThreadMember.html)
   """
 
   use Ash.TypedStruct

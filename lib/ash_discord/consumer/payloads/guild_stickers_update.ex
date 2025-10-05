@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.GuildStickersUpdate do
   TypedStruct for Discord GUILD_STICKERS_UPDATE event payload.
 
   Contains guild ID and old/new sticker lists.
+
+  ## References
+  - [Discord API - Guild Stickers Update Event](https://discord.com/developers/docs/topics/gateway-events#guild-stickers-update)
+  - [Nostrum - Sticker](https://hexdocs.pm/nostrum/Nostrum.Struct.Sticker.html)
   """
 
   use Ash.TypedStruct

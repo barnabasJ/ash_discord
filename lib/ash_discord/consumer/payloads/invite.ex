@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.Invite do
   TypedStruct wrapper for Discord Invite data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Invite.t()`.
+
+  ## References
+  - [Discord API - Invite](https://discord.com/developers/docs/resources/invite#invite-object)
+  - [Nostrum - Invite](https://hexdocs.pm/nostrum/Nostrum.Struct.Invite.html)
   """
 
   use Ash.TypedStruct

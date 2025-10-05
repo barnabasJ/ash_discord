@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.InviteCreateEvent do
   TypedStruct wrapper for Discord INVITE_CREATE event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.InviteCreate.t()`.
+
+  ## References
+  - [Discord API - Invite Create Event](https://discord.com/developers/docs/topics/gateway-events#invite-create)
+  - [Nostrum - Event.InviteCreate](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.InviteCreate.html)
   """
 
   use Ash.TypedStruct

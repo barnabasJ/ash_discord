@@ -3,6 +3,9 @@ defmodule AshDiscord.Consumer.Payloads.PresenceUpdate do
   TypedStruct for Discord PRESENCE_UPDATE event payload.
 
   Contains guild ID and old/new presence data.
+
+  ## References
+  - [Discord API - Presence Update Event](https://discord.com/developers/docs/topics/gateway-events#presence-update)
   """
 
   use Ash.TypedStruct

@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.InviteDeleteEvent do
   TypedStruct wrapper for Discord INVITE_DELETE event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.InviteDelete.t()`.
+
+  ## References
+  - [Discord API - Invite Delete Event](https://discord.com/developers/docs/topics/gateway-events#invite-delete)
+  - [Nostrum - Event.InviteDelete](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.InviteDelete.html)
   """
 
   use Ash.TypedStruct

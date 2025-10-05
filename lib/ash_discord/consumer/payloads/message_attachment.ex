@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.MessageAttachment do
   TypedStruct wrapper for Discord Message Attachment data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Message.Attachment.t()`.
+
+  ## References
+  - [Discord API - Attachment](https://discord.com/developers/docs/resources/message#attachment-object)
+  - [Nostrum - Message.Attachment](https://hexdocs.pm/nostrum/Nostrum.Struct.Message.Attachment.html)
   """
 
   use Ash.TypedStruct

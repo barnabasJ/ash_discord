@@ -3,6 +3,9 @@ defmodule AshDiscord.Consumer.Payloads.WebhooksUpdateEvent do
   TypedStruct wrapper for Discord WEBHOOKS_UPDATE event data.
 
   Wraps map() to provide a unified AshDiscord type.
+
+  ## References
+  - [Discord API - Webhooks Update Event](https://discord.com/developers/docs/topics/gateway-events#webhooks-update)
   """
 
   use Ash.TypedStruct

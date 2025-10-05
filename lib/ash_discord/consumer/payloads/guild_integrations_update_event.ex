@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.GuildIntegrationsUpdateEvent do
   TypedStruct wrapper for Discord GUILD_INTEGRATIONS_UPDATE event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.GuildIntegrationsUpdate.t()`.
+
+  ## References
+  - [Discord API - Guild Integrations Update Event](https://discord.com/developers/docs/topics/gateway-events#guild-integrations-update)
+  - [Nostrum - Event.GuildIntegrationsUpdate](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.GuildIntegrationsUpdate.html)
   """
 
   use Ash.TypedStruct

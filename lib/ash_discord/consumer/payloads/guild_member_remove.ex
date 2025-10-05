@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.GuildMemberRemove do
   TypedStruct for Discord GUILD_MEMBER_REMOVE event payload.
 
   Contains guild ID and member data of the removed member.
+
+  ## References
+  - [Discord API - Guild Member Remove Event](https://discord.com/developers/docs/topics/gateway-events#guild-member-remove)
+  - [Nostrum - Guild.Member](https://hexdocs.pm/nostrum/Nostrum.Struct.Guild.Member.html)
   """
 
   use Ash.TypedStruct

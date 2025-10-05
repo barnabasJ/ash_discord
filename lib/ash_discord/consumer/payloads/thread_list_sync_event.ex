@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.ThreadListSyncEvent do
   TypedStruct wrapper for Discord THREAD_LIST_SYNC event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.ThreadListSync.t()`.
+
+  ## References
+  - [Discord API - Thread List Sync Event](https://discord.com/developers/docs/topics/gateway-events#thread-list-sync)
+  - [Nostrum - Event.ThreadListSync](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.ThreadListSync.html)
   """
 
   use Ash.TypedStruct

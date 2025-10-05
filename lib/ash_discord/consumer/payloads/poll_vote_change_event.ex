@@ -3,6 +3,11 @@ defmodule AshDiscord.Consumer.Payloads.PollVoteChangeEvent do
   TypedStruct wrapper for Discord MESSAGE_POLL_VOTE_ADD/REMOVE event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.PollVoteChange.t()`.
+
+  ## References
+  - [Discord API - Message Poll Vote Add Event](https://discord.com/developers/docs/topics/gateway-events#message-poll-vote-add)
+  - [Discord API - Message Poll Vote Remove Event](https://discord.com/developers/docs/topics/gateway-events#message-poll-vote-remove)
+  - [Nostrum - Event.PollVoteChange](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.PollVoteChange.html)
   """
 
   use Ash.TypedStruct

@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.ChannelUpdate do
   TypedStruct for Discord CHANNEL_UPDATE event payload.
 
   Contains old and new channel data.
+
+  ## References
+  - [Discord API - Channel Update Event](https://discord.com/developers/docs/topics/gateway-events#channel-update)
+  - [Nostrum - Channel](https://hexdocs.pm/nostrum/Nostrum.Struct.Channel.html)
   """
 
   use Ash.TypedStruct

@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.Message do
   TypedStruct wrapper for Discord Message data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Message.t()`.
+
+  ## References
+  - [Discord API - Message](https://discord.com/developers/docs/resources/message#message-object)
+  - [Nostrum - Message](https://hexdocs.pm/nostrum/Nostrum.Struct.Message.html)
   """
 
   use Ash.TypedStruct

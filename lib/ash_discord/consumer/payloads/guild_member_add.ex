@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.GuildMemberAdd do
   TypedStruct for Discord GUILD_MEMBER_ADD event payload.
 
   Contains guild ID and new member data.
+
+  ## References
+  - [Discord API - Guild Member Add Event](https://discord.com/developers/docs/topics/gateway-events#guild-member-add)
+  - [Nostrum - Guild.Member](https://hexdocs.pm/nostrum/Nostrum.Struct.Guild.Member.html)
   """
 
   use Ash.TypedStruct

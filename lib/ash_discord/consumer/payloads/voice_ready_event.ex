@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.VoiceReadyEvent do
   TypedStruct wrapper for Discord VOICE_READY event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.VoiceReady.t()`.
+
+  ## References
+  - [Discord API - Voice](https://discord.com/developers/docs/topics/voice-connections)
+  - [Nostrum - Event.VoiceReady](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.VoiceReady.html)
   """
 
   use Ash.TypedStruct

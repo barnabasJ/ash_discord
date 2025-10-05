@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.GuildIntegrationDeleteEvent do
   TypedStruct wrapper for Discord GUILD_INTEGRATION_DELETE event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.GuildIntegrationDelete.t()`.
+
+  ## References
+  - [Discord API - Guild Integration Delete Event](https://discord.com/developers/docs/topics/gateway-events#guild-integration-delete)
+  - [Nostrum - Event.GuildIntegrationDelete](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.GuildIntegrationDelete.html)
   """
 
   use Ash.TypedStruct

@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.GuildDelete do
   TypedStruct for Discord GUILD_DELETE event payload.
 
   Contains guild data and unavailable status.
+
+  ## References
+  - [Discord API - Guild Delete Event](https://discord.com/developers/docs/topics/gateway-events#guild-delete)
+  - [Nostrum - Guild](https://hexdocs.pm/nostrum/Nostrum.Struct.Guild.html)
   """
 
   use Ash.TypedStruct

@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.Guild do
   TypedStruct wrapper for Discord Guild data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Guild.t()`.
+
+  ## References
+  - [Discord API - Guild](https://discord.com/developers/docs/resources/guild#guild-object)
+  - [Nostrum - Guild](https://hexdocs.pm/nostrum/Nostrum.Struct.Guild.html)
   """
 
   use Ash.TypedStruct

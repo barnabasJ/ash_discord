@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.Channel do
   TypedStruct wrapper for Discord Channel data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Channel.t()`.
+
+  ## References
+  - [Discord API - Channel](https://discord.com/developers/docs/resources/channel#channel-object)
+  - [Nostrum - Channel](https://hexdocs.pm/nostrum/Nostrum.Struct.Channel.html)
   """
 
   use Ash.TypedStruct

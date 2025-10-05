@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.Interaction do
   TypedStruct wrapper for Discord Interaction data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Interaction.t()`.
+
+  ## References
+  - [Discord API - Interaction](https://discord.com/developers/docs/interactions/receiving-and-responding#interaction-object)
+  - [Nostrum - Interaction](https://hexdocs.pm/nostrum/Nostrum.Struct.Interaction.html)
   """
 
   use Ash.TypedStruct

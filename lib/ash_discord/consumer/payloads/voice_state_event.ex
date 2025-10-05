@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.VoiceStateEvent do
   TypedStruct wrapper for Discord VOICE_STATE_UPDATE event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.VoiceState.t()`.
+
+  ## References
+  - [Discord API - Voice State Update Event](https://discord.com/developers/docs/topics/gateway-events#voice-state-update)
+  - [Nostrum - Event.VoiceState](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.VoiceState.html)
   """
 
   use Ash.TypedStruct

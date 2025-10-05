@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.AutoModerationRule do
   TypedStruct wrapper for Discord AutoModerationRule data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.AutoModerationRule.t()`.
+
+  ## References
+  - [Discord API - Auto Moderation Rule](https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object)
+  - [Nostrum - AutoModerationRule](https://hexdocs.pm/nostrum/Nostrum.Struct.AutoModerationRule.html)
   """
 
   use Ash.TypedStruct

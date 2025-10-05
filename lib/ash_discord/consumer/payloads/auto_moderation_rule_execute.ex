@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.AutoModerationRuleExecute do
   TypedStruct wrapper for Discord AUTO_MODERATION_RULE_EXECUTE event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.AutoModerationRuleExecute.t()`.
+
+  ## References
+  - [Discord API - Auto Moderation Action Execution Event](https://discord.com/developers/docs/topics/gateway-events#auto-moderation-action-execution)
+  - [Nostrum - Event.AutoModerationRuleExecute](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.AutoModerationRuleExecute.html)
   """
 
   use Ash.TypedStruct

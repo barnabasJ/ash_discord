@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.TypingStartEvent do
   TypedStruct wrapper for Discord TYPING_START event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.TypingStart.t()`.
+
+  ## References
+  - [Discord API - Typing Start Event](https://discord.com/developers/docs/topics/gateway-events#typing-start)
+  - [Nostrum - Event.TypingStart](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.TypingStart.html)
   """
 
   use Ash.TypedStruct

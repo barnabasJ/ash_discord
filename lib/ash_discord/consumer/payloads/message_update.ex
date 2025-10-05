@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.MessageUpdate do
   TypedStruct for Discord MESSAGE_UPDATE event payload.
 
   Contains old and new message data.
+
+  ## References
+  - [Discord API - Message Update Event](https://discord.com/developers/docs/topics/gateway-events#message-update)
+  - [Nostrum - Message](https://hexdocs.pm/nostrum/Nostrum.Struct.Message.html)
   """
 
   use Ash.TypedStruct

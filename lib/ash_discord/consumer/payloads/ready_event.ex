@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.ReadyEvent do
   TypedStruct wrapper for Discord READY event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.Ready.t()`.
+
+  ## References
+  - [Discord API - Ready Event](https://discord.com/developers/docs/topics/gateway-events#ready)
+  - [Nostrum - Event.Ready](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.Ready.html)
   """
 
   use Ash.TypedStruct

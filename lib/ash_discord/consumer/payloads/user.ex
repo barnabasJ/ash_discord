@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.User do
   TypedStruct wrapper for Discord User data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.User.t()`.
+
+  ## References
+  - [Discord API - User](https://discord.com/developers/docs/resources/user#user-object)
+  - [Nostrum - User](https://hexdocs.pm/nostrum/Nostrum.Struct.User.html)
   """
 
   use Ash.TypedStruct

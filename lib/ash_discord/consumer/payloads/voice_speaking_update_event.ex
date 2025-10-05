@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.VoiceSpeakingUpdateEvent do
   TypedStruct wrapper for Discord VOICE_SPEAKING_UPDATE event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.SpeakingUpdate.t()`.
+
+  ## References
+  - [Discord API - Voice](https://discord.com/developers/docs/topics/voice-connections)
+  - [Nostrum - Event.SpeakingUpdate](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.SpeakingUpdate.html)
   """
 
   use Ash.TypedStruct

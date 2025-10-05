@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.ThreadMembersUpdateEvent do
   TypedStruct wrapper for Discord THREAD_MEMBERS_UPDATE event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.ThreadMembersUpdate.t()`.
+
+  ## References
+  - [Discord API - Thread Members Update Event](https://discord.com/developers/docs/topics/gateway-events#thread-members-update)
+  - [Nostrum - Event.ThreadMembersUpdate](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.ThreadMembersUpdate.html)
   """
 
   use Ash.TypedStruct

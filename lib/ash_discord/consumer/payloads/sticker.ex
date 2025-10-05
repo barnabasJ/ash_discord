@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.Sticker do
   TypedStruct wrapper for Discord Sticker data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Sticker.t()`.
+
+  ## References
+  - [Discord API - Sticker](https://discord.com/developers/docs/resources/sticker#sticker-object)
+  - [Nostrum - Sticker](https://hexdocs.pm/nostrum/Nostrum.Struct.Sticker.html)
   """
 
   use Ash.TypedStruct

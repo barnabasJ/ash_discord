@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.GuildBanRemoveEvent do
   TypedStruct wrapper for Discord GUILD_BAN_REMOVE event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.GuildBanRemove.t()`.
+
+  ## References
+  - [Discord API - Guild Ban Remove Event](https://discord.com/developers/docs/topics/gateway-events#guild-ban-remove)
+  - [Nostrum - Event.GuildBanRemove](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.GuildBanRemove.html)
   """
 
   use Ash.TypedStruct

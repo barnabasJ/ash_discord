@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.GuildUpdate do
   TypedStruct for Discord GUILD_UPDATE event payload.
 
   Contains old and new guild data.
+
+  ## References
+  - [Discord API - Guild Update Event](https://discord.com/developers/docs/topics/gateway-events#guild-update)
+  - [Nostrum - Guild](https://hexdocs.pm/nostrum/Nostrum.Struct.Guild.html)
   """
 
   use Ash.TypedStruct

@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.MessageDeleteBulkEvent do
   TypedStruct wrapper for Discord MESSAGE_DELETE_BULK event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.MessageDeleteBulk.t()`.
+
+  ## References
+  - [Discord API - Message Delete Bulk Event](https://discord.com/developers/docs/topics/gateway-events#message-delete-bulk)
+  - [Nostrum - Event.MessageDeleteBulk](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.MessageDeleteBulk.html)
   """
 
   use Ash.TypedStruct

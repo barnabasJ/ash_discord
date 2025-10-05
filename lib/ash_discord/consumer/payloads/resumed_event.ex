@@ -3,6 +3,9 @@ defmodule AshDiscord.Consumer.Payloads.ResumedEvent do
   TypedStruct wrapper for Discord RESUMED event data.
 
   Wraps map() to provide a unified AshDiscord type.
+
+  ## References
+  - [Discord API - Resumed Event](https://discord.com/developers/docs/topics/gateway-events#resumed)
   """
 
   use Ash.TypedStruct

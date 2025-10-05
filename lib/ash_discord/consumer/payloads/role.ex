@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.Role do
   TypedStruct wrapper for Discord Role data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Guild.Role.t()`.
+
+  ## References
+  - [Discord API - Role](https://discord.com/developers/docs/topics/permissions#role-object)
+  - [Nostrum - Guild.Role](https://hexdocs.pm/nostrum/Nostrum.Struct.Guild.Role.html)
   """
 
   use Ash.TypedStruct

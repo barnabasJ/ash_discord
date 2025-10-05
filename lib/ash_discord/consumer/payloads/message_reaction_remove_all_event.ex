@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.MessageReactionRemoveAllEvent do
   TypedStruct wrapper for Discord MESSAGE_REACTION_REMOVE_ALL event data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Event.MessageReactionRemoveAll.t()`.
+
+  ## References
+  - [Discord API - Message Reaction Remove All Event](https://discord.com/developers/docs/topics/gateway-events#message-reaction-remove-all)
+  - [Nostrum - Event.MessageReactionRemoveAll](https://hexdocs.pm/nostrum/Nostrum.Struct.Event.MessageReactionRemoveAll.html)
   """
 
   use Ash.TypedStruct

@@ -3,6 +3,9 @@ defmodule AshDiscord.Consumer.Payloads.GuildMembersChunkEvent do
   TypedStruct wrapper for Discord GUILD_MEMBERS_CHUNK event data.
 
   Wraps map() to provide a unified AshDiscord type.
+
+  ## References
+  - [Discord API - Guild Members Chunk Event](https://discord.com/developers/docs/topics/gateway-events#guild-members-chunk)
   """
 
   use Ash.TypedStruct

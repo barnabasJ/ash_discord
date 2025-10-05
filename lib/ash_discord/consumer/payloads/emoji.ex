@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.Emoji do
   TypedStruct wrapper for Discord Emoji data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Emoji.t()`.
+
+  ## References
+  - [Discord API - Emoji](https://discord.com/developers/docs/resources/emoji#emoji-object)
+  - [Nostrum - Emoji](https://hexdocs.pm/nostrum/Nostrum.Struct.Emoji.html)
   """
 
   use Ash.TypedStruct

@@ -11,6 +11,10 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
 
   setup do
     copy(Nostrum.Api)
+    copy(Nostrum.Api.Guild)
+    copy(Nostrum.Api.Invite)
+    copy(Nostrum.Api.Webhook)
+    copy(Nostrum.Api.AutoModeration)
     :ok
   end
 
@@ -112,7 +116,7 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
       guild_id = 555_666_777
       emoji_id = 999_888_777
 
-      expect(Nostrum.Api, :get_guild_emoji, fn ^guild_id, ^emoji_id ->
+      expect(Nostrum.Api.Guild, :emoji, fn ^guild_id, ^emoji_id ->
         {:ok,
          emoji(%{
            id: emoji_id,
@@ -139,7 +143,7 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
       guild_id = 404_404_404
       emoji_id = 999_888_777
 
-      expect(Nostrum.Api, :get_guild_emoji, fn ^guild_id, ^emoji_id ->
+      expect(Nostrum.Api.Guild, :emoji, fn ^guild_id, ^emoji_id ->
         {:error, %{status_code: 404, message: "Unknown Guild"}}
       end)
 

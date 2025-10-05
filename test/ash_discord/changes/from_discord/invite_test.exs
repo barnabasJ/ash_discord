@@ -195,7 +195,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
     test "fetches invite from API when data not provided" do
       invite_code = "abc123def"
 
-      expect(Nostrum.Api, :get_invite, fn ^invite_code ->
+      expect(Nostrum.Api.Invite, :get, fn ^invite_code ->
         {:ok,
          invite(%{
            code: invite_code,
@@ -224,7 +224,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
     test "handles API errors gracefully" do
       invite_code = "notfound404"
 
-      expect(Nostrum.Api, :get_invite, fn ^invite_code ->
+      expect(Nostrum.Api.Invite, :get, fn ^invite_code ->
         {:error, %{status_code: 404, message: "Unknown Invite"}}
       end)
 

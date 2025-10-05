@@ -120,7 +120,7 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
     test "fetches webhook from API when data not provided" do
       webhook_id = 999_888_777
 
-      expect(Nostrum.Api, :get_webhook, fn ^webhook_id ->
+      expect(Nostrum.Api.Webhook, :get, fn ^webhook_id ->
         {:ok,
          webhook(%{
            id: webhook_id,
@@ -146,7 +146,7 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
     test "handles API errors gracefully" do
       webhook_id = 404_404_404
 
-      expect(Nostrum.Api, :get_webhook, fn ^webhook_id ->
+      expect(Nostrum.Api.Webhook, :get, fn ^webhook_id ->
         {:error, %{status_code: 404, message: "Unknown Webhook"}}
       end)
 

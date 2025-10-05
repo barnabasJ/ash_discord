@@ -56,7 +56,7 @@ defmodule AshDiscord.Changes.FromDiscord.Webhook do
   end
 
   defp fetch_webhook(discord_id) when is_integer(discord_id) do
-    case Nostrum.Api.get_webhook(discord_id) do
+    case Nostrum.Api.Webhook.get(discord_id) do
       {:ok, webhook} -> Payloads.Webhook.new(webhook)
       {:error, reason} -> {:error, reason}
     end

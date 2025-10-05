@@ -57,7 +57,7 @@ defmodule AshDiscord.Changes.FromDiscord.Emoji do
 
   defp fetch_emoji_from_identity(%{guild_id: guild_id, emoji_id: emoji_id}) do
     # Fetch emoji from guild
-    case Nostrum.Api.get_guild_emoji(guild_id, emoji_id) do
+    case Nostrum.Api.Guild.emoji(guild_id, emoji_id) do
       {:ok, emoji} ->
         Payloads.Emoji.new(emoji)
 

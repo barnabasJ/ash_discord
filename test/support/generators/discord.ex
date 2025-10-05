@@ -1040,9 +1040,8 @@ defmodule AshDiscord.Test.Generators.Discord do
       name: Faker.Lorem.word(),
       description: Faker.Lorem.sentence(3..10),
       tags: Enum.join([Faker.Lorem.word(), Faker.Lorem.word()], ","),
-      # type should be atom, not integer
+      # Nostrum uses atoms, which get converted to strings by payload
       type: Faker.Util.pick([:standard, :guild]),
-      # format_type should be atom, not integer
       format_type: Faker.Util.pick([:png, :apng, :lottie, :gif]),
       available: true,
       guild_id: generate_snowflake()

@@ -29,17 +29,18 @@ defmodule AshDiscord.Consumer.Payloads.Sticker do
       description: "Description of the sticker"
 
     field :tags, :string,
-      allow_nil?: false,
+      allow_nil?: true,
       description:
         "For guild stickers, the Discord name of a unicode emoji; for standard stickers, a comma-separated list of related expressions"
 
-    field :type, :atom,
+    field :type, :integer,
       allow_nil?: false,
-      description: "Type of sticker (:standard or :guild)"
+      description: "Type of sticker (1 = standard, 2 = guild - converted from Nostrum atoms)"
 
-    field :format_type, :atom,
+    field :format_type, :integer,
       allow_nil?: false,
-      description: "Format type (:png, :apng, :lottie, or :gif)"
+      description:
+        "Format type (1 = png, 2 = apng, 3 = lottie, 4 = gif - converted from Nostrum atoms)"
 
     field :available, :boolean,
       allow_nil?: true,
@@ -70,10 +71,37 @@ defmodule AshDiscord.Consumer.Payloads.Sticker do
   end
 
   def new(%Nostrum.Struct.Sticker{} = nostrum_sticker) do
-    super(Map.from_struct(nostrum_sticker))
+    # Convert Nostrum struct to map and convert atoms to integers
+    nostrum_sticker
+    |> Map.from_struct()
+    |> Map.update(:type, nil, &map_type_to_integer/1)
+    |> Map.update(:format_type, nil, &map_format_type_to_integer/1)
+    |> then(&super/1)
+  end
+
+  def new(value) when is_map(value) do
+    # Convert atom values to integers for Ash.TypedStruct
+    value
+    |> Map.update(:type, nil, &map_type_to_integer/1)
+    |> Map.update(:format_type, nil, &map_format_type_to_integer/1)
+    |> then(&super/1)
   end
 
   def new(value) do
     super(value)
   end
+
+  # Map Nostrum's type atoms to Discord API integers
+  defp map_type_to_integer(:standard), do: 1
+  defp map_type_to_integer(:guild), do: 2
+  defp map_type_to_integer(value) when is_integer(value), do: value
+  defp map_type_to_integer(other), do: other
+
+  # Map Nostrum's format_type atoms to Discord API integers
+  defp map_format_type_to_integer(:png), do: 1
+  defp map_format_type_to_integer(:apng), do: 2
+  defp map_format_type_to_integer(:lottie), do: 3
+  defp map_format_type_to_integer(:gif), do: 4
+  defp map_format_type_to_integer(value) when is_integer(value), do: value
+  defp map_format_type_to_integer(other), do: other
 end

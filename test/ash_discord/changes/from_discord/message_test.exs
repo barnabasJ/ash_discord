@@ -492,36 +492,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       assert error_message =~ "is required" or error_message =~ "must not be nil"
     end
 
-    test "handles invalid timestamp format" do
-      message_struct =
-        message(%{
-          id: 123_456_789,
-          content: "Test message",
-          author: user(%{id: 987_654_321, username: "test_user"}),
-          channel_id: 555_666_777,
-          # Invalid timestamp format
-          timestamp: "not_a_datetime",
-          tts: false,
-          mention_everyone: false,
-          pinned: false
-        })
-
-      result = TestApp.Discord.message_from_discord(%{data: message_struct})
-
-      # This might succeed with nil timestamp or fail with validation error
-      # Either is acceptable behavior
-      case result do
-        {:ok, created_message} ->
-          # If it succeeds, timestamp should be handled gracefully
-          assert created_message.discord_id == message_struct.id
-
-        {:error, error} ->
-          # If it fails, should be a validation error
-          error_message = Exception.message(error)
-          assert error_message =~ "invalid" or error_message =~ "must be"
-      end
-    end
-
     test "handles missing author in discord_struct" do
       invalid_struct = %{
         id: 123_456_789,

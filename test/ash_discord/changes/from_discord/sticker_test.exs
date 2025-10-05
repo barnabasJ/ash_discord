@@ -22,8 +22,8 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           name: "test_sticker",
           description: "A test sticker for unit tests",
           tags: "test,unit,discord",
-          type: 1,
-          format_type: 1,
+          type: :guild,
+          format_type: :png,
           available: true,
           guild_id: 555_666_777
         })
@@ -35,8 +35,8 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
       assert created_sticker.name == sticker_struct.name
       assert created_sticker.description == sticker_struct.description
       assert created_sticker.tags == sticker_struct.tags
-      assert created_sticker.type == sticker_struct.type
-      assert created_sticker.format_type == sticker_struct.format_type
+      assert created_sticker.type == 2
+      assert created_sticker.format_type == 1
       assert created_sticker.available == true
       assert created_sticker.guild_id == sticker_struct.guild_id
     end
@@ -49,8 +49,8 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           description: "A standard Discord sticker",
           tags: "discord,standard,official",
           # Standard type
-          type: 2,
-          format_type: 1,
+          type: :standard,
+          format_type: :png,
           available: true,
           # No guild for standard stickers
           guild_id: nil
@@ -61,7 +61,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
       assert {:ok, created_sticker} = result
       assert created_sticker.discord_id == sticker_struct.id
       assert created_sticker.name == sticker_struct.name
-      assert created_sticker.type == 2
+      assert created_sticker.type == 1
       assert created_sticker.guild_id == nil
     end
 
@@ -72,9 +72,9 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           name: "png_sticker",
           description: "A PNG format sticker",
           tags: "image,png",
-          type: 1,
+          type: :standard,
           # PNG format
-          format_type: 1,
+          format_type: :png,
           available: true,
           guild_id: 777_888_999
         })
@@ -93,9 +93,9 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           name: "apng_sticker",
           description: "An animated PNG sticker",
           tags: "animated,apng",
-          type: 1,
+          type: :standard,
           # APNG format
-          format_type: 2,
+          format_type: :apng,
           available: true,
           guild_id: 333_444_555
         })
@@ -114,9 +114,9 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           name: "lottie_sticker",
           description: "A Lottie animated sticker",
           tags: "lottie,animation,vector",
-          type: 1,
+          type: :standard,
           # Lottie format
-          format_type: 3,
+          format_type: :lottie,
           available: true,
           guild_id: 999_111_222
         })
@@ -135,8 +135,8 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           name: "unavailable_sticker",
           description: "A sticker that is unavailable",
           tags: "unavailable,test",
-          type: 1,
-          format_type: 1,
+          type: :standard,
+          format_type: :png,
           available: false,
           guild_id: 222_333_444
         })
@@ -155,8 +155,8 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           name: "no_description",
           description: nil,
           tags: "minimal",
-          type: 1,
-          format_type: 1,
+          type: :standard,
+          format_type: :png,
           available: true,
           guild_id: 666_777_888
         })
@@ -175,8 +175,8 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           name: "no_tags",
           description: "A sticker without tags",
           tags: "",
-          type: 1,
-          format_type: 1,
+          type: :standard,
+          format_type: :png,
           available: true,
           guild_id: 888_999_111
         })
@@ -200,8 +200,8 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
            name: "api_fetched_sticker",
            description: "Fetched from API",
            tags: "api,test",
-           type: 2,
-           format_type: 1,
+           type: :guild,
+           format_type: :png,
            available: true,
            guild_id: 555_666_777
          })}
@@ -253,8 +253,8 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           name: "original_sticker",
           description: "Original description",
           tags: "original,tags",
-          type: 1,
-          format_type: 1,
+          type: :standard,
+          format_type: :png,
           available: true,
           guild_id: 111_222_333
         })
@@ -270,8 +270,8 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           name: "updated_sticker",
           description: "Updated description",
           tags: "updated,tags,new",
-          type: 1,
-          format_type: 2,
+          type: :standard,
+          format_type: :apng,
           available: false,
           guild_id: 111_222_333
         })
@@ -301,8 +301,8 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           name: "status_sticker",
           description: "Status test sticker",
           tags: "status,test",
-          type: 1,
-          format_type: 1,
+          type: :standard,
+          format_type: :png,
           available: true,
           guild_id: 777_888_999
         })
@@ -318,8 +318,8 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           name: "status_sticker",
           description: "Status test sticker",
           tags: "status,test",
-          type: 1,
-          format_type: 1,
+          type: :standard,
+          format_type: :png,
           available: false,
           guild_id: 777_888_999
         })
@@ -365,7 +365,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           tags: "test",
           # Invalid type
           type: 999,
-          format_type: 1,
+          format_type: :png,
           available: true,
           guild_id: 555_666_777
         })
@@ -393,7 +393,7 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
           name: "test_sticker",
           description: "Test sticker",
           tags: "test",
-          type: 1,
+          type: :standard,
           # Invalid format type
           format_type: 999,
           available: true,

@@ -85,8 +85,8 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachment do
        "Identity must be a map with channel_id, message_id, and attachment_id for API fallback"}
 
   defp transform_message_attachment(changeset, attachment_data) do
-    # Infer content type from filename if not provided
-    content_type = attachment_data.content_type || infer_content_type(attachment_data.filename)
+    # Infer content type from filename (Nostrum doesn't provide content_type)
+    content_type = infer_content_type(attachment_data.filename)
 
     changeset
     |> maybe_set_attribute(:discord_id, attachment_data.id)

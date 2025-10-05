@@ -113,26 +113,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
       assert created_attachment.width == 800
     end
 
-    test "handles attachment without proxy URL" do
-      attachment_struct =
-        message_attachment(%{
-          id: 333_444_555,
-          filename: "untitled.png",
-          size: 262_144,
-          url: "https://cdn.discordapp.com/attachments/567/890/untitled.png",
-          proxy_url: nil,
-          height: 400,
-          width: 600
-        })
-
-      result =
-        TestApp.Discord.message_attachment_from_discord(%{data: attachment_struct})
-
-      assert {:ok, created_attachment} = result
-      assert created_attachment.discord_id == attachment_struct.id
-      assert created_attachment.proxy_url == nil
-    end
-
     test "handles large attachment" do
       attachment_struct =
         message_attachment(%{

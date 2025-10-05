@@ -7,9 +7,10 @@ defmodule AshDiscord.Test.Generators.Discord.VerificationTest do
   import AshDiscord.Test.Generators.Discord
 
   describe "member generator - DateTime fields" do
-    test "joined_at is DateTime, not Unix timestamp" do
+    test "joined_at is Unix timestamp (integer), not DateTime" do
       member = member()
-      assert %DateTime{} = member.joined_at
+      assert is_integer(member.joined_at)
+      assert member.joined_at > 0
     end
 
     test "premium_since is DateTime when present" do
@@ -112,17 +113,43 @@ defmodule AshDiscord.Test.Generators.Discord.VerificationTest do
   end
 
   describe "interaction generator - member field" do
-    test "member field is proper Member struct" do
-      interaction = interaction()
-      assert %Nostrum.Struct.Guild.Member{} = interaction.member
-      assert interaction.member.user_id == interaction.user.id
+    test "member field is proper Member struct for guild interactions" do
+      # Generate multiple interactions to get guild interactions (80% probability)
+      interactions = for _ <- 1..10, do: interaction()
+      guild_interactions = Enum.filter(interactions, & &1.guild_id)
+
+      assert Enum.any?(guild_interactions)
+
+      Enum.each(guild_interactions, fn i ->
+        assert %Nostrum.Struct.Guild.Member{} = i.member
+        assert i.member.user_id == i.user.id
+      end)
     end
 
-    test "member has all required timestamp fields" do
-      interaction = interaction()
-      # joined_at is a Unix timestamp (integer), not DateTime
-      assert is_integer(interaction.member.joined_at)
-      assert interaction.member.joined_at > 0
+    test "member field is nil for DM interactions" do
+      # Generate multiple interactions to get DM interactions (20% probability)
+      interactions = for _ <- 1..20, do: interaction()
+      dm_interactions = Enum.filter(interactions, &is_nil(&1.guild_id))
+
+      if Enum.any?(dm_interactions) do
+        Enum.each(dm_interactions, fn i ->
+          assert is_nil(i.member)
+        end)
+      end
+    end
+
+    test "member has Unix timestamp for joined_at when present" do
+      # Generate multiple interactions to get guild interactions
+      interactions = for _ <- 1..10, do: interaction()
+      guild_interactions = Enum.filter(interactions, & &1.member)
+
+      assert Enum.any?(guild_interactions)
+
+      Enum.each(guild_interactions, fn i ->
+        # joined_at is a Unix timestamp (integer), not DateTime
+        assert is_integer(i.member.joined_at)
+        assert i.member.joined_at > 0
+      end)
     end
   end
 

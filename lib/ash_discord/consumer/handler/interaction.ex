@@ -5,7 +5,7 @@ defmodule AshDiscord.Consumer.Handler.Interaction do
           interaction :: AshDiscord.Consumer.Payload.interaction_create(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: :ok | {:error, term()}
+        ) :: :ok | {:ok, term()} | {:error, term()}
   def create(interaction, _ws_state, context) do
     Logger.debug("Processing Discord interaction: #{interaction.id}")
 

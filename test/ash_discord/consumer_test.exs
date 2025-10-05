@@ -46,7 +46,8 @@ defmodule AshDiscord.ConsumerTest do
                Process.get(:last_interaction)
 
       assert interaction_id == interaction_data.id
-      assert {:ok, _response} = Process.get(:last_interaction_result)
+      # When command is not found, handler returns :ok from respond_with_error
+      assert :ok = Process.get(:last_interaction_result)
     end
 
     test "application command routing works" do

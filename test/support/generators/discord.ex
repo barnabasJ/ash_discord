@@ -904,6 +904,31 @@ defmodule AshDiscord.Test.Generators.Discord do
   end
 
   @doc """
+  Generates a Discord ChannelPinsUpdate event struct.
+
+  ## Options
+
+  - `:channel_id` - Channel ID (defaults to generated snowflake)
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+  - `:last_pin_timestamp` - Timestamp of last pinned message (defaults to current datetime)
+
+  ## Examples
+
+      iex> pins = channel_pins_update(%{channel_id: 123456})
+      iex> pins.channel_id
+      123456
+  """
+  def channel_pins_update(attrs \\ %{}) do
+    defaults = %{
+      channel_id: generate_snowflake(),
+      guild_id: generate_snowflake(),
+      last_pin_timestamp: DateTime.utc_now()
+    }
+
+    struct(Nostrum.Struct.Event.ChannelPinsUpdate, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
   Generates a Discord MessageDelete event struct.
 
   ## Options

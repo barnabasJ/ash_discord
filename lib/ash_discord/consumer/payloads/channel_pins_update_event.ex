@@ -21,7 +21,12 @@ defmodule AshDiscord.Consumer.Payloads.ChannelPinsUpdateEvent do
   Create a ChannelPinsUpdateEvent TypedStruct from a Nostrum ChannelPinsUpdate event struct.
 
   Accepts a `Nostrum.Struct.Event.ChannelPinsUpdate.t()` and creates an AshDiscord ChannelPinsUpdateEvent TypedStruct.
+  If already a ChannelPinsUpdateEvent struct, returns it as-is.
   """
+  def new(%__MODULE__{} = event) do
+    {:ok, event}
+  end
+
   def new(%Nostrum.Struct.Event.ChannelPinsUpdate{} = nostrum_event) do
     super(Map.from_struct(nostrum_event))
   end

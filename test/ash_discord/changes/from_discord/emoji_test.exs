@@ -232,7 +232,8 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
       assert {:error, error} = result
       error_message = Exception.message(error)
       # Should contain validation errors
-      assert error_message =~ "is required" or error_message =~ "is invalid" or error_message =~ "no function clause"
+      assert error_message =~ "is required" or error_message =~ "is invalid" or
+               error_message =~ "no function clause"
     end
   end
 end

@@ -127,7 +127,9 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "is required" or error_message =~ "Identity" or error_message =~ "data"
+
+      assert error_message =~ "is required" or error_message =~ "Identity" or
+               error_message =~ "data"
     end
   end
 

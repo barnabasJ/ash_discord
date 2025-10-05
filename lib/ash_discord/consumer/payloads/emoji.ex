@@ -15,7 +15,9 @@ defmodule AshDiscord.Consumer.Payloads.Emoji do
     field :require_colons, :boolean, description: "Whether this emoji must be wrapped in colons"
     field :managed, :boolean, description: "Whether this emoji is managed"
     field :animated, :boolean, description: "Whether this emoji is animated"
-    field :available, :boolean, description: "Whether this emoji can be used, may be false due to loss of Server Boosts"
+
+    field :available, :boolean,
+      description: "Whether this emoji can be used, may be false due to loss of Server Boosts"
   end
 
   @doc """

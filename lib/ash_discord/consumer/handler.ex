@@ -7,12 +7,41 @@ defmodule AshDiscord.Consumer.Handler do
 
   @spec handle_event(consumer :: module(), event_payload_ws :: Nostrum.Consumer.event()) :: any()
   def handle_event(consumer, {event, payload, ws_state}) do
-    {handler_mod, handler_fun, resource_type, callback, payload_module} =
-      AshDiscord.Consumer.EventMap.handler_for(event)
+    case AshDiscord.Consumer.EventMap.handler_for(event) do
+      nil ->
+        Logger.warning(
+          "Skipping #{event} - event not supported (not documented in official Discord API)"
+        )
 
-    # Transform Nostrum payload to AshDiscord TypedStruct
-    {:ok, transformed_payload} = payload_module.new(payload)
+        :ok
 
+      {handler_mod, handler_fun, resource_type, callback, payload_module} ->
+        # Transform Nostrum payload to AshDiscord TypedStruct
+        {:ok, transformed_payload} = payload_module.new(payload)
+
+        handle_supported_event(
+          consumer,
+          event,
+          transformed_payload,
+          ws_state,
+          handler_mod,
+          handler_fun,
+          resource_type,
+          callback
+        )
+    end
+  end
+
+  defp handle_supported_event(
+         consumer,
+         event,
+         transformed_payload,
+         ws_state,
+         handler_mod,
+         handler_fun,
+         resource_type,
+         callback
+       ) do
     if function_exported?(consumer, callback, 3) do
       context = build_context(consumer, nil, transformed_payload)
       Logger.info("Handling #{event} with #{consumer}.#{callback}/3")

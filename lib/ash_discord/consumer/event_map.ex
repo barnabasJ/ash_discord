@@ -121,7 +121,6 @@ defmodule AshDiscord.Consumer.EventMap do
           | :handle_auto_moderation_rule_update
           | :handle_channel_create
           | :handle_channel_delete
-          | :handle_channel_pins_ack
           | :handle_channel_pins_update
           | :handle_channel_update
           | :handle_guild_audit_log_entry_create
@@ -217,6 +216,9 @@ defmodule AshDiscord.Consumer.EventMap do
   @doc """
   Returns the handler module, function, resource type, callback name, and payload transformer for a given Discord event.
 
+  Returns `nil` for events that are not supported or not documented in the official Discord API
+  (e.g., CHANNEL_PINS_ACK). When `nil` is returned, the main handler should log a warning and skip processing.
+
   ## Examples
 
       iex> AshDiscord.Consumer.EventMap.handler_for(:GUILD_CREATE)
@@ -224,10 +226,14 @@ defmodule AshDiscord.Consumer.EventMap do
 
       iex> AshDiscord.Consumer.EventMap.handler_for(:INTERACTION_CREATE)
       {AshDiscord.Consumer.Handler.Interaction, :create, :interaction_resource, :handle_interaction_create, AshDiscord.Consumer.Payloads.Interaction}
+
+      iex> AshDiscord.Consumer.EventMap.handler_for(:CHANNEL_PINS_ACK)
+      nil
   """
   @spec handler_for(event()) ::
           {handler_module(), handler_function(), resource_type(), callback_name(),
            payload_module()}
+          | nil
   alias AshDiscord.Consumer.Payloads
 
   # Sorted alphabetically by event name for easier navigation
@@ -263,16 +269,15 @@ defmodule AshDiscord.Consumer.EventMap do
       {AshDiscord.Consumer.Handler.Channel, :delete, :channel_resource, :handle_channel_delete,
        Payloads.Channel}
 
-  # TODO: Implement channel pins handlers
-  def handler_for(:CHANNEL_PINS_ACK),
-    do:
-      {AshDiscord.Consumer.Handler.Channel.Pins, :ack, :channel_resource,
-       :handle_channel_pins_ack, Payloads.ChannelPinsAck}
+  # NOTE: CHANNEL_PINS_ACK is not documented in the official Discord API.
+  # It appears to be a deprecated user-client-specific event. We return nil
+  # to skip processing this event entirely.
+  def handler_for(:CHANNEL_PINS_ACK), do: nil
 
   def handler_for(:CHANNEL_PINS_UPDATE),
     do:
       {AshDiscord.Consumer.Handler.Channel.Pins, :update, :channel_resource,
-       :handle_channel_pins_update, Payloads.ChannelPinsUpdate}
+       :handle_channel_pins_update, Payloads.ChannelPinsUpdateEvent}
 
   def handler_for(:CHANNEL_UPDATE),
     do:

@@ -262,7 +262,9 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "data argument is required" or error_message =~ "cannot be fetched from API"
+
+      assert error_message =~ "data argument is required" or
+               error_message =~ "cannot be fetched from API"
     end
   end
 
@@ -461,7 +463,8 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
       assert {:error, error} = result
       error_message = Exception.message(error)
       # Should contain validation errors
-      assert error_message =~ "is required" or error_message =~ "is invalid" or error_message =~ "no function clause"
+      assert error_message =~ "is required" or error_message =~ "is invalid" or
+               error_message =~ "no function clause"
     end
 
     test "handles missing token in discord_struct" do

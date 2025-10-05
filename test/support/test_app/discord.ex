@@ -35,6 +35,10 @@ defmodule TestApp.Discord do
       define(:channel_from_discord, action: :from_discord)
     end
 
+    resource TestApp.Discord.ChannelPinsUpdate do
+      define(:channel_pins_update_from_discord, action: :from_discord)
+    end
+
     resource TestApp.Discord.VoiceState do
       define(:voice_state_from_discord, action: :from_discord)
     end

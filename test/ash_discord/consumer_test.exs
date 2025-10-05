@@ -42,7 +42,9 @@ defmodule AshDiscord.ConsumerTest do
       TestConsumer.handle_event({:INTERACTION_CREATE, interaction_data, ws_state})
 
       # Callback receives Payload, not Nostrum struct
-      assert %AshDiscord.Consumer.Payloads.Interaction{id: interaction_id} = Process.get(:last_interaction)
+      assert %AshDiscord.Consumer.Payloads.Interaction{id: interaction_id} =
+               Process.get(:last_interaction)
+
       assert interaction_id == interaction_data.id
       assert {:ok, _response} = Process.get(:last_interaction_result)
     end
@@ -63,7 +65,9 @@ defmodule AshDiscord.ConsumerTest do
       TestConsumer.handle_event({:INTERACTION_CREATE, command_interaction, ws_state})
 
       # Callback receives Payload, not Nostrum struct
-      assert %AshDiscord.Consumer.Payloads.Interaction{id: interaction_id} = Process.get(:last_interaction)
+      assert %AshDiscord.Consumer.Payloads.Interaction{id: interaction_id} =
+               Process.get(:last_interaction)
+
       assert interaction_id == command_interaction.id
     end
 

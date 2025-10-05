@@ -81,7 +81,11 @@ defmodule AshDiscord.Consumer.Handler.Guild do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def delete(%Payloads.GuildDelete{old_guild: old_guild, unavailable: unavailable}, _ws_state, context) do
+  def delete(
+        %Payloads.GuildDelete{old_guild: old_guild, unavailable: unavailable},
+        _ws_state,
+        context
+      ) do
     case unavailable do
       unavailable when unavailable in [nil, false] ->
         # Permanent deletion - unavailable=nil or false means guild was actually deleted

@@ -213,7 +213,9 @@ defmodule AshDiscord.CommandRegistrationTest do
       assert result == :ok
 
       # Should have processed the interaction (receives Payload, not Nostrum struct)
-      assert_receive {:interaction_processed, %AshDiscord.Consumer.Payloads.Interaction{id: interaction_id}}
+      assert_receive {:interaction_processed,
+                      %AshDiscord.Consumer.Payloads.Interaction{id: interaction_id}}
+
       assert interaction_id == interaction.id
     end
 

@@ -199,7 +199,9 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "invite code" or error_message =~ "code" or error_message =~ "Identity"
+
+      assert error_message =~ "invite code" or error_message =~ "code" or
+               error_message =~ "Identity"
     end
 
     test "requires data argument for invite creation" do
@@ -207,7 +209,9 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "is required" or error_message =~ "Identity" or error_message =~ "data"
+
+      assert error_message =~ "is required" or error_message =~ "Identity" or
+               error_message =~ "data"
     end
   end
 

@@ -10,7 +10,12 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def add(consumer, %Payloads.GuildMemberAdd{guild_id: guild_id, member: member}, _ws_state, _context) do
+  def add(
+        consumer,
+        %Payloads.GuildMemberAdd{guild_id: guild_id, member: member},
+        _ws_state,
+        _context
+      ) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_guild_member_resource(consumer) do
       {:ok, resource} ->
         # Extract user_id from member struct
@@ -52,7 +57,12 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def update(consumer, %Payloads.GuildMemberUpdate{guild_id: guild_id, new_member: member}, _ws_state, _context) do
+  def update(
+        consumer,
+        %Payloads.GuildMemberUpdate{guild_id: guild_id, new_member: member},
+        _ws_state,
+        _context
+      ) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_guild_member_resource(consumer) do
       {:ok, resource} ->
         user_discord_id = member.user_id
@@ -93,7 +103,12 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def remove(consumer, %Payloads.GuildMemberRemove{guild_id: guild_id, member: member}, _ws_state, _context) do
+  def remove(
+        consumer,
+        %Payloads.GuildMemberRemove{guild_id: guild_id, member: member},
+        _ws_state,
+        _context
+      ) do
     case AshDiscord.Consumer.Info.ash_discord_consumer_guild_member_resource(consumer) do
       {:ok, resource} ->
         user_discord_id = member.user_id

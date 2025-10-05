@@ -86,6 +86,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMember do
     |> maybe_set_attribute(:nick, member_data.nick)
     |> maybe_set_attribute(:avatar, member_data.avatar)
     |> maybe_set_attribute(:flags, member_data.flags)
+    |> maybe_set_attribute(:roles, member_data.roles)
     |> Transformations.set_datetime_field(:joined_at, member_data.joined_at)
     |> Transformations.set_datetime_field(:premium_since, member_data.premium_since)
     |> Transformations.set_datetime_field(

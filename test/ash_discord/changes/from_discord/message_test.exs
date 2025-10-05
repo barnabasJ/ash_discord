@@ -7,6 +7,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
 
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
+  import Mimic
 
   describe "struct-first pattern" do
     test "creates message from discord struct with all attributes" do
@@ -263,26 +264,83 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
   end
 
   describe "API fallback pattern" do
-    test "message API fallback is not supported" do
-      # Messages don't support direct API fetching in our implementation
-      # Passing invalid identity (number instead of map) triggers Ash validation error
-      discord_id = 999_888_777
+    setup do
+      copy(Nostrum.Api.Message)
+      copy(Nostrum.Api.Channel)
+      copy(Nostrum.Api.Guild)
+      copy(Nostrum.Api.User)
+      :ok
+    end
 
-      result = TestApp.Discord.message_from_discord(%{identity: discord_id})
+    test "fetches message from API when data not provided" do
+      channel_id = 555_666_777
+      message_id = 999_888_777
+
+      expect(Nostrum.Api.Message, :get, fn ^channel_id, ^message_id ->
+        {:ok,
+         message(%{
+           id: message_id,
+           channel_id: channel_id,
+           content: "API fetched message",
+           author: user(%{id: 123_456_789}),
+           timestamp: "2023-06-15T10:00:00.000000Z",
+           tts: false,
+           mention_everyone: false,
+           pinned: false
+         })}
+      end)
+
+      expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
+        {:ok, channel(%{id: channel_id, name: "test-channel", type: 0})}
+      end)
+
+      expect(Nostrum.Api.User, :get, fn 123_456_789 ->
+        {:ok, user(%{id: 123_456_789, username: "test_user"})}
+      end)
+
+      result =
+        TestApp.Discord.message_from_discord(%{
+          identity: %{channel_id: channel_id, message_id: message_id}
+        })
+
+      assert {:ok, created_message} = result
+      assert created_message.discord_id == message_id
+      assert created_message.channel_id == channel_id
+      assert created_message.content == "API fetched message"
+    end
+
+    test "handles API errors gracefully" do
+      channel_id = 404_404_404
+      message_id = 999_888_777
+
+      expect(Nostrum.Api.Message, :get, fn ^channel_id, ^message_id ->
+        {:error, %{status_code: 404, message: "Unknown Channel"}}
+      end)
+
+      result =
+        TestApp.Discord.message_from_discord(%{
+          identity: %{channel_id: channel_id, message_id: message_id}
+        })
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "is invalid" or error_message =~ ":requires_channel_and_message_ids"
+      assert error_message =~ "Unknown Channel" or error_message =~ "404"
     end
 
-    test "requires data argument for creation" do
+    test "requires complete identity with channel_id and message_id" do
+      result = TestApp.Discord.message_from_discord(%{identity: %{channel_id: 999_888_777}})
+
+      assert {:error, error} = result
+      error_message = Exception.message(error)
+      assert error_message =~ ":requires_channel_and_message_ids"
+    end
+
+    test "requires data or identity argument for message creation" do
       result = TestApp.Discord.message_from_discord(%{})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-
-      assert error_message =~ "is required" or error_message =~ "Identity" or
-               error_message =~ "data"
+      assert error_message =~ ":requires_channel_and_message_ids"
     end
   end
 

@@ -7,6 +7,12 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
 
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
+  import Mimic
+
+  setup do
+    copy(Nostrum.Api.Message)
+    :ok
+  end
 
   describe "struct-first pattern" do
     test "creates message attachment from discord struct with all attributes" do
@@ -150,24 +156,114 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
     end
   end
 
-  describe "data requirement (no API fallback)" do
-    test "requires data argument - API fallback not supported for attachments" do
-      # Message attachments are not independently fetchable from API
+  describe "API fallback pattern" do
+    test "fetches attachment from API when data not provided" do
+      channel_id = 555_666_777
+      message_id = 999_888_777
+      attachment_id = 123_456_789
+
+      expect(Nostrum.Api.Message, :get, fn ^channel_id, ^message_id ->
+        {:ok,
+         message(%{
+           id: message_id,
+           channel_id: channel_id,
+           content: "Check out this image!",
+           attachments: [
+             message_attachment(%{
+               id: attachment_id,
+               filename: "api_fetched.png",
+               size: 2_048_576,
+               url: "https://cdn.discordapp.com/attachments/555/999/api_fetched.png",
+               proxy_url: "https://media.discordapp.net/attachments/555/999/api_fetched.png",
+               height: 1920,
+               width: 1080
+             }),
+             message_attachment(%{id: 987_654_321, filename: "other.jpg"})
+           ]
+         })}
+      end)
+
+      result =
+        TestApp.Discord.message_attachment_from_discord(%{
+          identity: %{
+            channel_id: channel_id,
+            message_id: message_id,
+            attachment_id: attachment_id
+          }
+        })
+
+      assert {:ok, created_attachment} = result
+      assert created_attachment.discord_id == attachment_id
+      assert created_attachment.filename == "api_fetched.png"
+      assert created_attachment.size == 2_048_576
+      assert created_attachment.height == 1920
+      assert created_attachment.width == 1080
+    end
+
+    test "handles API errors gracefully" do
+      channel_id = 404_404_404
+      message_id = 999_888_777
+      attachment_id = 123_456_789
+
+      expect(Nostrum.Api.Message, :get, fn ^channel_id, ^message_id ->
+        {:error, %{status_code: 404, message: "Unknown Channel"}}
+      end)
+
+      result =
+        TestApp.Discord.message_attachment_from_discord(%{
+          identity: %{
+            channel_id: channel_id,
+            message_id: message_id,
+            attachment_id: attachment_id
+          }
+        })
+
+      assert {:error, error} = result
+      error_message = Exception.message(error)
+      assert error_message =~ "Unknown Channel" or error_message =~ "404"
+    end
+
+    test "handles attachment not found in message" do
+      channel_id = 555_666_777
+      message_id = 999_888_777
+      attachment_id = 999_999_999
+
+      expect(Nostrum.Api.Message, :get, fn ^channel_id, ^message_id ->
+        {:ok,
+         message(%{
+           id: message_id,
+           channel_id: channel_id,
+           content: "Message with different attachments",
+           attachments: [
+             message_attachment(%{id: 123_456_789, filename: "other.png"})
+           ]
+         })}
+      end)
+
+      result =
+        TestApp.Discord.message_attachment_from_discord(%{
+          identity: %{
+            channel_id: channel_id,
+            message_id: message_id,
+            attachment_id: attachment_id
+          }
+        })
+
+      assert {:error, error} = result
+      error_message = Exception.message(error)
+
+      assert error_message =~
+               "Attachment #{attachment_id} not found in message #{message_id}"
+    end
+
+    test "requires data or identity argument for attachment creation" do
       result = TestApp.Discord.message_attachment_from_discord(%{})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "MessageAttachment requires data argument"
-      assert error_message =~ "attachments are not independently fetchable from API"
-    end
 
-    test "requires non-nil data argument" do
-      result = TestApp.Discord.message_attachment_from_discord(%{data: nil})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "MessageAttachment requires data argument"
-      assert error_message =~ "attachments are not independently fetchable from API"
+      assert error_message =~
+               "Identity must be a map with channel_id, message_id, and attachment_id"
     end
   end
 

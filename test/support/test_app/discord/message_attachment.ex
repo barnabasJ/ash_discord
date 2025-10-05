@@ -68,6 +68,11 @@ defmodule TestApp.Discord.MessageAttachment do
         description: "Discord message attachment TypedStruct data"
       )
 
+      argument(:identity, :map,
+        allow_nil?: true,
+        description: "Map with channel_id, message_id, and attachment_id for API fallback"
+      )
+
       change(AshDiscord.Changes.FromDiscord.MessageAttachment)
 
       upsert?(true)

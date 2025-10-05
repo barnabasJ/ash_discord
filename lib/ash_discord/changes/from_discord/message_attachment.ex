@@ -2,17 +2,20 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachment do
   @moduledoc """
   Transforms Discord MessageAttachment data into Ash resource attributes.
 
-  Message attachments are part of message data and not independently fetchable,
-  so only the `:data` argument is supported (no `:identity` fallback).
+  This change handles creating/updating MessageAttachment resources from Discord data,
+  with support for both direct TypedStruct payloads and API fallback using
+  identity-based fetching.
 
   ## Arguments
 
   - `:data` - TypedStruct `AshDiscord.Consumer.Payloads.MessageAttachment.t()` with attachment data
+  - `:identity` - Map with `%{channel_id: integer, message_id: integer, attachment_id: integer}` for API fallback
 
   ## Example
 
       create :from_discord do
         argument :data, AshDiscord.Consumer.Payloads.MessageAttachment
+        argument :identity, :map
 
         change AshDiscord.Changes.FromDiscord.MessageAttachment
       end
@@ -25,15 +28,23 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachment do
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_transaction(changeset, fn changeset ->
+      # API calls happen here, OUTSIDE transaction
       case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
-        %Payloads.MessageAttachment{} = attachment_data ->
-          transform_message_attachment(changeset, attachment_data)
-
         nil ->
-          Ash.Changeset.add_error(
-            changeset,
-            "MessageAttachment requires data argument - attachments are not independently fetchable from API"
-          )
+          # No data provided, fetch from API using identity
+          identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
+
+          case fetch_attachment_from_identity(identity) do
+            {:ok, %Payloads.MessageAttachment{} = attachment_data} ->
+              transform_message_attachment(changeset, attachment_data)
+
+            {:error, reason} ->
+              Ash.Changeset.add_error(changeset, reason)
+          end
+
+        %Payloads.MessageAttachment{} = attachment_data ->
+          # Data provided directly, use it
+          transform_message_attachment(changeset, attachment_data)
 
         other ->
           Ash.Changeset.add_error(
@@ -43,6 +54,35 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachment do
       end
     end)
   end
+
+  defp fetch_attachment_from_identity(%{
+         channel_id: channel_id,
+         message_id: message_id,
+         attachment_id: attachment_id
+       }) do
+    # Fetch message from API, which includes attachments
+    case Nostrum.Api.Message.get(channel_id, message_id) do
+      {:ok, message} ->
+        case Enum.find(message.attachments, fn att -> att.id == attachment_id end) do
+          nil ->
+            {:error,
+             "Attachment #{attachment_id} not found in message #{message_id} (channel #{channel_id})"}
+
+          attachment ->
+            Payloads.MessageAttachment.new(attachment)
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  rescue
+    ArgumentError -> {:error, :api_unavailable}
+  end
+
+  defp fetch_attachment_from_identity(_),
+    do:
+      {:error,
+       "Identity must be a map with channel_id, message_id, and attachment_id for API fallback"}
 
   defp transform_message_attachment(changeset, attachment_data) do
     # Infer content type from filename if not provided

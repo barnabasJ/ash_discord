@@ -82,6 +82,10 @@ defmodule TestApp.Discord do
     resource TestApp.Discord.GuildBan do
       define(:guild_ban_from_discord, action: :from_discord)
     end
+
+    resource TestApp.Discord.GuildAuditLogEntry do
+      define(:guild_audit_log_entry_from_discord, action: :from_discord)
+    end
   end
 
   discord do

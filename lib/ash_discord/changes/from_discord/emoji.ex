@@ -2,17 +2,20 @@ defmodule AshDiscord.Changes.FromDiscord.Emoji do
   @moduledoc """
   Transforms Discord Emoji data into Ash resource attributes.
 
-  Custom emojis belong to guilds and are not independently fetchable via simple ID,
-  so only the `:data` argument is supported (no `:identity` fallback).
+  This change handles creating/updating Emoji resources from Discord data,
+  with support for both direct TypedStruct payloads and API fallback using
+  identity-based fetching.
 
   ## Arguments
 
-  - `:data` - TypedStruct `AshDiscord.Consumer.Payloads.Emoji.t()` or map with emoji data
+  - `:data` - TypedStruct `AshDiscord.Consumer.Payloads.Emoji.t()` with emoji data
+  - `:identity` - Map with `%{guild_id: integer, emoji_id: integer}` for API fallback
 
   ## Example
 
       create :from_discord do
         argument :data, AshDiscord.Consumer.Payloads.Emoji
+        argument :identity, :map
 
         change AshDiscord.Changes.FromDiscord.Emoji
       end
@@ -25,15 +28,23 @@ defmodule AshDiscord.Changes.FromDiscord.Emoji do
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_transaction(changeset, fn changeset ->
+      # API calls happen here, OUTSIDE transaction
       case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
-        %Payloads.Emoji{} = emoji_data ->
-          transform_emoji(changeset, emoji_data)
-
         nil ->
-          Ash.Changeset.add_error(
-            changeset,
-            "Emoji requires data argument - emojis require guild context to fetch from API"
-          )
+          # No data provided, fetch from API using identity
+          identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
+
+          case fetch_emoji_from_identity(identity) do
+            {:ok, %Payloads.Emoji{} = emoji_data} ->
+              transform_emoji(changeset, emoji_data)
+
+            {:error, reason} ->
+              Ash.Changeset.add_error(changeset, reason)
+          end
+
+        %Payloads.Emoji{} = emoji_data ->
+          # Data provided directly, use it
+          transform_emoji(changeset, emoji_data)
 
         other ->
           Ash.Changeset.add_error(
@@ -43,6 +54,22 @@ defmodule AshDiscord.Changes.FromDiscord.Emoji do
       end
     end)
   end
+
+  defp fetch_emoji_from_identity(%{guild_id: guild_id, emoji_id: emoji_id}) do
+    # Fetch emoji from guild
+    case Nostrum.Api.get_guild_emoji(guild_id, emoji_id) do
+      {:ok, emoji} ->
+        Payloads.Emoji.new(emoji)
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  rescue
+    ArgumentError -> {:error, :api_unavailable}
+  end
+
+  defp fetch_emoji_from_identity(_),
+    do: {:error, "Identity must be a map with guild_id and emoji_id for API fallback"}
 
   defp transform_emoji(changeset, emoji_data) do
     # Determine if this is a custom emoji (has an ID)

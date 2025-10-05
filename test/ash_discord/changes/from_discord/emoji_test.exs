@@ -7,6 +7,12 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
 
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
+  import Mimic
+
+  setup do
+    copy(Nostrum.Api)
+    :ok
+  end
 
   describe "struct-first pattern" do
     test "creates emoji from discord struct with all attributes" do
@@ -101,24 +107,56 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
     end
   end
 
-  describe "data requirement (no API fallback)" do
-    test "requires data argument - API fallback not supported for emojis" do
-      # Emojis require guild context to fetch from API, so direct API fallback is not supported
+  describe "API fallback pattern" do
+    test "fetches emoji from API when data not provided" do
+      guild_id = 555_666_777
+      emoji_id = 999_888_777
+
+      expect(Nostrum.Api, :get_guild_emoji, fn ^guild_id, ^emoji_id ->
+        {:ok,
+         emoji(%{
+           id: emoji_id,
+           name: "api_fetched_emoji",
+           animated: true,
+           managed: false,
+           require_colons: true
+         })}
+      end)
+
+      result =
+        TestApp.Discord.emoji_from_discord(%{identity: %{guild_id: guild_id, emoji_id: emoji_id}})
+
+      assert {:ok, created_emoji} = result
+      assert created_emoji.discord_id == emoji_id
+      assert created_emoji.name == "api_fetched_emoji"
+      assert created_emoji.animated == true
+      assert created_emoji.custom == true
+      assert created_emoji.managed == false
+      assert created_emoji.require_colons == true
+    end
+
+    test "handles API errors gracefully" do
+      guild_id = 404_404_404
+      emoji_id = 999_888_777
+
+      expect(Nostrum.Api, :get_guild_emoji, fn ^guild_id, ^emoji_id ->
+        {:error, %{status_code: 404, message: "Unknown Guild"}}
+      end)
+
+      result =
+        TestApp.Discord.emoji_from_discord(%{identity: %{guild_id: guild_id, emoji_id: emoji_id}})
+
+      assert {:error, error} = result
+      error_message = Exception.message(error)
+      assert error_message =~ "Unknown Guild" or error_message =~ "404"
+    end
+
+    test "requires data or identity argument for emoji creation" do
       result = TestApp.Discord.emoji_from_discord(%{})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Emoji requires data argument"
-      assert error_message =~ "emojis require guild context to fetch from API"
-    end
-
-    test "requires non-nil data argument" do
-      result = TestApp.Discord.emoji_from_discord(%{data: nil})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "Emoji requires data argument"
-      assert error_message =~ "emojis require guild context to fetch from API"
+      assert error_message =~ "Identity must be a map with guild_id and emoji_id"
     end
   end
 

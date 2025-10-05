@@ -67,6 +67,11 @@ defmodule TestApp.Discord.Emoji do
         description: "Discord emoji TypedStruct data"
       )
 
+      argument(:identity, :map,
+        allow_nil?: true,
+        description: "Map with guild_id and emoji_id for API fallback"
+      )
+
       change(AshDiscord.Changes.FromDiscord.Emoji)
 
       upsert?(true)

@@ -78,6 +78,10 @@ defmodule TestApp.Discord do
     resource TestApp.Discord.AutoModerationRuleExecute do
       define(:auto_moderation_rule_execute_from_discord, action: :from_discord)
     end
+
+    resource TestApp.Discord.GuildBan do
+      define(:guild_ban_from_discord, action: :from_discord)
+    end
   end
 
   discord do

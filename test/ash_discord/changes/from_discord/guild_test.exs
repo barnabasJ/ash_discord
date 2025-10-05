@@ -91,6 +91,30 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
       assert created_guild.icon == "api_icon_hash"
     end
 
+    test "fetches guild with minimal attributes from API" do
+      discord_id = 888_999_000
+
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^discord_id ->
+        {:ok,
+         guild(%{
+           id: discord_id,
+           name: "Minimal API Guild",
+           description: nil,
+           icon: nil,
+           owner_id: nil,
+           member_count: nil
+         })}
+      end)
+
+      result = TestApp.Discord.guild_from_discord(%{identity: discord_id})
+
+      assert {:ok, created_guild} = result
+      assert created_guild.discord_id == discord_id
+      assert created_guild.name == "Minimal API Guild"
+      assert created_guild.description == nil
+      assert created_guild.icon == nil
+    end
+
     test "handles API errors gracefully" do
       discord_id = 404_404_404
 

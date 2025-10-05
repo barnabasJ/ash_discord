@@ -3,6 +3,10 @@ defmodule AshDiscord.Consumer.Payloads.Member do
   TypedStruct wrapper for Discord Guild Member data.
 
   Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Guild.Member.t()`.
+
+  ## References
+  - [Discord API - Guild Member](https://discord.com/developers/docs/resources/guild#guild-member-object)
+  - [Nostrum - Guild.Member](https://hexdocs.pm/nostrum/Nostrum.Struct.Guild.Member.html)
   """
 
   use Ash.TypedStruct
@@ -15,10 +19,12 @@ defmodule AshDiscord.Consumer.Payloads.Member do
     field :deaf, :boolean, description: "Whether the user is deafened in voice channels"
     field :mute, :boolean, description: "Whether the user is muted in voice channels"
 
-    field :communication_disabled_until, :utc_datetime,
-      description: "When the user's timeout will expire (if they're timed out)"
+    field :communication_disabled_until, :integer,
+      description: "Unix timestamp when the user's timeout will expire (if they're timed out)"
 
-    field :premium_since, :utc_datetime, description: "When the user started boosting the guild"
+    field :premium_since, :integer,
+      description: "Unix timestamp when the user started boosting the guild"
+
     field :avatar, :string, description: "The member's guild-specific avatar hash"
 
     field :pending, :boolean,

@@ -7,6 +7,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
+  import Mimic
 
   describe "struct-first pattern" do
     test "creates message reaction from discord struct with unicode emoji" do
@@ -129,23 +130,176 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
   end
 
   describe "API fallback pattern" do
-    test "message reaction requires data argument" do
-      # Message reactions require data argument - passing invalid arg returns "No such input" error
-      discord_id = 999_888_777
+    setup do
+      copy(Nostrum.Api.Message)
+      :ok
+    end
 
-      result = TestApp.Discord.message_reaction_from_discord(%{discord_id: discord_id})
+    test "fetches message reaction from API when data not provided" do
+      channel_id = 555_666_777
+      message_id = 999_888_777
+      user_id = 123_456_789
+      emoji_name = "👍"
+
+      expect(Nostrum.Api.Message, :get, fn ^channel_id, ^message_id ->
+        {:ok,
+         message(%{
+           id: message_id,
+           channel_id: channel_id,
+           content: "Test message",
+           reactions: [
+             %{
+               count: 5,
+               me: false,
+               emoji: %{id: nil, name: emoji_name, animated: false}
+             }
+           ]
+         })}
+      end)
+
+      result =
+        TestApp.Discord.message_reaction_from_discord(%{
+          identity: %{
+            channel_id: channel_id,
+            message_id: message_id,
+            emoji_name: emoji_name,
+            user_id: user_id
+          }
+        })
+
+      assert {:ok, created_reaction} = result
+      assert created_reaction.emoji_name == emoji_name
+      assert created_reaction.emoji_id == nil
+      assert created_reaction.emoji_animated == false
+      assert created_reaction.user_id == user_id
+      assert created_reaction.message_id == message_id
+      assert created_reaction.channel_id == channel_id
+    end
+
+    test "fetches custom emoji reaction from API" do
+      channel_id = 555_666_777
+      message_id = 999_888_777
+      user_id = 123_456_789
+      emoji_id = 987_654_321
+      emoji_name = "custom_emoji"
+
+      expect(Nostrum.Api.Message, :get, fn ^channel_id, ^message_id ->
+        {:ok,
+         message(%{
+           id: message_id,
+           channel_id: channel_id,
+           content: "Test message",
+           reactions: [
+             %{
+               count: 3,
+               me: true,
+               emoji: %{id: emoji_id, name: emoji_name, animated: true}
+             }
+           ]
+         })}
+      end)
+
+      result =
+        TestApp.Discord.message_reaction_from_discord(%{
+          identity: %{
+            channel_id: channel_id,
+            message_id: message_id,
+            emoji_id: emoji_id,
+            emoji_name: emoji_name,
+            user_id: user_id
+          }
+        })
+
+      assert {:ok, created_reaction} = result
+      assert created_reaction.emoji_name == emoji_name
+      assert created_reaction.emoji_id == emoji_id
+      assert created_reaction.emoji_animated == true
+      assert created_reaction.user_id == user_id
+    end
+
+    test "handles reaction not found on message" do
+      channel_id = 555_666_777
+      message_id = 999_888_777
+      user_id = 123_456_789
+      emoji_name = "👎"
+
+      expect(Nostrum.Api.Message, :get, fn ^channel_id, ^message_id ->
+        {:ok,
+         message(%{
+           id: message_id,
+           channel_id: channel_id,
+           content: "Test message",
+           reactions: [
+             %{
+               count: 1,
+               me: false,
+               emoji: %{id: nil, name: "👍", animated: false}
+             }
+           ]
+         })}
+      end)
+
+      result =
+        TestApp.Discord.message_reaction_from_discord(%{
+          identity: %{
+            channel_id: channel_id,
+            message_id: message_id,
+            emoji_name: emoji_name,
+            user_id: user_id
+          }
+        })
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "No such input `discord_id`"
+      assert error_message =~ "Reaction with emoji #{emoji_name} not found"
     end
 
-    test "requires data argument for message reaction creation" do
+    test "handles API errors gracefully" do
+      channel_id = 404_404_404
+      message_id = 999_888_777
+      user_id = 123_456_789
+      emoji_name = "👍"
+
+      expect(Nostrum.Api.Message, :get, fn ^channel_id, ^message_id ->
+        {:error, %{status_code: 404, message: "Unknown Channel"}}
+      end)
+
+      result =
+        TestApp.Discord.message_reaction_from_discord(%{
+          identity: %{
+            channel_id: channel_id,
+            message_id: message_id,
+            emoji_name: emoji_name,
+            user_id: user_id
+          }
+        })
+
+      assert {:error, error} = result
+      error_message = Exception.message(error)
+      assert error_message =~ "Unknown Channel" or error_message =~ "404"
+    end
+
+    test "requires complete identity with all required fields" do
+      result =
+        TestApp.Discord.message_reaction_from_discord(%{
+          identity: %{channel_id: 555_666_777, message_id: 999_888_777}
+        })
+
+      assert {:error, error} = result
+      error_message = Exception.message(error)
+
+      assert error_message =~ "channel_id, message_id, emoji_name, and user_id" or
+               error_message =~ "requires identity"
+    end
+
+    test "requires data or identity argument for message reaction creation" do
       result = TestApp.Discord.message_reaction_from_discord(%{})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "MessageReaction requires data argument"
+
+      assert error_message =~ "channel_id, message_id, emoji_name, and user_id" or
+               error_message =~ "requires identity"
     end
   end
 

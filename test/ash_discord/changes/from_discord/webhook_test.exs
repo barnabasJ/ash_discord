@@ -7,6 +7,12 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
 
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
+  import Mimic
+
+  setup do
+    copy(Nostrum.Api)
+    :ok
+  end
 
   describe "struct-first pattern" do
     test "creates webhook from discord struct with all attributes" do
@@ -111,23 +117,52 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
   end
 
   describe "API fallback pattern" do
-    test "webhook API fallback is not supported" do
-      # Webhooks don't support direct API fetching in our implementation
-      discord_id = 999_888_777
+    test "fetches webhook from API when data not provided" do
+      webhook_id = 999_888_777
 
-      result = TestApp.Discord.webhook_from_discord(%{identity: discord_id})
+      expect(Nostrum.Api, :get_webhook, fn ^webhook_id ->
+        {:ok,
+         webhook(%{
+           id: webhook_id,
+           name: "API Fetched Webhook",
+           channel_id: 555_666_777,
+           guild_id: 111_222_333,
+           avatar: "api_avatar_hash",
+           token: "api_token_secret"
+         })}
+      end)
+
+      result = TestApp.Discord.webhook_from_discord(%{identity: webhook_id})
+
+      assert {:ok, created_webhook} = result
+      assert created_webhook.discord_id == webhook_id
+      assert created_webhook.name == "API Fetched Webhook"
+      assert created_webhook.channel_id == 555_666_777
+      assert created_webhook.guild_id == 111_222_333
+      assert created_webhook.avatar == "api_avatar_hash"
+      assert created_webhook.token == "api_token_secret"
+    end
+
+    test "handles API errors gracefully" do
+      webhook_id = 404_404_404
+
+      expect(Nostrum.Api, :get_webhook, fn ^webhook_id ->
+        {:error, %{status_code: 404, message: "Unknown Webhook"}}
+      end)
+
+      result = TestApp.Discord.webhook_from_discord(%{identity: webhook_id})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ ":api_unavailable" or error_message =~ "Identity"
+      assert error_message =~ "Unknown Webhook" or error_message =~ "404"
     end
 
-    test "requires data argument for webhook creation" do
+    test "requires data or identity argument for webhook creation" do
       result = TestApp.Discord.webhook_from_discord(%{})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Identity" or error_message =~ "is required"
+      assert error_message =~ "Identity must be an integer Discord webhook ID"
     end
   end
 

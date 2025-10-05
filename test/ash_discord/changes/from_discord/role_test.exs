@@ -7,6 +7,12 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
 
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
+  import Mimic
+
+  setup do
+    copy(Nostrum.Api.Guild)
+    :ok
+  end
 
   describe "struct-first pattern" do
     test "creates role from discord struct with all attributes" do
@@ -111,25 +117,76 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
   end
 
   describe "API fallback pattern" do
-    test "role API fallback is not supported" do
-      # Roles don't support direct API fetching in our implementation
-      discord_id = 999_888_777
+    test "fetches role from API when data not provided" do
+      guild_id = 555_666_777
+      role_id = 999_888_777
 
-      result = TestApp.Discord.role_from_discord(%{identity: discord_id})
+      expect(Nostrum.Api.Guild, :roles, fn ^guild_id ->
+        {:ok,
+         [
+           role(%{
+             id: role_id,
+             name: "API Fetched Role",
+             color: 16_711_680,
+             hoist: true,
+             position: 10,
+             permissions: 2048,
+             managed: false,
+             mentionable: true
+           }),
+           role(%{id: 123_456_789, name: "Other Role", permissions: 1024})
+         ]}
+      end)
+
+      result =
+        TestApp.Discord.role_from_discord(%{identity: %{guild_id: guild_id, role_id: role_id}})
+
+      assert {:ok, created_role} = result
+      assert created_role.discord_id == role_id
+      assert created_role.name == "API Fetched Role"
+      assert created_role.color == 16_711_680
+      assert created_role.hoist == true
+      assert created_role.permissions == "2048"
+    end
+
+    test "handles API errors gracefully" do
+      guild_id = 404_404_404
+      role_id = 999_888_777
+
+      expect(Nostrum.Api.Guild, :roles, fn ^guild_id ->
+        {:error, %{status_code: 404, message: "Unknown Guild"}}
+      end)
+
+      result =
+        TestApp.Discord.role_from_discord(%{identity: %{guild_id: guild_id, role_id: role_id}})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "No such input" or error_message =~ "is invalid"
+      assert error_message =~ "Unknown Guild" or error_message =~ "404"
     end
 
-    test "requires data argument for creation" do
+    test "handles role not found in guild" do
+      guild_id = 555_666_777
+      role_id = 999_999_999
+
+      expect(Nostrum.Api.Guild, :roles, fn ^guild_id ->
+        {:ok, [role(%{id: 123_456_789, name: "Other Role", permissions: 1024})]}
+      end)
+
+      result =
+        TestApp.Discord.role_from_discord(%{identity: %{guild_id: guild_id, role_id: role_id}})
+
+      assert {:error, error} = result
+      error_message = Exception.message(error)
+      assert error_message =~ "Role #{role_id} not found in guild #{guild_id}"
+    end
+
+    test "requires data or identity argument for role creation" do
       result = TestApp.Discord.role_from_discord(%{})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-
-      assert error_message =~ "is required" or error_message =~ "Identity" or
-               error_message =~ "data"
+      assert error_message =~ "Identity must be a map with guild_id and role_id"
     end
   end
 

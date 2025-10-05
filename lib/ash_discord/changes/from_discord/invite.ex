@@ -58,7 +58,7 @@ defmodule AshDiscord.Changes.FromDiscord.Invite do
 
   defp fetch_invite(code) when is_binary(code) do
     case Nostrum.Api.get_invite(code) do
-      {:ok, invite} -> {:ok, Payloads.Invite.new(invite)}
+      {:ok, invite} -> Payloads.Invite.new(invite)
       {:error, reason} -> {:error, reason}
     end
   rescue

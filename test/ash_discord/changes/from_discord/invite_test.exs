@@ -10,6 +10,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
   import Mimic
 
   setup do
+    copy(Nostrum.Api)
     copy(Nostrum.Api.Channel)
     copy(Nostrum.Api.Guild)
     copy(Nostrum.Api.User)
@@ -191,27 +192,55 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
   end
 
   describe "API fallback pattern" do
-    test "invite requires invite code" do
-      # Invites require an invite code to be valid
-      discord_id = "abc123def"
+    test "fetches invite from API when data not provided" do
+      invite_code = "abc123def"
 
-      result = TestApp.Discord.invite_from_discord(%{identity: discord_id})
+      expect(Nostrum.Api, :get_invite, fn ^invite_code ->
+        {:ok,
+         invite(%{
+           code: invite_code,
+           guild: guild(%{id: 555_666_777}),
+           channel: channel(%{id: 111_222_333}),
+           inviter: user(%{id: 987_654_321}),
+           uses: 10,
+           max_uses: 100,
+           max_age: 7200,
+           temporary: false,
+           created_at: "2023-08-15T14:30:00Z"
+         })}
+      end)
+
+      result = TestApp.Discord.invite_from_discord(%{identity: invite_code})
+
+      assert {:ok, created_invite} = result
+      assert created_invite.code == invite_code
+      assert created_invite.guild_discord_id == 555_666_777
+      assert created_invite.channel_discord_id == 111_222_333
+      assert created_invite.inviter_discord_id == 987_654_321
+      assert created_invite.uses == 10
+      assert created_invite.max_uses == 100
+    end
+
+    test "handles API errors gracefully" do
+      invite_code = "notfound404"
+
+      expect(Nostrum.Api, :get_invite, fn ^invite_code ->
+        {:error, %{status_code: 404, message: "Unknown Invite"}}
+      end)
+
+      result = TestApp.Discord.invite_from_discord(%{identity: invite_code})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-
-      assert error_message =~ "invite code" or error_message =~ "code" or
-               error_message =~ "Identity"
+      assert error_message =~ "Unknown Invite" or error_message =~ "404"
     end
 
-    test "requires data argument for invite creation" do
+    test "requires data or identity argument for invite creation" do
       result = TestApp.Discord.invite_from_discord(%{})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-
-      assert error_message =~ "is required" or error_message =~ "Identity" or
-               error_message =~ "data"
+      assert error_message =~ "Identity must be a string invite code"
     end
   end
 

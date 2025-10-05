@@ -169,26 +169,24 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
     end
   end
 
-  describe "API fallback pattern" do
-    test "voice state API fallback is not supported" do
-      # Voice states don't support direct API fetching in our implementation
-      discord_id = 999_888_777
-
-      result = TestApp.Discord.voice_state_from_discord(%{identity: discord_id})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "No such input" or error_message =~ "is invalid"
-    end
-
-    test "requires discord_struct for voice state creation" do
+  describe "data requirement (no API fallback)" do
+    test "requires data argument - API fallback not supported for ephemeral events" do
+      # Voice states are ephemeral and not independently fetchable from API
       result = TestApp.Discord.voice_state_from_discord(%{})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
+      assert error_message =~ "VoiceState requires data argument"
+      assert error_message =~ "voice states are not independently fetchable from API"
+    end
 
-      assert error_message =~ "is required" or error_message =~ "Identity" or
-               error_message =~ "data"
+    test "requires non-nil data argument" do
+      result = TestApp.Discord.voice_state_from_discord(%{data: nil})
+
+      assert {:error, error} = result
+      error_message = Exception.message(error)
+      assert error_message =~ "VoiceState requires data argument"
+      assert error_message =~ "voice states are not independently fetchable from API"
     end
   end
 

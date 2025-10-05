@@ -150,22 +150,19 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
     end
   end
 
-  describe "API fallback pattern" do
-    test "message attachment API fallback is not supported" do
-      # Message attachments don't support direct API fetching in our implementation
-      # Trying to pass identity argument should fail with "No such input" error
-      discord_id = 999_888_777
-
-      result = TestApp.Discord.message_attachment_from_discord(%{identity: discord_id})
+  describe "data requirement (no API fallback)" do
+    test "requires data argument - API fallback not supported for attachments" do
+      # Message attachments are not independently fetchable from API
+      result = TestApp.Discord.message_attachment_from_discord(%{})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "No such input" or error_message =~ "is invalid"
+      assert error_message =~ "MessageAttachment requires data argument"
+      assert error_message =~ "attachments are not independently fetchable from API"
     end
 
-    test "requires data argument for message attachment creation" do
-      # Empty input should fail because data argument is required
-      result = TestApp.Discord.message_attachment_from_discord(%{})
+    test "requires non-nil data argument" do
+      result = TestApp.Discord.message_attachment_from_discord(%{data: nil})
 
       assert {:error, error} = result
       error_message = Exception.message(error)

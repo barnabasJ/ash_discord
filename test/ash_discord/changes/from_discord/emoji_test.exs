@@ -101,24 +101,24 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
     end
   end
 
-  describe "API fallback pattern" do
-    test "emoji API fallback is not supported" do
-      # Emojis don't support direct API fetching in our implementation
-      discord_id = 999_888_777
-
-      result = TestApp.Discord.emoji_from_discord(%{discord_id: discord_id})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "No such input `discord_id`"
-    end
-
-    test "requires discord_struct for emoji creation" do
+  describe "data requirement (no API fallback)" do
+    test "requires data argument - API fallback not supported for emojis" do
+      # Emojis require guild context to fetch from API, so direct API fallback is not supported
       result = TestApp.Discord.emoji_from_discord(%{})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
       assert error_message =~ "Emoji requires data argument"
+      assert error_message =~ "emojis require guild context to fetch from API"
+    end
+
+    test "requires non-nil data argument" do
+      result = TestApp.Discord.emoji_from_discord(%{data: nil})
+
+      assert {:error, error} = result
+      error_message = Exception.message(error)
+      assert error_message =~ "Emoji requires data argument"
+      assert error_message =~ "emojis require guild context to fetch from API"
     end
   end
 

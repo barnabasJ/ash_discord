@@ -23,7 +23,6 @@ defmodule AshDiscord.Changes.FromDiscord.Webhook do
 
   use Ash.Resource.Change
 
-  alias AshDiscord.Changes.FromDiscord.ApiFetchers
   alias AshDiscord.Consumer.Payloads
 
   @impl true
@@ -58,7 +57,7 @@ defmodule AshDiscord.Changes.FromDiscord.Webhook do
 
   defp fetch_webhook(discord_id) when is_integer(discord_id) do
     case Nostrum.Api.get_webhook(discord_id) do
-      {:ok, webhook} -> {:ok, Payloads.Webhook.new(webhook)}
+      {:ok, webhook} -> Payloads.Webhook.new(webhook)
       {:error, reason} -> {:error, reason}
     end
   rescue

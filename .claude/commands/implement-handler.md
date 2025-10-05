@@ -55,6 +55,8 @@ Before starting, ensure you understand the overall architecture:
 - `lib/ash_discord/consumer/payloads/` - TypedStructs for event payloads
 - `lib/ash_discord/changes/from_discord/` - Changes for processing payloads
 - `test/support/test_app/discord/` - Test resources for verifying handlers
+- `test/ash_discord/consumer/handler/` - Tests for each handler module
+- `test/ash_discord/changes/from_discord` - Tests for change modules
 
 This workflow ensures a consistent and reliable implementation of event handlers
 across the AshDiscord library.

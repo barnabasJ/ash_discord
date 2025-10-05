@@ -23,7 +23,7 @@ defmodule AshDiscord.Changes.FromDiscord.Role do
 
   use Ash.Resource.Change
 
-  alias AshDiscord.Changes.FromDiscord.{ApiFetchers, Transformations}
+  alias AshDiscord.Changes.FromDiscord.Transformations
   alias AshDiscord.Consumer.Payloads
 
   @impl true
@@ -63,7 +63,7 @@ defmodule AshDiscord.Changes.FromDiscord.Role do
       {:ok, roles} ->
         case Enum.find(roles, fn role -> role.id == role_id end) do
           nil -> {:error, "Role #{role_id} not found in guild #{guild_id}"}
-          role -> {:ok, Payloads.Role.new(role)}
+          role -> Payloads.Role.new(role)
         end
 
       {:error, reason} ->

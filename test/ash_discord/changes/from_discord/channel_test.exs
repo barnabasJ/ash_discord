@@ -131,15 +131,48 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
   end
 
   describe "API fallback pattern" do
-    test "channel API fallback fails when API is unavailable" do
-      # Channel API fetching is supported but may fail in test environment
+    setup do
+      Mimic.copy(Nostrum.Api.Channel)
+      :ok
+    end
+
+    test "fetches channel from API when data not provided" do
       discord_id = 999_888_777
+
+      Mimic.expect(Nostrum.Api.Channel, :get, fn ^discord_id ->
+        {:ok,
+         channel(%{
+           id: discord_id,
+           name: "api-fetched-channel",
+           type: 0,
+           topic: "Fetched from Discord API",
+           position: 10
+         })}
+      end)
+
+      result = TestApp.Discord.channel_from_discord(%{identity: discord_id})
+
+      assert {:ok, created_channel} = result
+      assert created_channel.discord_id == discord_id
+      assert created_channel.name == "api-fetched-channel"
+      assert created_channel.topic == "Fetched from Discord API"
+      assert created_channel.position == 10
+    end
+
+    test "handles API errors gracefully" do
+      discord_id = 404_404_404
+
+      Mimic.expect(Nostrum.Api.Channel, :get, fn ^discord_id ->
+        {:error, %{status_code: 404, message: "Unknown Channel"}}
+      end)
 
       result = TestApp.Discord.channel_from_discord(%{identity: discord_id})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "Channel ID is required" or error_message =~ ":api_unavailable"
+      # API errors are wrapped in "unknown error" now
+      assert error_message =~ "unknown error"
+      assert error_message =~ "Unknown Channel"
     end
 
     test "requires data or identity argument for channel creation" do
@@ -147,9 +180,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-
-      assert error_message =~ "is required" or error_message =~ "data" or
-               error_message =~ "identity"
+      assert error_message =~ "Channel ID is required for API fallback"
     end
   end
 

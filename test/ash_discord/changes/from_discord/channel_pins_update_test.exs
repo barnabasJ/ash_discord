@@ -60,10 +60,9 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
     end
   end
 
-  describe "API fallback pattern" do
-    test "API fallback is NOT supported for ephemeral events" do
+  describe "data requirement (no API fallback)" do
+    test "requires data argument - API fallback not supported for ephemeral events" do
       # ChannelPinsUpdate events are ephemeral and not fetchable from API
-      # The resource doesn't even expose an identity argument
       result = TestApp.Discord.channel_pins_update_from_discord(%{})
 
       assert {:error, error} = result
@@ -73,7 +72,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
                "ChannelPinsUpdate requires data argument - pins update events are not fetchable from API"
     end
 
-    test "requires data argument for channel pins update creation" do
+    test "requires non-nil data argument" do
       result = TestApp.Discord.channel_pins_update_from_discord(%{data: nil})
 
       assert {:error, error} = result

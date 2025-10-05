@@ -2,7 +2,8 @@ defmodule AshDiscord.Consumer.Payloads.Webhook do
   @moduledoc """
   TypedStruct wrapper for Discord Webhook data.
 
-  Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Webhook.t()`.
+  Provides a unified AshDiscord type with all fields from `Nostrum.Struct.Webhook.t()`,
+  plus the `type` field from the Discord API.
 
   ## References
   - [Discord API - Webhook](https://discord.com/developers/docs/resources/webhook#webhook-object)
@@ -12,23 +13,56 @@ defmodule AshDiscord.Consumer.Payloads.Webhook do
   use Ash.TypedStruct
 
   typed_struct do
-    field :id, :integer, allow_nil?: false, description: "Webhook id"
-    field :name, :string, description: "Webhook name"
-    field :avatar, :string, description: "Webhook avatar hash"
-    field :token, :string, description: "Secure token for the webhook"
-    field :channel_id, :integer, description: "Channel id this webhook is for"
-    field :guild_id, :integer, description: "Guild id this webhook is for"
-    field :type, :integer, description: "Type of webhook"
+    field :id, :integer,
+      allow_nil?: false,
+      description: "The id of the webhook (snowflake)"
+
+    field :type, :integer,
+      allow_nil?: false,
+      description: "The type of the webhook (1 = Incoming, 2 = Channel Follower, 3 = Application)"
+
+    field :guild_id, :integer,
+      allow_nil?: true,
+      description: "The guild id this webhook is for (snowflake), if available"
+
+    field :channel_id, :integer,
+      allow_nil?: false,
+      description: "The channel id this webhook is for (snowflake)"
+
+    field :user, :map,
+      allow_nil?: true,
+      description:
+        "The user this webhook was created by (not returned when getting a webhook with its token)"
+
+    field :name, :string,
+      allow_nil?: true,
+      description: "The default name of the webhook"
+
+    field :avatar, :string,
+      allow_nil?: true,
+      description: "The default avatar of the webhook (avatar hash)"
+
+    field :token, :string,
+      allow_nil?: true,
+      description: "The secure token of the webhook (returned for Incoming Webhooks)"
+
+    field :application_id, :integer,
+      allow_nil?: true,
+      description: "The bot/OAuth2 application that created this webhook (snowflake)"
 
     field :source_guild, :map,
-      description: "Partial guild object for webhooks created from server following"
+      allow_nil?: true,
+      description:
+        "The guild of the channel that this webhook is following (partial guild object for Channel Follower Webhooks)"
 
     field :source_channel, :map,
-      description: "Partial channel object for webhooks created from server following"
+      allow_nil?: true,
+      description:
+        "The channel that this webhook is following (partial channel object with id and name for Channel Follower Webhooks)"
 
-    field :user, :map, description: "User object of the webhook creator"
-    field :application_id, :integer, description: "Bot/OAuth2 application id"
-    field :url, :string, description: "URL for executing the webhook"
+    field :url, :string,
+      allow_nil?: true,
+      description: "The url used for executing the webhook (returned by the webhooks OAuth2 flow)"
   end
 
   @doc """
@@ -36,6 +70,8 @@ defmodule AshDiscord.Consumer.Payloads.Webhook do
 
   Accepts a `Nostrum.Struct.Webhook.t()` and creates an AshDiscord Webhook TypedStruct.
   Also handles being passed a Webhook payload (no-op for already-converted payloads) or a raw map for validation.
+
+  Note: Nostrum.Struct.Webhook does not include the `type` field, so it will be nil when converting from Nostrum.
   """
   def new(%__MODULE__{} = webhook_payload) do
     {:ok, webhook_payload}

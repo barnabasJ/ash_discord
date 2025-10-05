@@ -245,13 +245,38 @@ defmodule AshDiscord.Test.Generators.Discord do
   def message(attrs \\ %{}) do
     author_user = user()
 
+    # Generate member if this is a guild message (80% of messages)
+    has_guild = Faker.Util.pick([true, true, true, true, false])
+    guild_id_value = if has_guild, do: generate_snowflake(), else: nil
+
+    member_value =
+      if has_guild do
+        %Nostrum.Struct.Guild.Member{
+          user_id: author_user.id,
+          nick:
+            if(Faker.Util.pick([true, false, false]), do: Faker.Person.first_name(), else: nil),
+          roles: [],
+          joined_at: Faker.DateTime.backward(365),
+          premium_since: nil,
+          communication_disabled_until: nil,
+          deaf: false,
+          mute: false,
+          pending: false,
+          flags: 0
+        }
+      else
+        nil
+      end
+
     defaults = %{
       id: generate_snowflake(),
       channel_id: generate_snowflake(),
-      guild_id: nil,
+      guild_id: guild_id_value,
       author: author_user,
+      member: member_value,
       content: Faker.Lorem.sentence(3..50),
-      timestamp: Faker.DateTime.backward(30) |> DateTime.to_iso8601(),
+      # timestamp should be DateTime, not ISO8601 string
+      timestamp: Faker.DateTime.backward(30),
       edited_timestamp: nil,
       tts: false,
       mention_everyone: false,
@@ -270,24 +295,11 @@ defmodule AshDiscord.Test.Generators.Discord do
     # Add edited timestamp 25% of the time, but only if not explicitly set
     final_result =
       if Map.has_key?(attrs, :edited_timestamp) do
-        # If edited_timestamp was explicitly provided in attrs, respect it
         result
       else
-        # Only add random edited_timestamp if not explicitly set
         if Faker.Util.pick([true, false, false, false]) do
-          edited_time =
-            result.timestamp
-            |> DateTime.from_iso8601()
-            |> case do
-              {:ok, dt, _} ->
-                dt
-                |> DateTime.add(Faker.random_between(60, 7200), :second)
-                |> DateTime.to_iso8601()
-
-              _ ->
-                result.timestamp
-            end
-
+          # edited_timestamp should be DateTime, add 1-2 hours after original timestamp
+          edited_time = DateTime.add(result.timestamp, Faker.random_between(3600, 7200), :second)
           Map.put(result, :edited_timestamp, edited_time)
         else
           result
@@ -322,22 +334,90 @@ defmodule AshDiscord.Test.Generators.Discord do
   def interaction(attrs \\ %{}) do
     interaction_user = user()
 
+    # 20% DM interactions
+    has_guild = Faker.Util.pick([true, true, true, true, false])
+
+    # Vary interaction types: 60% commands, 20% components, 20% modals
+    interaction_type = Faker.Util.pick([2, 2, 2, 3, 5])
+
+    # Adjust data based on type
+    data_value =
+      case interaction_type do
+        1 ->
+          nil
+
+        2 ->
+          %{
+            name: Faker.Util.pick(["hello", "help", "ping", "info"]),
+            options: []
+          }
+
+        3 ->
+          %{
+            component_type: 2,
+            custom_id: "button_#{Faker.UUID.v4()}"
+          }
+
+        4 ->
+          %{
+            name: "search",
+            options: [%{name: "query", value: Faker.Lorem.word()}]
+          }
+
+        5 ->
+          %{
+            custom_id: "modal_#{Faker.UUID.v4()}",
+            components: []
+          }
+      end
+
     defaults = %{
       id: generate_snowflake(),
       application_id: generate_snowflake(),
-      type: 2,
-      data: %{
-        name: Faker.Util.pick(["hello", "help", "ping", "info"]),
-        options: []
-      },
-      guild_id: generate_snowflake(),
+      type: interaction_type,
+      data: data_value,
+      guild_id: if(has_guild, do: generate_snowflake(), else: nil),
       channel_id: generate_snowflake(),
-      member: %{
-        user: interaction_user
-      },
+      channel:
+        if(Faker.Util.pick([true, false, false]),
+          do: %{
+            id: generate_snowflake(),
+            type: 0,
+            name: Faker.Lorem.word()
+          },
+          else: nil
+        ),
+      member:
+        if has_guild do
+          struct(Nostrum.Struct.Guild.Member, %{
+            user_id: interaction_user.id,
+            nick: nil,
+            roles: [],
+            joined_at: Faker.DateTime.backward(365),
+            premium_since: nil,
+            communication_disabled_until: nil,
+            deaf: false,
+            mute: false,
+            pending: false,
+            flags: 0
+          })
+        else
+          nil
+        end,
       user: interaction_user,
       token: "#{Faker.UUID.v4()}#{Faker.UUID.v4()}",
-      version: 1
+      version: 1,
+      message:
+        if(interaction_type == 3,
+          do: %{
+            id: generate_snowflake(),
+            channel_id: generate_snowflake(),
+            content: Faker.Lorem.sentence(1..10)
+          },
+          else: nil
+        ),
+      locale: Faker.Util.pick(["en-US", "en-GB", "fr", "de", "es-ES", "pt-BR", "ja", "zh-CN"]),
+      guild_locale: if(has_guild, do: Faker.Util.pick(["en-US", "en-GB", "fr", "de"]), else: nil)
     }
 
     struct(Nostrum.Struct.Interaction, merge_attrs(defaults, attrs))
@@ -371,12 +451,24 @@ defmodule AshDiscord.Test.Generators.Discord do
       user_id: member_user.id,
       nick: if(Faker.Util.pick([true, false, false]), do: Faker.Person.first_name(), else: nil),
       roles: [],
-      # joined_at is Unix timestamp in milliseconds - convert from DateTime
-      joined_at: Faker.DateTime.backward(365) |> DateTime.to_unix(:millisecond),
-      premium_since: nil,
+      # joined_at should be DateTime, not Unix timestamp
+      joined_at: Faker.DateTime.backward(365),
+      # premium_since should be DateTime 25% of the time for boosted members
+      premium_since:
+        if(Faker.Util.pick([true, false, false, false]),
+          do: Faker.DateTime.backward(30),
+          else: nil
+        ),
+      # communication_disabled_until should be DateTime 5% of the time for timed-out members
+      communication_disabled_until:
+        if(Faker.Util.pick([true] ++ List.duplicate(false, 19)),
+          do: Faker.DateTime.forward(7),
+          else: nil
+        ),
       deaf: false,
       mute: false,
-      pending: false
+      pending: false,
+      flags: 0
     }
 
     struct(Nostrum.Struct.Guild.Member, merge_attrs(defaults, attrs))
@@ -521,6 +613,7 @@ defmodule AshDiscord.Test.Generators.Discord do
   def webhook(attrs \\ %{}) do
     defaults = %{
       id: generate_snowflake(),
+      type: Faker.Util.pick([1, 2, 3]),
       guild_id: generate_snowflake(),
       channel_id: generate_snowflake(),
       user: user(),
@@ -555,15 +648,93 @@ defmodule AshDiscord.Test.Generators.Discord do
   def invite(attrs \\ %{}) do
     code = Faker.Lorem.characters(6..10) |> to_string() |> String.replace(~r/[^a-zA-Z0-9]/, "")
 
+    # 80% partial objects, 20% IDs only
+    has_objects = Faker.Util.pick([true, true, true, true, false])
+
+    # 50% extended invites with counts
+    has_counts = Faker.Util.pick([true, false])
+
+    # 10% target invites (stream/embedded app)
+    has_target = Faker.Util.pick([true] ++ List.duplicate(false, 9))
+
+    # 5% event invites
+    has_event = Faker.Util.pick([true] ++ List.duplicate(false, 19))
+
+    guild_id_value = generate_snowflake()
+    channel_id_value = generate_snowflake()
+
     defaults = %{
       code: code,
-      guild: guild(),
-      channel: channel(),
-      inviter: user(),
-      target_user: nil,
-      expires_at: Faker.DateTime.forward(7) |> DateTime.to_iso8601(),
-      max_uses: 0,
-      uses: 0
+      guild:
+        if has_objects do
+          %{
+            id: guild_id_value,
+            name: Faker.Company.name(),
+            splash: nil,
+            banner: nil,
+            description: nil,
+            icon: nil,
+            features: [],
+            verification_level: 0,
+            vanity_url_code: nil
+          }
+        else
+          nil
+        end,
+      guild_id: if(not has_objects, do: guild_id_value, else: nil),
+      channel:
+        if has_objects do
+          %{
+            id: channel_id_value,
+            name: Faker.Lorem.word(),
+            type: Faker.Util.pick([0, 2, 5, 13, 15])
+          }
+        else
+          nil
+        end,
+      channel_id: if(not has_objects, do: channel_id_value, else: nil),
+      inviter: %{
+        id: generate_snowflake(),
+        username: Faker.Internet.user_name(),
+        discriminator: "0",
+        avatar: nil
+      },
+      target_user:
+        if has_target do
+          %{
+            id: generate_snowflake(),
+            username: Faker.Internet.user_name(),
+            discriminator: "0",
+            avatar: nil
+          }
+        else
+          nil
+        end,
+      target_type: if(has_target, do: Faker.Util.pick([1, 2]), else: nil),
+      target_user_type: nil,
+      approximate_presence_count: if(has_counts, do: Faker.random_between(10, 1000), else: nil),
+      approximate_member_count: if(has_counts, do: Faker.random_between(100, 10_000), else: nil),
+      uses: Faker.random_between(0, 100),
+      max_uses: Faker.Util.pick([0, 10, 25, 50, 100]),
+      max_age: Faker.Util.pick([0, 1800, 3600, 86_400, 604_800]),
+      temporary: Faker.Util.pick([true, false, false]),
+      created_at: Faker.DateTime.backward(30) |> DateTime.to_iso8601(),
+      expires_at:
+        if(Faker.Util.pick([true, false, false]),
+          do: Faker.DateTime.forward(7) |> DateTime.to_iso8601(),
+          else: nil
+        ),
+      stage_instance: nil,
+      guild_scheduled_event:
+        if has_event do
+          %{
+            id: generate_snowflake(),
+            name: Faker.Lorem.sentence(1..5),
+            description: Faker.Lorem.sentence(5..20)
+          }
+        else
+          nil
+        end
     }
 
     struct(Nostrum.Struct.Invite, merge_attrs(defaults, attrs))
@@ -730,18 +901,57 @@ defmodule AshDiscord.Test.Generators.Discord do
       true
   """
   def voice_state(attrs \\ %{}) do
+    voice_user = user()
+
+    # 80% guild voice, 20% DM voice (Discord supports DM voice calls)
+    has_guild = Faker.Util.pick([true, true, true, true, false])
+    guild_id_value = if has_guild, do: generate_snowflake(), else: nil
+
+    member_value =
+      if has_guild do
+        %Nostrum.Struct.Guild.Member{
+          user_id: voice_user.id,
+          nick:
+            if(Faker.Util.pick([true, false, false]), do: Faker.Person.first_name(), else: nil),
+          roles: [],
+          joined_at: Faker.DateTime.backward(365),
+          premium_since:
+            if(Faker.Util.pick([true, false, false, false]),
+              do: Faker.DateTime.backward(30),
+              else: nil
+            ),
+          communication_disabled_until: nil,
+          deaf: false,
+          mute: false,
+          pending: false,
+          flags: 0
+        }
+      else
+        nil
+      end
+
+    # Support disconnection pattern (10% of voice states)
+    channel_id_value =
+      if Faker.Util.pick(List.duplicate(true, 9) ++ [false]) do
+        generate_snowflake()
+      else
+        nil
+      end
+
     defaults = %{
-      guild_id: generate_snowflake(),
-      channel_id: generate_snowflake(),
-      user_id: generate_snowflake(),
+      guild_id: guild_id_value,
+      channel_id: channel_id_value,
+      user_id: voice_user.id,
+      member: member_value,
       session_id: Faker.UUID.v4(),
       deaf: false,
       mute: false,
-      self_deaf: false,
-      self_mute: false,
-      self_stream: false,
-      self_video: false,
-      suppress: false
+      self_deaf: Faker.Util.pick([true, false, false]),
+      self_mute: Faker.Util.pick([true, false, false]),
+      self_stream: Faker.Util.pick([true] ++ List.duplicate(false, 9)),
+      self_video: Faker.Util.pick([true, false, false, false]),
+      suppress: false,
+      request_to_speak_timestamp: nil
     }
 
     struct(Nostrum.Struct.Event.VoiceState, merge_attrs(defaults, attrs))
@@ -809,21 +1019,33 @@ defmodule AshDiscord.Test.Generators.Discord do
   """
   def message_reaction(attrs \\ %{}) do
     # Generate either unicode or custom emoji
-    emoji_data =
+    emoji_struct =
       if Faker.Util.pick([true, false]) do
-        # Unicode emoji
-        %{id: nil, name: Faker.Util.pick(["👍", "👎", "❤️", "😂", "😢", "🔥"]), animated: false}
+        # Unicode emoji (id is nil)
+        struct(Nostrum.Struct.Emoji, %{
+          id: nil,
+          name: Faker.Util.pick(["👍", "👎", "❤️", "😂", "😢", "🔥"]),
+          animated: false,
+          managed: false,
+          require_colons: false,
+          roles: [],
+          user: nil
+        })
       else
         # Custom emoji
-        %{
+        struct(Nostrum.Struct.Emoji, %{
           id: generate_snowflake(),
           name: Faker.Lorem.word(),
-          animated: Faker.Util.pick([true, false])
-        }
+          animated: Faker.Util.pick([true, false]),
+          managed: false,
+          require_colons: true,
+          roles: [],
+          user: nil
+        })
       end
 
     defaults = %{
-      emoji: emoji_data,
+      emoji: emoji_struct,
       count: Faker.random_between(1, 10),
       me: Faker.Util.pick([true, false])
     }
@@ -866,8 +1088,10 @@ defmodule AshDiscord.Test.Generators.Discord do
       name: Faker.Lorem.word(),
       description: Faker.Lorem.sentence(3..10),
       tags: Enum.join([Faker.Lorem.word(), Faker.Lorem.word()], ","),
-      type: 1,
-      format_type: Faker.Util.pick([1, 2, 3]),
+      # type should be atom, not integer
+      type: Faker.Util.pick([:standard, :guild]),
+      # format_type should be atom, not integer
+      format_type: Faker.Util.pick([:png, :apng, :lottie, :gif]),
       available: true,
       guild_id: generate_snowflake()
     }
@@ -1186,11 +1410,19 @@ defmodule AshDiscord.Test.Generators.Discord do
       123
   """
   def thread_member(attrs \\ %{}) do
+    # 20% GUILD_CREATE events (id and user_id omitted)
+    is_guild_create = Faker.Util.pick([true] ++ List.duplicate(false, 4))
+
     defaults = %{
-      id: generate_snowflake(),
-      user_id: generate_snowflake(),
-      join_timestamp: Faker.DateTime.backward(7) |> DateTime.to_iso8601(),
-      flags: 0
+      id: if(is_guild_create, do: nil, else: generate_snowflake()),
+      user_id: if(is_guild_create, do: nil, else: generate_snowflake()),
+      join_timestamp: Faker.DateTime.backward(7),
+      flags: Faker.Util.pick([0, 0, 1, 3]),
+      guild_id:
+        if(Faker.Util.pick(List.duplicate(true, 9) ++ [false]),
+          do: generate_snowflake(),
+          else: nil
+        )
     }
 
     struct(Nostrum.Struct.ThreadMember, merge_attrs(defaults, attrs))

@@ -14,16 +14,23 @@ defmodule AshDiscord.Consumer.Payloads.Member do
   typed_struct do
     field :user_id, :integer, description: "The user ID (can be nil for partial Member objects)"
     field :nick, :string, description: "The nickname of the member"
-    field :roles, {:array, :integer}, allow_nil?: false, description: "A list of role ids"
-    field :joined_at, :integer, description: "Unix timestamp when the user joined the guild"
+
+    field :roles, {:array, :integer},
+      allow_nil?: false,
+      description: "A list of role ids (Nostrum converts Snowflakes to integers)"
+
+    field :joined_at, :integer,
+      description:
+        "Unix timestamp when the user joined the guild (Nostrum converts from ISO8601; can be nil)"
+
     field :deaf, :boolean, description: "Whether the user is deafened in voice channels"
     field :mute, :boolean, description: "Whether the user is muted in voice channels"
 
-    field :communication_disabled_until, :integer,
-      description: "Unix timestamp when the user's timeout will expire (if they're timed out)"
+    field :communication_disabled_until, :utc_datetime,
+      description: "DateTime when the user's timeout will expire; nil if not timed out"
 
-    field :premium_since, :integer,
-      description: "Unix timestamp when the user started boosting the guild"
+    field :premium_since, :utc_datetime,
+      description: "DateTime when the user started boosting the guild"
 
     field :avatar, :string, description: "The member's guild-specific avatar hash"
 
@@ -31,7 +38,7 @@ defmodule AshDiscord.Consumer.Payloads.Member do
       description:
         "Whether the user has not yet passed the guild's Membership Screening requirements"
 
-    field :flags, :integer, description: "Guild member flags"
+    field :flags, :integer, description: "Guild member flags represented as a bit set"
   end
 
   @doc """

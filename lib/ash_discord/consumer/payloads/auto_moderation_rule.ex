@@ -30,7 +30,9 @@ defmodule AshDiscord.Consumer.Payloads.AutoModerationRule do
         "Characterizes the type of content which can trigger the rule (1 = keyword, 3 = spam, 4 = keyword preset, 5 = mention spam, 6 = member profile)"
 
     field :trigger_metadata, :map,
-      description: "Additional metadata used to determine whether a rule should be triggered"
+      allow_nil?: true,
+      description:
+        "Additional metadata used to determine whether a rule should be triggered (optional)"
 
     field :actions, {:array, :map},
       allow_nil?: false,
@@ -41,12 +43,12 @@ defmodule AshDiscord.Consumer.Payloads.AutoModerationRule do
       description: "Whether the rule is enabled"
 
     field :exempt_roles, {:array, :integer},
-      allow_nil?: false,
-      description: "Roles that should not be affected by the rule"
+      allow_nil?: true,
+      description: "Roles that should not be affected by the rule (optional, maximum of 20)"
 
     field :exempt_channels, {:array, :integer},
-      allow_nil?: false,
-      description: "Channels that should not be affected by the rule"
+      allow_nil?: true,
+      description: "Channels that should not be affected by the rule (optional, maximum of 50)"
   end
 
   @doc """

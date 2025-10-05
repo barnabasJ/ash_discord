@@ -31,10 +31,13 @@ defmodule AshDiscord.Consumer.Payloads.Role do
       allow_nil?: false,
       description: "Whether the role is mentionable"
 
-    field :icon, :string, description: "The hash of the role icon"
+    field :icon, :string,
+      allow_nil?: true,
+      description: "The hash of the role icon (optional, nullable)"
 
     field :unicode_emoji, :string,
-      description: "The standard unicode character emoji icon for the role"
+      allow_nil?: true,
+      description: "The standard unicode character emoji icon for the role (optional, nullable)"
   end
 
   @doc """

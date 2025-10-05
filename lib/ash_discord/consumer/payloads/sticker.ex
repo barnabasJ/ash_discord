@@ -12,23 +12,51 @@ defmodule AshDiscord.Consumer.Payloads.Sticker do
   use Ash.TypedStruct
 
   typed_struct do
-    field :id, :integer, allow_nil?: false, description: "ID of the sticker"
-    field :pack_id, :integer, description: "ID of the pack the sticker is from"
-    field :name, :string, description: "Name of the sticker"
-    field :description, :string, description: "Description of the sticker"
+    field :id, :integer,
+      allow_nil?: false,
+      description: "ID of the sticker"
+
+    field :pack_id, :integer,
+      allow_nil?: true,
+      description: "For standard stickers, ID of the pack the sticker is from"
+
+    field :name, :string,
+      allow_nil?: true,
+      description: "Name of the sticker"
+
+    field :description, :string,
+      allow_nil?: true,
+      description: "Description of the sticker"
 
     field :tags, :string,
-      description: "Autocomplete/suggestion tags for the sticker (comma-separated)"
+      allow_nil?: false,
+      description:
+        "For guild stickers, the Discord name of a unicode emoji; for standard stickers, a comma-separated list of related expressions"
 
-    field :type, :integer, description: "Type of sticker (1 = standard, 2 = guild)"
+    field :type, :atom,
+      allow_nil?: false,
+      description: "Type of sticker (:standard or :guild)"
 
-    field :format_type, :integer,
-      description: "Format type (1 = png, 2 = apng, 3 = lottie, 4 = gif)"
+    field :format_type, :atom,
+      allow_nil?: false,
+      description: "Format type (:png, :apng, :lottie, or :gif)"
 
-    field :available, :boolean, description: "Whether this guild sticker can be used"
-    field :guild_id, :integer, description: "ID of the guild that owns this sticker"
-    field :user, :map, description: "User that uploaded the guild sticker"
-    field :sort_value, :integer, description: "Standard sticker's sort order within its pack"
+    field :available, :boolean,
+      allow_nil?: true,
+      description:
+        "Whether this guild sticker can be used, may be false due to loss of Server Boosts"
+
+    field :guild_id, :integer,
+      allow_nil?: true,
+      description: "ID of the guild that owns this sticker"
+
+    field :user, :map,
+      allow_nil?: true,
+      description: "The user that uploaded the guild sticker"
+
+    field :sort_value, :integer,
+      allow_nil?: true,
+      description: "The standard sticker's sort order within its pack"
   end
 
   @doc """

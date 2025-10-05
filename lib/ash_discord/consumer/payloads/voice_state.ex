@@ -13,15 +13,20 @@ defmodule AshDiscord.Consumer.Payloads.VoiceState do
   use Ash.TypedStruct
 
   typed_struct do
-    field :guild_id, :integer, description: "Guild ID this voice state is for (if applicable)"
+    field :guild_id, :integer,
+      allow_nil?: true,
+      description:
+        "Guild ID this voice state is for (optional, only present for guild voice channels)"
 
     field :channel_id, :integer,
+      allow_nil?: true,
       description: "Channel ID this voice state is for (nil if user left voice)"
 
     field :user_id, :integer, allow_nil?: false, description: "User ID this voice state is for"
 
     field :member, AshDiscord.Consumer.Payloads.Member,
-      description: "Guild member this voice state is for"
+      allow_nil?: true,
+      description: "Guild member this voice state is for (optional)"
 
     field :session_id, :string, allow_nil?: false, description: "Session ID for this voice state"
 
@@ -41,7 +46,9 @@ defmodule AshDiscord.Consumer.Payloads.VoiceState do
       allow_nil?: false,
       description: "Whether this user is locally muted"
 
-    field :self_stream, :boolean, description: "Whether this user is streaming using Go Live"
+    field :self_stream, :boolean,
+      allow_nil?: false,
+      description: "Whether this user is streaming using Go Live"
 
     field :self_video, :boolean,
       allow_nil?: false,
@@ -52,7 +59,8 @@ defmodule AshDiscord.Consumer.Payloads.VoiceState do
       description: "Whether this user's permission to speak is denied"
 
     field :request_to_speak_timestamp, :utc_datetime,
-      description: "Time at which the user requested to speak"
+      allow_nil?: true,
+      description: "Time at which the user requested to speak (nullable ISO8601 timestamp)"
   end
 
   @doc """

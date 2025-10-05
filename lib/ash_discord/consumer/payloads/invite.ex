@@ -13,14 +13,17 @@ defmodule AshDiscord.Consumer.Payloads.Invite do
 
   typed_struct do
     field :code, :string, allow_nil?: false, description: "Invite code"
-    field :guild, :map, description: "Partial guild object"
-    field :guild_id, :integer, description: "Guild ID (from events)"
-    field :channel, :map, description: "Partial channel object"
-    field :channel_id, :integer, description: "Channel ID (from events)"
-    field :inviter, :map, description: "User who created the invite"
-    field :target_user, :map, description: "Target user for this invite"
-    field :target_type, :integer, description: "Type of target for this invite"
-    field :target_user_type, :integer, description: "Deprecated target user type"
+    field :guild, :map, allow_nil?: true, description: "Partial guild object"
+    field :guild_id, :integer, allow_nil?: true, description: "Guild ID (from events)"
+    field :channel, :map, allow_nil?: true, description: "Partial channel object"
+    field :channel_id, :integer, allow_nil?: true, description: "Channel ID (from events)"
+    field :inviter, :map, allow_nil?: true, description: "User who created the invite"
+    field :target_user, :map, allow_nil?: true, description: "Target user for this invite"
+    field :target_type, :integer, allow_nil?: true, description: "Type of target for this invite"
+
+    field :target_user_type, :integer,
+      allow_nil?: true,
+      description: "Deprecated target user type (use target_type instead)"
 
     field :approximate_presence_count, :integer,
       description: "Approximate count of online members"
@@ -31,7 +34,7 @@ defmodule AshDiscord.Consumer.Payloads.Invite do
     field :max_age, :integer, description: "Duration (in seconds) after which the invite expires"
     field :temporary, :boolean, description: "Whether this invite grants temporary membership"
     field :created_at, :string, description: "When this invite was created"
-    field :expires_at, :string, description: "When this invite expires"
+    field :expires_at, :string, allow_nil?: true, description: "When this invite expires"
     field :stage_instance, :map, description: "Stage instance data if any"
 
     field :guild_scheduled_event, :map, description: "Guild scheduled event data if any"

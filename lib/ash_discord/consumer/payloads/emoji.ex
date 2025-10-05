@@ -12,15 +12,36 @@ defmodule AshDiscord.Consumer.Payloads.Emoji do
   use Ash.TypedStruct
 
   typed_struct do
-    field :id, :integer, description: "Id of the emoji"
-    field :name, :string, allow_nil?: false, description: "Name of the emoji"
-    field :roles, {:array, :integer}, description: "Roles this emoji is whitelisted to"
-    field :user, :map, description: "User that created this emoji"
-    field :require_colons, :boolean, description: "Whether this emoji must be wrapped in colons"
-    field :managed, :boolean, description: "Whether this emoji is managed"
-    field :animated, :boolean, description: "Whether this emoji is animated"
+    field :id, :integer,
+      allow_nil?: true,
+      description: "Id of the emoji (snowflake integer, can be nil for standard Unicode emoji)"
+
+    field :name, :string,
+      allow_nil?: false,
+      description: "Name of the emoji"
+
+    field :roles, {:array, :integer},
+      allow_nil?: true,
+      description: "Roles this emoji is whitelisted to (array of role ID snowflake integers)"
+
+    field :user, :map,
+      allow_nil?: true,
+      description: "User that created this emoji"
+
+    field :require_colons, :boolean,
+      allow_nil?: true,
+      description: "Whether this emoji must be wrapped in colons"
+
+    field :managed, :boolean,
+      allow_nil?: true,
+      description: "Whether this emoji is managed"
+
+    field :animated, :boolean,
+      allow_nil?: true,
+      description: "Whether this emoji is animated"
 
     field :available, :boolean,
+      allow_nil?: true,
       description: "Whether this emoji can be used, may be false due to loss of Server Boosts"
   end
 

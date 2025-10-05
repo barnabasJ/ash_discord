@@ -19,10 +19,21 @@ defmodule AshDiscord.Consumer.Payloads.User do
       allow_nil?: false,
       description: "The user's 4-digit discord-tag"
 
-    field :global_name, :string, description: "The user's display name, if it is set"
-    field :avatar, :string, description: "User's avatar hash"
-    field :bot, :boolean, description: "Whether the user is a bot"
-    field :public_flags, :integer, description: "The user's public flags"
+    field :global_name, :string,
+      allow_nil?: true,
+      description: "The user's display name, if it is set. For bots, this is the application name"
+
+    field :avatar, :string,
+      allow_nil?: true,
+      description: "The user's avatar hash"
+
+    field :bot, :boolean,
+      allow_nil?: true,
+      description: "Whether the user belongs to an OAuth2 application"
+
+    field :public_flags, :integer,
+      allow_nil?: true,
+      description: "The public flags on a user's account (as a bitset)"
   end
 
   @doc """

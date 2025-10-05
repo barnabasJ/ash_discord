@@ -12,9 +12,12 @@ defmodule AshDiscord.Consumer.Payloads.ThreadMember do
   use Ash.TypedStruct
 
   typed_struct do
-    field :id, :integer, description: "The id of the thread (omitted within GUILD_CREATE events)"
+    field :id, :integer,
+      allow_nil?: true,
+      description: "The id of the thread (omitted within GUILD_CREATE events)"
 
     field :user_id, :integer,
+      allow_nil?: true,
       description: "The id of the user (omitted within GUILD_CREATE events)"
 
     field :join_timestamp, :utc_datetime,
@@ -22,7 +25,10 @@ defmodule AshDiscord.Consumer.Payloads.ThreadMember do
       description: "The timestamp of when the user last joined the thread"
 
     field :flags, :integer, allow_nil?: false, description: "User thread settings flags"
-    field :guild_id, :integer, description: "ID of the guild containing the thread"
+
+    field :guild_id, :integer,
+      allow_nil?: true,
+      description: "ID of the guild containing the thread (Nostrum extension)"
   end
 
   @doc """

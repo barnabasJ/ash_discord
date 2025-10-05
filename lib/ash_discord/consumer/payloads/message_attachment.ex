@@ -16,10 +16,9 @@ defmodule AshDiscord.Consumer.Payloads.MessageAttachment do
     field :filename, :string, allow_nil?: false, description: "Name of attached file"
     field :size, :integer, allow_nil?: false, description: "Size of the file in bytes"
     field :url, :string, allow_nil?: false, description: "Source url of the file"
-    field :proxy_url, :string, description: "Proxy url of the file"
-    field :height, :integer, description: "Height of the file (if image)"
-    field :width, :integer, description: "Width of the file (if image)"
-    field :content_type, :string, description: "Media type of the file"
+    field :proxy_url, :string, allow_nil?: false, description: "Proxy url of the file"
+    field :height, :integer, allow_nil?: true, description: "Height of the file (if image)"
+    field :width, :integer, allow_nil?: true, description: "Width of the file (if image)"
   end
 
   @doc """

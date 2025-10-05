@@ -148,16 +148,61 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
   end
 
   describe "API fallback pattern" do
-    test "guild member requires identity map for API fallback" do
-      # Guild members with API fallback would need both guild_id and user_id in identity map
-      # This test verifies proper error handling when identity is incomplete
+    test "fetches guild member from API when data not provided" do
+      guild_id = 555_666_777
+      user_id = 999_888_777
 
+      expect(Nostrum.Api.Guild, :member, fn ^guild_id, ^user_id ->
+        {:ok,
+         guild_member(%{
+           user_id: user_id,
+           nick: "API_Fetched_Nick",
+           joined_at: to_unix_ms("2023-06-15T10:00:00Z"),
+           premium_since: to_unix_ms("2023-07-01T12:00:00Z"),
+           deaf: false,
+           mute: true,
+           roles: [123_456, 789_012]
+         })}
+      end)
+
+      result =
+        TestApp.Discord.guild_member_from_discord(%{
+          identity: %{guild_id: guild_id, user_id: user_id}
+        })
+
+      assert {:ok, created_member} = result
+      assert created_member.user_id == user_id
+      assert created_member.guild_id == guild_id
+      assert created_member.nick == "API_Fetched_Nick"
+      assert created_member.mute == true
+      assert created_member.deaf == false
+      assert created_member.roles == [123_456, 789_012]
+    end
+
+    test "handles API errors gracefully" do
+      guild_id = 404_404_404
+      user_id = 999_888_777
+
+      expect(Nostrum.Api.Guild, :member, fn ^guild_id, ^user_id ->
+        {:error, %{status_code: 404, message: "Unknown Guild"}}
+      end)
+
+      result =
+        TestApp.Discord.guild_member_from_discord(%{
+          identity: %{guild_id: guild_id, user_id: user_id}
+        })
+
+      assert {:error, error} = result
+      error_message = Exception.message(error)
+      assert error_message =~ "Unknown Guild" or error_message =~ "404"
+    end
+
+    test "requires complete identity map with guild_id and user_id" do
       result = TestApp.Discord.guild_member_from_discord(%{identity: %{guild_id: 999_888_777}})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      # Should fail because user_id is missing from identity, so API fetch can't happen
-      assert error_message =~ "user_id" or error_message =~ "is required"
+      assert error_message =~ "guild_id" and error_message =~ "user_id"
     end
 
     test "requires data or identity for guild member creation" do
@@ -165,8 +210,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      # Should fail because both data and identity arguments are nil
-      assert error_message =~ "requires data argument" or error_message =~ "identity argument"
+      assert error_message =~ "guild_id" and error_message =~ "user_id"
     end
   end
 

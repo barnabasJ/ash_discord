@@ -7,6 +7,12 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
 
   use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators.Discord
+  import Mimic
+
+  setup do
+    copy(Nostrum.Api.Sticker)
+    :ok
+  end
 
   describe "struct-first pattern" do
     test "creates sticker from discord struct with all attributes" do
@@ -184,26 +190,55 @@ defmodule AshDiscord.Changes.FromDiscord.StickerTest do
   end
 
   describe "API fallback pattern" do
-    test "sticker API fallback fails when API is unavailable" do
-      # Sticker API fetching is supported but may fail in test environment
-      discord_id = 999_888_777
+    test "fetches sticker from API when data not provided" do
+      sticker_id = 999_888_777
 
-      result = TestApp.Discord.sticker_from_discord(%{identity: discord_id})
+      expect(Nostrum.Api.Sticker, :get, fn ^sticker_id ->
+        {:ok,
+         sticker(%{
+           id: sticker_id,
+           name: "api_fetched_sticker",
+           description: "Fetched from API",
+           tags: "api,test",
+           type: 2,
+           format_type: 1,
+           available: true,
+           guild_id: 555_666_777
+         })}
+      end)
+
+      result = TestApp.Discord.sticker_from_discord(%{identity: sticker_id})
+
+      assert {:ok, created_sticker} = result
+      assert created_sticker.discord_id == sticker_id
+      assert created_sticker.name == "api_fetched_sticker"
+      assert created_sticker.description == "Fetched from API"
+      assert created_sticker.tags == "api,test"
+      assert created_sticker.type == 2
+      assert created_sticker.guild_id == 555_666_777
+    end
+
+    test "handles API errors gracefully" do
+      sticker_id = 404_404_404
+
+      expect(Nostrum.Api.Sticker, :get, fn ^sticker_id ->
+        {:error, %{status_code: 404, message: "Unknown Sticker"}}
+      end)
+
+      result = TestApp.Discord.sticker_from_discord(%{identity: sticker_id})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ ":api_unavailable" or error_message =~ "Identity"
-      assert error_message =~ ":api_unavailable"
+      assert error_message =~ "Unknown Sticker" or error_message =~ "404"
     end
 
-    test "requires data argument for creation" do
+    test "requires data or identity argument for sticker creation" do
       result = TestApp.Discord.sticker_from_discord(%{})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-
-      assert error_message =~ "is required" or error_message =~ "Identity" or
-               error_message =~ "data"
+      # When identity is nil, API call fails with :api_unavailable
+      assert error_message =~ ":api_unavailable"
     end
   end
 

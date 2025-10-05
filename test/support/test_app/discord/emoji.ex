@@ -55,6 +55,10 @@ defmodule TestApp.Discord.Emoji do
     end
   end
 
+  code_interface do
+    define(:read)
+  end
+
   actions do
     defaults([:read, :destroy])
 

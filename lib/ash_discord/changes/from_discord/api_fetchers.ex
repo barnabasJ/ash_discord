@@ -57,7 +57,7 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
   """
   def fetch_member(%{guild_id: guild_id, user_id: user_id}) do
     case Nostrum.Api.Guild.member(guild_id, user_id) do
-      {:ok, nostrum_member} -> {:ok, Payloads.Member.new(nostrum_member)}
+      {:ok, nostrum_member} -> Payloads.Member.new(nostrum_member)
       error -> error
     end
   rescue
@@ -69,7 +69,7 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
   """
   def fetch_message(%{channel_id: channel_id, message_id: message_id}) do
     case Nostrum.Api.Message.get(channel_id, message_id) do
-      {:ok, nostrum_message} -> {:ok, Payloads.Message.new(nostrum_message)}
+      {:ok, nostrum_message} -> Payloads.Message.new(nostrum_message)
       error -> error
     end
   rescue
@@ -261,7 +261,7 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
       if guild_discord_id && user_discord_id do
         try do
           case Nostrum.Api.Guild.member(guild_discord_id, user_discord_id) do
-            {:ok, nostrum_member} -> {:ok, Payloads.Member.new(nostrum_member)}
+            {:ok, nostrum_member} -> Payloads.Member.new(nostrum_member)
             error -> error
           end
         rescue
@@ -284,7 +284,7 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
       if channel_id && message_id do
         try do
           case Nostrum.Api.Message.get(channel_id, message_id) do
-            {:ok, nostrum_message} -> {:ok, Payloads.Message.new(nostrum_message)}
+            {:ok, nostrum_message} -> Payloads.Message.new(nostrum_message)
             error -> error
           end
         rescue

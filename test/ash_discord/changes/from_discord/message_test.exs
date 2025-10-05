@@ -275,12 +275,14 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
     test "fetches message from API when data not provided" do
       channel_id = 555_666_777
       message_id = 999_888_777
+      guild_id = 111_222_333
 
       expect(Nostrum.Api.Message, :get, fn ^channel_id, ^message_id ->
         {:ok,
          message(%{
            id: message_id,
            channel_id: channel_id,
+           guild_id: guild_id,
            content: "API fetched message",
            author: user(%{id: 123_456_789}),
            timestamp: "2023-06-15T10:00:00.000000Z",
@@ -292,6 +294,10 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
 
       expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
         {:ok, channel(%{id: channel_id, name: "test-channel", type: 0})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "test-guild"})}
       end)
 
       expect(Nostrum.Api.User, :get, fn 123_456_789 ->

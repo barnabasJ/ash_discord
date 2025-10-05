@@ -153,12 +153,14 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       user_id = 999_888_777
 
       expect(Nostrum.Api.Guild, :member, fn ^guild_id, ^user_id ->
+        {:ok, datetime_premium, 0} = DateTime.from_iso8601("2023-07-01T12:00:00Z")
+
         {:ok,
          guild_member(%{
            user_id: user_id,
            nick: "API_Fetched_Nick",
            joined_at: to_unix_ms("2023-06-15T10:00:00Z"),
-           premium_since: to_unix_ms("2023-07-01T12:00:00Z"),
+           premium_since: datetime_premium,
            deaf: false,
            mute: true,
            roles: [123_456, 789_012]

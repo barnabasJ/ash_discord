@@ -23,7 +23,7 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
           channel_id: 555_666_777,
           guild_id: 111_222_333,
           avatar: "webhook_avatar_hash",
-          token: "webhook_token_secret"
+          token: "webhook_token_secret",
         })
 
       result = TestApp.Discord.webhook_from_discord(%{data: webhook_struct})
@@ -45,7 +45,7 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
           channel_id: 777_888_999,
           guild_id: 333_444_555,
           avatar: nil,
-          token: "another_token"
+          token: "another_token",
         })
 
       result = TestApp.Discord.webhook_from_discord(%{data: webhook_struct})
@@ -65,7 +65,7 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
           channel_id: 444_555_666,
           guild_id: 777_888_999,
           avatar: "app_webhook_avatar",
-          token: nil
+          token: nil,
         })
 
       result = TestApp.Discord.webhook_from_discord(%{data: webhook_struct})
@@ -85,7 +85,7 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
           channel_id: 999_111_222,
           guild_id: 333_444_555,
           avatar: "follower_avatar",
-          token: "follower_token"
+          token: "follower_token",
         })
 
       result = TestApp.Discord.webhook_from_discord(%{data: webhook_struct})
@@ -104,7 +104,7 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
           # No guild for DM webhook
           guild_id: nil,
           avatar: "dm_avatar",
-          token: "dm_token"
+          token: "dm_token",
         })
 
       result = TestApp.Discord.webhook_from_discord(%{data: webhook_struct})
@@ -128,7 +128,7 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
            channel_id: 555_666_777,
            guild_id: 111_222_333,
            avatar: "api_avatar_hash",
-           token: "api_token_secret"
+           token: "api_token_secret",
          })}
       end)
 
@@ -178,7 +178,7 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
           channel_id: 111_222_333,
           guild_id: 444_555_666,
           avatar: "original_avatar",
-          token: "original_token"
+          token: "original_token",
         })
 
       {:ok, original_webhook} =
@@ -193,7 +193,7 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
           channel_id: 111_222_333,
           guild_id: 444_555_666,
           avatar: "updated_avatar",
-          token: "updated_token"
+          token: "updated_token",
         })
 
       {:ok, updated_webhook} =
@@ -219,7 +219,7 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
           name: "Type Change Webhook",
           channel_id: 777_888_999,
           guild_id: 111_222_333,
-          token: "type_token"
+          token: "type_token",
         })
 
       {:ok, original_webhook} =
@@ -233,7 +233,7 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
           name: "Type Change Webhook",
           channel_id: 777_888_999,
           guild_id: 111_222_333,
-          token: nil
+          token: nil,
         })
 
       {:ok, updated_webhook} =
@@ -275,7 +275,7 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
           name: "Test Webhook",
           # Invalid type
           channel_id: 555_666_777,
-          guild_id: 111_222_333
+          guild_id: 111_222_333,
         })
 
       result = TestApp.Discord.webhook_from_discord(%{data: webhook_struct})

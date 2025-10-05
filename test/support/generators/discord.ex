@@ -256,7 +256,7 @@ defmodule AshDiscord.Test.Generators.Discord do
           nick:
             if(Faker.Util.pick([true, false, false]), do: Faker.Person.first_name(), else: nil),
           roles: [],
-          joined_at: Faker.DateTime.backward(365),
+          joined_at: Faker.DateTime.backward(365) |> DateTime.to_unix(:millisecond),
           premium_since: nil,
           communication_disabled_until: nil,
           deaf: false,
@@ -292,17 +292,37 @@ defmodule AshDiscord.Test.Generators.Discord do
 
     result = merge_attrs(defaults, attrs)
 
+    # Convert timestamp to DateTime if it's a string
+    result_with_datetime =
+      case result.timestamp do
+        %DateTime{} = dt ->
+          Map.put(result, :timestamp, dt)
+
+        timestamp_string when is_binary(timestamp_string) ->
+          {:ok, dt, _} = DateTime.from_iso8601(timestamp_string)
+          Map.put(result, :timestamp, dt)
+
+        _ ->
+          result
+      end
+
     # Add edited timestamp 25% of the time, but only if not explicitly set
     final_result =
       if Map.has_key?(attrs, :edited_timestamp) do
-        result
+        result_with_datetime
       else
         if Faker.Util.pick([true, false, false, false]) do
           # edited_timestamp should be DateTime, add 1-2 hours after original timestamp
-          edited_time = DateTime.add(result.timestamp, Faker.random_between(3600, 7200), :second)
-          Map.put(result, :edited_timestamp, edited_time)
+          edited_time =
+            DateTime.add(
+              result_with_datetime.timestamp,
+              Faker.random_between(3600, 7200),
+              :second
+            )
+
+          Map.put(result_with_datetime, :edited_timestamp, edited_time)
         else
-          result
+          result_with_datetime
         end
       end
 
@@ -393,7 +413,7 @@ defmodule AshDiscord.Test.Generators.Discord do
             user_id: interaction_user.id,
             nick: nil,
             roles: [],
-            joined_at: Faker.DateTime.backward(365),
+            joined_at: Faker.DateTime.backward(365) |> DateTime.to_unix(:millisecond),
             premium_since: nil,
             communication_disabled_until: nil,
             deaf: false,
@@ -452,7 +472,7 @@ defmodule AshDiscord.Test.Generators.Discord do
       nick: if(Faker.Util.pick([true, false, false]), do: Faker.Person.first_name(), else: nil),
       roles: [],
       # joined_at should be DateTime, not Unix timestamp
-      joined_at: Faker.DateTime.backward(365),
+      joined_at: Faker.DateTime.backward(365) |> DateTime.to_unix(:millisecond),
       # premium_since should be DateTime 25% of the time for boosted members
       premium_since:
         if(Faker.Util.pick([true, false, false, false]),
@@ -613,7 +633,6 @@ defmodule AshDiscord.Test.Generators.Discord do
   def webhook(attrs \\ %{}) do
     defaults = %{
       id: generate_snowflake(),
-      type: Faker.Util.pick([1, 2, 3]),
       guild_id: generate_snowflake(),
       channel_id: generate_snowflake(),
       user: user(),
@@ -648,93 +667,26 @@ defmodule AshDiscord.Test.Generators.Discord do
   def invite(attrs \\ %{}) do
     code = Faker.Lorem.characters(6..10) |> to_string() |> String.replace(~r/[^a-zA-Z0-9]/, "")
 
-    # 80% partial objects, 20% IDs only
-    has_objects = Faker.Util.pick([true, true, true, true, false])
-
     # 50% extended invites with counts
     has_counts = Faker.Util.pick([true, false])
 
     # 10% target invites (stream/embedded app)
     has_target = Faker.Util.pick([true] ++ List.duplicate(false, 9))
 
-    # 5% event invites
-    has_event = Faker.Util.pick([true] ++ List.duplicate(false, 19))
-
-    guild_id_value = generate_snowflake()
-    channel_id_value = generate_snowflake()
-
     defaults = %{
       code: code,
-      guild:
-        if has_objects do
-          %{
-            id: guild_id_value,
-            name: Faker.Company.name(),
-            splash: nil,
-            banner: nil,
-            description: nil,
-            icon: nil,
-            features: [],
-            verification_level: 0,
-            vanity_url_code: nil
-          }
-        else
-          nil
-        end,
-      guild_id: if(not has_objects, do: guild_id_value, else: nil),
-      channel:
-        if has_objects do
-          %{
-            id: channel_id_value,
-            name: Faker.Lorem.word(),
-            type: Faker.Util.pick([0, 2, 5, 13, 15])
-          }
-        else
-          nil
-        end,
-      channel_id: if(not has_objects, do: channel_id_value, else: nil),
-      inviter: %{
-        id: generate_snowflake(),
-        username: Faker.Internet.user_name(),
-        discriminator: "0",
-        avatar: nil
-      },
-      target_user:
-        if has_target do
-          %{
-            id: generate_snowflake(),
-            username: Faker.Internet.user_name(),
-            discriminator: "0",
-            avatar: nil
-          }
-        else
-          nil
-        end,
-      target_type: if(has_target, do: Faker.Util.pick([1, 2]), else: nil),
-      target_user_type: nil,
+      guild: guild(),
+      channel: channel(),
+      inviter: user(),
+      target_user: if(has_target, do: user(), else: nil),
+      target_user_type: if(has_target, do: Faker.Util.pick([1, 2]), else: nil),
       approximate_presence_count: if(has_counts, do: Faker.random_between(10, 1000), else: nil),
       approximate_member_count: if(has_counts, do: Faker.random_between(100, 10_000), else: nil),
       uses: Faker.random_between(0, 100),
       max_uses: Faker.Util.pick([0, 10, 25, 50, 100]),
       max_age: Faker.Util.pick([0, 1800, 3600, 86_400, 604_800]),
       temporary: Faker.Util.pick([true, false, false]),
-      created_at: Faker.DateTime.backward(30) |> DateTime.to_iso8601(),
-      expires_at:
-        if(Faker.Util.pick([true, false, false]),
-          do: Faker.DateTime.forward(7) |> DateTime.to_iso8601(),
-          else: nil
-        ),
-      stage_instance: nil,
-      guild_scheduled_event:
-        if has_event do
-          %{
-            id: generate_snowflake(),
-            name: Faker.Lorem.sentence(1..5),
-            description: Faker.Lorem.sentence(5..20)
-          }
-        else
-          nil
-        end
+      created_at: Faker.DateTime.backward(30) |> DateTime.to_iso8601()
     }
 
     struct(Nostrum.Struct.Invite, merge_attrs(defaults, attrs))
@@ -914,7 +866,7 @@ defmodule AshDiscord.Test.Generators.Discord do
           nick:
             if(Faker.Util.pick([true, false, false]), do: Faker.Person.first_name(), else: nil),
           roles: [],
-          joined_at: Faker.DateTime.backward(365),
+          joined_at: Faker.DateTime.backward(365) |> DateTime.to_unix(:millisecond),
           premium_since:
             if(Faker.Util.pick([true, false, false, false]),
               do: Faker.DateTime.backward(30),

@@ -526,24 +526,17 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       invalid_struct = %{
         id: 123_456_789,
         content: "Test message",
-        # Missing author field
+        # Missing author field - this is required by Nostrum
         channel_id: 555_666_777,
         timestamp: "2023-01-01T00:00:00Z"
       }
 
       result = TestApp.Discord.message_from_discord(%{data: invalid_struct})
 
-      # Author is optional - accepts API unavailable error when trying to fetch channel
-      case result do
-        {:ok, message} ->
-          assert message.discord_id == 123_456_789
-          assert message.content == "Test message"
-          assert message.author_id == nil
-
-        {:error, error} ->
-          error_message = Exception.message(error)
-          assert error_message =~ "api_unavailable"
-      end
+      # Author is required, so this should fail
+      assert {:error, error} = result
+      error_message = Exception.message(error)
+      assert error_message =~ "author" or error_message =~ "must be present"
     end
   end
 end

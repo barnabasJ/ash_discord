@@ -118,9 +118,11 @@ defmodule AshDiscord.Test.Generators.Discord.VerificationTest do
       assert interaction.member.user_id == interaction.user.id
     end
 
-    test "member has all required DateTime fields" do
+    test "member has all required timestamp fields" do
       interaction = interaction()
-      assert %DateTime{} = interaction.member.joined_at
+      # joined_at is a Unix timestamp (integer), not DateTime
+      assert is_integer(interaction.member.joined_at)
+      assert interaction.member.joined_at > 0
     end
   end
 

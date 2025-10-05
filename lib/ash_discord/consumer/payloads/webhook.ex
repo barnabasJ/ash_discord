@@ -18,8 +18,8 @@ defmodule AshDiscord.Consumer.Payloads.Webhook do
       description: "The id of the webhook (snowflake)"
 
     field :type, :integer,
-      allow_nil?: false,
-      description: "The type of the webhook (1 = Incoming, 2 = Channel Follower, 3 = Application)"
+      description:
+        "The type of the webhook (1 = Incoming, 2 = Channel Follower, 3 = Application) - not provided by Nostrum.Struct.Webhook"
 
     field :guild_id, :integer,
       allow_nil?: true,

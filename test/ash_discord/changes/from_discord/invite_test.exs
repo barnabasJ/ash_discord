@@ -68,11 +68,11 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
       invite_struct =
         invite(%{
           code: "permanent123",
-          guild_id: 777_888_999,
-          channel_id: 333_444_555,
-          inviter_id: 111_222_333,
+          guild: guild(%{id: 777_888_999}),
+          channel: channel(%{id: 333_444_555}),
+          inviter: user(%{id: 111_222_333}),
           target_user_type: nil,
-          target_user_id: nil,
+          target_user: nil,
           uses: 0,
           # No max uses (permanent)
           max_uses: 0,
@@ -95,11 +95,11 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
       invite_struct =
         invite(%{
           code: "temp456def",
-          guild_id: 999_111_222,
-          channel_id: 444_555_666,
-          inviter_id: 777_888_999,
+          guild: guild(%{id: 999_111_222}),
+          channel: channel(%{id: 444_555_666}),
+          inviter: user(%{id: 777_888_999}),
           target_user_type: nil,
-          target_user_id: nil,
+          target_user: nil,
           uses: 1,
           max_uses: 1,
           max_age: 1800,
@@ -120,12 +120,12 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
       invite_struct =
         invite(%{
           code: "stream789ghi",
-          guild_id: 333_444_555,
-          channel_id: 666_777_888,
-          inviter_id: 999_111_222,
+          guild: guild(%{id: 333_444_555}),
+          channel: channel(%{id: 666_777_888}),
+          inviter: user(%{id: 999_111_222}),
           # Stream target type
           target_user_type: 1,
-          target_user_id: 123_456_789,
+          target_user: user(%{id: 123_456_789}),
           uses: 0,
           max_uses: 5,
           max_age: 3600,
@@ -138,20 +138,19 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
       assert {:ok, created_invite} = result
       assert created_invite.code == invite_struct.code
       assert created_invite.target_user_type == 1
-      # target_user is nil in struct, so target_user_discord_id should be nil
-      assert created_invite.target_user_discord_id == nil
+      assert created_invite.target_user_discord_id == 123_456_789
     end
 
     test "handles embedded application target invite" do
       invite_struct =
         invite(%{
           code: "app012jkl",
-          guild_id: 777_888_999,
-          channel_id: 111_222_333,
-          inviter_id: 444_555_666,
+          guild: guild(%{id: 777_888_999}),
+          channel: channel(%{id: 111_222_333}),
+          inviter: user(%{id: 444_555_666}),
           # Embedded application target type
           target_user_type: 2,
-          target_user_id: nil,
+          target_user: nil,
           uses: 3,
           max_uses: 10,
           max_age: 7200,
@@ -171,11 +170,12 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
       invite_struct =
         invite(%{
           code: "noinviter345",
-          guild_id: 555_666_777,
-          channel_id: 888_999_111,
+          guild: guild(%{id: 555_666_777}),
+          channel: channel(%{id: 888_999_111}),
           # No inviter (vanity URL or widget)
           inviter: nil,
           target_user_type: nil,
+          target_user: nil,
           uses: 50,
           max_uses: 0,
           max_age: 0,
@@ -252,9 +252,9 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
       initial_struct =
         invite(%{
           code: code,
-          guild_id: 555_666_777,
-          channel_id: 111_222_333,
-          inviter_id: 987_654_321,
+          guild: guild(%{id: 555_666_777}),
+          channel: channel(%{id: 111_222_333}),
+          inviter: user(%{id: 987_654_321}),
           uses: 0,
           max_uses: 5,
           max_age: 3600,
@@ -270,9 +270,9 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
         invite(%{
           # Same code
           code: code,
-          guild_id: 555_666_777,
-          channel_id: 111_222_333,
-          inviter_id: 987_654_321,
+          guild: guild(%{id: 555_666_777}),
+          channel: channel(%{id: 111_222_333}),
+          inviter: user(%{id: 987_654_321}),
           uses: 3,
           max_uses: 5,
           max_age: 3600,
@@ -298,9 +298,9 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
       initial_struct =
         invite(%{
           code: code,
-          guild_id: 777_888_999,
-          channel_id: 333_444_555,
-          inviter_id: 111_222_333,
+          guild: guild(%{id: 777_888_999}),
+          channel: channel(%{id: 333_444_555}),
+          inviter: user(%{id: 111_222_333}),
           uses: 0,
           max_uses: 1,
           max_age: 1800,
@@ -316,9 +316,9 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
         invite(%{
           # Same code
           code: code,
-          guild_id: 777_888_999,
-          channel_id: 333_444_555,
-          inviter_id: 111_222_333,
+          guild: guild(%{id: 777_888_999}),
+          channel: channel(%{id: 333_444_555}),
+          inviter: user(%{id: 111_222_333}),
           uses: 0,
           max_uses: 0,
           max_age: 0,
@@ -364,9 +364,9 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
       invite_struct =
         invite(%{
           code: "invalid789",
-          guild_id: 555_666_777,
-          channel_id: 111_222_333,
-          inviter_id: 987_654_321,
+          guild: guild(%{id: 555_666_777}),
+          channel: channel(%{id: 111_222_333}),
+          inviter: user(%{id: 987_654_321}),
           uses: 0,
           max_uses: 1,
           max_age: 3600,
@@ -395,7 +395,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
       malformed_struct = %{
         # Required field as nil
         code: nil,
-        guild_id: "not_an_integer",
+        guild: "not_a_struct",
         uses: "not_an_integer"
       }
 

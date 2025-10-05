@@ -20,7 +20,10 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
           mute: false,
           self_deaf: false,
           self_mute: false,
-          suppress: false
+          self_stream: false,
+          self_video: false,
+          suppress: false,
+          member: nil
         })
 
       result = TestApp.Discord.voice_state_from_discord(%{data: voice_state_struct})
@@ -48,7 +51,10 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
           mute: false,
           self_deaf: false,
           self_mute: false,
-          suppress: false
+          self_stream: false,
+          self_video: false,
+          suppress: false,
+          member: nil
         })
 
       result = TestApp.Discord.voice_state_from_discord(%{data: voice_state_struct})
@@ -70,7 +76,10 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
           mute: true,
           self_deaf: false,
           self_mute: false,
-          suppress: false
+          suppress: false,
+          self_stream: false,
+          self_video: false,
+          member: nil
         })
 
       result = TestApp.Discord.voice_state_from_discord(%{data: voice_state_struct})
@@ -92,7 +101,10 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
           mute: false,
           self_deaf: true,
           self_mute: false,
-          suppress: false
+          suppress: false,
+          self_stream: false,
+          self_video: false,
+          member: nil
         })
 
       result = TestApp.Discord.voice_state_from_discord(%{data: voice_state_struct})
@@ -114,7 +126,10 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
           mute: false,
           self_deaf: false,
           self_mute: true,
-          suppress: false
+          suppress: false,
+          self_stream: false,
+          self_video: false,
+          member: nil
         })
 
       result = TestApp.Discord.voice_state_from_discord(%{data: voice_state_struct})
@@ -158,7 +173,10 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
           mute: false,
           self_deaf: false,
           self_mute: false,
-          suppress: false
+          suppress: false,
+          self_stream: false,
+          self_video: false,
+          member: nil
         })
 
       result = TestApp.Discord.voice_state_from_discord(%{data: voice_state_struct})
@@ -206,7 +224,10 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
           mute: false,
           self_deaf: false,
           self_mute: false,
-          suppress: false
+          suppress: false,
+          self_stream: false,
+          self_video: false,
+          member: nil
         })
 
       {:ok, original_voice_state} =

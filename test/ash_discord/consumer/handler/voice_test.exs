@@ -9,7 +9,7 @@ defmodule AshDiscord.Consumer.Handler.VoiceTest do
 
   describe "update/3" do
     test "creates voice state in database" do
-      voice_state_data = voice_state()
+      voice_state_data = voice_state(%{channel_id: 123_456_789})
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,

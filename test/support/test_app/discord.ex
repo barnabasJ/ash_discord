@@ -43,6 +43,18 @@ defmodule TestApp.Discord do
       define(:voice_state_from_discord, action: :from_discord)
     end
 
+    resource TestApp.Discord.VoiceReady do
+      define(:voice_ready_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.VoiceServerUpdate do
+      define(:voice_server_update_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.VoiceSpeakingUpdate do
+      define(:voice_speaking_update_from_discord, action: :from_discord)
+    end
+
     resource TestApp.Discord.Webhook do
       define(:webhook_from_discord, action: :from_discord)
     end

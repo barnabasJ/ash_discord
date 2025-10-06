@@ -914,6 +914,94 @@ defmodule AshDiscord.Test.Generators.Discord do
   end
 
   @doc """
+  Generates a Discord voice ready event struct.
+
+  ## Options
+
+  - `:channel_id` - Channel ID (defaults to generated snowflake)
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+
+  ## Examples
+
+      iex> voice_ready = voice_ready_event()
+      iex> is_integer(voice_ready.channel_id)
+      true
+  """
+  def voice_ready_event(attrs \\ %{}) do
+    defaults = %{
+      channel_id: generate_snowflake(),
+      guild_id: generate_snowflake()
+    }
+
+    struct(Nostrum.Struct.Event.VoiceReady, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
+  Generates a Discord voice server update event struct.
+
+  ## Options
+
+  - `:token` - Voice connection token (defaults to generated UUID)
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+  - `:endpoint` - Voice server host (defaults to generated endpoint)
+
+  ## Examples
+
+      iex> voice_server_update = voice_server_update_event()
+      iex> is_binary(voice_server_update.token)
+      true
+  """
+  def voice_server_update_event(attrs \\ %{}) do
+    region = Faker.Util.pick(["us-west", "us-east", "us-central", "eu-west", "eu-central"])
+
+    defaults = %{
+      token: Faker.UUID.v4(),
+      guild_id: generate_snowflake(),
+      endpoint: "#{region}.discord.gg:#{Faker.random_between(40000, 50000)}"
+    }
+
+    struct(Nostrum.Struct.Event.VoiceServerUpdate, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
+  Generates a Discord speaking update event struct.
+
+  ## Options
+
+  - `:channel_id` - Channel ID (defaults to generated snowflake)
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+  - `:speaking` - Whether speaking (defaults to random boolean)
+  - `:current_url` - Current audio URL (defaults to nil or generated URL)
+  - `:timed_out` - Whether timed out (defaults to false)
+
+  ## Examples
+
+      iex> speaking_update = speaking_update_event()
+      iex> is_boolean(speaking_update.speaking)
+      true
+  """
+  def speaking_update_event(attrs \\ %{}) do
+    is_speaking = Faker.Util.pick([true, false])
+
+    current_url_value =
+      if is_speaking && Faker.Util.pick([true, false, false]) do
+        "https://cdn.discordapp.com/attachments/#{generate_snowflake()}/audio.mp3"
+      else
+        nil
+      end
+
+    defaults = %{
+      channel_id: generate_snowflake(),
+      guild_id: generate_snowflake(),
+      speaking: is_speaking,
+      current_url: current_url_value,
+      timed_out: Faker.Util.pick([false, false, false, true])
+    }
+
+    struct(Nostrum.Struct.Event.SpeakingUpdate, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
   Generates a Discord message attachment struct.
 
   ## Options

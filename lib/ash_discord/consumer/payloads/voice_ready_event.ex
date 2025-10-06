@@ -23,7 +23,12 @@ defmodule AshDiscord.Consumer.Payloads.VoiceReadyEvent do
   Create a VoiceReadyEvent TypedStruct from a Nostrum VoiceReady event struct.
 
   Accepts a `Nostrum.Struct.Event.VoiceReady.t()` and creates an AshDiscord VoiceReadyEvent TypedStruct.
+  Also handles being passed a VoiceReadyEvent payload (no-op for already-converted payloads).
   """
+  def new(%__MODULE__{} = voice_ready_payload) do
+    {:ok, voice_ready_payload}
+  end
+
   def new(%Nostrum.Struct.Event.VoiceReady{} = nostrum_event) do
     super(Map.from_struct(nostrum_event))
   end

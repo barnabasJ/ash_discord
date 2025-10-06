@@ -15,8 +15,7 @@ defmodule AshDiscord.Consumer.Payloads.VoiceStateEvent do
     field :guild_id, :integer, description: "Guild ID this voice state is for (if applicable)"
 
     field :channel_id, :integer,
-      allow_nil?: false,
-      description: "Channel ID this voice state is for"
+      description: "Channel ID this voice state is for (nil when user leaves voice)"
 
     field :user_id, :integer, allow_nil?: false, description: "User ID this voice state is for"
 

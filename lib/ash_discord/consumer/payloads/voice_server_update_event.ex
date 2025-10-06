@@ -25,7 +25,12 @@ defmodule AshDiscord.Consumer.Payloads.VoiceServerUpdateEvent do
   Create a VoiceServerUpdateEvent TypedStruct from a Nostrum VoiceServerUpdate event struct.
 
   Accepts a `Nostrum.Struct.Event.VoiceServerUpdate.t()` and creates an AshDiscord VoiceServerUpdateEvent TypedStruct.
+  Also handles being passed a VoiceServerUpdateEvent payload (no-op for already-converted payloads).
   """
+  def new(%__MODULE__{} = voice_server_update_payload) do
+    {:ok, voice_server_update_payload}
+  end
+
   def new(%Nostrum.Struct.Event.VoiceServerUpdate{} = nostrum_event) do
     super(Map.from_struct(nostrum_event))
   end

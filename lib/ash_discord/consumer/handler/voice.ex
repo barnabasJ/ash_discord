@@ -21,21 +21,41 @@ defmodule AshDiscord.Consumer.Handler.Voice do
   end
 
   @spec ready(
-          data :: Nostrum.Struct.Event.VoiceReady.t(),
+          voice_ready_event :: Payloads.VoiceReadyEvent.t(),
           ws_state :: Nostrum.Struct.VoiceWSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def ready(_data, _ws_state, _context) do
-    :ok
+  def ready(voice_ready, _ws_state, context) do
+    context.resource
+    |> Ash.Changeset.for_create(:from_discord, %{data: voice_ready})
+    |> Ash.Changeset.set_context(%{
+      private: %{ash_discord?: true},
+      shared: %{private: %{ash_discord?: true}}
+    })
+    |> Ash.create()
+    |> case do
+      {:ok, _voice_ready_record} -> :ok
+      {:error, _error} = error -> error
+    end
   end
 
   @spec speaking(
-          data :: Nostrum.Struct.Event.SpeakingUpdate.t(),
+          voice_speaking_update :: Payloads.VoiceSpeakingUpdateEvent.t(),
           ws_state :: Nostrum.Struct.VoiceWSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def speaking(_data, _ws_state, _context) do
-    :ok
+  def speaking(voice_speaking_update, _ws_state, context) do
+    context.resource
+    |> Ash.Changeset.for_create(:from_discord, %{data: voice_speaking_update})
+    |> Ash.Changeset.set_context(%{
+      private: %{ash_discord?: true},
+      shared: %{private: %{ash_discord?: true}}
+    })
+    |> Ash.create()
+    |> case do
+      {:ok, _voice_speaking_update_record} -> :ok
+      {:error, _error} = error -> error
+    end
   end
 
   @spec incoming(
@@ -48,11 +68,21 @@ defmodule AshDiscord.Consumer.Handler.Voice do
   end
 
   @spec server(
-          data :: Nostrum.Struct.Event.VoiceServerUpdate.t(),
+          voice_server_update :: Payloads.VoiceServerUpdateEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def server(_data, _ws_state, _context) do
-    :ok
+  def server(voice_server_update, _ws_state, context) do
+    context.resource
+    |> Ash.Changeset.for_create(:from_discord, %{data: voice_server_update})
+    |> Ash.Changeset.set_context(%{
+      private: %{ash_discord?: true},
+      shared: %{private: %{ash_discord?: true}}
+    })
+    |> Ash.create()
+    |> case do
+      {:ok, _voice_server_update_record} -> :ok
+      {:error, _error} = error -> error
+    end
   end
 end

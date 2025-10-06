@@ -568,17 +568,17 @@ defmodule AshDiscord.Consumer.EventMap do
   def handler_for(:VOICE_READY),
     do:
       {AshDiscord.Consumer.Handler.Voice, :ready, :voice_state_resource, :handle_voice_ready,
-       Payloads.VoiceReady}
+       Payloads.VoiceReadyEvent}
 
   def handler_for(:VOICE_SERVER_UPDATE),
     do:
       {AshDiscord.Consumer.Handler.Voice, :server, :voice_state_resource,
-       :handle_voice_server_update, Payloads.VoiceServerUpdate}
+       :handle_voice_server_update, Payloads.VoiceServerUpdateEvent}
 
   def handler_for(:VOICE_SPEAKING_UPDATE),
     do:
       {AshDiscord.Consumer.Handler.Voice, :speaking, :voice_state_resource,
-       :handle_voice_speaking_update, Payloads.VoiceSpeakingUpdate}
+       :handle_voice_speaking_update, Payloads.VoiceSpeakingUpdateEvent}
 
   def handler_for(:VOICE_STATE_UPDATE),
     do:

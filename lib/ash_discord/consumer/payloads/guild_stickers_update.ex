@@ -26,4 +26,30 @@ defmodule AshDiscord.Consumer.Payloads.GuildStickersUpdate do
       allow_nil?: false,
       description: "The updated list of stickers"
   end
+
+  @doc """
+  Create a GuildStickersUpdate TypedStruct from Nostrum guild stickers update event data.
+
+  Accepts a tuple `{guild_id, old_stickers, new_stickers}` where stickers are lists of `Nostrum.Struct.Sticker.t()`.
+  """
+  def new({guild_id, old_stickers, new_stickers})
+      when is_integer(guild_id) and is_list(old_stickers) and is_list(new_stickers) do
+    old_stickers_typed =
+      Enum.map(old_stickers, fn sticker ->
+        {:ok, typed_sticker} = Sticker.new(sticker)
+        typed_sticker
+      end)
+
+    new_stickers_typed =
+      Enum.map(new_stickers, fn sticker ->
+        {:ok, typed_sticker} = Sticker.new(sticker)
+        typed_sticker
+      end)
+
+    super(%{
+      guild_id: guild_id,
+      old_stickers: old_stickers_typed,
+      new_stickers: new_stickers_typed
+    })
+  end
 end

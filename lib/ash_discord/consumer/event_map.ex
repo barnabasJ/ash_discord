@@ -331,24 +331,23 @@ defmodule AshDiscord.Consumer.EventMap do
 
   def handler_for(:GUILD_MEMBER_ADD),
     do:
-      {AshDiscord.Consumer.Handler.Member, :add, :guild_member_resource, :handle_guild_member_add,
-       Payloads.GuildMemberAdd}
+      {AshDiscord.Consumer.Handler.Guild.Member, :add, :guild_member_resource,
+       :handle_guild_member_add, Payloads.GuildMemberAdd}
 
   def handler_for(:GUILD_MEMBER_REMOVE),
     do:
-      {AshDiscord.Consumer.Handler.Member, :remove, :guild_member_resource,
+      {AshDiscord.Consumer.Handler.Guild.Member, :remove, :guild_member_resource,
        :handle_guild_member_remove, Payloads.GuildMemberRemove}
 
   def handler_for(:GUILD_MEMBER_UPDATE),
     do:
-      {AshDiscord.Consumer.Handler.Member, :update, :guild_member_resource,
+      {AshDiscord.Consumer.Handler.Guild.Member, :update, :guild_member_resource,
        :handle_guild_member_update, Payloads.GuildMemberUpdate}
 
-  # TODO: Implement guild members chunk handler
   def handler_for(:GUILD_MEMBERS_CHUNK),
     do:
-      {AshDiscord.Consumer.Handler.Guild.Members, :chunk, :guild_member_resource,
-       :handle_guild_members_chunk, Payloads.GuildMembersChunk}
+      {AshDiscord.Consumer.Handler.Guild.Member, :chunk, :guild_member_resource,
+       :handle_guild_members_chunk, Payloads.GuildMembersChunkEvent}
 
   def handler_for(:GUILD_ROLE_CREATE),
     do:

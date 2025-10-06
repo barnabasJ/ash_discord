@@ -213,4 +213,60 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
                )
     end
   end
+
+  describe "chunk/4" do
+    test "handles GUILD_MEMBERS_CHUNK event and returns :ok" do
+      context = %AshDiscord.Context{
+        consumer: TestConsumer,
+        resource: nil,
+        guild: nil,
+        user: nil
+      }
+
+      chunk_event = %Payloads.GuildMembersChunkEvent{
+        data: %{
+          guild_id: generate_snowflake(),
+          members: [],
+          chunk_index: 0,
+          chunk_count: 1
+        }
+      }
+
+      assert :ok =
+               Member.chunk(
+                 TestConsumer,
+                 chunk_event,
+                 %Nostrum.Struct.WSState{},
+                 context
+               )
+    end
+
+    test "accepts chunk event with member data" do
+      context = %AshDiscord.Context{
+        consumer: TestConsumer,
+        resource: nil,
+        guild: nil,
+        user: nil
+      }
+
+      chunk_event = %Payloads.GuildMembersChunkEvent{
+        data: %{
+          guild_id: generate_snowflake(),
+          members: [%{user_id: generate_snowflake(), nick: "TestUser"}],
+          chunk_index: 0,
+          chunk_count: 1,
+          nonce: "test_nonce"
+        }
+      }
+
+      # This is an informational event - we just verify it doesn't crash
+      assert :ok =
+               Member.chunk(
+                 TestConsumer,
+                 chunk_event,
+                 %Nostrum.Struct.WSState{},
+                 context
+               )
+    end
+  end
 end

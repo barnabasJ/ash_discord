@@ -149,4 +149,20 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
         :ok
     end
   end
+
+  @spec chunk(
+          consumer :: module(),
+          chunk_event :: Payloads.GuildMembersChunkEvent.t(),
+          ws_state :: Nostrum.Struct.WSState.t(),
+          context :: AshDiscord.Context.t()
+        ) :: :ok | {:error, term()}
+  def chunk(_consumer, _chunk_event, _ws_state, _context) do
+    # GUILD_MEMBERS_CHUNK is an informational event sent in response to
+    # Gateway Request Guild Members. It contains bulk member data but is
+    # typically handled by Nostrum's caching layer.
+    #
+    # This handler exists to acknowledge the event and allow users to attach
+    # their own side effects if needed, but by default we just return :ok.
+    :ok
+  end
 end

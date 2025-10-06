@@ -1,5 +1,5 @@
 defmodule AshDiscord.Consumer.Handler.Guild.Audit.Log.EntryTest do
-  use TestApp.DataCase, async: false
+  use TestApp.DataCase, async: true
 
   import AshDiscord.Test.Generators.Discord
 

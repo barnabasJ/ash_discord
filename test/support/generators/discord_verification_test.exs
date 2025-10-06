@@ -3,7 +3,7 @@ defmodule AshDiscord.Test.Generators.Discord.VerificationTest do
   Verification tests for critical Discord generator fixes.
   These tests verify the corrections made based on GENERATOR_VERIFICATION.md
   """
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   import AshDiscord.Test.Generators.Discord
 
   describe "member generator - DateTime fields" do

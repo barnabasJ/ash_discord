@@ -6,7 +6,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
   Tests focus on struct-first pattern and error handling.
   """
 
-  use TestApp.DataCase, async: false
+  use TestApp.DataCase, async: true
   import AshDiscord.Test.Generators.Discord
 
   describe "struct-first pattern" do

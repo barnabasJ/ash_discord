@@ -1,5 +1,5 @@
 defmodule AshDiscord.CommandFilterTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   describe "behavior implementation" do
     defmodule TestFilter do

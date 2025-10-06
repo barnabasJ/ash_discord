@@ -5,7 +5,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
   Tests both struct-first and API fallback patterns, plus upsert behavior.
   """
 
-  use TestApp.DataCase, async: false
+  use TestApp.DataCase, async: true
   import AshDiscord.Test.Generators.Discord
   import Mimic
 

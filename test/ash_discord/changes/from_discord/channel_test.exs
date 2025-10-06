@@ -6,7 +6,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
   Special focus on permission overwrites transformation.
   """
 
-  use TestApp.DataCase, async: false
+  use TestApp.DataCase, async: true
   import AshDiscord.Test.Generators.Discord
 
   describe "struct-first pattern" do

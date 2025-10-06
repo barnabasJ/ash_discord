@@ -5,7 +5,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildTest do
   Tests both struct-first and API fallback patterns, plus upsert behavior.
   """
 
-  use TestApp.DataCase, async: false
+  use TestApp.DataCase, async: true
   import AshDiscord.Test.Generators.Discord
 
   describe "struct-first pattern" do

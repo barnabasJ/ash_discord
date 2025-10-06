@@ -1,5 +1,5 @@
 defmodule Mix.Tasks.AshDiscord.InstallTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   import Igniter.Test
 
   describe "ash_discord.install" do

@@ -1,5 +1,5 @@
 defmodule AshDiscord.DslTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias AshDiscord.Info
   alias TestApp.Discord

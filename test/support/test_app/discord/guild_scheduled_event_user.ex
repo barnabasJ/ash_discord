@@ -10,6 +10,10 @@ defmodule TestApp.Discord.GuildScheduledEventUser do
     domain: TestApp.Discord,
     data_layer: Ash.DataLayer.Ets
 
+  ets do
+    private?(true)
+  end
+
   attributes do
     uuid_primary_key(:id)
 

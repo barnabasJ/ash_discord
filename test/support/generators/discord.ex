@@ -1593,6 +1593,41 @@ defmodule AshDiscord.Test.Generators.Discord do
     struct(Nostrum.Struct.Event.GuildIntegrationDelete, merge_attrs(defaults, attrs))
   end
 
+  @doc """
+  Generates a Discord PollVoteChange event struct for MESSAGE_POLL_VOTE_ADD or MESSAGE_POLL_VOTE_REMOVE events.
+
+  ## Options
+
+  - `:user_id` - User ID who voted (defaults to generated snowflake)
+  - `:channel_id` - Channel ID (defaults to generated snowflake)
+  - `:message_id` - Message ID containing the poll (defaults to generated snowflake)
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+  - `:answer_id` - Answer ID that was voted for (defaults to random integer 1-5)
+  - `:type` - Type of vote change, :add or :remove (defaults to :add)
+
+  ## Examples
+
+      iex> event = poll_vote_change_event(%{type: :add})
+      iex> event.type
+      :add
+
+      iex> event = poll_vote_change_event(%{answer_id: 2, type: :remove})
+      iex> event.answer_id
+      2
+  """
+  def poll_vote_change_event(attrs \\ %{}) do
+    defaults = %{
+      user_id: generate_snowflake(),
+      channel_id: generate_snowflake(),
+      message_id: generate_snowflake(),
+      guild_id: generate_snowflake(),
+      answer_id: Faker.random_between(1, 5),
+      type: :add
+    }
+
+    struct(Nostrum.Struct.Event.PollVoteChange, merge_attrs(defaults, attrs))
+  end
+
   # Private helper functions
 
   defp merge_attrs(defaults, overrides) when is_map(overrides) do

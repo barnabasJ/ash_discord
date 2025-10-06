@@ -68,6 +68,10 @@ defmodule AshDiscord.Dsl.Consumer do
         type: :atom,
         doc: "Ash resource for Discord message reactions"
       ],
+      message_poll_vote_resource: [
+        type: :atom,
+        doc: "Ash resource for Discord message poll votes"
+      ],
       voice_state_resource: [
         type: :atom,
         doc: "Ash resource for Discord voice states"

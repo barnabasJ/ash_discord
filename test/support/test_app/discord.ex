@@ -59,6 +59,10 @@ defmodule TestApp.Discord do
       define(:message_reaction_from_discord, action: :from_discord)
     end
 
+    resource TestApp.Discord.MessagePollVote do
+      define(:message_poll_vote_from_discord, action: :from_discord)
+    end
+
     resource TestApp.Discord.TypingIndicator do
       define(:typing_indicator_from_discord, action: :from_discord)
     end

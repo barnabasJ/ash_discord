@@ -36,8 +36,17 @@ defmodule AshDiscord.Consumer.Payloads.PollVoteChangeEvent do
   Create a PollVoteChangeEvent TypedStruct from a Nostrum PollVoteChange event struct.
 
   Accepts a `Nostrum.Struct.Event.PollVoteChange.t()` and creates an AshDiscord PollVoteChangeEvent TypedStruct.
+  Also handles being passed a PollVoteChangeEvent payload (no-op for already-converted payloads).
   """
+  def new(%__MODULE__{} = poll_vote_payload) do
+    {:ok, poll_vote_payload}
+  end
+
   def new(%Nostrum.Struct.Event.PollVoteChange{} = nostrum_event) do
     super(Map.from_struct(nostrum_event))
+  end
+
+  def new(value) do
+    super(value)
   end
 end

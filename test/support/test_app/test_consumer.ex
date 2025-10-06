@@ -18,6 +18,7 @@ defmodule TestApp.TestConsumer do
     typing_indicator_resource(TestApp.Discord.TypingIndicator)
     voice_state_resource(TestApp.Discord.VoiceState)
     message_reaction_resource(TestApp.Discord.MessageReaction)
+    message_poll_vote_resource(TestApp.Discord.MessagePollVote)
   end
 
   @doc """

@@ -92,6 +92,10 @@ defmodule TestApp.Discord do
     end
 
     resource(TestApp.Discord.GuildScheduledEventUser)
+
+    resource TestApp.Discord.Integration do
+      define(:integration_from_discord, action: :from_discord)
+    end
   end
 
   discord do

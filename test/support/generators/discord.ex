@@ -56,6 +56,10 @@ defmodule AshDiscord.Test.Generators.Discord do
   - `guild_member/1` - Guild members (alias for member/1)
   - `sticker/1` - Discord stickers
   - `typing_indicator/1` - Typing indicators
+  - `integration/1` - Guild integrations
+  - `integration_account/1` - Integration accounts
+  - `integration_application/1` - Integration applications
+  - `integration_delete_event/1` - Integration delete events
 
   ## Utilities
 
@@ -1475,6 +1479,118 @@ defmodule AshDiscord.Test.Generators.Discord do
     }
 
     struct(Nostrum.Struct.Event.AutoModerationRuleExecute, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
+  Generates a Discord Integration Account struct.
+
+  ## Options
+
+  - `:id` - Account ID (defaults to generated UUID string)
+  - `:name` - Account name (defaults to generated username)
+
+  ## Examples
+
+      iex> account = integration_account(%{name: "MyAccount"})
+      iex> account.name
+      "MyAccount"
+  """
+  def integration_account(attrs \\ %{}) do
+    defaults = %{
+      id: Faker.UUID.v4(),
+      name: Faker.Internet.user_name()
+    }
+
+    struct(Nostrum.Struct.Guild.Integration.Account, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
+  Generates a Discord Integration Application struct.
+
+  ## Options
+
+  - `:id` - Application ID (defaults to generated snowflake)
+  - `:name` - Application name (defaults to generated app name)
+  - `:icon` - Icon hash (defaults to generated UUID)
+  - `:description` - Application description (defaults to generated sentence)
+  - `:summary` - Application summary (defaults to generated sentence)
+  - `:bot` - Bot user (defaults to nil)
+
+  ## Examples
+
+      iex> app = integration_application(%{name: "MyBot"})
+      iex> app.name
+      "MyBot"
+  """
+  def integration_application(attrs \\ %{}) do
+    defaults = %{
+      id: generate_snowflake(),
+      name: Faker.App.name(),
+      icon: Faker.UUID.v4(),
+      description: Faker.Lorem.sentence(),
+      summary: Faker.Lorem.sentence(),
+      bot: nil
+    }
+
+    struct(Nostrum.Struct.Guild.Integration.Application, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
+  Generates a Discord Integration struct.
+
+  ## Options
+
+  - `:id` - Integration ID (defaults to generated snowflake)
+  - `:name` - Integration name (defaults to generated name)
+  - `:type` - Integration type (defaults to "discord")
+  - `:enabled` - Whether enabled (defaults to true)
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+  - `:account` - Account struct (defaults to generated account)
+  - `:application` - Application struct (defaults to generated application)
+
+  ## Examples
+
+      iex> integration = integration(%{name: "MyIntegration"})
+      iex> integration.name
+      "MyIntegration"
+  """
+  def integration(attrs \\ %{}) do
+    defaults = %{
+      id: generate_snowflake(),
+      name: Faker.App.name(),
+      type: Faker.Util.pick(["discord", "twitch", "youtube"]),
+      enabled: true,
+      guild_id: generate_snowflake(),
+      account: integration_account(),
+      application: integration_application()
+    }
+
+    struct(Nostrum.Struct.Guild.Integration, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
+  Generates a Discord IntegrationDelete event struct.
+
+  ## Options
+
+  - `:id` - Integration ID (defaults to generated snowflake)
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+  - `:application_id` - Application ID (defaults to generated snowflake)
+
+  ## Examples
+
+      iex> event = integration_delete_event(%{id: 123456})
+      iex> event.id
+      123456
+  """
+  def integration_delete_event(attrs \\ %{}) do
+    defaults = %{
+      id: generate_snowflake(),
+      guild_id: generate_snowflake(),
+      application_id: generate_snowflake()
+    }
+
+    struct(Nostrum.Struct.Event.GuildIntegrationDelete, merge_attrs(defaults, attrs))
   end
 
   # Private helper functions

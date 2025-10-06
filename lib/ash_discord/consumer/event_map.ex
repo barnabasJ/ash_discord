@@ -527,7 +527,7 @@ defmodule AshDiscord.Consumer.EventMap do
   def handler_for(:THREAD_LIST_SYNC),
     do:
       {AshDiscord.Consumer.Handler.Thread, :list_sync, :thread_resource, :handle_thread_list_sync,
-       Payloads.ThreadListSync}
+       Payloads.ThreadListSyncEvent}
 
   def handler_for(:THREAD_MEMBER_UPDATE),
     do:
@@ -537,7 +537,7 @@ defmodule AshDiscord.Consumer.EventMap do
   def handler_for(:THREAD_MEMBERS_UPDATE),
     do:
       {AshDiscord.Consumer.Handler.Thread.Members, :update, :thread_members_resource,
-       :handle_thread_members_update, Payloads.ThreadMembersUpdate}
+       :handle_thread_members_update, Payloads.ThreadMembersUpdateEvent}
 
   def handler_for(:THREAD_UPDATE),
     do:

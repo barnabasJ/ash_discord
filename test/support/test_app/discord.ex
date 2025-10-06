@@ -100,6 +100,22 @@ defmodule TestApp.Discord do
     resource TestApp.Discord.Integration do
       define(:integration_from_discord, action: :from_discord)
     end
+
+    resource TestApp.Discord.Thread do
+      define(:thread_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.ThreadListSync do
+      define(:thread_list_sync_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.ThreadMember do
+      define(:thread_member_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.ThreadMembersUpdate do
+      define(:thread_members_update_from_discord, action: :from_discord)
+    end
   end
 
   discord do

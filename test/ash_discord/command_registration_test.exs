@@ -184,9 +184,12 @@ defmodule AshDiscord.CommandRegistrationTest do
       # Create an interaction for a command that doesn't exist
       interaction =
         interaction(%{
+          # Application command interaction
+          type: 2,
           data: %{
             # This command doesn't exist in our registry
             name: "nonexistent_command",
+            # Chat input command
             type: 1
           },
           user: user()

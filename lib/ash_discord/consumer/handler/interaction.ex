@@ -21,22 +21,31 @@ defmodule AshDiscord.Consumer.Handler.Interaction do
   end
 
   defp handle_application_command(consumer, interaction) do
-    command_name = String.to_existing_atom(interaction.data.name)
-    Logger.info("Processing slash command: #{command_name} from user #{interaction.user.id}")
+    try do
+      command_name = String.to_existing_atom(interaction.data.name)
+      Logger.info("Processing slash command: #{command_name} from user #{interaction.user.id}")
 
-    case find_command(consumer, command_name) do
-      nil ->
-        Logger.error("Unknown command: #{command_name}")
+      case find_command(consumer, command_name) do
+        nil ->
+          Logger.error("Unknown command: #{command_name}")
+          respond_with_error(interaction, "Unknown command")
+
+        command ->
+          # Apply command filtering based on guild context
+          if command_allowed_for_interaction?(consumer, interaction, command) do
+            AshDiscord.InteractionRouter.route_interaction(interaction, command,
+              consumer: consumer
+            )
+          else
+            Logger.warning("Command #{command_name} filtered for guild #{interaction.guild_id}")
+            respond_with_error(interaction, "This command is not available in this server")
+          end
+      end
+    rescue
+      ArgumentError ->
+        # String.to_existing_atom raises if atom doesn't exist - treat as unknown command
+        Logger.error("Unknown command: #{interaction.data.name}")
         respond_with_error(interaction, "Unknown command")
-
-      command ->
-        # Apply command filtering based on guild context
-        if command_allowed_for_interaction?(consumer, interaction, command) do
-          AshDiscord.InteractionRouter.route_interaction(interaction, command, consumer: consumer)
-        else
-          Logger.warning("Command #{command_name} filtered for guild #{interaction.guild_id}")
-          respond_with_error(interaction, "This command is not available in this server")
-        end
     end
   end
 

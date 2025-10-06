@@ -1002,6 +1002,32 @@ defmodule AshDiscord.Test.Generators.Discord do
   end
 
   @doc """
+  Generates a Discord webhooks update event map.
+
+  The WEBHOOKS_UPDATE event is minimal - it only contains guild_id and channel_id
+  to indicate that something changed with webhooks in that channel.
+
+  ## Options
+
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+  - `:channel_id` - Channel ID (defaults to generated snowflake)
+
+  ## Examples
+
+      iex> webhooks_update = webhooks_update_event()
+      iex> is_integer(webhooks_update.guild_id)
+      true
+  """
+  def webhooks_update_event(attrs \\ %{}) do
+    defaults = %{
+      guild_id: generate_snowflake(),
+      channel_id: generate_snowflake()
+    }
+
+    merge_attrs(defaults, attrs)
+  end
+
+  @doc """
   Generates a Discord message attachment struct.
 
   ## Options

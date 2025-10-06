@@ -59,6 +59,10 @@ defmodule TestApp.Discord do
       define(:webhook_from_discord, action: :from_discord)
     end
 
+    resource TestApp.Discord.WebhooksUpdate do
+      define(:webhooks_update_from_discord, action: :from_discord)
+    end
+
     resource TestApp.Discord.Invite do
       define(:invite_from_discord, action: :from_discord)
     end

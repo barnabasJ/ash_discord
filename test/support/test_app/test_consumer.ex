@@ -10,6 +10,7 @@ defmodule TestApp.TestConsumer do
     user_resource(TestApp.Discord.User)
     guild_resource(TestApp.Discord.Guild)
     guild_member_resource(TestApp.Discord.GuildMember)
+    guild_scheduled_event_resource(TestApp.Discord.GuildScheduledEvent)
     message_resource(TestApp.Discord.Message)
     channel_resource(TestApp.Discord.Channel)
     role_resource(TestApp.Discord.Role)

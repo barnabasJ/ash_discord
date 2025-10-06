@@ -86,6 +86,12 @@ defmodule TestApp.Discord do
     resource TestApp.Discord.GuildAuditLogEntry do
       define(:guild_audit_log_entry_from_discord, action: :from_discord)
     end
+
+    resource TestApp.Discord.GuildScheduledEvent do
+      define(:guild_scheduled_event_from_discord, action: :from_discord)
+    end
+
+    resource(TestApp.Discord.GuildScheduledEventUser)
   end
 
   discord do

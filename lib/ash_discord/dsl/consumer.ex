@@ -88,6 +88,10 @@ defmodule AshDiscord.Dsl.Consumer do
         type: :atom,
         doc: "Ash resource for Discord presence updates"
       ],
+      guild_scheduled_event_resource: [
+        type: :atom,
+        doc: "Ash resource for Discord guild scheduled events"
+      ],
       store_bot_messages: [
         type: :boolean,
         default: false,

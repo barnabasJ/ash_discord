@@ -123,23 +123,18 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReaction do
     emoji_data = reaction_data.emoji
 
     changeset
+    # Set both _discord_id and _id versions to support both naming conventions
     |> maybe_set_attribute(:user_discord_id, reaction_data.user_id)
+    |> maybe_set_attribute(:user_id, reaction_data.user_id)
     |> maybe_set_attribute(:message_discord_id, reaction_data.message_id)
+    |> maybe_set_attribute(:message_id, reaction_data.message_id)
     |> maybe_set_attribute(:channel_discord_id, reaction_data.channel_id)
+    |> maybe_set_attribute(:channel_id, reaction_data.channel_id)
     |> maybe_set_attribute(:guild_discord_id, reaction_data.guild_id)
+    |> maybe_set_attribute(:guild_id, reaction_data.guild_id)
     |> maybe_set_attribute(:emoji_id, emoji_data && Map.get(emoji_data, :id))
     |> maybe_set_attribute(:emoji_name, emoji_data && Map.get(emoji_data, :name))
     |> maybe_set_attribute(:emoji_animated, emoji_data && Map.get(emoji_data, :animated, false))
-    |> manage_relationships(reaction_data)
-  end
-
-  # Manage relationships for auto-creating related entities
-  defp manage_relationships(changeset, reaction_data) do
-    changeset
-    |> Transformations.manage_user_relationship(reaction_data.user_id)
-    |> Transformations.manage_message_relationship(reaction_data.message_id)
-    |> Transformations.manage_channel_relationship(reaction_data.channel_id)
-    |> Transformations.manage_guild_relationship(reaction_data.guild_id)
   end
 
   defp maybe_set_attribute(changeset, _field, nil), do: changeset

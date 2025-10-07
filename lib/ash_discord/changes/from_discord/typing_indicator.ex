@@ -54,7 +54,6 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicator do
     |> maybe_set_attribute(:guild_id, typing_data.guild_id)
     |> set_typing_timestamp(typing_data)
     |> maybe_set_attribute(:member, convert_member_to_map(typing_data.member))
-    |> manage_relationships(typing_data)
   end
 
   defp convert_member_to_map(nil), do: nil
@@ -64,14 +63,6 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicator do
   end
 
   defp convert_member_to_map(member) when is_map(member), do: member
-
-  # Manage relationships for auto-creating related entities
-  defp manage_relationships(changeset, typing_data) do
-    changeset
-    |> Transformations.manage_user_relationship(typing_data.user_id)
-    |> Transformations.manage_channel_relationship(typing_data.channel_id)
-    |> Transformations.manage_guild_relationship(typing_data.guild_id)
-  end
 
   # Handle timestamp setting for typing indicators
   defp set_typing_timestamp(changeset, %{timestamp: timestamp}) when not is_nil(timestamp) do

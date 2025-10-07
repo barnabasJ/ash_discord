@@ -3,6 +3,7 @@ defmodule AshDiscord.Consumer.Handler do
   Main event handler for routing Discord events to callbacks or handler modules.
   """
 
+  require Ash.Query
   require Logger
 
   @spec handle_event(consumer :: module(), event_payload_ws :: Nostrum.Consumer.event()) :: any()
@@ -117,7 +118,11 @@ defmodule AshDiscord.Consumer.Handler do
       consumer: consumer,
       resource: resource,
       guild: guild,
-      user: user
+      user: user,
+      context: %{
+        private: %{ash_discord?: true},
+        shared: %{private: %{ash_discord?: true}}
+      }
     }
   end
 
@@ -146,15 +151,14 @@ defmodule AshDiscord.Consumer.Handler do
       {:ok, %MyApp.Message{}}
   """
   @spec invoke_configured_action(
-          resource :: Ash.Resource.t(),
           event :: atom(),
           payload :: map(),
           context :: AshDiscord.Context.t()
         ) :: {:ok, any()} | {:error, any()}
-  def invoke_configured_action(resource, event, payload, context) do
+  def invoke_configured_action(event, payload, %{resource: resource} = context) do
     with {:ok, action_name} <- get_configured_action(resource, event),
          {:ok, action} <- fetch_action(resource, action_name) do
-      invoke_action_by_type(resource, action, payload, context)
+      invoke(resource, action, payload, context)
     end
   end
 
@@ -182,43 +186,13 @@ defmodule AshDiscord.Consumer.Handler do
     end
   end
 
-  @spec invoke_action_by_type(
-          resource :: Ash.Resource.t(),
-          action :: Ash.Resource.Actions.action(),
-          payload :: map(),
-          context :: AshDiscord.Context.t()
-        ) :: {:ok, any()} | {:error, any()}
-  defp invoke_action_by_type(resource, action, payload, context) do
-    opts = context_to_opts(context)
-
-    case action.type do
-      :create ->
-        invoke_bulk_create(resource, action, payload, opts)
-
-      :update ->
-        invoke_bulk_update(resource, action, payload, opts)
-
-      :destroy ->
-        invoke_bulk_destroy(resource, action, payload, opts)
-
-      :read ->
-        invoke_read_action(resource, action, payload, opts)
-
-      :action ->
-        invoke_generic_action(resource, action, payload, opts)
-
-      unknown_type ->
-        {:error, "Unknown action type: #{unknown_type}"}
-    end
-  end
-
-  @spec invoke_bulk_create(
+  @spec invoke(
           resource :: Ash.Resource.t(),
           action :: Ash.Resource.Actions.action(),
           attributes :: map(),
           opts :: keyword()
         ) :: {:ok, Ash.Resource.record()} | {:error, any()}
-  defp invoke_bulk_create(resource, action, attributes, opts) do
+  defp invoke(resource, %{type: :create} = action, attributes, opts) do
     Logger.debug("Invoking bulk create action #{action.name} on #{inspect(resource)}")
 
     result =
@@ -236,16 +210,10 @@ defmodule AshDiscord.Consumer.Handler do
     format_bulk_result(result, :single)
   end
 
-  @spec invoke_bulk_update(
-          resource :: Ash.Resource.t(),
-          action :: Ash.Resource.Actions.action(),
-          attributes :: map(),
-          opts :: keyword()
-        ) :: {:ok, Ash.Resource.record()} | {:error, any()}
-  defp invoke_bulk_update(resource, action, attributes, opts) do
+  defp invoke(resource, %{type: :update} = action, {identity, attributes}, opts) do
     Logger.debug("Invoking bulk update action #{action.name} on #{inspect(resource)}")
 
-    with {:ok, query} <- build_update_query(resource, attributes, opts) do
+    with {:ok, query} <- build_query(resource, identity, opts) do
       result =
         Ash.bulk_update(
           query,
@@ -262,18 +230,12 @@ defmodule AshDiscord.Consumer.Handler do
     end
   end
 
-  @spec invoke_bulk_destroy(
-          resource :: Ash.Resource.t(),
-          action :: Ash.Resource.Actions.action(),
-          attributes :: map(),
-          opts :: keyword()
-        ) :: {:ok, Ash.Resource.record()} | {:error, any()}
-  defp invoke_bulk_destroy(resource, action, attributes, opts) do
+  defp invoke(resource, %{type: :destroy} = action, {identity, attributes}, opts) do
     require Ash.Query
 
     Logger.debug("Invoking bulk destroy action #{action.name} on #{inspect(resource)}")
 
-    with {:ok, query} <- build_destroy_query(resource, attributes, opts) do
+    with {:ok, query} <- build_query(resource, identity, opts) do
       result =
         Ash.bulk_destroy(
           query,
@@ -290,29 +252,15 @@ defmodule AshDiscord.Consumer.Handler do
     end
   end
 
-  @spec invoke_read_action(
-          resource :: Ash.Resource.t(),
-          action :: Ash.Resource.Actions.action(),
-          filters :: map(),
-          opts :: keyword()
-        ) :: {:ok, list(Ash.Resource.record())} | {:error, any()}
-  defp invoke_read_action(resource, action, filters, opts) do
-    require Ash.Query
-
+  defp invoke(resource, %{type: :read} = action, arguments, opts) do
     Logger.debug("Invoking read action #{action.name} on #{inspect(resource)}")
 
     resource
-    |> Ash.Query.for_read(action.name, filters, opts)
-    |> Ash.read(opts)
+    |> Ash.Query.for_read(action.name, arguments, opts)
+    |> Ash.read()
   end
 
-  @spec invoke_generic_action(
-          resource :: Ash.Resource.t(),
-          action :: Ash.Resource.Actions.action(),
-          arguments :: map(),
-          opts :: keyword()
-        ) :: {:ok, any()} | {:error, any()}
-  defp invoke_generic_action(resource, action, arguments, opts) do
+  defp invoke(resource, %{type: :read} = action, arguments, opts) do
     Logger.debug("Invoking generic action #{action.name} on #{inspect(resource)}")
 
     resource
@@ -320,56 +268,24 @@ defmodule AshDiscord.Consumer.Handler do
     |> Ash.run_action(opts)
   end
 
-  @spec build_update_query(
+  @spec build_query(
           resource :: Ash.Resource.t(),
           attributes :: map(),
           opts :: keyword()
         ) :: {:ok, Ash.Query.t()} | {:error, any()}
-  defp build_update_query(resource, %{id: id}, opts) do
-    require Ash.Query
+  defp build_query(resource, identity, _opts) do
+    query = Ash.Query.new(resource)
 
-    case Ash.get(resource, id, opts) do
-      {:ok, record} ->
-        {:ok, [record]}
+    case identity do
+      id when is_list(id) ->
+        {:ok, Ash.Query.filter(query, id)}
 
-      {:error, _} = error ->
-        Logger.error("Failed to fetch record with id #{id} for update: #{inspect(error)}")
-        error
+      id when is_map(id) ->
+        {:ok, Ash.Query.filter(query, id)}
+
+      id when is_integer(id) or is_binary(id) ->
+        {:ok, Ash.Query.filter(Ash.Query.new(resource), id: id)}
     end
-  end
-
-  defp build_update_query(resource, attributes, _opts) do
-    Logger.error(
-      "No identifier provided for update action on #{inspect(resource)}: #{inspect(attributes)}"
-    )
-
-    {:error, "No identifier provided for update action"}
-  end
-
-  @spec build_destroy_query(
-          resource :: Ash.Resource.t(),
-          attributes :: map(),
-          opts :: keyword()
-        ) :: {:ok, Ash.Query.t()} | {:error, any()}
-  defp build_destroy_query(resource, %{id: id}, opts) do
-    require Ash.Query
-
-    case Ash.get(resource, id, opts) do
-      {:ok, record} ->
-        {:ok, [record]}
-
-      {:error, _} = error ->
-        Logger.error("Failed to fetch record with id #{id} for destroy: #{inspect(error)}")
-        error
-    end
-  end
-
-  defp build_destroy_query(resource, attributes, _opts) do
-    Logger.error(
-      "No identifier provided for destroy action on #{inspect(resource)}: #{inspect(attributes)}"
-    )
-
-    {:error, "No identifier provided for destroy action"}
   end
 
   @spec format_bulk_result(Ash.BulkResult.t(), :single | :bulk) ::
@@ -397,15 +313,4 @@ defmodule AshDiscord.Consumer.Handler do
 
     {:error, result.errors}
   end
-
-  @spec context_to_opts(context :: AshDiscord.Context.t()) :: keyword()
-  defp context_to_opts(context) do
-    []
-    |> maybe_add_opt(:actor, context.user)
-    |> maybe_add_opt(:tenant, context.guild)
-  end
-
-  @spec maybe_add_opt(opts :: keyword(), key :: atom(), value :: any()) :: keyword()
-  defp maybe_add_opt(opts, _key, nil), do: opts
-  defp maybe_add_opt(opts, key, value), do: Keyword.put(opts, key, value)
 end

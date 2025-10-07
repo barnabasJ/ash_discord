@@ -1,4 +1,5 @@
 defmodule AshDiscord.Consumer.Handler.User do
+  alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 
   @spec update(
@@ -6,9 +7,16 @@ defmodule AshDiscord.Consumer.Handler.User do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def update(_user_update, _ws_state, _context) do
-    # TODO: Implement user update logic when user resource is configured
-    :ok
+  def update(%Payloads.UserUpdate{new_user: new_user}, _ws_state, context) do
+    case Handler.invoke_configured_action(
+           :USER_UPDATE,
+           new_user.id,
+           %{identity: new_user.id, data: new_user},
+           context
+         ) do
+      {:ok, _user} -> :ok
+      {:error, error} -> {:error, error}
+    end
   end
 
   @spec settings(

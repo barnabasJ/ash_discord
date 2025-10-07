@@ -15,7 +15,8 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Channel,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       {:ok, channel_payload} = Payloads.Channel.new(channel_data)
@@ -41,7 +42,8 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Channel,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       {:ok, old_channel_payload} = Payloads.Channel.new(old_channel)
@@ -91,7 +93,8 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Channel,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       assert :ok =
@@ -109,7 +112,8 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Channel,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       {:ok, channel_payload} = Payloads.Channel.new(channel_data)

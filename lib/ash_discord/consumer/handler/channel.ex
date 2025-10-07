@@ -1,7 +1,7 @@
 defmodule AshDiscord.Consumer.Handler.Channel do
   require Logger
-  require Ash.Query
 
+  alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 
   @spec create(
@@ -10,16 +10,14 @@ defmodule AshDiscord.Consumer.Handler.Channel do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def create(channel, _ws_state, context) do
-    context.resource
-    |> Ash.Changeset.for_create(:from_discord, %{data: channel})
-    |> Ash.Changeset.set_context(%{
-      private: %{ash_discord?: true},
-      shared: %{private: %{ash_discord?: true}}
-    })
-    |> Ash.create()
-    |> case do
-      {:ok, _channel_record} -> :ok
-      {:error, _error} = error -> error
+    case Handler.invoke_configured_action(
+           :CHANNEL_CREATE,
+           channel.id,
+           %{identity: channel.id, data: channel},
+           context
+         ) do
+      {:ok, _} -> :ok
+      {:error, error} -> {:error, error}
     end
   end
 
@@ -29,16 +27,14 @@ defmodule AshDiscord.Consumer.Handler.Channel do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def update(%Payloads.ChannelUpdate{new_channel: channel}, _ws_state, context) do
-    context.resource
-    |> Ash.Changeset.for_create(:from_discord, %{data: channel})
-    |> Ash.Changeset.set_context(%{
-      private: %{ash_discord?: true},
-      shared: %{private: %{ash_discord?: true}}
-    })
-    |> Ash.create()
-    |> case do
-      {:ok, _channel_record} -> :ok
-      {:error, _error} = error -> error
+    case Handler.invoke_configured_action(
+           :CHANNEL_UPDATE,
+           channel.id,
+           %{identity: channel.id, data: channel},
+           context
+         ) do
+      {:ok, _} -> :ok
+      {:error, error} -> {:error, error}
     end
   end
 
@@ -48,21 +44,14 @@ defmodule AshDiscord.Consumer.Handler.Channel do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def delete(channel, _ws_state, context) do
-    query =
-      context.resource
-      |> Ash.Query.filter(discord_id == ^channel.id)
-
-    case Ash.bulk_destroy(query, :destroy, %{},
-           context: %{
-             private: %{ash_discord?: true},
-             shared: %{private: %{ash_discord?: true}}
-           }
+    case Handler.invoke_configured_action(
+           :CHANNEL_DELETE,
+           %{discord_id: channel.id},
+           %{},
+           context
          ) do
-      %Ash.BulkResult{status: :success} ->
-        :ok
-
-      result ->
-        {:error, result}
+      {:ok, _} -> :ok
+      {:error, error} -> {:error, error}
     end
   end
 end

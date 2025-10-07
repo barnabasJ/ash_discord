@@ -6,19 +6,8 @@ defmodule TestApp.TestConsumer do
   use AshDiscord.Consumer
 
   ash_discord_consumer do
+    # Resources auto-discovered from domain via AshDiscord.Resource extension
     domains([TestApp.Discord])
-    user_resource(TestApp.Discord.User)
-    guild_resource(TestApp.Discord.Guild)
-    guild_member_resource(TestApp.Discord.GuildMember)
-    guild_scheduled_event_resource(TestApp.Discord.GuildScheduledEvent)
-    message_resource(TestApp.Discord.Message)
-    channel_resource(TestApp.Discord.Channel)
-    role_resource(TestApp.Discord.Role)
-    invite_resource(TestApp.Discord.Invite)
-    typing_indicator_resource(TestApp.Discord.TypingIndicator)
-    voice_state_resource(TestApp.Discord.VoiceState)
-    message_reaction_resource(TestApp.Discord.MessageReaction)
-    message_poll_vote_resource(TestApp.Discord.MessagePollVote)
   end
 
   @doc """

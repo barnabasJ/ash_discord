@@ -17,13 +17,16 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEvent do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def create(
-        consumer,
+        _consumer,
         %Payloads.GuildScheduledEvent{} = event,
         _ws_state,
-        _context
+        context
       ) do
-    case AshDiscord.Consumer.Info.ash_discord_consumer_guild_scheduled_event_resource(consumer) do
-      {:ok, resource} ->
+    case context.resource do
+      nil ->
+        :ok
+
+      resource ->
         case resource
              |> Ash.Changeset.for_create(
                :from_discord,
@@ -42,12 +45,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEvent do
               "Failed to create guild scheduled event #{event.id} in guild #{event.guild_id}: #{inspect(error)}"
             )
 
-            {:error, error}
+            :ok
         end
-
-      :error ->
-        # No guild scheduled event resource configured
-        :ok
     end
   end
 
@@ -58,13 +57,16 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEvent do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def update(
-        consumer,
+        _consumer,
         %Payloads.GuildScheduledEvent{} = event,
         _ws_state,
-        _context
+        context
       ) do
-    case AshDiscord.Consumer.Info.ash_discord_consumer_guild_scheduled_event_resource(consumer) do
-      {:ok, resource} ->
+    case context.resource do
+      nil ->
+        :ok
+
+      resource ->
         case resource
              |> Ash.Changeset.for_create(
                :from_discord,
@@ -83,12 +85,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEvent do
               "Failed to update guild scheduled event #{event.id} in guild #{event.guild_id}: #{inspect(error)}"
             )
 
-            {:error, error}
+            :ok
         end
-
-      :error ->
-        # No guild scheduled event resource configured
-        :ok
     end
   end
 
@@ -99,13 +97,16 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEvent do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def delete(
-        consumer,
+        _consumer,
         %Payloads.GuildScheduledEvent{id: event_id, guild_id: guild_id},
         _ws_state,
-        _context
+        context
       ) do
-    case AshDiscord.Consumer.Info.ash_discord_consumer_guild_scheduled_event_resource(consumer) do
-      {:ok, resource} ->
+    case context.resource do
+      nil ->
+        :ok
+
+      resource ->
         query =
           resource
           |> Ash.Query.filter(discord_id == ^event_id)
@@ -127,19 +128,15 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEvent do
               "Failed to delete guild scheduled event #{event_id} from guild #{guild_id}: #{inspect(errors)}"
             )
 
-            {:error, errors}
+            :ok
 
           {:error, error} ->
             Logger.warning(
               "Failed to delete guild scheduled event #{event_id} from guild #{guild_id}: #{inspect(error)}"
             )
 
-            {:error, error}
+            :ok
         end
-
-      :error ->
-        # No guild scheduled event resource configured
-        :ok
     end
   end
 

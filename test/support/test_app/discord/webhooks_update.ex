@@ -12,8 +12,13 @@ defmodule TestApp.Discord.WebhooksUpdate do
   """
 
   use Ash.Resource,
+    extensions: [AshDiscord.Resource],
     domain: TestApp.Discord,
     data_layer: Ash.DataLayer.Ets
+
+  ash_discord do
+    discord_entity(:webhooks_update)
+  end
 
   ets do
     private?(true)

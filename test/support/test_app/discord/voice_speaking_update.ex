@@ -8,8 +8,15 @@ defmodule TestApp.Discord.VoiceSpeakingUpdate do
   """
 
   use Ash.Resource,
+    extensions: [AshDiscord.Resource],
     domain: TestApp.Discord,
     data_layer: Ash.DataLayer.Ets
+
+  ash_discord do
+    events do
+      on(:VOICE_SPEAKING_UPDATE, :from_discord)
+    end
+  end
 
   ets do
     private?(true)

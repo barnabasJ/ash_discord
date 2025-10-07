@@ -6,8 +6,13 @@ defmodule TestApp.Discord.AutoModerationRuleExecute do
   """
 
   use Ash.Resource,
+    extensions: [AshDiscord.Resource],
     domain: TestApp.Discord,
     data_layer: Ash.DataLayer.Ets
+
+  ash_discord do
+    discord_entity(:auto_moderation_rule_execute)
+  end
 
   ets do
     private?(true)

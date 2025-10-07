@@ -11,13 +11,16 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def add(
-        consumer,
+        _consumer,
         %Payloads.GuildMemberAdd{guild_id: guild_id, member: member},
         _ws_state,
-        _context
+        context
       ) do
-    case AshDiscord.Consumer.Info.ash_discord_consumer_guild_member_resource(consumer) do
-      {:ok, resource} ->
+    case context.resource do
+      nil ->
+        :ok
+
+      resource ->
         # Extract user_id from member struct
         user_discord_id = member.user_id || (member.user && member.user.id)
 
@@ -42,12 +45,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
               "Failed to create guild member #{user_discord_id} in guild #{guild_id}: #{inspect(error)}"
             )
 
-            {:error, error}
+            :ok
         end
-
-      :error ->
-        # No guild member resource configured
-        :ok
     end
   end
 
@@ -58,13 +57,16 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def update(
-        consumer,
+        _consumer,
         %Payloads.GuildMemberUpdate{guild_id: guild_id, new_member: member},
         _ws_state,
-        _context
+        context
       ) do
-    case AshDiscord.Consumer.Info.ash_discord_consumer_guild_member_resource(consumer) do
-      {:ok, resource} ->
+    case context.resource do
+      nil ->
+        :ok
+
+      resource ->
         user_discord_id = member.user_id
 
         case resource
@@ -88,12 +90,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
               "Failed to update guild member #{user_discord_id} in guild #{guild_id}: #{inspect(error)}"
             )
 
-            {:error, error}
+            :ok
         end
-
-      :error ->
-        # No guild member resource configured
-        :ok
     end
   end
 
@@ -104,13 +102,16 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def remove(
-        consumer,
+        _consumer,
         %Payloads.GuildMemberRemove{guild_id: guild_id, member: member},
         _ws_state,
-        _context
+        context
       ) do
-    case AshDiscord.Consumer.Info.ash_discord_consumer_guild_member_resource(consumer) do
-      {:ok, resource} ->
+    case context.resource do
+      nil ->
+        :ok
+
+      resource ->
         user_discord_id = member.user_id
 
         query =
@@ -134,19 +135,15 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
               "Failed to delete guild member #{user_discord_id} from guild #{guild_id}: #{inspect(errors)}"
             )
 
-            {:error, errors}
+            :ok
 
           {:error, error} ->
             Logger.warning(
               "Failed to delete guild member #{user_discord_id} from guild #{guild_id}: #{inspect(error)}"
             )
 
-            {:error, error}
+            :ok
         end
-
-      :error ->
-        # No guild member resource configured
-        :ok
     end
   end
 

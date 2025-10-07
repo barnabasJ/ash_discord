@@ -73,13 +73,21 @@ defmodule AshDiscord.InteractionRouter do
   end
 
   defp resolve_actor_with_user(discord_user, interaction, consumer_module) do
-    case AshDiscord.Consumer.Info.ash_discord_consumer_user_resource(consumer_module) do
-      {:ok, user_resource} ->
-        create_or_find_user(user_resource, discord_user, interaction)
-
-      # no user resource configured, continue with raw discord user
-      :error ->
+    # Find the User resource via event discovery (USER_UPDATE event)
+    case Spark.Dsl.Extension.get_persisted(consumer_module, :discord_event_handlers) do
+      nil ->
+        # No event handlers discovered, continue with raw discord user
         {:ok, discord_user}
+
+      event_handlers when is_map(event_handlers) ->
+        case Map.get(event_handlers, :USER_UPDATE) do
+          {user_resource, _action} when is_atom(user_resource) ->
+            create_or_find_user(user_resource, discord_user, interaction)
+
+          nil ->
+            # No user resource configured, continue with raw discord user
+            {:ok, discord_user}
+        end
     end
   end
 

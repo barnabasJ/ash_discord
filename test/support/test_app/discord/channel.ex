@@ -4,8 +4,13 @@ defmodule TestApp.Discord.Channel do
   """
 
   use Ash.Resource,
+    extensions: [AshDiscord.Resource],
     domain: TestApp.Discord,
     data_layer: Ash.DataLayer.Ets
+
+  ash_discord do
+    discord_entity(:channel)
+  end
 
   ets do
     private?(true)

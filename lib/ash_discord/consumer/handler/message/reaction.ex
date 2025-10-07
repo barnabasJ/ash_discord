@@ -10,9 +10,12 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def add(consumer, reaction_add, _ws_state, _context) do
-    case AshDiscord.Consumer.Info.ash_discord_consumer_message_reaction_resource(consumer) do
-      {:ok, resource} ->
+  def add(_consumer, reaction_add, _ws_state, context) do
+    case context.resource do
+      nil ->
+        :ok
+
+      resource ->
         resource
         |> Ash.Changeset.for_create(
           :from_discord,
@@ -25,10 +28,6 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
           }
         )
         |> Ash.create()
-
-      :error ->
-        Logger.warning("No message reaction resource configured")
-        {:error, "No message reaction resource configured"}
     end
 
     :ok
@@ -40,11 +39,14 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def remove(consumer, reaction_remove, _ws_state, _context) do
+  def remove(_consumer, reaction_remove, _ws_state, context) do
     Logger.info("AshDiscord: Message reaction removal requested")
 
-    case AshDiscord.Consumer.Info.ash_discord_consumer_message_reaction_resource(consumer) do
-      {:ok, resource} ->
+    case context.resource do
+      nil ->
+        :ok
+
+      resource ->
         Logger.info("AshDiscord: Found message reaction resource: #{inspect(resource)}")
 
         # Find and destroy the reaction based on user_id, message_id, emoji_name, and emoji_id
@@ -91,12 +93,8 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
 
           %Ash.BulkResult{errors: errors} ->
             Logger.error("AshDiscord: Failed to remove reaction: #{inspect(errors)}")
-            {:error, errors}
+            :ok
         end
-
-      :error ->
-        Logger.info("AshDiscord: No message reaction resource configured")
-        :ok
     end
   end
 
@@ -106,11 +104,14 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def remove_all(consumer, reaction_remove_all, _ws_state, _context) do
+  def remove_all(_consumer, reaction_remove_all, _ws_state, context) do
     Logger.info("AshDiscord: Message reaction remove all requested")
 
-    case AshDiscord.Consumer.Info.ash_discord_consumer_message_reaction_resource(consumer) do
-      {:ok, resource} ->
+    case context.resource do
+      nil ->
+        :ok
+
+      resource ->
         Logger.info("AshDiscord: Found message reaction resource: #{inspect(resource)}")
 
         # Get the message_id from the reaction_remove_all
@@ -181,17 +182,13 @@ defmodule AshDiscord.Consumer.Handler.Message.Reaction do
 
               {:error, error} ->
                 Logger.error("AshDiscord: Failed to remove some reactions: #{inspect(error)}")
-                {:error, error}
+                :ok
             end
 
           {:error, error} ->
             Logger.error("AshDiscord: Failed to query reactions: #{inspect(error)}")
-            {:error, error}
+            :ok
         end
-
-      :error ->
-        Logger.info("AshDiscord: No message reaction resource configured")
-        :ok
     end
   end
 

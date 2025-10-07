@@ -7,8 +7,16 @@ defmodule TestApp.Discord.GuildScheduledEventUser do
   """
 
   use Ash.Resource,
+    extensions: [AshDiscord.Resource],
     domain: TestApp.Discord,
     data_layer: Ash.DataLayer.Ets
+
+  ash_discord do
+    events do
+      on(:GUILD_SCHEDULED_EVENT_USER_ADD, :create)
+      on(:GUILD_SCHEDULED_EVENT_USER_REMOVE, :destroy)
+    end
+  end
 
   ets do
     private?(true)

@@ -10,9 +10,12 @@ defmodule AshDiscord.Consumer.Handler.Invite do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def create(consumer, invite, _ws_state, _context) do
-    case AshDiscord.Consumer.Info.ash_discord_consumer_invite_resource(consumer) do
-      {:ok, resource} ->
+  def create(_consumer, invite, _ws_state, context) do
+    case context.resource do
+      nil ->
+        :ok
+
+      resource ->
         case resource
              |> Ash.Changeset.for_create(
                :from_discord,
@@ -31,12 +34,8 @@ defmodule AshDiscord.Consumer.Handler.Invite do
 
           {:error, error} ->
             Logger.error("AshDiscord: Failed to create invite: #{inspect(error)}")
-            {:error, error}
+            :ok
         end
-
-      :error ->
-        Logger.warning("No invite resource configured")
-        {:error, "No invite resource configured"}
     end
   end
 
@@ -46,11 +45,14 @@ defmodule AshDiscord.Consumer.Handler.Invite do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def delete(consumer, invite_delete, _ws_state, _context) do
+  def delete(_consumer, invite_delete, _ws_state, context) do
     code = invite_delete.code
 
-    case AshDiscord.Consumer.Info.ash_discord_consumer_invite_resource(consumer) do
-      {:ok, resource} ->
+    case context.resource do
+      nil ->
+        :ok
+
+      resource ->
         # Try to find and delete the invite by code
         case resource
              |> Ash.Query.for_read(:read)
@@ -77,12 +79,8 @@ defmodule AshDiscord.Consumer.Handler.Invite do
 
           {:error, error} ->
             Logger.error("AshDiscord: Failed to find invite for deletion: #{inspect(error)}")
-            {:error, error}
+            :ok
         end
-
-      :error ->
-        Logger.warning("No invite resource configured")
-        :ok
     end
   end
 end

@@ -4,8 +4,13 @@ defmodule TestApp.Discord.Sticker do
   """
 
   use Ash.Resource,
+    extensions: [AshDiscord.Resource],
     domain: TestApp.Discord,
     data_layer: Ash.DataLayer.Ets
+
+  ash_discord do
+    discord_entity(:sticker)
+  end
 
   ets do
     private?(true)

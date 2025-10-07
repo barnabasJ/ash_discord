@@ -10,10 +10,11 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.Vote do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def add(poll_vote_add, _ws_state, context) do
-    consumer = context.consumer
+    case context.resource do
+      nil ->
+        :ok
 
-    case AshDiscord.Consumer.Info.ash_discord_consumer_message_poll_vote_resource(consumer) do
-      {:ok, resource} ->
+      resource ->
         case resource
              |> Ash.Changeset.for_create(:from_discord, %{
                data: poll_vote_add
@@ -34,10 +35,6 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.Vote do
             # Don't crash the consumer
             :ok
         end
-
-      :error ->
-        # No message poll vote resource configured
-        :ok
     end
   end
 
@@ -47,10 +44,11 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.Vote do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def remove(poll_vote_remove, _ws_state, context) do
-    consumer = context.consumer
+    case context.resource do
+      nil ->
+        :ok
 
-    case AshDiscord.Consumer.Info.ash_discord_consumer_message_poll_vote_resource(consumer) do
-      {:ok, resource} ->
+      resource ->
         # Delete the poll vote by user_id, message_id, and answer_id
         query =
           resource
@@ -74,10 +72,6 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.Vote do
 
             :ok
         end
-
-      :error ->
-        # No message poll vote resource configured
-        :ok
     end
   end
 end

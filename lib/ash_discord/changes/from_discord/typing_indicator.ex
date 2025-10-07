@@ -20,6 +20,8 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicator do
 
   use Ash.Resource.Change
 
+  alias AshDiscord.Changes.FromDiscord.Transformations
+
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_transaction(changeset, fn changeset ->
@@ -51,7 +53,24 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicator do
     |> maybe_set_attribute(:guild_discord_id, typing_data.guild_id)
     |> maybe_set_attribute(:guild_id, typing_data.guild_id)
     |> set_typing_timestamp(typing_data)
-    |> maybe_set_attribute(:member, typing_data.member)
+    |> maybe_set_attribute(:member, convert_member_to_map(typing_data.member))
+    |> manage_relationships(typing_data)
+  end
+
+  defp convert_member_to_map(nil), do: nil
+
+  defp convert_member_to_map(%AshDiscord.Consumer.Payloads.Member{} = member) do
+    Map.from_struct(member)
+  end
+
+  defp convert_member_to_map(member) when is_map(member), do: member
+
+  # Manage relationships for auto-creating related entities
+  defp manage_relationships(changeset, typing_data) do
+    changeset
+    |> Transformations.manage_user_relationship(typing_data.user_id)
+    |> Transformations.manage_channel_relationship(typing_data.channel_id)
+    |> Transformations.manage_guild_relationship(typing_data.guild_id)
   end
 
   # Handle timestamp setting for typing indicators

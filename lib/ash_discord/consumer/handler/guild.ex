@@ -12,7 +12,12 @@ defmodule AshDiscord.Consumer.Handler.Guild do
   def create(guild, _ws_state, context) do
     register_commands(context.consumer, guild)
 
-    Handler.invoke_configured_action(:GUILD_CREATE, %{identity: guild.id, data: guild}, context)
+    Handler.invoke_configured_action(
+      :GUILD_CREATE,
+      guild.id,
+      %{identity: guild.id, data: guild},
+      context
+    )
   end
 
   defp register_commands(consumer, guild) do
@@ -49,7 +54,8 @@ defmodule AshDiscord.Consumer.Handler.Guild do
   def update(%Payloads.GuildUpdate{new_guild: new_guild}, _ws_state, context) do
     Handler.invoke_configured_action(
       :GUILD_UPDATE,
-      {new_guild.id, %{identity: new_guild.id, data: new_guild}},
+      new_guild.id,
+      %{identity: new_guild.id, data: new_guild},
       context
     )
   end
@@ -68,7 +74,8 @@ defmodule AshDiscord.Consumer.Handler.Guild do
       unavailable when unavailable in [nil, false] ->
         Handler.invoke_configured_action(
           :GUILD_DELETE,
-          {old_guild.id, %{}},
+          old_guild.id,
+          %{},
           context
         )
 
@@ -90,6 +97,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
 
     Handler.invoke_configured_action(
       :GUILD_AVAILABLE,
+      guild.id,
       %{identity: guild.id, data: guild},
       context
     )
@@ -103,6 +111,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
   def unavailable(guild, _ws_state, context) do
     Handler.invoke_configured_action(
       :GUILD_UNAVAILABLE,
+      guild.id,
       %{identity: guild.id, data: guild},
       context
     )

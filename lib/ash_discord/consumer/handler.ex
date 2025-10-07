@@ -152,13 +152,14 @@ defmodule AshDiscord.Consumer.Handler do
   """
   @spec invoke_configured_action(
           event :: atom(),
-          payload :: map(),
+          identity :: map() | integer() | binary(),
+          arguments :: map(),
           context :: AshDiscord.Context.t()
         ) :: {:ok, any()} | {:error, any()}
-  def invoke_configured_action(event, payload, %{resource: resource} = context) do
+  def invoke_configured_action(event, identity, arguments, %{resource: resource} = context) do
     with {:ok, action_name} <- get_configured_action(resource, event),
          {:ok, action} <- fetch_action(resource, action_name) do
-      invoke(resource, action, payload, context)
+      invoke(resource, action, identity, arguments, context)
     end
   end
 
@@ -189,10 +190,11 @@ defmodule AshDiscord.Consumer.Handler do
   @spec invoke(
           resource :: Ash.Resource.t(),
           action :: Ash.Resource.Actions.action(),
+          identitiy :: map() | integer() | binary(),
           attributes :: map(),
           opts :: keyword()
         ) :: {:ok, Ash.Resource.record()} | {:error, any()}
-  defp invoke(resource, %{type: :create} = action, attributes, opts) do
+  defp invoke(resource, %{type: :create} = action, identity, attributes, opts) do
     Logger.debug("Invoking bulk create action #{action.name} on #{inspect(resource)}")
 
     result =
@@ -210,7 +212,7 @@ defmodule AshDiscord.Consumer.Handler do
     format_bulk_result(result, :single)
   end
 
-  defp invoke(resource, %{type: :update} = action, {identity, attributes}, opts) do
+  defp invoke(resource, %{type: :update} = action, identity, attributes, opts) do
     Logger.debug("Invoking bulk update action #{action.name} on #{inspect(resource)}")
 
     with {:ok, query} <- build_query(resource, identity, opts) do
@@ -230,7 +232,7 @@ defmodule AshDiscord.Consumer.Handler do
     end
   end
 
-  defp invoke(resource, %{type: :destroy} = action, {identity, attributes}, opts) do
+  defp invoke(resource, %{type: :destroy} = action, identity, attributes, opts) do
     require Ash.Query
 
     Logger.debug("Invoking bulk destroy action #{action.name} on #{inspect(resource)}")
@@ -252,15 +254,16 @@ defmodule AshDiscord.Consumer.Handler do
     end
   end
 
-  defp invoke(resource, %{type: :read} = action, arguments, opts) do
+  defp invoke(resource, %{type: :read} = action, identity, arguments, opts) do
     Logger.debug("Invoking read action #{action.name} on #{inspect(resource)}")
 
     resource
+    |> build_query(identity, opts)
     |> Ash.Query.for_read(action.name, arguments, opts)
     |> Ash.read()
   end
 
-  defp invoke(resource, %{type: :read} = action, arguments, opts) do
+  defp invoke(resource, %{type: :action} = action, _identity, arguments, opts) do
     Logger.debug("Invoking generic action #{action.name} on #{inspect(resource)}")
 
     resource

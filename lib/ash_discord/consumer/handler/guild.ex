@@ -1,7 +1,7 @@
 defmodule AshDiscord.Consumer.Handler.Guild do
   require Logger
-  require Ash.Query
 
+  alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 
   @spec create(
@@ -12,15 +12,8 @@ defmodule AshDiscord.Consumer.Handler.Guild do
   def create(guild, _ws_state, context) do
     register_commands(context.consumer, guild)
 
-    context.resource
-    |> Ash.Changeset.for_create(:from_discord, %{
-      data: guild
-    })
-    |> Ash.Changeset.set_context(%{
-      private: %{ash_discord?: true},
-      shared: %{private: %{ash_discord?: true}}
-    })
-    |> Ash.create()
+    # Pass guild data directly to the action via :data argument
+    Handler.invoke_configured_action(context.resource, :GUILD_CREATE, %{data: guild}, context)
   end
 
   defp register_commands(consumer, guild) do
@@ -55,15 +48,13 @@ defmodule AshDiscord.Consumer.Handler.Guild do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def update(%Payloads.GuildUpdate{new_guild: new_guild}, _ws_state, context) do
-    case context.resource
-         |> Ash.Changeset.for_create(:from_discord, %{
-           data: new_guild
-         })
-         |> Ash.Changeset.set_context(%{
-           private: %{ash_discord?: true},
-           shared: %{private: %{ash_discord?: true}}
-         })
-         |> Ash.create() do
+    # Pass guild data directly to the action via :data argument
+    case Handler.invoke_configured_action(
+           context.resource,
+           :GUILD_UPDATE,
+           %{data: new_guild},
+           context
+         ) do
       {:ok, _guild_record} ->
         :ok
 
@@ -89,30 +80,22 @@ defmodule AshDiscord.Consumer.Handler.Guild do
     case unavailable do
       unavailable when unavailable in [nil, false] ->
         # Permanent deletion - unavailable=nil or false means guild was actually deleted
-        guild_discord_id = old_guild.id
+        # Pass the discord_id for the destroy action to find and delete the record
+        case Handler.invoke_configured_action(
+               context.resource,
+               :GUILD_DELETE,
+               %{discord_id: old_guild.id},
+               context
+             ) do
+          {:ok, _} ->
+            :ok
 
-        case context.resource
-             |> Ash.Query.for_read(:read)
-             |> Ash.Query.filter(discord_id == ^guild_discord_id)
-             |> Ash.Query.set_context(%{
-               private: %{ash_discord?: true},
-               shared: %{private: %{ash_discord?: true}}
-             })
-             |> Ash.read() do
-          {:ok, [guild]} ->
-            case guild |> Ash.destroy(actor: %{role: :bot}) do
-              :ok -> :ok
-              {:error, error} -> {:error, error}
-            end
-
-          {:ok, []} ->
-            Logger.info("Guild #{guild_discord_id} not found, nothing to delete")
+          {:error, %Ash.Error.Query.NotFound{}} ->
+            Logger.info("Guild #{old_guild.id} not found, nothing to delete")
             :ok
 
           {:error, error} ->
-            Logger.error(
-              "Failed to find guild #{guild_discord_id} for deletion: #{inspect(error)}"
-            )
+            Logger.error("Failed to delete guild #{old_guild.id}: #{inspect(error)}")
 
             {:error, error}
         end

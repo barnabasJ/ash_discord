@@ -136,7 +136,10 @@ defmodule AshDiscord.Dsl.Resource do
              :integration,
              :webhooks_update,
              # Poll entities
-             :message_poll_vote
+             :message_poll_vote,
+             # Child entities (no gateway events, relationship-managed)
+             :message_attachment,
+             :webhook
            ]},
         doc: """
         The type of Discord entity this resource represents.

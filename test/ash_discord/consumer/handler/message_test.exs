@@ -17,7 +17,8 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
 
   describe "create/3" do
     test "creates message from Discord event" do
-      message_data = message()
+      # Ensure message has guild_id for guild API call
+      message_data = message(%{guild_id: generate_snowflake()})
 
       expect(Nostrum.Api.Channel, :get, fn _channel_id ->
         {:ok, channel()}
@@ -87,7 +88,8 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
 
   describe "update/3" do
     test "updates existing message" do
-      message_data = message(%{content: "Updated content"})
+      # Ensure message has guild_id for guild API call
+      message_data = message(%{content: "Updated content", guild_id: generate_snowflake()})
 
       expect(Nostrum.Api.Channel, :get, fn _channel_id ->
         {:ok, channel()}
@@ -129,7 +131,8 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
 
   describe "delete/3" do
     test "deletes message by discord_id" do
-      message_data = message()
+      # Ensure message has guild_id for guild API call
+      message_data = message(%{guild_id: generate_snowflake()})
 
       expect(Nostrum.Api.Channel, :get, fn _channel_id ->
         {:ok, channel()}
@@ -176,8 +179,10 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
 
   describe "bulk/3" do
     test "bulk deletes multiple messages" do
-      message1_data = message()
-      message2_data = message()
+      guild_id = generate_snowflake()
+      # Ensure both messages have guild_id for guild API calls
+      message1_data = message(%{guild_id: guild_id})
+      message2_data = message(%{guild_id: guild_id})
 
       expect(Nostrum.Api.Channel, :get, 2, fn _channel_id ->
         {:ok, channel()}

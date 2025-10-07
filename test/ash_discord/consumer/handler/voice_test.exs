@@ -33,7 +33,21 @@ defmodule AshDiscord.Consumer.Handler.VoiceTest do
     end
 
     test "updates existing voice state via upsert" do
-      voice_state_data = voice_state(%{self_mute: false, self_deaf: false})
+      # Use fixed IDs to avoid generator randomness interfering with upsert
+      user_id = generate_snowflake()
+      guild_id = generate_snowflake()
+      channel_id = generate_snowflake()
+      session_id = Faker.UUID.v4()
+
+      voice_state_data =
+        voice_state(%{
+          user_id: user_id,
+          guild_id: guild_id,
+          channel_id: channel_id,
+          session_id: session_id,
+          self_mute: false,
+          self_deaf: false
+        })
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -47,13 +61,13 @@ defmodule AshDiscord.Consumer.Handler.VoiceTest do
       # Create initial voice state
       assert :ok = Voice.update(voice_state_payload, %Nostrum.Struct.WSState{}, context)
 
-      # Update with same user but different mute/deaf state
+      # Update with same identity but different mute/deaf state
       updated_voice_state_data =
         voice_state(%{
-          user_id: voice_state_data.user_id,
-          guild_id: voice_state_data.guild_id,
-          channel_id: voice_state_data.channel_id,
-          session_id: voice_state_data.session_id,
+          user_id: user_id,
+          guild_id: guild_id,
+          channel_id: channel_id,
+          session_id: session_id,
           self_mute: true,
           self_deaf: true
         })

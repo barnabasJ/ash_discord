@@ -207,13 +207,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
         {:error, %{status_code: 404, message: "Unknown Guild"}}
       end)
 
-      expect(Nostrum.Api.User, :get, fn ^user_id ->
-        {:ok, user(%{id: user_id, username: "test_user"})}
-      end)
-
-      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
-        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
-      end)
+      # API error short-circuits, so User.get and Guild.get are not called
 
       result =
         TestApp.Discord.guild_member_from_discord(%{

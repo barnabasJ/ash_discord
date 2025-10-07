@@ -8,10 +8,6 @@ defmodule AshDiscord.ConsumerConfigurationTest do
 
   use TestApp.DataCase
 
-  setup do
-    TestHelper.setup_mocks()
-  end
-
   describe "automatic user resolution system (Task 19)" do
     test "consumer can be configured with user_resource for automatic resolution" do
       # Define a test consumer with user_resource configuration

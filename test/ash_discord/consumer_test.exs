@@ -14,11 +14,6 @@ defmodule AshDiscord.ConsumerTest do
       copy(Nostrum.Api.User)
       copy(Nostrum.Api.ApplicationCommand)
 
-      stub(Nostrum.Api.ApplicationCommand, :bulk_overwrite_guild_commands, fn _guild_id,
-                                                                              _commands ->
-        {:ok, []}
-      end)
-
       :ok
     end
 
@@ -30,6 +25,7 @@ defmodule AshDiscord.ConsumerTest do
     test "interaction handling works" do
       interaction_data =
         interaction(%{
+          type: 2,
           data: %{name: "hello", options: []},
           member: member(%{user_id: user().id})
         })
@@ -79,6 +75,12 @@ defmodule AshDiscord.ConsumerTest do
     test "from_discord actions work with consumer - guild" do
       guild_data = guild()
 
+      # Guild creation triggers command registration
+      expect(Nostrum.Api.ApplicationCommand, :bulk_overwrite_guild_commands, fn _guild_id,
+                                                                                _commands ->
+        {:ok, []}
+      end)
+
       ws_state = %Nostrum.Struct.WSState{}
       TestConsumer.handle_event({:GUILD_CREATE, guild_data, ws_state})
 
@@ -91,7 +93,8 @@ defmodule AshDiscord.ConsumerTest do
     end
 
     test "message creation works with consumer" do
-      message_data = message()
+      # Ensure message has guild_id for guild API call
+      message_data = message(%{guild_id: generate_snowflake()})
 
       expect(Nostrum.Api.Channel, :get, fn _channel_id ->
         {:ok, channel()}

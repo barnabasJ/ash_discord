@@ -4,7 +4,7 @@ defmodule AshDiscord.CommandRegistrationTest do
   import AshDiscord.Test.Generators.Discord
 
   # Mock Nostrum API calls
-  import Mimic
+  use Mimic
   setup :verify_on_exit!
 
   setup do

@@ -7,7 +7,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
 
   use TestApp.DataCase, async: true
   import AshDiscord.Test.Generators.Discord
-  import Mimic
+  use Mimic
 
   describe "struct-first pattern" do
     test "creates message from discord struct with all attributes" do

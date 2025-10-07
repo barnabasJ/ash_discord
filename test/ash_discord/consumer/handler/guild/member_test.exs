@@ -2,7 +2,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
   use TestApp.DataCase, async: true
 
   import AshDiscord.Test.Generators.Discord
-  import Mimic
+  use Mimic
 
   require Ash.Query
 

@@ -7,7 +7,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
 
   use TestApp.DataCase, async: true
   import AshDiscord.Test.Generators.Discord
-  import Mimic
+  use Mimic
 
   setup do
     copy(Nostrum.Api.Message)

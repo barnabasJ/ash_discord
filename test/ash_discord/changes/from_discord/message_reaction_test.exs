@@ -7,7 +7,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
   use TestApp.DataCase, async: true
   import AshDiscord.Test.Generators.Discord
-  import Mimic
+  use Mimic
 
   describe "struct-first pattern" do
     test "creates message reaction from discord struct with unicode emoji" do

@@ -7,7 +7,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
   use TestApp.DataCase, async: true
   import AshDiscord.Test.Generators.Discord
-  import Mimic
+  use Mimic
 
   # Helper to convert ISO8601 to Unix timestamp in milliseconds
   defp to_unix_ms(iso8601_string) do
@@ -15,25 +15,27 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
     DateTime.to_unix(datetime, :millisecond)
   end
 
-  setup do
-    copy(Nostrum.Api.User)
-    copy(Nostrum.Api.Guild)
-
-    # Mock user API calls for any user ID with basic user data
+  # Helper to set up common API mocks for tests that need them
+  defp expect_api_calls do
     expect(Nostrum.Api.User, :get, fn user_id ->
       {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
     end)
 
-    # Mock guild API calls for any guild ID
     expect(Nostrum.Api.Guild, :get, fn guild_id ->
       {:ok, guild(%{id: guild_id, name: "Test Guild"})}
     end)
+  end
 
+  setup do
+    copy(Nostrum.Api.User)
+    copy(Nostrum.Api.Guild)
     :ok
   end
 
   describe "struct-first pattern" do
     test "creates guild member from discord struct with all attributes" do
+      expect_api_calls()
+
       member_struct =
         guild_member(%{
           user_id: 123_456_789,
@@ -59,6 +61,8 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
     end
 
     test "handles member without nickname" do
+      expect_api_calls()
+
       member_struct =
         guild_member(%{
           user_id: 987_654_321,
@@ -81,6 +85,8 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
     end
 
     test "handles deafened member" do
+      expect_api_calls()
+
       member_struct =
         guild_member(%{
           user_id: 111_222_333,
@@ -103,6 +109,8 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
     end
 
     test "handles muted member" do
+      expect_api_calls()
+
       member_struct =
         guild_member(%{
           user_id: 777_888_999,
@@ -125,6 +133,8 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
     end
 
     test "handles member with both deaf and mute" do
+      expect_api_calls()
+
       member_struct =
         guild_member(%{
           user_id: 333_444_555,
@@ -167,6 +177,14 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
          })}
       end)
 
+      expect(Nostrum.Api.User, :get, fn ^user_id ->
+        {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
       result =
         TestApp.Discord.guild_member_from_discord(%{
           identity: %{guild_id: guild_id, user_id: user_id}
@@ -187,6 +205,14 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
       expect(Nostrum.Api.Guild, :member, fn ^guild_id, ^user_id ->
         {:error, %{status_code: 404, message: "Unknown Guild"}}
+      end)
+
+      expect(Nostrum.Api.User, :get, fn ^user_id ->
+        {:ok, user(%{id: user_id, username: "test_user"})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
       end)
 
       result =
@@ -218,6 +244,8 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
   describe "upsert behavior" do
     test "updates existing guild member instead of creating duplicate" do
+      expect_api_calls()
+
       user_id = 555_666_777
       guild_id = 111_222_333
 
@@ -265,6 +293,8 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
     end
 
     test "upsert works with nickname changes" do
+      expect_api_calls()
+
       user_id = 333_444_555
       guild_id = 777_888_999
 

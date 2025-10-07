@@ -2,7 +2,7 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
   use TestApp.DataCase, async: true
 
   import AshDiscord.Test.Generators.Discord
-  import Mimic
+  use Mimic
 
   alias AshDiscord.Consumer.Handler.Message
   alias AshDiscord.Consumer.Payloads

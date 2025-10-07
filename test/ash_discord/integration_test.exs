@@ -2,7 +2,7 @@ defmodule AshDiscord.IntegrationTest do
   use TestApp.DataCase
 
   import AshDiscord.Test.Generators.Discord
-  import Mimic
+  use Mimic
 
   setup :verify_on_exit!
 

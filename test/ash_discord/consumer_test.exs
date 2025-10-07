@@ -2,7 +2,7 @@ defmodule AshDiscord.ConsumerTest do
   use TestApp.DataCase, async: true
 
   import AshDiscord.Test.Generators.Discord
-  import Mimic
+  use Mimic
 
   alias TestApp.TestConsumer
 

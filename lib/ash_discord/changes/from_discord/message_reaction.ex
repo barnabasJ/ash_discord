@@ -24,15 +24,16 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReaction do
   use Ash.Resource.Change
 
   alias AshDiscord.Changes.FromDiscord.ApiFetchers
+  alias AshDiscord.Changes.FromDiscord.Transformations
   alias AshDiscord.Consumer.Payloads
 
   @impl true
   def change(changeset, _opts, _context) do
-    Ash.Changeset.before_transaction(changeset, fn changeset ->
-      # API calls happen here, OUTSIDE transaction
-      case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
-        nil ->
-          # No data provided, fetch from API using identity
+    # First, extract and set attributes immediately (before validation)
+    case Ash.Changeset.get_argument(changeset, :data) do
+      nil ->
+        # No data provided, will fetch from API in before_transaction
+        Ash.Changeset.before_transaction(changeset, fn changeset ->
           identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
 
           case fetch_reaction_from_identity(identity) do
@@ -42,18 +43,18 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReaction do
             {:error, reason} ->
               Ash.Changeset.add_error(changeset, reason)
           end
+        end)
 
-        %Payloads.MessageReactionAddEvent{} = reaction_data ->
-          # Data provided directly, use it
-          transform_message_reaction(changeset, reaction_data)
+      data when is_map(data) ->
+        # Data provided directly - set attributes immediately for validation
+        transform_message_reaction(changeset, data)
 
-        other ->
-          Ash.Changeset.add_error(
-            changeset,
-            "Invalid data argument: expected %AshDiscord.Consumer.Payloads.MessageReactionAddEvent{}, got: #{inspect(other)}"
-          )
-      end
-    end)
+      other ->
+        Ash.Changeset.add_error(
+          changeset,
+          "Invalid data argument: expected map with reaction data, got: #{inspect(other)}"
+        )
+    end
   end
 
   defp fetch_reaction_from_identity(
@@ -118,61 +119,27 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReaction do
   end
 
   defp transform_message_reaction(changeset, reaction_data) do
-    # Handle emoji data
+    # Handle emoji data - emoji is a plain map, not a struct
     emoji_data = reaction_data.emoji
 
     changeset
-    |> maybe_set_attribute(:emoji_id, get_nested_id(emoji_data))
-    |> maybe_set_attribute(:emoji_name, emoji_data && emoji_data.name)
-    |> maybe_set_attribute(:emoji_animated, emoji_data && emoji_data.animated)
-    |> maybe_set_attribute(:count, 1)
-    |> maybe_set_attribute(:me, false)
-    |> set_message_reaction_id_fields(reaction_data)
+    |> maybe_set_attribute(:user_discord_id, reaction_data.user_id)
+    |> maybe_set_attribute(:message_discord_id, reaction_data.message_id)
+    |> maybe_set_attribute(:channel_discord_id, reaction_data.channel_id)
+    |> maybe_set_attribute(:guild_discord_id, reaction_data.guild_id)
+    |> maybe_set_attribute(:emoji_id, emoji_data && Map.get(emoji_data, :id))
+    |> maybe_set_attribute(:emoji_name, emoji_data && Map.get(emoji_data, :name))
+    |> maybe_set_attribute(:emoji_animated, emoji_data && Map.get(emoji_data, :animated, false))
+    |> manage_relationships(reaction_data)
   end
 
-  # Set all ID fields for message reactions
-  defp set_message_reaction_id_fields(changeset, reaction_data) do
+  # Manage relationships for auto-creating related entities
+  defp manage_relationships(changeset, reaction_data) do
     changeset
-    |> set_id_field(reaction_data, :user_id)
-    |> set_id_field(reaction_data, :message_id)
-    |> set_id_field(reaction_data, :channel_id)
-    |> set_id_field(reaction_data, :guild_id)
-  end
-
-  defp set_id_field(changeset, data, field) do
-    id_value = Map.get(data, field)
-
-    if is_nil(id_value) do
-      changeset
-    else
-      # Determine target field name based on what exists on the resource
-      target_field = get_target_field_name(changeset.resource, field)
-
-      if target_field do
-        maybe_set_attribute(changeset, target_field, id_value)
-      else
-        changeset
-      end
-    end
-  end
-
-  # Helper to determine the correct field name based on resource structure
-  defp get_target_field_name(resource, field) do
-    # Convert :user_id -> :user_discord_id
-    field_str = to_string(field)
-
-    discord_field_name =
-      field_str
-      |> String.replace_suffix("_id", "_discord_id")
-      |> String.to_atom()
-
-    simple_field_name = field
-
-    cond do
-      Ash.Resource.Info.attribute(resource, discord_field_name) -> discord_field_name
-      Ash.Resource.Info.attribute(resource, simple_field_name) -> simple_field_name
-      true -> nil
-    end
+    |> Transformations.manage_user_relationship(reaction_data.user_id)
+    |> Transformations.manage_message_relationship(reaction_data.message_id)
+    |> Transformations.manage_channel_relationship(reaction_data.channel_id)
+    |> Transformations.manage_guild_relationship(reaction_data.guild_id)
   end
 
   defp maybe_set_attribute(changeset, _field, nil), do: changeset
@@ -184,8 +151,4 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReaction do
       changeset
     end
   end
-
-  defp get_nested_id(nil), do: nil
-  defp get_nested_id(%{id: id}), do: id
-  defp get_nested_id(_), do: nil
 end

@@ -34,6 +34,10 @@ defmodule AshDiscord.Resource.Transformers.ExpandEntityEvents do
   alias Spark.Dsl.Transformer
 
   @impl Spark.Dsl.Transformer
+  def before?(AshDiscord.Resource.Transformers.RegisterEvents), do: true
+  def before?(_), do: false
+
+  @impl Spark.Dsl.Transformer
   def transform(dsl_state) do
     # Get discord_entity if specified
     entity_type = Transformer.get_option(dsl_state, [:ash_discord], :discord_entity)

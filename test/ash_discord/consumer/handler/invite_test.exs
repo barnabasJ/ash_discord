@@ -28,7 +28,7 @@ defmodule AshDiscord.Consumer.Handler.InviteTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.Invite,
         guild: nil,
         user: nil
       }
@@ -72,7 +72,7 @@ defmodule AshDiscord.Consumer.Handler.InviteTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.Invite,
         guild: nil,
         user: nil
       }
@@ -90,7 +90,7 @@ defmodule AshDiscord.Consumer.Handler.InviteTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.Invite,
         guild: nil,
         user: nil
       }

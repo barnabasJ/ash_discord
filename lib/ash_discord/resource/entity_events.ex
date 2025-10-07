@@ -61,8 +61,8 @@ defmodule AshDiscord.Resource.EntityEvents do
     [
       {:CHANNEL_CREATE, :from_discord},
       {:CHANNEL_UPDATE, :from_discord},
-      {:CHANNEL_DELETE, :destroy},
-      {:CHANNEL_PINS_UPDATE, :from_discord}
+      {:CHANNEL_DELETE, :destroy}
+      # CHANNEL_PINS_UPDATE removed - handle with separate ChannelPinsUpdate resource
     ]
   end
 
@@ -138,15 +138,15 @@ defmodule AshDiscord.Resource.EntityEvents do
     [
       {:THREAD_CREATE, :from_discord},
       {:THREAD_UPDATE, :from_discord},
-      {:THREAD_DELETE, :destroy},
-      {:THREAD_LIST_SYNC, :from_discord}
+      {:THREAD_DELETE, :destroy}
+      # THREAD_LIST_SYNC removed - handle with separate ThreadListSync resource
     ]
   end
 
   def events_for(:thread_member) do
     [
-      {:THREAD_MEMBER_UPDATE, :from_discord},
-      {:THREAD_MEMBERS_UPDATE, :from_discord}
+      {:THREAD_MEMBER_UPDATE, :from_discord}
+      # THREAD_MEMBERS_UPDATE removed - handle with separate ThreadMembersUpdate resource
     ]
   end
 
@@ -174,9 +174,8 @@ defmodule AshDiscord.Resource.EntityEvents do
     [
       {:GUILD_SCHEDULED_EVENT_CREATE, :from_discord},
       {:GUILD_SCHEDULED_EVENT_UPDATE, :from_discord},
-      {:GUILD_SCHEDULED_EVENT_DELETE, :destroy},
-      {:GUILD_SCHEDULED_EVENT_USER_ADD, :from_discord},
-      {:GUILD_SCHEDULED_EVENT_USER_REMOVE, :from_discord}
+      {:GUILD_SCHEDULED_EVENT_DELETE, :destroy}
+      # GUILD_SCHEDULED_EVENT_USER_ADD/REMOVE removed - handle with separate GuildScheduledEventUser resource
     ]
   end
 

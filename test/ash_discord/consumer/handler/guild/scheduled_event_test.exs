@@ -41,7 +41,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEventTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.GuildScheduledEvent,
         guild: nil,
         user: nil
       }
@@ -147,7 +147,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEventTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.GuildScheduledEvent,
         guild: nil,
         user: nil
       }
@@ -238,7 +238,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEventTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.GuildScheduledEvent,
         guild: nil,
         user: nil
       }
@@ -301,7 +301,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEventTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.GuildScheduledEvent,
         guild: nil,
         user: nil
       }
@@ -327,7 +327,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEventTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.GuildScheduledEvent,
         guild: nil,
         user: nil
       }
@@ -352,7 +352,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEventTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.GuildScheduledEvent,
         guild: nil,
         user: nil
       }

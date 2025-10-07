@@ -12,7 +12,7 @@ defmodule AshDiscord.Consumer.Handler.Message.ReactionTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.MessageReaction,
         guild: nil,
         user: nil
       }
@@ -57,7 +57,7 @@ defmodule AshDiscord.Consumer.Handler.Message.ReactionTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.MessageReaction,
         guild: nil,
         user: nil
       }
@@ -110,7 +110,7 @@ defmodule AshDiscord.Consumer.Handler.Message.ReactionTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.MessageReaction,
         guild: nil,
         user: nil
       }
@@ -133,7 +133,7 @@ defmodule AshDiscord.Consumer.Handler.Message.ReactionTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.MessageReaction,
         guild: nil,
         user: nil
       }
@@ -153,7 +153,7 @@ defmodule AshDiscord.Consumer.Handler.Message.ReactionTest do
     test "returns :ok without side effects" do
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.MessageReaction,
         guild: nil,
         user: nil
       }

@@ -59,10 +59,11 @@ defmodule AshDiscord.Consumer.ResourceDiscovery do
   @spec discover_event_handlers([module()]) :: {:ok, event_map()} | {:error, conflicts()}
   def discover_event_handlers(domains) do
     # Collect all event handlers from all resources
+    resources = collect_resources(domains)
+    ash_discord_resources = Enum.filter(resources, &ResourceInfo.ash_discord_resource?/1)
+
     all_handlers =
-      domains
-      |> collect_resources()
-      |> Enum.filter(&ResourceInfo.ash_discord_resource?/1)
+      ash_discord_resources
       |> Enum.flat_map(&extract_event_handlers/1)
 
     # Group by event to detect conflicts

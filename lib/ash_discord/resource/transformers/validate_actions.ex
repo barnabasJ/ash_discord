@@ -17,6 +17,14 @@ defmodule AshDiscord.Resource.Transformers.ValidateActions do
   alias Spark.Error.DslError
 
   @impl Spark.Dsl.Transformer
+  def after?(AshDiscord.Resource.Transformers.ExpandEntityEvents), do: true
+  def after?(_), do: false
+
+  @impl Spark.Dsl.Transformer
+  def before?(AshDiscord.Resource.Transformers.RegisterEvents), do: true
+  def before?(_), do: false
+
+  @impl Spark.Dsl.Transformer
   def transform(dsl_state) do
     # Get the event map from previous transformer
     event_map = Transformer.get_persisted(dsl_state, :discord_event_map, %{})

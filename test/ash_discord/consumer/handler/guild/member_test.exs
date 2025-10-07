@@ -32,7 +32,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.GuildMember,
         guild: nil,
         user: nil
       }
@@ -84,7 +84,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.GuildMember,
         guild: nil,
         user: nil
       }
@@ -154,7 +154,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.GuildMember,
         guild: nil,
         user: nil
       }
@@ -190,7 +190,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.GuildMember,
         guild: nil,
         user: nil
       }
@@ -218,7 +218,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
     test "handles GUILD_MEMBERS_CHUNK event and returns :ok" do
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.GuildMember,
         guild: nil,
         user: nil
       }
@@ -244,7 +244,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
     test "accepts chunk event with member data" do
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.GuildMember,
         guild: nil,
         user: nil
       }

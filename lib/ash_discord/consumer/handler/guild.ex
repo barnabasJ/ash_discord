@@ -12,8 +12,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
   def create(guild, _ws_state, context) do
     register_commands(context.consumer, guild)
 
-    # Pass guild data directly to the action via :data argument
-    Handler.invoke_configured_action(context.resource, :GUILD_CREATE, %{data: guild}, context)
+    Handler.invoke_configured_action(:GUILD_CREATE, %{identity: guild.id, data: guild}, context)
   end
 
   defp register_commands(consumer, guild) do
@@ -48,23 +47,11 @@ defmodule AshDiscord.Consumer.Handler.Guild do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def update(%Payloads.GuildUpdate{new_guild: new_guild}, _ws_state, context) do
-    # Pass guild data directly to the action via :data argument
-    case Handler.invoke_configured_action(
-           context.resource,
-           :GUILD_UPDATE,
-           %{data: new_guild},
-           context
-         ) do
-      {:ok, _guild_record} ->
-        :ok
-
-      {:error, error} ->
-        Logger.error(
-          "Failed to update guild #{new_guild.name} (#{new_guild.id}): #{inspect(error)}"
-        )
-
-        {:error, error}
-    end
+    Handler.invoke_configured_action(
+      :GUILD_UPDATE,
+      {new_guild.id, %{identity: new_guild.id, data: new_guild}},
+      context
+    )
   end
 
   @spec delete(
@@ -79,26 +66,11 @@ defmodule AshDiscord.Consumer.Handler.Guild do
       ) do
     case unavailable do
       unavailable when unavailable in [nil, false] ->
-        # Permanent deletion - unavailable=nil or false means guild was actually deleted
-        # Pass the discord_id for the destroy action to find and delete the record
-        case Handler.invoke_configured_action(
-               context.resource,
-               :GUILD_DELETE,
-               %{discord_id: old_guild.id},
-               context
-             ) do
-          {:ok, _} ->
-            :ok
-
-          {:error, %Ash.Error.Query.NotFound{}} ->
-            Logger.info("Guild #{old_guild.id} not found, nothing to delete")
-            :ok
-
-          {:error, error} ->
-            Logger.error("Failed to delete guild #{old_guild.id}: #{inspect(error)}")
-
-            {:error, error}
-        end
+        Handler.invoke_configured_action(
+          :GUILD_DELETE,
+          {old_guild.id, %{}},
+          context
+        )
 
       true ->
         # Temporary unavailability - guild still exists but bot can't access it
@@ -115,6 +87,12 @@ defmodule AshDiscord.Consumer.Handler.Guild do
   def available(guild, ws_state, context) do
     # When a guild becomes available, treat it like a create
     create(guild, ws_state, context)
+
+    Handler.invoke_configured_action(
+      :GUILD_AVAILABLE,
+      %{identity: guild.id, data: guild},
+      context
+    )
   end
 
   @spec unavailable(
@@ -122,7 +100,11 @@ defmodule AshDiscord.Consumer.Handler.Guild do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok
-  def unavailable(_guild, _ws_state, _context) do
-    :ok
+  def unavailable(guild, _ws_state, context) do
+    Handler.invoke_configured_action(
+      :GUILD_UNAVAILABLE,
+      %{identity: guild.id, data: guild},
+      context
+    )
   end
 end

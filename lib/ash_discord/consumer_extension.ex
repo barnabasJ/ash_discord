@@ -3,9 +3,12 @@ defmodule AshDiscord.ConsumerExtension do
   Spark DSL extension for AshDiscord consumers.
 
   This extension provides the `ash_discord_consumer` DSL block for configuring
-  Discord consumer behavior and resource mappings.
+  Discord consumer behavior and automatically discovers resources from configured domains.
   """
 
   use Spark.Dsl.Extension,
-    sections: [AshDiscord.Dsl.Consumer.ash_discord_consumer()]
+    sections: [AshDiscord.Dsl.Consumer.ash_discord_consumer()],
+    transformers: [
+      AshDiscord.Consumer.Transformers.DiscoverAndValidateResources
+    ]
 end

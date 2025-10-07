@@ -56,7 +56,7 @@ defmodule AshDiscord.Consumer.Handler do
           other
       end
     else
-      resource = get_resource(consumer, resource_type)
+      resource = get_resource(consumer, event)
 
       if resource do
         context = build_context(consumer, resource, transformed_payload)
@@ -76,62 +76,31 @@ defmodule AshDiscord.Consumer.Handler do
             other
         end
       else
-        Logger.debug("Skipping #{event} - no #{resource_type} configured")
+        Logger.debug("Skipping #{event} - no resource configured to handle this event")
         :ok
       end
     end
   end
 
-  @spec get_resource(consumer :: module(), resource_type :: atom()) :: Ash.Resource.t() | nil
-  defp get_resource(consumer, resource_type) do
-    resource_type
-    |> case do
-      :channel_resource ->
-        AshDiscord.Consumer.Info.ash_discord_consumer_channel_resource(consumer)
+  @spec get_resource(consumer :: module(), event :: atom()) :: Ash.Resource.t() | nil
+  defp get_resource(consumer, event) do
+    # Get the discovered event handlers map from the consumer
+    case Spark.Dsl.Extension.get_persisted(consumer, :discord_event_handlers) do
+      nil ->
+        # No event handlers discovered (or consumer not compiled with new transformer yet)
+        Logger.debug("No event handlers discovered for #{consumer}")
+        nil
 
-      :guild_member_resource ->
-        AshDiscord.Consumer.Info.ash_discord_consumer_guild_member_resource(consumer)
+      event_handlers when is_map(event_handlers) ->
+        # Look up the resource for this specific event
+        case Map.get(event_handlers, event) do
+          {resource, _action} when is_atom(resource) ->
+            resource
 
-      :guild_resource ->
-        AshDiscord.Consumer.Info.ash_discord_consumer_guild_resource(consumer)
-
-      :invite_resource ->
-        AshDiscord.Consumer.Info.ash_discord_consumer_invite_resource(consumer)
-
-      :interaction_resource ->
-        AshDiscord.Consumer.Info.ash_discord_consumer_interaction_resource(consumer)
-
-      :presence_resource ->
-        AshDiscord.Consumer.Info.ash_discord_consumer_presence_resource(consumer)
-
-      :message_reaction_resource ->
-        AshDiscord.Consumer.Info.ash_discord_consumer_message_reaction_resource(consumer)
-
-      :message_resource ->
-        AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(consumer)
-
-      :role_resource ->
-        AshDiscord.Consumer.Info.ash_discord_consumer_role_resource(consumer)
-
-      :typing_indicator_resource ->
-        AshDiscord.Consumer.Info.ash_discord_consumer_typing_indicator_resource(consumer)
-
-      :user_resource ->
-        AshDiscord.Consumer.Info.ash_discord_consumer_user_resource(consumer)
-
-      :voice_state_resource ->
-        AshDiscord.Consumer.Info.ash_discord_consumer_voice_state_resource(consumer)
-
-      :ready_resource ->
-        # Ready is a special case with no associated resource
-        :error
-
-      _ ->
-        :error
-    end
-    |> case do
-      {:ok, resource} -> resource
-      :error -> nil
+          nil ->
+            Logger.debug("No handler configured for event #{event}")
+            nil
+        end
     end
   end
 

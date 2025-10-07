@@ -1,6 +1,5 @@
 defmodule AshDiscord.Consumer.Handler.Auto.Moderation.Rule do
-  require Ash.Query
-
+  alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 
   @spec create(
@@ -9,16 +8,14 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.Rule do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def create(rule, _ws_state, context) do
-    context.resource
-    |> Ash.Changeset.for_create(:from_discord, %{data: rule})
-    |> Ash.Changeset.set_context(%{
-      private: %{ash_discord?: true},
-      shared: %{private: %{ash_discord?: true}}
-    })
-    |> Ash.create()
-    |> case do
-      {:ok, _rule_record} -> :ok
-      {:error, _error} = error -> error
+    case Handler.invoke_configured_action(
+           :AUTO_MODERATION_RULE_CREATE,
+           rule.id,
+           %{identity: %{guild_id: rule.guild_id, rule_id: rule.id}, data: rule},
+           context
+         ) do
+      {:ok, _} -> :ok
+      {:error, error} -> {:error, error}
     end
   end
 
@@ -28,21 +25,14 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.Rule do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def delete(rule, _ws_state, context) do
-    query =
-      context.resource
-      |> Ash.Query.filter(discord_id == ^rule.id)
-
-    case Ash.bulk_destroy(query, :destroy, %{},
-           context: %{
-             private: %{ash_discord?: true},
-             shared: %{private: %{ash_discord?: true}}
-           }
+    case Handler.invoke_configured_action(
+           :AUTO_MODERATION_RULE_DELETE,
+           %{discord_id: rule.id},
+           %{},
+           context
          ) do
-      %Ash.BulkResult{status: :success} ->
-        :ok
-
-      result ->
-        {:error, result}
+      {:ok, _} -> :ok
+      {:error, error} -> {:error, error}
     end
   end
 
@@ -52,16 +42,14 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.Rule do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def update(rule, _ws_state, context) do
-    context.resource
-    |> Ash.Changeset.for_create(:from_discord, %{data: rule})
-    |> Ash.Changeset.set_context(%{
-      private: %{ash_discord?: true},
-      shared: %{private: %{ash_discord?: true}}
-    })
-    |> Ash.create()
-    |> case do
-      {:ok, _rule_record} -> :ok
-      {:error, _error} = error -> error
+    case Handler.invoke_configured_action(
+           :AUTO_MODERATION_RULE_UPDATE,
+           rule.id,
+           %{identity: %{guild_id: rule.guild_id, rule_id: rule.id}, data: rule},
+           context
+         ) do
+      {:ok, _} -> :ok
+      {:error, error} -> {:error, error}
     end
   end
 
@@ -71,16 +59,14 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.Rule do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def execute(data, _ws_state, context) do
-    context.resource
-    |> Ash.Changeset.for_create(:from_discord, %{data: data})
-    |> Ash.Changeset.set_context(%{
-      private: %{ash_discord?: true},
-      shared: %{private: %{ash_discord?: true}}
-    })
-    |> Ash.create()
-    |> case do
-      {:ok, _execution_record} -> :ok
-      {:error, _error} = error -> error
+    case Handler.invoke_configured_action(
+           :AUTO_MODERATION_RULE_EXECUTE,
+           nil,
+           %{data: data},
+           context
+         ) do
+      {:ok, _} -> :ok
+      {:error, error} -> {:error, error}
     end
   end
 end

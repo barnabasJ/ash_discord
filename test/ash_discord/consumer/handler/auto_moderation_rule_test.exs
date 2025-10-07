@@ -15,7 +15,11 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.RuleTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.AutoModerationRule,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{
+          private: %{ash_discord?: true},
+          shared: %{private: %{ash_discord?: true}}
+        }
       }
 
       {:ok, rule_payload} = Payloads.AutoModerationRule.new(rule_data)
@@ -47,7 +51,11 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.RuleTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.AutoModerationRule,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{
+          private: %{ash_discord?: true},
+          shared: %{private: %{ash_discord?: true}}
+        }
       }
 
       {:ok, new_rule_payload} = Payloads.AutoModerationRule.new(new_rule)
@@ -87,7 +95,11 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.RuleTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.AutoModerationRule,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{
+          private: %{ash_discord?: true},
+          shared: %{private: %{ash_discord?: true}}
+        }
       }
 
       assert :ok = Rule.delete(rule_payload, %Nostrum.Struct.WSState{}, context)
@@ -104,7 +116,11 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.RuleTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.AutoModerationRule,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{
+          private: %{ash_discord?: true},
+          shared: %{private: %{ash_discord?: true}}
+        }
       }
 
       {:ok, rule_payload} = Payloads.AutoModerationRule.new(rule_data)
@@ -122,7 +138,11 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.RuleTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.AutoModerationRuleExecute,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{
+          private: %{ash_discord?: true},
+          shared: %{private: %{ash_discord?: true}}
+        }
       }
 
       {:ok, execute_payload} = Payloads.AutoModerationRuleExecute.new(execute_data)
@@ -156,7 +176,11 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.RuleTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.AutoModerationRuleExecute,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{
+          private: %{ash_discord?: true},
+          shared: %{private: %{ash_discord?: true}}
+        }
       }
 
       {:ok, execute_payload} = Payloads.AutoModerationRuleExecute.new(execute_data)

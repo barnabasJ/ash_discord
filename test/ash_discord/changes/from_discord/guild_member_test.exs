@@ -6,7 +6,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
   """
 
   use TestApp.DataCase, async: true
-  import AshDiscord.Test.Generators.Discord
+  import AshDiscord.Test.Generators
   use Mimic
 
   # Helper to convert ISO8601 to Unix timestamp in milliseconds

@@ -7,7 +7,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
   """
 
   use TestApp.DataCase, async: true
-  import AshDiscord.Test.Generators.Discord
+  import AshDiscord.Test.Generators
 
   describe "struct-first pattern" do
     test "creates channel from discord struct with all attributes" do

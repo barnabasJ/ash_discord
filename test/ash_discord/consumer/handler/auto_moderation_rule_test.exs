@@ -1,7 +1,7 @@
 defmodule AshDiscord.Consumer.Handler.Auto.Moderation.RuleTest do
   use TestApp.DataCase, async: true
 
-  import AshDiscord.Test.Generators.Discord
+  import AshDiscord.Test.Generators
 
   alias AshDiscord.Consumer.Handler.Auto.Moderation.Rule
   alias AshDiscord.Consumer.Payloads

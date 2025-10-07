@@ -1,7 +1,7 @@
 defmodule AshDiscord.Changes.FromDiscord.MessagePollVoteTest do
   use TestApp.DataCase, async: true
 
-  import AshDiscord.Test.Generators.Discord
+  import AshDiscord.Test.Generators
 
   alias TestApp.Discord.MessagePollVote
 

@@ -1,7 +1,7 @@
 defmodule AshDiscord.Consumer.Handler.VoiceTest do
   use TestApp.DataCase, async: true
 
-  import AshDiscord.Test.Generators.Discord
+  import AshDiscord.Test.Generators
 
   alias AshDiscord.Consumer.Handler.Voice
   alias AshDiscord.Consumer.Payloads

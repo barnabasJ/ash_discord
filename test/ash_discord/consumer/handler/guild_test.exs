@@ -1,7 +1,7 @@
 defmodule AshDiscord.Consumer.Handler.GuildTest do
   use TestApp.DataCase, async: true
 
-  import AshDiscord.Test.Generators.Discord
+  import AshDiscord.Test.Generators
   use Mimic
 
   alias AshDiscord.Consumer.Handler.Guild

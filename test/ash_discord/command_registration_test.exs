@@ -1,7 +1,7 @@
 defmodule AshDiscord.CommandRegistrationTest do
   use ExUnit.Case, async: true
 
-  import AshDiscord.Test.Generators.Discord
+  import AshDiscord.Test.Generators
 
   # Mock Nostrum API calls
   use Mimic

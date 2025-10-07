@@ -1,7 +1,7 @@
 defmodule AshDiscord.Consumer.Handler.Guild.Audit.Log.EntryTest do
   use TestApp.DataCase, async: true
 
-  import AshDiscord.Test.Generators.Discord
+  import AshDiscord.Test.Generators
 
   alias AshDiscord.Consumer.Handler.Guild.Audit.Log.Entry
   alias AshDiscord.Consumer.Payloads

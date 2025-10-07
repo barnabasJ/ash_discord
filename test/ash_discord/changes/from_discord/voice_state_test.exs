@@ -6,7 +6,7 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
   """
 
   use TestApp.DataCase, async: true
-  import AshDiscord.Test.Generators.Discord
+  import AshDiscord.Test.Generators
 
   describe "struct-first pattern" do
     test "creates voice state from discord struct with all attributes" do

@@ -1,7 +1,7 @@
 defmodule AshDiscord.Consumer.Handler.Guild.RoleTest do
   use TestApp.DataCase, async: true
 
-  import AshDiscord.Test.Generators.Discord
+  import AshDiscord.Test.Generators
 
   alias AshDiscord.Consumer.Handler.Guild.Role
   alias AshDiscord.Consumer.Payloads

@@ -2,7 +2,7 @@ defmodule AshDiscord.InteractionRouterTest do
   use TestApp.DataCase
   use Mimic
 
-  import AshDiscord.Test.Generators.Discord
+  import AshDiscord.Test.Generators
 
   alias AshDiscord.Info
   alias AshDiscord.InteractionRouter

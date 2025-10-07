@@ -1,7 +1,7 @@
 defmodule AshDiscord.Consumer.Handler.Guild.BanTest do
   use TestApp.DataCase, async: true
 
-  import AshDiscord.Test.Generators.Discord
+  import AshDiscord.Test.Generators
 
   alias AshDiscord.Consumer.Handler.Guild.Ban
   alias AshDiscord.Consumer.Payloads

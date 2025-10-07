@@ -4,7 +4,7 @@ defmodule AshDiscord.Test.Generators.Discord.VerificationTest do
   These tests verify the corrections made based on GENERATOR_VERIFICATION.md
   """
   use ExUnit.Case, async: true
-  import AshDiscord.Test.Generators.Discord
+  import AshDiscord.Test.Generators
 
   describe "member generator - DateTime fields" do
     test "joined_at is Unix timestamp (integer), not DateTime" do

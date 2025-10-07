@@ -6,7 +6,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
   """
 
   use TestApp.DataCase, async: true
-  import AshDiscord.Test.Generators.Discord
+  import AshDiscord.Test.Generators
   use Mimic
 
   setup do

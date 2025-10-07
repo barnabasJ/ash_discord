@@ -1,23 +1,35 @@
-defmodule AshDiscord.Test.Generators.Discord do
+defmodule AshDiscord.Test.Generators do
   import Bitwise
 
   @moduledoc """
-  Generator functions for Discord structs using Faker for realistic test data.
+  Test data generators for Discord API entities.
 
-  This module provides functions to generate Discord API entities with realistic
-  data using the Faker library. All generators accept an optional attributes map
-  to override default values.
+  This module provides comprehensive generator functions for creating Discord API structs
+  with realistic test data. All generators use the Faker library for randomized data
+  and accept optional attribute overrides.
+
+  ## Installation
+
+  Add to your test dependencies in `mix.exs`:
+
+      defp deps do
+        [
+          {:ash_discord, "~> 0.1.0"},
+          {:faker, "~> 0.17", only: [:test, :dev]}
+        ]
+      end
 
   ## Usage
 
   Import the module in your test files:
 
-      import AshDiscord.Test.Generators.Discord
+      import AshDiscord.Test.Generators
 
-  Generate Discord entities:
+  Generate Discord entities with random data:
 
       # Generate a user
-      user = user(%{username: "testuser"})
+      user = user()
+      user_with_attrs = user(%{username: "testuser", discriminator: "0001"})
 
       # Generate a complete interaction
       interaction = interaction(%{

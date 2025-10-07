@@ -6,7 +6,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
   """
 
   use TestApp.DataCase, async: true
-  import AshDiscord.Test.Generators.Discord
+  import AshDiscord.Test.Generators
 
   describe "struct-first pattern" do
     test "creates typing indicator from discord struct with all attributes" do

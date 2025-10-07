@@ -76,7 +76,113 @@ defmodule AshDiscord.Test.Generators do
   ## Utilities
 
   - `generate_snowflake/0` - Generate Discord snowflake IDs
+  - `generate/1` - Convert Nostrum structs to AshDiscord payload types
   """
+
+  @doc """
+  Converts a Nostrum struct to an AshDiscord payload type.
+
+  This is useful for testing with generated Nostrum structs. It automatically
+  detects the struct type and converts it to the corresponding AshDiscord payload.
+
+  Raises if the conversion fails or the struct type is unsupported.
+
+  ## Examples
+
+      # Generate a Nostrum message and convert to payload
+      nostrum_message = message()
+      payload = generate(nostrum_message)
+      # Returns %AshDiscord.Consumer.Payloads.Message{}
+
+      # Works with any supported Nostrum struct
+      nostrum_user = user()
+      user_payload = generate(nostrum_user)
+
+      # Works with events
+      delete_event = message_delete_event()
+      delete_payload = generate(delete_event)
+
+  ## Supported Types
+
+  - `Nostrum.Struct.Message` → `AshDiscord.Consumer.Payloads.Message`
+  - `Nostrum.Struct.User` → `AshDiscord.Consumer.Payloads.User`
+  - `Nostrum.Struct.Guild` → `AshDiscord.Consumer.Payloads.Guild`
+  - `Nostrum.Struct.Channel` → `AshDiscord.Consumer.Payloads.Channel`
+  - `Nostrum.Struct.Interaction` → `AshDiscord.Consumer.Payloads.Interaction`
+  - `Nostrum.Struct.Event.VoiceState` → `AshDiscord.Consumer.Payloads.VoiceState`
+  - And many more...
+  """
+  def generate(%Nostrum.Struct.Message{} = message) do
+    AshDiscord.Consumer.Payloads.Message.new!(message)
+  end
+
+  def generate(%Nostrum.Struct.User{} = user) do
+    AshDiscord.Consumer.Payloads.User.new!(user)
+  end
+
+  def generate(%Nostrum.Struct.Guild{} = guild) do
+    AshDiscord.Consumer.Payloads.Guild.new!(guild)
+  end
+
+  def generate(%Nostrum.Struct.Channel{} = channel) do
+    AshDiscord.Consumer.Payloads.Channel.new!(channel)
+  end
+
+  def generate(%Nostrum.Struct.Interaction{} = interaction) do
+    AshDiscord.Consumer.Payloads.Interaction.new!(interaction)
+  end
+
+  def generate(%Nostrum.Struct.Event.VoiceState{} = voice_state) do
+    AshDiscord.Consumer.Payloads.VoiceState.new!(voice_state)
+  end
+
+  def generate(%Nostrum.Struct.Guild.Member{} = member) do
+    AshDiscord.Consumer.Payloads.Member.new!(member)
+  end
+
+  def generate(%Nostrum.Struct.Guild.Role{} = role) do
+    AshDiscord.Consumer.Payloads.Role.new!(role)
+  end
+
+  def generate(%Nostrum.Struct.Invite{} = invite) do
+    AshDiscord.Consumer.Payloads.Invite.new!(invite)
+  end
+
+  def generate(%Nostrum.Struct.Webhook{} = webhook) do
+    AshDiscord.Consumer.Payloads.Webhook.new!(webhook)
+  end
+
+  def generate(%Nostrum.Struct.Sticker{} = sticker) do
+    AshDiscord.Consumer.Payloads.Sticker.new!(sticker)
+  end
+
+  def generate(%Nostrum.Struct.Emoji{} = emoji) do
+    AshDiscord.Consumer.Payloads.Emoji.new!(emoji)
+  end
+
+  def generate(%Nostrum.Struct.Event.MessageDelete{} = message_delete) do
+    AshDiscord.Consumer.Payloads.MessageDeleteEvent.new!(message_delete)
+  end
+
+  def generate(%Nostrum.Struct.Event.MessageDeleteBulk{} = bulk_delete) do
+    AshDiscord.Consumer.Payloads.MessageDeleteBulkEvent.new!(bulk_delete)
+  end
+
+  def generate(%Nostrum.Struct.Event.ChannelPinsUpdate{} = pins_update) do
+    AshDiscord.Consumer.Payloads.ChannelPinsUpdateEvent.new!(pins_update)
+  end
+
+  def generate(%Nostrum.Struct.Event.TypingStart{} = typing) do
+    AshDiscord.Consumer.Payloads.TypingStartEvent.new!(typing)
+  end
+
+  def generate(%Nostrum.Struct.Event.Ready{} = ready) do
+    AshDiscord.Consumer.Payloads.ReadyEvent.new!(ready)
+  end
+
+  def generate(struct) do
+    raise ArgumentError, "Unsupported struct type: #{inspect(struct.__struct__)}"
+  end
 
   @doc """
   Generates a Discord snowflake ID.

@@ -24,7 +24,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReaction do
   use Ash.Resource.Change
 
   alias AshDiscord.Changes.FromDiscord.ApiFetchers
-  alias AshDiscord.Changes.FromDiscord.Transformations
   alias AshDiscord.Consumer.Payloads
 
   @impl true

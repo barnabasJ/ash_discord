@@ -159,7 +159,7 @@ defmodule AshDiscord.Consumer.Handler do
   def invoke_configured_action(event, identity, arguments, %{resource: resource} = context) do
     with {:ok, action_name} <- get_configured_action(resource, event),
          {:ok, action} <- fetch_action(resource, action_name) do
-      invoke(resource, action, identity, arguments, context)
+      invoke(resource, action, identity, arguments, scope: context)
     end
   end
 
@@ -194,7 +194,7 @@ defmodule AshDiscord.Consumer.Handler do
           attributes :: map(),
           opts :: keyword()
         ) :: {:ok, Ash.Resource.record()} | {:error, any()}
-  defp invoke(resource, %{type: :create} = action, identity, attributes, opts) do
+  defp invoke(resource, %{type: :create} = action, _identity, attributes, opts) do
     Logger.debug("Invoking bulk create action #{action.name} on #{inspect(resource)}")
 
     result =
@@ -295,6 +295,10 @@ defmodule AshDiscord.Consumer.Handler do
           {:ok, any()} | {:error, any()}
   defp format_bulk_result(%Ash.BulkResult{status: :success, records: [record]}, :single) do
     {:ok, record}
+  end
+
+  defp format_bulk_result(%Ash.BulkResult{status: :success, records: []}, :single) do
+    {:ok, nil}
   end
 
   defp format_bulk_result(%Ash.BulkResult{status: :success, records: records}, :bulk) do

@@ -35,7 +35,8 @@ defmodule AshDiscord.Context do
     def get_tenant(_), do: :error
 
     @doc "Extract shared context information"
-    def get_context(%{context: context}), do: {:ok, context}
+    def get_context(%{context: context}) when not is_nil(context), do: {:ok, context}
+    def get_context(_), do: :error
 
     @doc "Tracers are typically configured elsewhere"
     def get_tracer(_), do: :error

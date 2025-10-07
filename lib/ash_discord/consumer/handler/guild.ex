@@ -52,12 +52,15 @@ defmodule AshDiscord.Consumer.Handler.Guild do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def update(%Payloads.GuildUpdate{new_guild: new_guild}, _ws_state, context) do
-    Handler.invoke_configured_action(
-      :GUILD_UPDATE,
-      new_guild.id,
-      %{identity: new_guild.id, data: new_guild},
-      context
-    )
+    case Handler.invoke_configured_action(
+           :GUILD_UPDATE,
+           new_guild.id,
+           %{identity: new_guild.id, data: new_guild},
+           context
+         ) do
+      {:ok, _guild} -> :ok
+      {:error, error} -> {:error, error}
+    end
   end
 
   @spec delete(
@@ -74,7 +77,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
       unavailable when unavailable in [nil, false] ->
         Handler.invoke_configured_action(
           :GUILD_DELETE,
-          old_guild.id,
+          %{discord_id: old_guild.id},
           %{},
           context
         )
@@ -109,11 +112,14 @@ defmodule AshDiscord.Consumer.Handler.Guild do
           context :: AshDiscord.Context.t()
         ) :: :ok
   def unavailable(guild, _ws_state, context) do
-    Handler.invoke_configured_action(
-      :GUILD_UNAVAILABLE,
-      guild.id,
-      %{identity: guild.id, data: guild},
-      context
-    )
+    case Handler.invoke_configured_action(
+           :GUILD_UNAVAILABLE,
+           guild.id,
+           %{identity: guild.id, data: guild},
+           context
+         ) do
+      {:ok, _guild} -> :ok
+      {:error, error} -> {:error, error}
+    end
   end
 end

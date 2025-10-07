@@ -139,4 +139,15 @@ defmodule AshDiscord.Consumer.Payloads.Guild do
   def new(%Nostrum.Struct.Guild{} = nostrum_guild) do
     super(Map.from_struct(nostrum_guild))
   end
+
+  def new(%Nostrum.Struct.Guild.UnavailableGuild{id: id, unavailable: unavailable}) do
+    # UnavailableGuild only has :id and :unavailable fields
+    # Fill in minimal required fields for Guild struct
+    super(%{
+      id: id,
+      name: "Unavailable Guild",
+      # Set all optional fields to nil/default values
+      unavailable: unavailable
+    })
+  end
 end

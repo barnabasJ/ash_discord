@@ -20,8 +20,6 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicator do
 
   use Ash.Resource.Change
 
-  alias AshDiscord.Changes.FromDiscord.Transformations
-
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_transaction(changeset, fn changeset ->

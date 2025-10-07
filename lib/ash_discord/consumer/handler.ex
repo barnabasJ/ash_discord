@@ -120,4 +120,292 @@ defmodule AshDiscord.Consumer.Handler do
       user: user
     }
   end
+
+  @doc """
+  Invokes a configured action on a resource based on the event, dynamically selecting
+  the appropriate invocation method based on the action type.
+
+  Uses bulk operations by default for better performance, even for single records.
+
+  ## Parameters
+    - resource: The Ash resource module to invoke the action on
+    - event: The Discord event atom (e.g., :MESSAGE_CREATE)
+    - payload: The event payload containing attributes
+    - context: The AshDiscord.Context struct containing actor, tenant, etc.
+
+  ## Returns
+    - `{:ok, result}` on successful action invocation
+    - `{:error, reason}` on failure
+
+  ## Examples
+
+      iex> invoke_configured_action(MyApp.Message, :MESSAGE_CREATE, payload, context)
+      {:ok, %MyApp.Message{}}
+
+      iex> invoke_configured_action(MyApp.Message, :MESSAGE_DELETE, payload, context)
+      {:ok, %MyApp.Message{}}
+  """
+  @spec invoke_configured_action(
+          resource :: Ash.Resource.t(),
+          event :: atom(),
+          payload :: map(),
+          context :: AshDiscord.Context.t()
+        ) :: {:ok, any()} | {:error, any()}
+  def invoke_configured_action(resource, event, payload, context) do
+    with {:ok, action_name} <- get_configured_action(resource, event),
+         {:ok, action} <- fetch_action(resource, action_name) do
+      invoke_action_by_type(resource, action, payload, context)
+    end
+  end
+
+  @spec get_configured_action(resource :: Ash.Resource.t(), event :: atom()) ::
+          {:ok, atom()} | {:error, String.t()}
+  defp get_configured_action(resource, event) do
+    case AshDiscord.Resource.Info.discord_event_action(resource, event) do
+      {:ok, action_name} ->
+        {:ok, action_name}
+
+      :error ->
+        {:error, "No action configured for event #{event} on resource #{inspect(resource)}"}
+    end
+  end
+
+  @spec fetch_action(resource :: Ash.Resource.t(), action_name :: atom()) ::
+          {:ok, Ash.Resource.Actions.action()} | {:error, String.t()}
+  defp fetch_action(resource, action_name) do
+    case Ash.Resource.Info.action(resource, action_name) do
+      nil ->
+        {:error, "Action #{action_name} not found on resource #{inspect(resource)}"}
+
+      action ->
+        {:ok, action}
+    end
+  end
+
+  @spec invoke_action_by_type(
+          resource :: Ash.Resource.t(),
+          action :: Ash.Resource.Actions.action(),
+          payload :: map(),
+          context :: AshDiscord.Context.t()
+        ) :: {:ok, any()} | {:error, any()}
+  defp invoke_action_by_type(resource, action, payload, context) do
+    opts = context_to_opts(context)
+
+    case action.type do
+      :create ->
+        invoke_bulk_create(resource, action, payload, opts)
+
+      :update ->
+        invoke_bulk_update(resource, action, payload, opts)
+
+      :destroy ->
+        invoke_bulk_destroy(resource, action, payload, opts)
+
+      :read ->
+        invoke_read_action(resource, action, payload, opts)
+
+      :action ->
+        invoke_generic_action(resource, action, payload, opts)
+
+      unknown_type ->
+        {:error, "Unknown action type: #{unknown_type}"}
+    end
+  end
+
+  @spec invoke_bulk_create(
+          resource :: Ash.Resource.t(),
+          action :: Ash.Resource.Actions.action(),
+          attributes :: map(),
+          opts :: keyword()
+        ) :: {:ok, Ash.Resource.record()} | {:error, any()}
+  defp invoke_bulk_create(resource, action, attributes, opts) do
+    Logger.debug("Invoking bulk create action #{action.name} on #{inspect(resource)}")
+
+    result =
+      Ash.bulk_create(
+        [attributes],
+        resource,
+        action.name,
+        Keyword.merge(opts,
+          return_records?: true,
+          return_errors?: true,
+          stop_on_error?: true
+        )
+      )
+
+    format_bulk_result(result, :single)
+  end
+
+  @spec invoke_bulk_update(
+          resource :: Ash.Resource.t(),
+          action :: Ash.Resource.Actions.action(),
+          attributes :: map(),
+          opts :: keyword()
+        ) :: {:ok, Ash.Resource.record()} | {:error, any()}
+  defp invoke_bulk_update(resource, action, attributes, opts) do
+    Logger.debug("Invoking bulk update action #{action.name} on #{inspect(resource)}")
+
+    with {:ok, query} <- build_update_query(resource, attributes, opts) do
+      result =
+        Ash.bulk_update(
+          query,
+          action.name,
+          attributes,
+          Keyword.merge(opts,
+            return_records?: true,
+            return_errors?: true,
+            stop_on_error?: true
+          )
+        )
+
+      format_bulk_result(result, :single)
+    end
+  end
+
+  @spec invoke_bulk_destroy(
+          resource :: Ash.Resource.t(),
+          action :: Ash.Resource.Actions.action(),
+          attributes :: map(),
+          opts :: keyword()
+        ) :: {:ok, Ash.Resource.record()} | {:error, any()}
+  defp invoke_bulk_destroy(resource, action, attributes, opts) do
+    require Ash.Query
+
+    Logger.debug("Invoking bulk destroy action #{action.name} on #{inspect(resource)}")
+
+    with {:ok, query} <- build_destroy_query(resource, attributes, opts) do
+      result =
+        Ash.bulk_destroy(
+          query,
+          action.name,
+          attributes,
+          Keyword.merge(opts,
+            return_records?: true,
+            return_errors?: true,
+            stop_on_error?: true
+          )
+        )
+
+      format_bulk_result(result, :single)
+    end
+  end
+
+  @spec invoke_read_action(
+          resource :: Ash.Resource.t(),
+          action :: Ash.Resource.Actions.action(),
+          filters :: map(),
+          opts :: keyword()
+        ) :: {:ok, list(Ash.Resource.record())} | {:error, any()}
+  defp invoke_read_action(resource, action, filters, opts) do
+    require Ash.Query
+
+    Logger.debug("Invoking read action #{action.name} on #{inspect(resource)}")
+
+    resource
+    |> Ash.Query.for_read(action.name, filters, opts)
+    |> Ash.read(opts)
+  end
+
+  @spec invoke_generic_action(
+          resource :: Ash.Resource.t(),
+          action :: Ash.Resource.Actions.action(),
+          arguments :: map(),
+          opts :: keyword()
+        ) :: {:ok, any()} | {:error, any()}
+  defp invoke_generic_action(resource, action, arguments, opts) do
+    Logger.debug("Invoking generic action #{action.name} on #{inspect(resource)}")
+
+    resource
+    |> Ash.ActionInput.for_action(action.name, arguments, opts)
+    |> Ash.run_action(opts)
+  end
+
+  @spec build_update_query(
+          resource :: Ash.Resource.t(),
+          attributes :: map(),
+          opts :: keyword()
+        ) :: {:ok, Ash.Query.t()} | {:error, any()}
+  defp build_update_query(resource, %{id: id}, opts) do
+    require Ash.Query
+
+    case Ash.get(resource, id, opts) do
+      {:ok, record} ->
+        {:ok, [record]}
+
+      {:error, _} = error ->
+        Logger.error("Failed to fetch record with id #{id} for update: #{inspect(error)}")
+        error
+    end
+  end
+
+  defp build_update_query(resource, attributes, _opts) do
+    Logger.error(
+      "No identifier provided for update action on #{inspect(resource)}: #{inspect(attributes)}"
+    )
+
+    {:error, "No identifier provided for update action"}
+  end
+
+  @spec build_destroy_query(
+          resource :: Ash.Resource.t(),
+          attributes :: map(),
+          opts :: keyword()
+        ) :: {:ok, Ash.Query.t()} | {:error, any()}
+  defp build_destroy_query(resource, %{id: id}, opts) do
+    require Ash.Query
+
+    case Ash.get(resource, id, opts) do
+      {:ok, record} ->
+        {:ok, [record]}
+
+      {:error, _} = error ->
+        Logger.error("Failed to fetch record with id #{id} for destroy: #{inspect(error)}")
+        error
+    end
+  end
+
+  defp build_destroy_query(resource, attributes, _opts) do
+    Logger.error(
+      "No identifier provided for destroy action on #{inspect(resource)}: #{inspect(attributes)}"
+    )
+
+    {:error, "No identifier provided for destroy action"}
+  end
+
+  @spec format_bulk_result(Ash.BulkResult.t(), :single | :bulk) ::
+          {:ok, any()} | {:error, any()}
+  defp format_bulk_result(%Ash.BulkResult{status: :success, records: [record]}, :single) do
+    {:ok, record}
+  end
+
+  defp format_bulk_result(%Ash.BulkResult{status: :success, records: records}, :bulk) do
+    {:ok, records}
+  end
+
+  defp format_bulk_result(%Ash.BulkResult{status: :error, errors: [error | _]}, :single) do
+    {:error, error}
+  end
+
+  defp format_bulk_result(%Ash.BulkResult{status: :error, errors: errors}, :bulk) do
+    {:error, errors}
+  end
+
+  defp format_bulk_result(%Ash.BulkResult{status: :partial_success} = result, _) do
+    Logger.warning(
+      "Partial success: #{length(result.records)} succeeded, #{result.error_count} failed"
+    )
+
+    {:error, result.errors}
+  end
+
+  @spec context_to_opts(context :: AshDiscord.Context.t()) :: keyword()
+  defp context_to_opts(context) do
+    []
+    |> maybe_add_opt(:actor, context.user)
+    |> maybe_add_opt(:tenant, context.guild)
+  end
+
+  @spec maybe_add_opt(opts :: keyword(), key :: atom(), value :: any()) :: keyword()
+  defp maybe_add_opt(opts, _key, nil), do: opts
+  defp maybe_add_opt(opts, key, value), do: Keyword.put(opts, key, value)
 end

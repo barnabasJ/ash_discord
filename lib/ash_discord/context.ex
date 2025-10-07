@@ -10,8 +10,9 @@ defmodule AshDiscord.Context do
 
   defstruct [
     :consumer,
-    :resource,
+    :context,
     :guild,
+    :resource,
     :user
   ]
 
@@ -19,7 +20,8 @@ defmodule AshDiscord.Context do
           consumer: module(),
           resource: Ash.Resource.t(),
           guild: Nostrum.Struct.Guild.t() | Nostrum.Snowflake.t() | nil,
-          user: Nostrum.Struct.User.t() | Nostrum.Snowflake.t() | nil
+          user: Nostrum.Struct.User.t() | Nostrum.Snowflake.t() | nil,
+          context: map()
         }
 
   defimpl Ash.Scope.ToOpts do
@@ -33,9 +35,7 @@ defmodule AshDiscord.Context do
     def get_tenant(_), do: :error
 
     @doc "Extract shared context information"
-    def get_context(_context) do
-      :error
-    end
+    def get_context(%{context: context}), do: {:ok, context}
 
     @doc "Tracers are typically configured elsewhere"
     def get_tracer(_), do: :error

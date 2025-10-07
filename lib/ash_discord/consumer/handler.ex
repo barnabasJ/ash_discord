@@ -39,7 +39,7 @@ defmodule AshDiscord.Consumer.Handler do
          ws_state,
          handler_mod,
          handler_fun,
-         resource_type,
+         _resource_type,
          callback
        ) do
     if function_exported?(consumer, callback, 3) do

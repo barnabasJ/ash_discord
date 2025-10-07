@@ -57,7 +57,24 @@ defmodule AshDiscord.Resource do
 
   ## Supported Entity Types
 
-  #{supported_entity_types_doc()}
+  ### Standard Entities
+  - `:message`, `:guild`, `:channel`, `:user`, `:role`
+  - `:guild_member`, `:message_reaction`, `:voice_state`
+  - `:invite`, `:interaction`, `:presence`, `:typing_indicator`
+
+  ### Thread Entities
+  - `:thread`, `:thread_member`
+
+  ### Guild Sub-Entities
+  - `:guild_ban`, `:emoji`, `:sticker`
+  - `:guild_scheduled_event`, `:guild_audit_log_entry`
+
+  ### Moderation & Integration
+  - `:auto_moderation_rule`, `:auto_moderation_rule_execute`
+  - `:integration`, `:webhooks_update`
+
+  ### Poll Entities
+  - `:message_poll_vote`
 
   ## How It Works
 
@@ -86,27 +103,4 @@ defmodule AshDiscord.Resource do
       AshDiscord.Resource.Transformers.ValidateActions,
       AshDiscord.Resource.Transformers.RegisterEvents
     ]
-
-  defp supported_entity_types_doc do
-    """
-    ### Standard Entities
-    - `:message`, `:guild`, `:channel`, `:user`, `:role`
-    - `:guild_member`, `:message_reaction`, `:voice_state`
-    - `:invite`, `:interaction`, `:presence`, `:typing_indicator`
-
-    ### Thread Entities
-    - `:thread`, `:thread_member`
-
-    ### Guild Sub-Entities
-    - `:guild_ban`, `:emoji`, `:sticker`
-    - `:guild_scheduled_event`, `:guild_audit_log_entry`
-
-    ### Moderation & Integration
-    - `:auto_moderation_rule`, `:auto_moderation_rule_execute`
-    - `:integration`, `:webhooks_update`
-
-    ### Poll Entities
-    - `:message_poll_vote`
-    """
-  end
 end

@@ -10,40 +10,42 @@ defmodule AshDiscord.Consumer.Handler.Message do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def create(message, _ws_state, context) do
-    consumer = context.consumer
-
-    with {:ok, message_resource} <-
-           AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(consumer),
-         {:ok, store_bot_messages} <-
-           AshDiscord.Consumer.Info.ash_discord_consumer_store_bot_messages(consumer) do
-      Logger.debug("Message resource found: #{inspect(message_resource)}")
-
-      # Skip bot messages if store_bot_messages is false
-      if message.author.bot && !store_bot_messages do
+    # Use resource from context (auto-discovered via AshDiscord.Resource extension)
+    case context.resource do
+      nil ->
+        # No resource configured for this event
         :ok
-      else
-        case message_resource
-             |> Ash.Changeset.for_create(:from_discord, %{
-               data: message
-             })
-             |> Ash.Changeset.set_context(%{
-               private: %{ash_discord?: true},
-               shared: %{private: %{ash_discord?: true}}
-             })
-             |> Ash.create() do
-          {:ok, _message_record} ->
-            :ok
 
-          {:error, error} ->
-            Logger.error("Failed to save message #{message.id}: #{inspect(error)}")
-            # Don't crash the consumer
-            :ok
+      message_resource ->
+        consumer = context.consumer
+
+        {:ok, store_bot_messages} =
+          AshDiscord.Consumer.Info.ash_discord_consumer_store_bot_messages(consumer)
+
+        Logger.debug("Message resource found: #{inspect(message_resource)}")
+
+        # Skip bot messages if store_bot_messages is false
+        if message.author.bot && !store_bot_messages do
+          :ok
+        else
+          case message_resource
+               |> Ash.Changeset.for_create(:from_discord, %{
+                 data: message
+               })
+               |> Ash.Changeset.set_context(%{
+                 private: %{ash_discord?: true},
+                 shared: %{private: %{ash_discord?: true}}
+               })
+               |> Ash.create() do
+            {:ok, _message_record} ->
+              :ok
+
+            {:error, error} ->
+              Logger.error("Failed to save message #{message.id}: #{inspect(error)}")
+              # Don't crash the consumer
+              :ok
+          end
         end
-      end
-    else
-      :error ->
-        # No message resource configured
-        :ok
     end
   end
 
@@ -53,10 +55,11 @@ defmodule AshDiscord.Consumer.Handler.Message do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def update(%Payloads.MessageUpdate{updated_message: message}, _ws_state, context) do
-    consumer = context.consumer
+    case context.resource do
+      nil ->
+        :ok
 
-    case AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(consumer) do
-      {:ok, message_resource} ->
+      message_resource ->
         # Update the existing message - provide channel and guild IDs from the message struct
         case message_resource
              |> Ash.Changeset.for_create(:from_discord, %{
@@ -75,10 +78,6 @@ defmodule AshDiscord.Consumer.Handler.Message do
             # Don't crash the consumer
             :ok
         end
-
-      :error ->
-        # No message resource configured
-        :ok
     end
   end
 
@@ -88,10 +87,11 @@ defmodule AshDiscord.Consumer.Handler.Message do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def delete(message_delete, _ws_state, context) do
-    consumer = context.consumer
+    case context.resource do
+      nil ->
+        :ok
 
-    case AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(consumer) do
-      {:ok, message_resource} ->
+      message_resource ->
         require Ash.Query
 
         # Delete the message by discord_id
@@ -112,10 +112,6 @@ defmodule AshDiscord.Consumer.Handler.Message do
             Logger.error("Failed to delete message #{message_delete.id}: #{inspect(result)}")
             :ok
         end
-
-      :error ->
-        # No message resource configured
-        :ok
     end
   end
 
@@ -125,10 +121,11 @@ defmodule AshDiscord.Consumer.Handler.Message do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def delete_bulk(message_delete_bulk, _ws_state, context) do
-    consumer = context.consumer
+    case context.resource do
+      nil ->
+        :ok
 
-    case AshDiscord.Consumer.Info.ash_discord_consumer_message_resource(consumer) do
-      {:ok, message_resource} ->
+      message_resource ->
         # Handle empty IDs list gracefully
         if message_delete_bulk.ids == [] do
           :ok
@@ -153,10 +150,6 @@ defmodule AshDiscord.Consumer.Handler.Message do
               :ok
           end
         end
-
-      :error ->
-        # No message resource configured
-        :ok
     end
   end
 

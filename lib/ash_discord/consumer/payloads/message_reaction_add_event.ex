@@ -49,4 +49,8 @@ defmodule AshDiscord.Consumer.Payloads.MessageReactionAddEvent do
   def new(%Nostrum.Struct.Event.MessageReactionAdd{} = nostrum_event) do
     super(Map.from_struct(nostrum_event))
   end
+
+  def new(map) when is_map(map) do
+    super(map)
+  end
 end

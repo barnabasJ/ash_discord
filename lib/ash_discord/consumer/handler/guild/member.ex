@@ -16,9 +16,11 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
         _ws_state,
         context
       ) do
+    user_discord_id = member.user_id
+
     case Handler.invoke_configured_action(
            :GUILD_MEMBER_ADD,
-           %{guild_id: guild_id, user_id: member.user_id},
+           %{guild_id: guild_id, user_id: user_discord_id},
            %{data: member, identity: %{guild_id: guild_id, user_id: user_discord_id}},
            context
          ) do
@@ -46,9 +48,11 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
         _ws_state,
         context
       ) do
+    user_discord_id = member.user_id
+
     case Handler.invoke_configured_action(
            :GUILD_MEMBER_UPDATE,
-           %{guild_id: guild_id, user_id: member.user_id},
+           %{guild_id: guild_id, user_id: user_discord_id},
            %{data: member, identity: %{guild_id: guild_id, user_id: user_discord_id}},
            context
          ) do
@@ -76,9 +80,11 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
         _ws_state,
         context
       ) do
+    user_discord_id = member.user_id
+
     case Handler.invoke_configured_action(
            :GUILD_MEMBER_REMOVE,
-           %{guild_id: guild_id, user_id: member.user_id},
+           %{guild_id: guild_id, user_id: user_discord_id},
            %{},
            context
          ) do

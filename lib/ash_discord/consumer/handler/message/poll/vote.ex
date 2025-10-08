@@ -28,7 +28,6 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.Vote do
           "Failed to save poll vote for user #{poll_vote_add.user_id} on message #{poll_vote_add.message_id}: #{inspect(error)}"
         )
 
-        # Don't crash the consumer
         :ok
     end
   end

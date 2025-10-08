@@ -1,4 +1,4 @@
-defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEvent do
+defmodule AshDiscord.Consumer.Handler.GuildScheduledEvent do
   @moduledoc """
   Handler for Discord Guild Scheduled Event gateway events.
 

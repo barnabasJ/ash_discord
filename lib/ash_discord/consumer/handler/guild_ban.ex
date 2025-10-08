@@ -1,4 +1,4 @@
-defmodule AshDiscord.Consumer.Handler.Guild.Ban do
+defmodule AshDiscord.Consumer.Handler.GuildBan do
   require Logger
 
   alias AshDiscord.Consumer.Handler

@@ -241,22 +241,22 @@ defmodule AshDiscord.Consumer.EventMap do
   # TODO: Implement auto moderation handlers
   def handler_for(:AUTO_MODERATION_RULE_CREATE),
     do:
-      {AshDiscord.Consumer.Handler.Auto.Moderation.Rule, :create, :auto_moderation_rule_resource,
+      {AshDiscord.Consumer.Handler.AutoModerationRule, :create, :auto_moderation_rule_resource,
        :handle_auto_moderation_rule_create, Payloads.AutoModerationRule}
 
   def handler_for(:AUTO_MODERATION_RULE_DELETE),
     do:
-      {AshDiscord.Consumer.Handler.Auto.Moderation.Rule, :delete, :auto_moderation_rule_resource,
+      {AshDiscord.Consumer.Handler.AutoModerationRule, :delete, :auto_moderation_rule_resource,
        :handle_auto_moderation_rule_delete, Payloads.AutoModerationRule}
 
   def handler_for(:AUTO_MODERATION_RULE_EXECUTE),
     do:
-      {AshDiscord.Consumer.Handler.Auto.Moderation.Rule, :execute, :auto_moderation_rule_resource,
+      {AshDiscord.Consumer.Handler.AutoModerationRule, :execute, :auto_moderation_rule_resource,
        :handle_auto_moderation_rule_execute, Payloads.AutoModerationRuleExecute}
 
   def handler_for(:AUTO_MODERATION_RULE_UPDATE),
     do:
-      {AshDiscord.Consumer.Handler.Auto.Moderation.Rule, :update, :auto_moderation_rule_resource,
+      {AshDiscord.Consumer.Handler.AutoModerationRule, :update, :auto_moderation_rule_resource,
        :handle_auto_moderation_rule_update, Payloads.AutoModerationRule}
 
   def handler_for(:CHANNEL_CREATE),
@@ -276,7 +276,7 @@ defmodule AshDiscord.Consumer.EventMap do
 
   def handler_for(:CHANNEL_PINS_UPDATE),
     do:
-      {AshDiscord.Consumer.Handler.Channel.Pins, :update, :channel_resource,
+      {AshDiscord.Consumer.Handler.ChannelPins, :update, :channel_resource,
        :handle_channel_pins_update, Payloads.ChannelPinsUpdateEvent}
 
   def handler_for(:CHANNEL_UPDATE),
@@ -287,7 +287,7 @@ defmodule AshDiscord.Consumer.EventMap do
   # TODO: Implement guild audit log handler
   def handler_for(:GUILD_AUDIT_LOG_ENTRY_CREATE),
     do:
-      {AshDiscord.Consumer.Handler.Guild.Audit.Log.Entry, :create,
+      {AshDiscord.Consumer.Handler.GuildAuditLogEntry, :create,
        :guild_audit_log_entry_resource, :handle_guild_audit_log_entry_create,
        Payloads.GuildAuditLogEntryCreate}
 
@@ -299,12 +299,12 @@ defmodule AshDiscord.Consumer.EventMap do
   # TODO: Implement guild ban handlers
   def handler_for(:GUILD_BAN_ADD),
     do:
-      {AshDiscord.Consumer.Handler.Guild.Ban, :add, :guild_ban_resource, :handle_guild_ban_add,
+      {AshDiscord.Consumer.Handler.GuildBan, :add, :guild_ban_resource, :handle_guild_ban_add,
        Payloads.GuildBanAdd}
 
   def handler_for(:GUILD_BAN_REMOVE),
     do:
-      {AshDiscord.Consumer.Handler.Guild.Ban, :remove, :guild_ban_resource,
+      {AshDiscord.Consumer.Handler.GuildBan, :remove, :guild_ban_resource,
        :handle_guild_ban_remove, Payloads.GuildBanRemove}
 
   def handler_for(:GUILD_CREATE),
@@ -320,81 +320,81 @@ defmodule AshDiscord.Consumer.EventMap do
   # TODO: Implement guild emojis handler
   def handler_for(:GUILD_EMOJIS_UPDATE),
     do:
-      {AshDiscord.Consumer.Handler.Guild.Emojis, :update, :guild_emoji_resource,
+      {AshDiscord.Consumer.Handler.GuildEmojis, :update, :guild_emoji_resource,
        :handle_guild_emojis_update, Payloads.GuildEmojisUpdate}
 
   def handler_for(:GUILD_INTEGRATIONS_UPDATE),
     do:
-      {AshDiscord.Consumer.Handler.Guild.Integrations, :update, :guild_integration_resource,
+      {AshDiscord.Consumer.Handler.GuildIntegrations, :update, :guild_integration_resource,
        :handle_guild_integrations_update, Payloads.GuildIntegrationsUpdateEvent}
 
   def handler_for(:GUILD_MEMBER_ADD),
     do:
-      {AshDiscord.Consumer.Handler.Guild.Member, :add, :guild_member_resource,
+      {AshDiscord.Consumer.Handler.GuildMember, :add, :guild_member_resource,
        :handle_guild_member_add, Payloads.GuildMemberAdd}
 
   def handler_for(:GUILD_MEMBER_REMOVE),
     do:
-      {AshDiscord.Consumer.Handler.Guild.Member, :remove, :guild_member_resource,
+      {AshDiscord.Consumer.Handler.GuildMember, :remove, :guild_member_resource,
        :handle_guild_member_remove, Payloads.GuildMemberRemove}
 
   def handler_for(:GUILD_MEMBER_UPDATE),
     do:
-      {AshDiscord.Consumer.Handler.Guild.Member, :update, :guild_member_resource,
+      {AshDiscord.Consumer.Handler.GuildMember, :update, :guild_member_resource,
        :handle_guild_member_update, Payloads.GuildMemberUpdate}
 
   def handler_for(:GUILD_MEMBERS_CHUNK),
     do:
-      {AshDiscord.Consumer.Handler.Guild.Member, :chunk, :guild_member_resource,
+      {AshDiscord.Consumer.Handler.GuildMember, :chunk, :guild_member_resource,
        :handle_guild_members_chunk, Payloads.GuildMembersChunkEvent}
 
   def handler_for(:GUILD_ROLE_CREATE),
     do:
-      {AshDiscord.Consumer.Handler.Guild.Role, :create, :role_resource, :handle_guild_role_create,
+      {AshDiscord.Consumer.Handler.GuildRole, :create, :role_resource, :handle_guild_role_create,
        Payloads.GuildRoleCreate}
 
   def handler_for(:GUILD_ROLE_DELETE),
     do:
-      {AshDiscord.Consumer.Handler.Guild.Role, :delete, :role_resource, :handle_guild_role_delete,
+      {AshDiscord.Consumer.Handler.GuildRole, :delete, :role_resource, :handle_guild_role_delete,
        Payloads.GuildRoleDelete}
 
   def handler_for(:GUILD_ROLE_UPDATE),
     do:
-      {AshDiscord.Consumer.Handler.Guild.Role, :update, :role_resource, :handle_guild_role_update,
+      {AshDiscord.Consumer.Handler.GuildRole, :update, :role_resource, :handle_guild_role_update,
        Payloads.GuildRoleUpdate}
 
   # TODO: Implement guild scheduled event handlers
   def handler_for(:GUILD_SCHEDULED_EVENT_CREATE),
     do:
-      {AshDiscord.Consumer.Handler.Guild.ScheduledEvent, :create, :guild_scheduled_event_resource,
+      {AshDiscord.Consumer.Handler.GuildScheduledEvent, :create, :guild_scheduled_event_resource,
        :handle_guild_scheduled_event_create, Payloads.GuildScheduledEvent}
 
   def handler_for(:GUILD_SCHEDULED_EVENT_DELETE),
     do:
-      {AshDiscord.Consumer.Handler.Guild.ScheduledEvent, :delete, :guild_scheduled_event_resource,
+      {AshDiscord.Consumer.Handler.GuildScheduledEvent, :delete, :guild_scheduled_event_resource,
        :handle_guild_scheduled_event_delete, Payloads.GuildScheduledEvent}
 
   def handler_for(:GUILD_SCHEDULED_EVENT_UPDATE),
     do:
-      {AshDiscord.Consumer.Handler.Guild.ScheduledEvent, :update, :guild_scheduled_event_resource,
+      {AshDiscord.Consumer.Handler.GuildScheduledEvent, :update, :guild_scheduled_event_resource,
        :handle_guild_scheduled_event_update, Payloads.GuildScheduledEvent}
 
   def handler_for(:GUILD_SCHEDULED_EVENT_USER_ADD),
     do:
-      {AshDiscord.Consumer.Handler.Guild.ScheduledEvent, :user_add,
+      {AshDiscord.Consumer.Handler.GuildScheduledEvent, :user_add,
        :guild_scheduled_event_resource, :handle_guild_scheduled_event_user_add,
        Payloads.GuildScheduledEventUserAdd}
 
   def handler_for(:GUILD_SCHEDULED_EVENT_USER_REMOVE),
     do:
-      {AshDiscord.Consumer.Handler.Guild.ScheduledEvent, :user_remove,
+      {AshDiscord.Consumer.Handler.GuildScheduledEvent, :user_remove,
        :guild_scheduled_event_resource, :handle_guild_scheduled_event_user_remove,
        Payloads.GuildScheduledEventUserRemove}
 
   # TODO: Implement guild stickers handler
   def handler_for(:GUILD_STICKERS_UPDATE),
     do:
-      {AshDiscord.Consumer.Handler.Guild.Stickers, :update, :guild_sticker_resource,
+      {AshDiscord.Consumer.Handler.GuildStickers, :update, :guild_sticker_resource,
        :handle_guild_stickers_update, Payloads.GuildStickersUpdate}
 
   def handler_for(:GUILD_UNAVAILABLE),
@@ -462,12 +462,12 @@ defmodule AshDiscord.Consumer.EventMap do
   # TODO: Implement message poll vote handlers
   def handler_for(:MESSAGE_POLL_VOTE_ADD),
     do:
-      {AshDiscord.Consumer.Handler.Message.Poll.Vote, :add, :message_poll_vote_resource,
+      {AshDiscord.Consumer.Handler.MessagePollVote, :add, :message_poll_vote_resource,
        :handle_message_poll_vote_add, Payloads.MessagePollVoteAdd}
 
   def handler_for(:MESSAGE_POLL_VOTE_REMOVE),
     do:
-      {AshDiscord.Consumer.Handler.Message.Poll.Vote, :remove, :message_poll_vote_resource,
+      {AshDiscord.Consumer.Handler.MessagePollVote, :remove, :message_poll_vote_resource,
        :handle_message_poll_vote_remove, Payloads.MessagePollVoteRemove}
 
   def handler_for(:MESSAGE_REACTION_ADD),

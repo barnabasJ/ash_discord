@@ -1,4 +1,4 @@
-defmodule AshDiscord.Consumer.Handler.Auto.Moderation.Rule do
+defmodule AshDiscord.Consumer.Handler.AutoModerationRule do
   alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 

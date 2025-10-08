@@ -1,4 +1,4 @@
-defmodule AshDiscord.Consumer.Handler.Message.Poll.Vote do
+defmodule AshDiscord.Consumer.Handler.MessagePollVote do
   require Logger
 
   alias AshDiscord.Consumer.Handler

@@ -1,4 +1,4 @@
-defmodule AshDiscord.Consumer.Handler.Guild.Integrations do
+defmodule AshDiscord.Consumer.Handler.GuildIntegrations do
   require Logger
 
   alias AshDiscord.Consumer.Handler

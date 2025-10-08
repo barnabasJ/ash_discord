@@ -1,4 +1,4 @@
-defmodule AshDiscord.Consumer.Handler.Guild.Audit.Log.Entry do
+defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntry do
   alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 

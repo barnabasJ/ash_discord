@@ -1,4 +1,4 @@
-defmodule AshDiscord.Consumer.Handler.Guild.Emojis do
+defmodule AshDiscord.Consumer.Handler.GuildEmojis do
   require Logger
 
   alias AshDiscord.Consumer.Handler

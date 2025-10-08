@@ -1,4 +1,4 @@
-defmodule AshDiscord.Consumer.Handler.Guild.Stickers do
+defmodule AshDiscord.Consumer.Handler.GuildStickers do
   require Logger
 
   alias AshDiscord.Consumer.Handler

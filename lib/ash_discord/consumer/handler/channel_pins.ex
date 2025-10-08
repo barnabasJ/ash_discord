@@ -1,4 +1,4 @@
-defmodule AshDiscord.Consumer.Handler.Channel.Pins do
+defmodule AshDiscord.Consumer.Handler.ChannelPins do
   alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 

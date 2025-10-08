@@ -530,12 +530,12 @@ defmodule AshDiscord.Consumer.EventMap do
 
   def handler_for(:THREAD_MEMBER_UPDATE),
     do:
-      {AshDiscord.Consumer.Handler.Thread.Member, :update, :thread_member_resource,
+      {AshDiscord.Consumer.Handler.Thread, :member_update, :thread_member_resource,
        :handle_thread_member_update, Payloads.ThreadMember}
 
   def handler_for(:THREAD_MEMBERS_UPDATE),
     do:
-      {AshDiscord.Consumer.Handler.Thread.Members, :update, :thread_members_resource,
+      {AshDiscord.Consumer.Handler.Thread, :members_update, :thread_members_resource,
        :handle_thread_members_update, Payloads.ThreadMembersUpdateEvent}
 
   def handler_for(:THREAD_UPDATE),

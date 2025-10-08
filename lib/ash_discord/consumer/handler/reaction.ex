@@ -51,8 +51,8 @@ defmodule AshDiscord.Consumer.Handler.Reaction do
     # Build filter as keyword list to handle is_nil properly
     identity =
       [
-        user_id: reaction_remove.user_id,
-        message_id: reaction_remove.message_id,
+        user_discord_id: reaction_remove.user_id,
+        message_discord_id: reaction_remove.message_id,
         emoji_name: reaction_remove.emoji.name
       ] ++
         if is_nil(reaction_remove.emoji.id) do
@@ -92,8 +92,8 @@ defmodule AshDiscord.Consumer.Handler.Reaction do
     case Handler.invoke_configured_action(
            :MESSAGE_REACTION_REMOVE_ALL,
            %{
-             message_id: reaction_remove_all.message_id,
-             channel_id: reaction_remove_all.channel_id
+             message_discord_id: reaction_remove_all.message_id,
+             channel_discord_id: reaction_remove_all.channel_id
            },
            %{},
            context
@@ -121,8 +121,8 @@ defmodule AshDiscord.Consumer.Handler.Reaction do
     # Build filter as keyword list to handle is_nil properly
     identity =
       [
-        message_id: reaction_remove_emoji.message_id,
-        channel_id: reaction_remove_emoji.channel_id,
+        message_discord_id: reaction_remove_emoji.message_id,
+        channel_discord_id: reaction_remove_emoji.channel_id,
         emoji_name: reaction_remove_emoji.emoji.name
       ] ++
         if is_nil(reaction_remove_emoji.emoji.id) do

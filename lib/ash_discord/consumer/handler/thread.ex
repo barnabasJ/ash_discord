@@ -1,7 +1,7 @@
 defmodule AshDiscord.Consumer.Handler.Thread do
-  require Ash.Query
   require Logger
 
+  alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 
   @spec create(
@@ -10,15 +10,13 @@ defmodule AshDiscord.Consumer.Handler.Thread do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def create(thread, _ws_state, context) do
-    context.resource
-    |> Ash.Changeset.for_create(:from_discord, %{data: thread})
-    |> Ash.Changeset.set_context(%{
-      private: %{ash_discord?: true},
-      shared: %{private: %{ash_discord?: true}}
-    })
-    |> Ash.create()
-    |> case do
-      {:ok, _thread_record} -> :ok
+    case Handler.invoke_configured_action(
+           :THREAD_CREATE,
+           %{discord_id: thread.id},
+           %{identity: thread.id, data: thread},
+           context
+         ) do
+      {:ok, _} -> :ok
       {:error, _error} = error -> error
     end
   end
@@ -29,21 +27,14 @@ defmodule AshDiscord.Consumer.Handler.Thread do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def delete(thread, _ws_state, context) do
-    query =
-      context.resource
-      |> Ash.Query.filter(discord_id == ^thread.id)
-
-    case Ash.bulk_destroy(query, :destroy, %{},
-           context: %{
-             private: %{ash_discord?: true},
-             shared: %{private: %{ash_discord?: true}}
-           }
+    case Handler.invoke_configured_action(
+           :THREAD_DELETE,
+           %{discord_id: thread.id},
+           %{},
+           context
          ) do
-      %Ash.BulkResult{status: :success} ->
-        :ok
-
-      result ->
-        {:error, result}
+      {:ok, _} -> :ok
+      {:error, _error} = error -> error
     end
   end
 
@@ -53,15 +44,13 @@ defmodule AshDiscord.Consumer.Handler.Thread do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def update(%Payloads.ThreadUpdate{new_thread: thread}, _ws_state, context) do
-    context.resource
-    |> Ash.Changeset.for_create(:from_discord, %{data: thread})
-    |> Ash.Changeset.set_context(%{
-      private: %{ash_discord?: true},
-      shared: %{private: %{ash_discord?: true}}
-    })
-    |> Ash.create()
-    |> case do
-      {:ok, _thread_record} -> :ok
+    case Handler.invoke_configured_action(
+           :THREAD_UPDATE,
+           %{discord_id: thread.id},
+           %{identity: thread.id, data: thread},
+           context
+         ) do
+      {:ok, _} -> :ok
       {:error, _error} = error -> error
     end
   end
@@ -72,15 +61,47 @@ defmodule AshDiscord.Consumer.Handler.Thread do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def list_sync(sync_event, _ws_state, context) do
-    context.resource
-    |> Ash.Changeset.for_create(:from_discord, %{data: sync_event})
-    |> Ash.Changeset.set_context(%{
-      private: %{ash_discord?: true},
-      shared: %{private: %{ash_discord?: true}}
-    })
-    |> Ash.create()
-    |> case do
-      {:ok, _sync_record} -> :ok
+    case Handler.invoke_configured_action(
+           :THREAD_LIST_SYNC,
+           %{discord_id: sync_event.id},
+           %{identity: sync_event.id, data: sync_event},
+           context
+         ) do
+      {:ok, _} -> :ok
+      {:error, _error} = error -> error
+    end
+  end
+
+  @spec member_update(
+          member :: Payloads.ThreadMember.t(),
+          ws_state :: Nostrum.Struct.WSState.t(),
+          context :: AshDiscord.Context.t()
+        ) :: :ok | {:error, term()}
+  def member_update(member, _ws_state, context) do
+    case Handler.invoke_configured_action(
+           :THREAD_MEMBER_UPDATE,
+           %{id: member.id, user_id: member.user_id},
+           %{data: member},
+           context
+         ) do
+      {:ok, _} -> :ok
+      {:error, _error} = error -> error
+    end
+  end
+
+  @spec members_update(
+          members_update :: Payloads.ThreadMembersUpdateEvent.t(),
+          ws_state :: Nostrum.Struct.WSState.t(),
+          context :: AshDiscord.Context.t()
+        ) :: :ok | {:error, term()}
+  def members_update(members_update, _ws_state, context) do
+    case Handler.invoke_configured_action(
+           :THREAD_MEMBERS_UPDATE,
+           %{id: members_update.id},
+           %{data: members_update},
+           context
+         ) do
+      {:ok, _} -> :ok
       {:error, _error} = error -> error
     end
   end

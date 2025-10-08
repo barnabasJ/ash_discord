@@ -5,9 +5,9 @@ defmodule AshDiscord.Consumer.Handler.Reaction do
   Processes reaction add/remove events for messages, routing them to the configured message_reaction_resource.
   """
 
-  require Ash.Query
   require Logger
 
+  alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 
   @doc """
@@ -21,18 +21,19 @@ defmodule AshDiscord.Consumer.Handler.Reaction do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def add(%Payloads.MessageReactionAddEvent{} = reaction_add, _ws_state, context) do
-    context.resource
-    |> Ash.Changeset.for_create(:from_discord, %{
-      data: reaction_add
-    })
-    |> Ash.Changeset.set_context(%{
-      private: %{ash_discord?: true},
-      shared: %{private: %{ash_discord?: true}}
-    })
-    |> Ash.create()
-    |> case do
-      {:ok, _reaction_record} -> :ok
-      {:error, _error} = error -> error
+    case Handler.invoke_configured_action(
+           :MESSAGE_REACTION_ADD,
+           %{
+             user_id: reaction_add.user_id,
+             message_id: reaction_add.message_id,
+             emoji_name: reaction_add.emoji.name,
+             emoji_id: reaction_add.emoji.id
+           },
+           %{data: reaction_add},
+           context
+         ) do
+      {:ok, _reaction} -> :ok
+      {:error, error} -> {:error, error}
     end
   end
 
@@ -47,39 +48,29 @@ defmodule AshDiscord.Consumer.Handler.Reaction do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def remove(%Payloads.MessageReactionRemoveEvent{} = reaction_remove, _ws_state, context) do
-    user_discord_id = reaction_remove.user_id
-    message_discord_id = reaction_remove.message_id
-    emoji_name = reaction_remove.emoji.name
-    emoji_id = reaction_remove.emoji.id
-
-    # Build query to find the specific reaction
-    query =
-      context.resource
-      |> Ash.Query.filter(
-        user_discord_id == ^user_discord_id and message_discord_id == ^message_discord_id and
-          emoji_name == ^emoji_name
-      )
-      |> then(fn q ->
-        if is_nil(emoji_id) do
-          # For unicode emojis, emoji_id should be nil
-          Ash.Query.filter(q, is_nil(emoji_id))
+    # Build filter as keyword list to handle is_nil properly
+    identity =
+      [
+        user_id: reaction_remove.user_id,
+        message_id: reaction_remove.message_id,
+        emoji_name: reaction_remove.emoji.name
+      ] ++
+        if is_nil(reaction_remove.emoji.id) do
+          # For unicode emojis, filter where emoji_id is nil
+          [emoji_id: [is_nil: true]]
         else
           # For custom emojis, match by emoji_id
-          Ash.Query.filter(q, emoji_id == ^emoji_id)
+          [emoji_id: reaction_remove.emoji.id]
         end
-      end)
 
-    case Ash.bulk_destroy(query, :destroy, %{},
-           context: %{
-             private: %{ash_discord?: true},
-             shared: %{private: %{ash_discord?: true}}
-           }
+    case Handler.invoke_configured_action(
+           :MESSAGE_REACTION_REMOVE,
+           identity,
+           %{},
+           context
          ) do
-      %Ash.BulkResult{status: :success} ->
-        :ok
-
-      result ->
-        {:error, result}
+      {:ok, _} -> :ok
+      {:error, error} -> {:error, error}
     end
   end
 
@@ -98,27 +89,17 @@ defmodule AshDiscord.Consumer.Handler.Reaction do
         _ws_state,
         context
       ) do
-    message_discord_id = reaction_remove_all.message_id
-    channel_discord_id = reaction_remove_all.channel_id
-
-    # Remove all reactions for this message
-    query =
-      context.resource
-      |> Ash.Query.filter(
-        message_discord_id == ^message_discord_id and channel_discord_id == ^channel_discord_id
-      )
-
-    case Ash.bulk_destroy(query, :destroy, %{},
-           context: %{
-             private: %{ash_discord?: true},
-             shared: %{private: %{ash_discord?: true}}
-           }
+    case Handler.invoke_configured_action(
+           :MESSAGE_REACTION_REMOVE_ALL,
+           %{
+             message_id: reaction_remove_all.message_id,
+             channel_id: reaction_remove_all.channel_id
+           },
+           %{},
+           context
          ) do
-      %Ash.BulkResult{status: :success} ->
-        :ok
-
-      result ->
-        {:error, result}
+      {:ok, _} -> :ok
+      {:error, error} -> {:error, error}
     end
   end
 
@@ -137,39 +118,29 @@ defmodule AshDiscord.Consumer.Handler.Reaction do
         _ws_state,
         context
       ) do
-    message_discord_id = reaction_remove_emoji.message_id
-    channel_discord_id = reaction_remove_emoji.channel_id
-    emoji_name = reaction_remove_emoji.emoji.name
-    emoji_id = reaction_remove_emoji.emoji.id
-
-    # Remove all reactions with this emoji from the message
-    query =
-      context.resource
-      |> Ash.Query.filter(
-        message_discord_id == ^message_discord_id and channel_discord_id == ^channel_discord_id and
-          emoji_name == ^emoji_name
-      )
-      |> then(fn q ->
-        if is_nil(emoji_id) do
-          # For unicode emojis, emoji_id should be nil
-          Ash.Query.filter(q, is_nil(emoji_id))
+    # Build filter as keyword list to handle is_nil properly
+    identity =
+      [
+        message_id: reaction_remove_emoji.message_id,
+        channel_id: reaction_remove_emoji.channel_id,
+        emoji_name: reaction_remove_emoji.emoji.name
+      ] ++
+        if is_nil(reaction_remove_emoji.emoji.id) do
+          # For unicode emojis, filter where emoji_id is nil
+          [emoji_id: [is_nil: true]]
         else
           # For custom emojis, match by emoji_id
-          Ash.Query.filter(q, emoji_id == ^emoji_id)
+          [emoji_id: reaction_remove_emoji.emoji.id]
         end
-      end)
 
-    case Ash.bulk_destroy(query, :destroy, %{},
-           context: %{
-             private: %{ash_discord?: true},
-             shared: %{private: %{ash_discord?: true}}
-           }
+    case Handler.invoke_configured_action(
+           :MESSAGE_REACTION_REMOVE_EMOJI,
+           identity,
+           %{},
+           context
          ) do
-      %Ash.BulkResult{status: :success} ->
-        :ok
-
-      result ->
-        {:error, result}
+      {:ok, _} -> :ok
+      {:error, error} -> {:error, error}
     end
   end
 end

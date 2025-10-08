@@ -81,6 +81,7 @@ defmodule TestApp.Discord.WebhooksUpdate do
 
       upsert?(true)
       upsert_identity(:discord_id)
+      upsert_fields([:guild_id, :channel_id])
     end
   end
 end

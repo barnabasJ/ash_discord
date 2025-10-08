@@ -1,7 +1,7 @@
 defmodule AshDiscord.Consumer.Handler.Guild.Emojis do
-  require Ash.Query
   require Logger
 
+  alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 
   @spec update(
@@ -14,19 +14,19 @@ defmodule AshDiscord.Consumer.Handler.Guild.Emojis do
         _ws_state,
         context
       ) do
-    # Process each emoji in the new_emojis list
+    # Process all emojis in a single bulk operation
+    # For each emoji, we need to call invoke_configured_action
     results =
       Enum.map(emojis, fn emoji ->
-        context.resource
-        |> Ash.Changeset.for_create(:from_discord, %{
-          data: emoji,
-          identity: %{emoji_id: emoji.id, guild_id: guild_id}
-        })
-        |> Ash.Changeset.set_context(%{
-          private: %{ash_discord?: true},
-          shared: %{private: %{ash_discord?: true}}
-        })
-        |> Ash.create()
+        Handler.invoke_configured_action(
+          :GUILD_EMOJIS_UPDATE,
+          emoji.id,
+          %{
+            data: emoji,
+            identity: %{emoji_id: emoji.id, guild_id: guild_id}
+          },
+          context
+        )
       end)
 
     # Check if any failed

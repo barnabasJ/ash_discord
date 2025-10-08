@@ -17,7 +17,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.EmojisTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Emoji,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
       {:ok, emoji1_payload} = Payloads.Emoji.new(emoji1_data)
@@ -61,7 +62,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.EmojisTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Emoji,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
       # Create initial emoji
@@ -112,7 +114,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.EmojisTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Emoji,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
       guild_emojis_update = %Payloads.GuildEmojisUpdate{
@@ -147,7 +150,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.EmojisTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Emoji,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
       emoji_payloads =

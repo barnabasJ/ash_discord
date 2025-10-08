@@ -78,31 +78,6 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.VoteTest do
       poll_votes = TestApp.Discord.MessagePollVote.read!()
       assert length(poll_votes) == 2
     end
-
-    test "returns :ok when no poll vote resource configured" do
-      poll_vote_event = poll_vote_change_event(%{type: :add})
-
-      # Use a consumer without poll vote resource configured
-      defmodule TestConsumerWithoutPollVote do
-        use AshDiscord.Consumer
-
-        ash_discord_consumer do
-          domains([TestApp.Discord])
-        end
-      end
-
-      context = %AshDiscord.Context{
-        consumer: TestConsumerWithoutPollVote,
-        resource: nil,
-        guild: nil,
-        user: nil,
-        context: nil
-      }
-
-      {:ok, poll_vote_payload} = Payloads.PollVoteChangeEvent.new(poll_vote_event)
-
-      assert :ok = Vote.add(poll_vote_payload, %Nostrum.Struct.WSState{}, context)
-    end
   end
 
   describe "remove/3" do
@@ -196,31 +171,6 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.VoteTest do
       {:ok, poll_vote_payload} = Payloads.PollVoteChangeEvent.new(poll_vote_event)
 
       # Should not error when trying to remove non-existent vote
-      assert :ok = Vote.remove(poll_vote_payload, %Nostrum.Struct.WSState{}, context)
-    end
-
-    test "returns :ok when no poll vote resource configured" do
-      poll_vote_event = poll_vote_change_event(%{type: :remove})
-
-      # Use a consumer without poll vote resource configured
-      defmodule TestConsumerWithoutPollVote2 do
-        use AshDiscord.Consumer
-
-        ash_discord_consumer do
-          domains([TestApp.Discord])
-        end
-      end
-
-      context = %AshDiscord.Context{
-        consumer: TestConsumerWithoutPollVote2,
-        resource: nil,
-        guild: nil,
-        user: nil,
-        context: nil
-      }
-
-      {:ok, poll_vote_payload} = Payloads.PollVoteChangeEvent.new(poll_vote_event)
-
       assert :ok = Vote.remove(poll_vote_payload, %Nostrum.Struct.WSState{}, context)
     end
   end

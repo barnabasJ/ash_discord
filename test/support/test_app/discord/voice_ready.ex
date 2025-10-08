@@ -79,6 +79,7 @@ defmodule TestApp.Discord.VoiceReady do
 
       upsert?(true)
       upsert_identity(:discord_id)
+      upsert_fields([:channel_id, :guild_id])
     end
   end
 end

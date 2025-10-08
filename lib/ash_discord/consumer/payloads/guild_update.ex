@@ -27,10 +27,12 @@ defmodule AshDiscord.Consumer.Payloads.GuildUpdate do
   Accepts a tuple `{old_guild, new_guild}` where each is a `Nostrum.Struct.Guild.t()`.
   """
   def new({%Nostrum.Struct.Guild{} = old_guild, %Nostrum.Struct.Guild{} = new_guild}) do
-    # Pass Nostrum structs directly - super() will cast them using Guild.cast_input/2
+    {:ok, old_guild_payload} = AshDiscord.Consumer.Payloads.Guild.new(old_guild)
+    {:ok, new_guild_payload} = AshDiscord.Consumer.Payloads.Guild.new(new_guild)
+
     super(%{
-      old_guild: old_guild,
-      new_guild: new_guild
+      old_guild: old_guild_payload,
+      new_guild: new_guild_payload
     })
   end
 end

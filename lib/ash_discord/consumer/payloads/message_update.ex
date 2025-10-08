@@ -27,9 +27,19 @@ defmodule AshDiscord.Consumer.Payloads.MessageUpdate do
   Accepts a tuple `{old_message, updated_message}` where each is a `Nostrum.Struct.Message.t()`.
   """
   def new({old_message, %Nostrum.Struct.Message{} = updated_message}) do
+    {:ok, updated_msg_payload} = AshDiscord.Consumer.Payloads.Message.new(updated_message)
+
+    old_msg_payload =
+      if old_message do
+        {:ok, payload} = AshDiscord.Consumer.Payloads.Message.new(old_message)
+        payload
+      else
+        nil
+      end
+
     super(%{
-      old_message: old_message && AshDiscord.Consumer.Payloads.Message.new(old_message),
-      updated_message: AshDiscord.Consumer.Payloads.Message.new(updated_message)
+      old_message: old_msg_payload,
+      updated_message: updated_msg_payload
     })
   end
 end

@@ -27,9 +27,19 @@ defmodule AshDiscord.Consumer.Payloads.ChannelUpdate do
   Accepts a tuple `{old_channel, new_channel}` where each is a `Nostrum.Struct.Channel.t()`.
   """
   def new({old_channel, %Nostrum.Struct.Channel{} = new_channel}) do
+    {:ok, new_channel_payload} = AshDiscord.Consumer.Payloads.Channel.new(new_channel)
+
+    old_channel_payload =
+      if old_channel do
+        {:ok, payload} = AshDiscord.Consumer.Payloads.Channel.new(old_channel)
+        payload
+      else
+        nil
+      end
+
     super(%{
-      old_channel: old_channel && AshDiscord.Consumer.Payloads.Channel.new(old_channel),
-      new_channel: AshDiscord.Consumer.Payloads.Channel.new(new_channel)
+      old_channel: old_channel_payload,
+      new_channel: new_channel_payload
     })
   end
 end

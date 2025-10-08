@@ -13,8 +13,8 @@ defmodule AshDiscord.Consumer.Payloads.GuildUpdate do
 
   typed_struct do
     field :old_guild, AshDiscord.Consumer.Payloads.Guild,
-      allow_nil?: false,
-      description: "The previous guild state"
+      allow_nil?: true,
+      description: "The previous guild state (may be nil if not cached)"
 
     field :new_guild, AshDiscord.Consumer.Payloads.Guild,
       allow_nil?: false,
@@ -26,9 +26,16 @@ defmodule AshDiscord.Consumer.Payloads.GuildUpdate do
 
   Accepts a tuple `{old_guild, new_guild}` where each is a `Nostrum.Struct.Guild.t()`.
   """
-  def new({%Nostrum.Struct.Guild{} = old_guild, %Nostrum.Struct.Guild{} = new_guild}) do
-    {:ok, old_guild_payload} = AshDiscord.Consumer.Payloads.Guild.new(old_guild)
+  def new({old_guild, %Nostrum.Struct.Guild{} = new_guild}) do
     {:ok, new_guild_payload} = AshDiscord.Consumer.Payloads.Guild.new(new_guild)
+
+    old_guild_payload =
+      if old_guild do
+        {:ok, payload} = AshDiscord.Consumer.Payloads.Guild.new(old_guild)
+        payload
+      else
+        nil
+      end
 
     super(%{
       old_guild: old_guild_payload,

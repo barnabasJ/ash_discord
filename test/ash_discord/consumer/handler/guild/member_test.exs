@@ -34,7 +34,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildMember,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       # Create GuildMemberAdd payload
@@ -86,7 +87,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildMember,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       # Create GuildMemberUpdate payload
@@ -156,7 +158,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildMember,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       # Create GuildMemberRemove payload
@@ -192,7 +195,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildMember,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       # Create GuildMemberRemove payload
@@ -220,7 +224,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildMember,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       chunk_event = %Payloads.GuildMembersChunkEvent{
@@ -246,7 +251,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildMember,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       chunk_event = %Payloads.GuildMembersChunkEvent{

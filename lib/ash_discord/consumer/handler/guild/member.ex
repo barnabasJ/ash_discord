@@ -1,7 +1,7 @@
 defmodule AshDiscord.Consumer.Handler.Guild.Member do
   require Logger
-  require Ash.Query
 
+  alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 
   @spec add(
@@ -20,23 +20,15 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
       nil ->
         :ok
 
-      resource ->
-        # Extract user_id from member struct
-        user_discord_id = member.user_id || (member.user && member.user.id)
+      _resource ->
+        user_discord_id = member.user_id
 
-        case resource
-             |> Ash.Changeset.for_create(
-               :from_discord,
-               %{
-                 data: member,
-                 identity: %{guild_id: guild_id, user_id: user_discord_id}
-               },
-               context: %{
-                 private: %{ash_discord?: true},
-                 shared: %{private: %{ash_discord?: true}}
-               }
-             )
-             |> Ash.create() do
+        case Handler.invoke_configured_action(
+               :GUILD_MEMBER_ADD,
+               %{guild_id: guild_id, user_id: user_discord_id},
+               %{data: member, identity: %{guild_id: guild_id, user_id: user_discord_id}},
+               context
+             ) do
           {:ok, _member} ->
             :ok
 
@@ -66,22 +58,15 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
       nil ->
         :ok
 
-      resource ->
+      _resource ->
         user_discord_id = member.user_id
 
-        case resource
-             |> Ash.Changeset.for_create(
-               :from_discord,
-               %{
-                 data: member,
-                 identity: %{guild_id: guild_id, user_id: user_discord_id}
-               },
-               context: %{
-                 private: %{ash_discord?: true},
-                 shared: %{private: %{ash_discord?: true}}
-               }
-             )
-             |> Ash.create() do
+        case Handler.invoke_configured_action(
+               :GUILD_MEMBER_UPDATE,
+               %{guild_id: guild_id, user_id: user_discord_id},
+               %{data: member, identity: %{guild_id: guild_id, user_id: user_discord_id}},
+               context
+             ) do
           {:ok, _member} ->
             :ok
 
@@ -111,30 +96,17 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
       nil ->
         :ok
 
-      resource ->
+      _resource ->
         user_discord_id = member.user_id
 
-        query =
-          resource
-          |> Ash.Query.filter(user_id: user_discord_id, guild_id: guild_id)
-          |> Ash.Query.set_context(%{
-            private: %{ash_discord?: true},
-            shared: %{private: %{ash_discord?: true}}
-          })
-
-        case Ash.bulk_destroy(query, :destroy, %{},
-               return_errors?: true,
-               return_records?: false
+        case Handler.invoke_configured_action(
+               :GUILD_MEMBER_REMOVE,
+               %{guild_id: guild_id, user_id: user_discord_id},
+               %{},
+               context
              ) do
-          %Ash.BulkResult{status: :success} ->
+          {:ok, _} ->
             Logger.info("Deleted guild member #{user_discord_id} from guild #{guild_id}")
-            :ok
-
-          %Ash.BulkResult{status: :error, errors: errors} ->
-            Logger.warning(
-              "Failed to delete guild member #{user_discord_id} from guild #{guild_id}: #{inspect(errors)}"
-            )
-
             :ok
 
           {:error, error} ->

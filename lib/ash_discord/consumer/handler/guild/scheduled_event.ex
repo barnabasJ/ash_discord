@@ -107,13 +107,21 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEvent do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def user_add(_consumer, _event, _ws_state, _context) do
+  def user_add(_consumer, event, _ws_state, context) do
     # GUILD_SCHEDULED_EVENT_USER_ADD is an informational event sent when a user
     # subscribes to a scheduled event.
-    #
-    # This handler exists to acknowledge the event and allow users to attach
-    # their own side effects if needed, but by default we just return :ok.
-    :ok
+    case Handler.invoke_configured_action(
+           :GUILD_SCHEDULED_EVENT_USER_ADD,
+           %{
+             guild_scheduled_event_discord_id: event.guild_scheduled_event_id,
+             user_discord_id: event.user_id
+           },
+           %{data: event},
+           context
+         ) do
+      {:ok, _} -> :ok
+      {:error, error} -> {:error, error}
+    end
   end
 
   @spec user_remove(
@@ -122,12 +130,20 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEvent do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def user_remove(_consumer, _event, _ws_state, _context) do
+  def user_remove(_consumer, event, _ws_state, context) do
     # GUILD_SCHEDULED_EVENT_USER_REMOVE is an informational event sent when a user
     # unsubscribes from a scheduled event.
-    #
-    # This handler exists to acknowledge the event and allow users to attach
-    # their own side effects if needed, but by default we just return :ok.
-    :ok
+    case Handler.invoke_configured_action(
+           :GUILD_SCHEDULED_EVENT_USER_REMOVE,
+           %{
+             guild_scheduled_event_discord_id: event.guild_scheduled_event_id,
+             user_discord_id: event.user_id
+           },
+           %{},
+           context
+         ) do
+      {:ok, _} -> :ok
+      {:error, error} -> {:error, error}
+    end
   end
 end

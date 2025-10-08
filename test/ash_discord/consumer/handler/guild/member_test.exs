@@ -246,7 +246,22 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
                )
     end
 
-    test "accepts chunk event with member data" do
+    test "creates guild members from chunk event data" do
+      guild_id = generate_snowflake()
+      user_id_1 = generate_snowflake()
+      user_id_2 = generate_snowflake()
+
+      # Mock API calls for relationships
+      # Each member requires user lookup
+      expect(Nostrum.Api.User, :get, 2, fn user_id ->
+        {:ok, user(%{id: user_id})}
+      end)
+
+      # Guild is fetched once and cached for all members
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id})}
+      end)
+
       context = %AshDiscord.Context{
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildMember,
@@ -257,15 +272,17 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
 
       chunk_event = %Payloads.GuildMembersChunkEvent{
         data: %{
-          guild_id: generate_snowflake(),
-          members: [%{user_id: generate_snowflake(), nick: "TestUser"}],
+          guild_id: guild_id,
+          members: [
+            %{user_id: user_id_1, nick: "TestUser1", roles: []},
+            %{user_id: user_id_2, nick: "TestUser2", roles: []}
+          ],
           chunk_index: 0,
           chunk_count: 1,
           nonce: "test_nonce"
         }
       }
 
-      # This is an informational event - we just verify it doesn't crash
       assert :ok =
                Member.chunk(
                  TestConsumer,
@@ -273,6 +290,22 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
                  %Nostrum.Struct.WSState{},
                  context
                )
+
+      # Verify members were created
+      members = TestApp.Discord.GuildMember.read!()
+      assert length(members) == 2
+
+      member_user_ids = Enum.map(members, & &1.user_id)
+      assert user_id_1 in member_user_ids
+      assert user_id_2 in member_user_ids
+
+      member1 = Enum.find(members, &(&1.user_id == user_id_1))
+      assert member1.guild_id == guild_id
+      assert member1.nick == "TestUser1"
+
+      member2 = Enum.find(members, &(&1.user_id == user_id_2))
+      assert member2.guild_id == guild_id
+      assert member2.nick == "TestUser2"
     end
   end
 end

@@ -107,13 +107,43 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def chunk(_consumer, _chunk_event, _ws_state, _context) do
-    # GUILD_MEMBERS_CHUNK is an informational event sent in response to
-    # Gateway Request Guild Members. It contains bulk member data but is
-    # typically handled by Nostrum's caching layer.
-    #
-    # This handler exists to acknowledge the event and allow users to attach
-    # their own side effects if needed, but by default we just return :ok.
-    :ok
+  def chunk(_consumer, %Payloads.GuildMembersChunkEvent{data: data}, _ws_state, context) do
+    guild_id = Map.get(data, :guild_id)
+    members = Map.get(data, :members, [])
+
+    # Process each member in the chunk using invoke_configured_action
+    results =
+      Enum.map(members, fn member_data ->
+        # Convert member data to Member payload
+        case Payloads.Member.new(member_data) do
+          {:ok, member_payload} ->
+            user_id = member_payload.user_id
+
+            Handler.invoke_configured_action(
+              :GUILD_MEMBERS_CHUNK,
+              %{guild_id: guild_id, user_id: user_id},
+              %{data: member_payload, identity: %{guild_id: guild_id, user_id: user_id}},
+              context
+            )
+
+          {:error, error} ->
+            Logger.warning(
+              "Failed to convert member data to payload: #{inspect(error)}, data: #{inspect(member_data)}"
+            )
+
+            {:error, error}
+        end
+      end)
+
+    # Check if any operations failed
+    errors = Enum.filter(results, fn result -> match?({:error, _}, result) end)
+
+    if Enum.empty?(errors) do
+      :ok
+    else
+      Logger.warning("Failed to process #{length(errors)} members in chunk for guild #{guild_id}")
+
+      :ok
+    end
   end
 end

@@ -4,15 +4,18 @@ This guide documents the pattern for migrating Discord event handlers from
 manual Ash operation calls to the standardized `invoke_configured_action/4`
 function.
 
+EVERY EVENT SHOULD BE MAPPABLE TO AN ASH ACTION
+
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [The New Pattern](#the-new-pattern)
-3. [Step-by-Step Migration](#step-by-step-migration)
-4. [Action Type Patterns](#action-type-patterns)
-5. [Common Pitfalls](#common-pitfalls)
-6. [Testing Considerations](#testing-considerations)
-7. [Complete Example](#complete-example)
+2. [Resource Checking - IMPORTANT](#resource-checking---important)
+3. [The New Pattern](#the-new-pattern)
+4. [Step-by-Step Migration](#step-by-step-migration)
+5. [Action Type Patterns](#action-type-patterns)
+6. [Common Pitfalls](#common-pitfalls)
+7. [Testing Considerations](#testing-considerations)
+8. [Complete Example](#complete-example)
 
 ## Overview
 
@@ -42,6 +45,9 @@ Handler.invoke_configured_action(
 )
 ```
 
+Handlers don't need to check if the resource exists, they only get called if
+it's there.
+
 ### Benefits
 
 - ✅ **Consistent**: All handlers use the same pattern
@@ -51,6 +57,109 @@ Handler.invoke_configured_action(
   `AshDiscord.Context`
 - ✅ **Type Safety**: Single point of action invocation logic
 - ✅ **DSL-Driven**: Action names come from resource configuration
+
+## Resource Checking - IMPORTANT
+
+### The Dispatcher Handles Resource Existence
+
+**Critical concept**: Handlers are **only called if a resource is configured**.
+You should **never** check for `nil` resources in handler functions.
+
+### How It Works in Production
+
+The event dispatcher (in `AshDiscord.Consumer`) checks for resource existence
+**before** calling handlers:
+
+```elixir
+# In AshDiscord.Consumer event handling
+resource = get_resource(consumer, event)
+
+if resource do
+  context = build_context(consumer, resource, transformed_payload)
+  # Handler is called here with valid context.resource
+  apply(handler_module, handler_function, [consumer, payload, ws_state, context])
+else
+  # Handler is NOT called - event is silently ignored
+  :ok
+end
+```
+
+This means:
+
+- ✅ Handlers always receive a valid `context.resource` (never `nil`)
+- ✅ No need for `case context.resource do nil -> :ok` guards
+- ✅ `invoke_configured_action` can safely assume the resource exists
+
+### Old Pattern (❌ DO NOT USE)
+
+```elixir
+def create(_consumer, event, _ws_state, context) do
+  case context.resource do
+    nil ->
+      :ok
+
+    resource ->
+      # Actually do the work...
+      resource
+      |> Ash.Changeset.for_create(:from_discord, %{data: event})
+      |> Ash.create()
+  end
+end
+```
+
+### New Pattern (✅ USE THIS)
+
+```elixir
+def create(_consumer, event, _ws_state, context) do
+  # No resource check needed - dispatcher guarantees it exists
+  Handler.invoke_configured_action(
+    :EVENT_NAME,
+    %{discord_id: event.id},
+    %{data: event},
+    context
+  )
+end
+```
+
+### Testing Implications
+
+When writing tests that call handlers directly, you **must** provide a valid
+resource in the context:
+
+```elixir
+# ❌ BAD - This will cause invoke_configured_action to crash
+context = %AshDiscord.Context{
+  consumer: TestConsumer,
+  resource: nil,  # ❌ Don't do this!
+  guild: nil,
+  user: nil,
+  context: %{private: %{ash_discord?: true}}
+}
+
+# ✅ GOOD - Provide the actual resource
+context = %AshDiscord.Context{
+  consumer: TestConsumer,
+  resource: TestApp.Discord.GuildScheduledEvent,  # ✅ Valid resource
+  guild: nil,
+  user: nil,
+  context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
+}
+```
+
+**Note**: The `context.context` field is also required and should include the
+`ash_discord?: true` flag in the private context.
+
+### What About "No Resource Configured" Tests?
+
+**Don't test this in handler tests**. The nil resource scenario is handled by
+the dispatcher, not the handler. If you need to test "resource not configured"
+behavior:
+
+1. Test it at the **dispatcher level**, not the handler level
+2. Or simply trust that the dispatcher works correctly (it's tested elsewhere)
+
+Handler tests should focus on testing the handler's logic when given valid
+inputs, which includes a valid `context.resource`.
 
 ## The New Pattern
 

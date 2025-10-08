@@ -1,4 +1,5 @@
 defmodule AshDiscord.Consumer.Handler.Channel.Pins do
+  alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 
   @spec update(
@@ -7,16 +8,14 @@ defmodule AshDiscord.Consumer.Handler.Channel.Pins do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def update(channel_pins_update, _ws_state, context) do
-    context.resource
-    |> Ash.Changeset.for_create(:from_discord, %{data: channel_pins_update})
-    |> Ash.Changeset.set_context(%{
-      private: %{ash_discord?: true},
-      shared: %{private: %{ash_discord?: true}}
-    })
-    |> Ash.create()
-    |> case do
-      {:ok, _pins_record} -> :ok
-      {:error, _error} = error -> error
+    case Handler.invoke_configured_action(
+           :CHANNEL_PINS_UPDATE,
+           channel_pins_update.channel_id,
+           %{data: channel_pins_update},
+           context
+         ) do
+      {:ok, _} -> :ok
+      {:error, error} -> {:error, error}
     end
   end
 end

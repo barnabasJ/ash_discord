@@ -15,7 +15,8 @@ defmodule AshDiscord.Consumer.Handler.Channel.PinsTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.ChannelPinsUpdate,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       {:ok, pins_payload} = Payloads.ChannelPinsUpdateEvent.new(pins_data)
@@ -43,7 +44,8 @@ defmodule AshDiscord.Consumer.Handler.Channel.PinsTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.ChannelPinsUpdate,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       # First update
@@ -88,7 +90,8 @@ defmodule AshDiscord.Consumer.Handler.Channel.PinsTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.ChannelPinsUpdate,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       {:ok, pins_payload} = Payloads.ChannelPinsUpdateEvent.new(pins_data)

@@ -323,11 +323,10 @@ defmodule AshDiscord.Consumer.EventMap do
       {AshDiscord.Consumer.Handler.Guild.Emojis, :update, :guild_emoji_resource,
        :handle_guild_emojis_update, Payloads.GuildEmojisUpdate}
 
-  # TODO: Implement guild integrations update handler
   def handler_for(:GUILD_INTEGRATIONS_UPDATE),
     do:
       {AshDiscord.Consumer.Handler.Guild.Integrations, :update, :guild_integration_resource,
-       :handle_guild_integrations_update, Payloads.GuildIntegrationsUpdate}
+       :handle_guild_integrations_update, Payloads.GuildIntegrationsUpdateEvent}
 
   def handler_for(:GUILD_MEMBER_ADD),
     do:

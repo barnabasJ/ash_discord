@@ -16,6 +16,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.Emojis do
       ) do
     # Process all emojis in a single bulk operation
     # For each emoji, we need to call invoke_configured_action
+    # TODO: add support for passing a list of identities/changes 
+    # to the handler
     results =
       Enum.map(emojis, fn emoji ->
         Handler.invoke_configured_action(

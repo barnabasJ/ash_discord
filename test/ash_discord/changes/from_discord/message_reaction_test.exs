@@ -125,7 +125,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       assert {:ok, created_reaction} = result
       assert created_reaction.emoji_name == "😊"
-      assert created_reaction.guild_id == nil
+      assert created_reaction.guild_discord_id == nil
     end
   end
 
@@ -171,9 +171,9 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
       assert created_reaction.emoji_name == emoji_name
       assert created_reaction.emoji_id == nil
       assert created_reaction.emoji_animated == false
-      assert created_reaction.user_id == user_id
-      assert created_reaction.message_id == message_id
-      assert created_reaction.channel_id == channel_id
+      assert created_reaction.user_discord_id == user_id
+      assert created_reaction.message_discord_id == message_id
+      assert created_reaction.channel_discord_id == channel_id
     end
 
     test "fetches custom emoji reaction from API" do
@@ -214,7 +214,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
       assert created_reaction.emoji_name == emoji_name
       assert created_reaction.emoji_id == emoji_id
       assert created_reaction.emoji_animated == true
-      assert created_reaction.user_id == user_id
+      assert created_reaction.user_discord_id == user_id
     end
 
     test "handles reaction not found on message" do
@@ -339,8 +339,8 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       # Should be same record (same Ash ID)
       assert updated_reaction.id == original_reaction.id
-      assert updated_reaction.user_id == original_reaction.user_id
-      assert updated_reaction.message_id == original_reaction.message_id
+      assert updated_reaction.user_discord_id == original_reaction.user_discord_id
+      assert updated_reaction.message_discord_id == original_reaction.message_discord_id
       assert updated_reaction.emoji_name == original_reaction.emoji_name
     end
 
@@ -377,8 +377,8 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       # Should be same record (same Ash ID)
       assert updated_reaction.id == original_reaction.id
-      assert updated_reaction.user_id == original_reaction.user_id
-      assert updated_reaction.message_id == original_reaction.message_id
+      assert updated_reaction.user_discord_id == original_reaction.user_discord_id
+      assert updated_reaction.message_discord_id == original_reaction.message_discord_id
       assert updated_reaction.emoji_name == original_reaction.emoji_name
       assert updated_reaction.emoji_id == nil
     end
@@ -416,8 +416,8 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       # Should be same record
       assert updated_reaction.id == original_reaction.id
-      assert updated_reaction.user_id == user_id
-      assert updated_reaction.message_id == message_id
+      assert updated_reaction.user_discord_id == user_id
+      assert updated_reaction.message_discord_id == message_id
       assert updated_reaction.emoji_id == emoji_id
 
       # But with updated attributes
@@ -483,8 +483,8 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       assert {:ok, created_reaction} = result
       assert created_reaction.emoji_name == "👍"
-      assert created_reaction.user_id == 123_456_789
-      assert created_reaction.message_id == 555_666_777
+      assert created_reaction.user_discord_id == 123_456_789
+      assert created_reaction.message_discord_id == 555_666_777
     end
 
     test "handles malformed emoji structure in event" do

@@ -48,7 +48,7 @@ defmodule TestApp.Discord.MessageReaction do
     )
 
     # Foreign key attributes for relationships
-    attribute(:user_id, :integer,
+    attribute(:user_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
@@ -96,10 +96,10 @@ defmodule TestApp.Discord.MessageReaction do
   end
 
   identities do
-    # Use user_id, message_discord_id, and either emoji_id (for custom) or emoji_name (for standard)
+    # Use user_discord_id, message_discord_id, and either emoji_id (for custom) or emoji_name (for standard)
     # We'll exclude emoji_id from the identity and handle uniqueness through a combination
     identity :discord_id,
-             [:user_id, :message_discord_id, :guild_discord_id, :emoji_name, :emoji_id] do
+             [:user_discord_id, :message_discord_id, :guild_discord_id, :emoji_name, :emoji_id] do
       pre_check_with(TestApp.Discord)
     end
   end
@@ -123,7 +123,7 @@ defmodule TestApp.Discord.MessageReaction do
       argument(:identity, :map,
         allow_nil?: true,
         description:
-          "Map with channel_id, message_id, emoji_name, emoji_id (optional), and user_id for API fallback"
+          "Map with channel_id, message_id, emoji_name, emoji_id (optional), and user_discord_id for API fallback"
       )
 
       change(AshDiscord.Changes.FromDiscord.MessageReaction)
@@ -137,7 +137,7 @@ defmodule TestApp.Discord.MessageReaction do
         :count,
         :me,
         :emoji_animated,
-        :user_id,
+        :user_discord_id,
         :message_discord_id,
         :channel_discord_id,
         :guild_discord_id
@@ -153,7 +153,7 @@ defmodule TestApp.Discord.MessageReaction do
         :count,
         :me,
         :emoji_animated,
-        :user_id,
+        :user_discord_id,
         :message_discord_id,
         :channel_discord_id,
         :guild_discord_id

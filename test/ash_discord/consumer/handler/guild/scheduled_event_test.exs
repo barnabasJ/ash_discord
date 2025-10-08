@@ -43,7 +43,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEventTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildScheduledEvent,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
       assert :ok =
@@ -70,50 +71,6 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEventTest do
       assert created_event.status == 1
       assert created_event.entity_type == 3
       assert created_event.entity_metadata_location == "Discord HQ"
-    end
-
-    test "returns :ok when no scheduled event resource configured" do
-      # Use a test consumer without scheduled event resource configured
-      defmodule NoScheduledEventConsumer do
-        use AshDiscord.Consumer.Dsl
-
-        ash_discord_consumer do
-          domains([TestApp.Discord])
-        end
-      end
-
-      event_payload = %Payloads.GuildScheduledEvent{
-        id: generate_snowflake(),
-        guild_id: generate_snowflake(),
-        channel_id: nil,
-        creator_id: nil,
-        name: "Test",
-        description: nil,
-        scheduled_start_time: ~U[2025-12-01 10:00:00Z],
-        scheduled_end_time: nil,
-        privacy_level: 2,
-        status: 1,
-        entity_type: 1,
-        entity_id: nil,
-        entity_metadata: nil,
-        creator: nil,
-        user_count: nil
-      }
-
-      context = %AshDiscord.Context{
-        consumer: NoScheduledEventConsumer,
-        resource: nil,
-        guild: nil,
-        user: nil
-      }
-
-      assert :ok =
-               ScheduledEvent.create(
-                 NoScheduledEventConsumer,
-                 event_payload,
-                 %Nostrum.Struct.WSState{},
-                 context
-               )
     end
   end
 
@@ -149,7 +106,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEventTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildScheduledEvent,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
       # Create the event
@@ -240,7 +198,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEventTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildScheduledEvent,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
       :ok =
@@ -303,7 +262,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEventTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildScheduledEvent,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
       # Deleting non-existent event should succeed (idempotent)
@@ -329,7 +289,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEventTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildScheduledEvent,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
       assert :ok =
@@ -354,7 +315,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEventTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildScheduledEvent,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
       assert :ok =

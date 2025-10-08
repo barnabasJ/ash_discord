@@ -6,8 +6,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEvent do
   """
 
   require Logger
-  require Ash.Query
 
+  alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 
   @spec create(
@@ -18,35 +18,25 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEvent do
         ) :: :ok | {:error, term()}
   def create(
         _consumer,
-        %Payloads.GuildScheduledEvent{} = event,
+        %Payloads.GuildScheduledEvent{id: event_id, guild_id: guild_id} = event,
         _ws_state,
         context
       ) do
-    case context.resource do
-      nil ->
+    case Handler.invoke_configured_action(
+           :GUILD_SCHEDULED_EVENT_CREATE,
+           %{discord_id: event_id},
+           %{data: event},
+           context
+         ) do
+      {:ok, _scheduled_event} ->
         :ok
 
-      resource ->
-        case resource
-             |> Ash.Changeset.for_create(
-               :from_discord,
-               %{data: event},
-               context: %{
-                 private: %{ash_discord?: true},
-                 shared: %{private: %{ash_discord?: true}}
-               }
-             )
-             |> Ash.create() do
-          {:ok, _scheduled_event} ->
-            :ok
+      {:error, error} ->
+        Logger.warning(
+          "Failed to create guild scheduled event #{event_id} in guild #{guild_id}: #{inspect(error)}"
+        )
 
-          {:error, error} ->
-            Logger.warning(
-              "Failed to create guild scheduled event #{event.id} in guild #{event.guild_id}: #{inspect(error)}"
-            )
-
-            :ok
-        end
+        :ok
     end
   end
 
@@ -58,35 +48,25 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEvent do
         ) :: :ok | {:error, term()}
   def update(
         _consumer,
-        %Payloads.GuildScheduledEvent{} = event,
+        %Payloads.GuildScheduledEvent{id: event_id, guild_id: guild_id} = event,
         _ws_state,
         context
       ) do
-    case context.resource do
-      nil ->
+    case Handler.invoke_configured_action(
+           :GUILD_SCHEDULED_EVENT_UPDATE,
+           %{discord_id: event_id},
+           %{data: event},
+           context
+         ) do
+      {:ok, _scheduled_event} ->
         :ok
 
-      resource ->
-        case resource
-             |> Ash.Changeset.for_create(
-               :from_discord,
-               %{data: event},
-               context: %{
-                 private: %{ash_discord?: true},
-                 shared: %{private: %{ash_discord?: true}}
-               }
-             )
-             |> Ash.create() do
-          {:ok, _scheduled_event} ->
-            :ok
+      {:error, error} ->
+        Logger.warning(
+          "Failed to update guild scheduled event #{event_id} in guild #{guild_id}: #{inspect(error)}"
+        )
 
-          {:error, error} ->
-            Logger.warning(
-              "Failed to update guild scheduled event #{event.id} in guild #{event.guild_id}: #{inspect(error)}"
-            )
-
-            :ok
-        end
+        :ok
     end
   end
 
@@ -102,41 +82,22 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEvent do
         _ws_state,
         context
       ) do
-    case context.resource do
-      nil ->
+    case Handler.invoke_configured_action(
+           :GUILD_SCHEDULED_EVENT_DELETE,
+           %{discord_id: event_id},
+           %{},
+           context
+         ) do
+      {:ok, _} ->
+        Logger.info("Deleted guild scheduled event #{event_id} from guild #{guild_id}")
         :ok
 
-      resource ->
-        query =
-          resource
-          |> Ash.Query.filter(discord_id == ^event_id)
-          |> Ash.Query.set_context(%{
-            private: %{ash_discord?: true},
-            shared: %{private: %{ash_discord?: true}}
-          })
+      {:error, error} ->
+        Logger.warning(
+          "Failed to delete guild scheduled event #{event_id} from guild #{guild_id}: #{inspect(error)}"
+        )
 
-        case Ash.bulk_destroy(query, :destroy, %{},
-               return_errors?: true,
-               return_records?: false
-             ) do
-          %Ash.BulkResult{status: :success} ->
-            Logger.info("Deleted guild scheduled event #{event_id} from guild #{guild_id}")
-            :ok
-
-          %Ash.BulkResult{status: :error, errors: errors} ->
-            Logger.warning(
-              "Failed to delete guild scheduled event #{event_id} from guild #{guild_id}: #{inspect(errors)}"
-            )
-
-            :ok
-
-          {:error, error} ->
-            Logger.warning(
-              "Failed to delete guild scheduled event #{event_id} from guild #{guild_id}: #{inspect(error)}"
-            )
-
-            :ok
-        end
+        :ok
     end
   end
 

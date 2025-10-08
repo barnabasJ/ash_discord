@@ -15,7 +15,8 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.VoteTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.MessagePollVote,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       {:ok, poll_vote_payload} = Payloads.PollVoteChangeEvent.new(poll_vote_event)
@@ -38,7 +39,8 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.VoteTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.MessagePollVote,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       {:ok, poll_vote_payload} = Payloads.PollVoteChangeEvent.new(poll_vote_event)
@@ -63,7 +65,8 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.VoteTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.MessagePollVote,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       {:ok, payload1} = Payloads.PollVoteChangeEvent.new(vote1)
@@ -92,7 +95,8 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.VoteTest do
         consumer: TestConsumerWithoutPollVote,
         resource: nil,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       {:ok, poll_vote_payload} = Payloads.PollVoteChangeEvent.new(poll_vote_event)
@@ -123,7 +127,8 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.VoteTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.MessagePollVote,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       {:ok, remove_payload} = Payloads.PollVoteChangeEvent.new(remove_event)
@@ -162,7 +167,8 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.VoteTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.MessagePollVote,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       {:ok, remove_payload} = Payloads.PollVoteChangeEvent.new(remove_event)
@@ -183,7 +189,8 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.VoteTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.MessagePollVote,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       {:ok, poll_vote_payload} = Payloads.PollVoteChangeEvent.new(poll_vote_event)
@@ -208,7 +215,8 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.VoteTest do
         consumer: TestConsumerWithoutPollVote2,
         resource: nil,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       {:ok, poll_vote_payload} = Payloads.PollVoteChangeEvent.new(poll_vote_event)

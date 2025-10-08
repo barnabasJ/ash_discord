@@ -1,7 +1,7 @@
 defmodule AshDiscord.Consumer.Handler.Message.Poll.Vote do
   require Logger
-  require Ash.Query
 
+  alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 
   @spec add(
@@ -14,17 +14,18 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.Vote do
       nil ->
         :ok
 
-      resource ->
-        case resource
-             |> Ash.Changeset.for_create(:from_discord, %{
-               data: poll_vote_add
-             })
-             |> Ash.Changeset.set_context(%{
-               private: %{ash_discord?: true},
-               shared: %{private: %{ash_discord?: true}}
-             })
-             |> Ash.create() do
-          {:ok, _poll_vote_record} ->
+      _resource ->
+        case Handler.invoke_configured_action(
+               :MESSAGE_POLL_VOTE_ADD,
+               %{
+                 user_id: poll_vote_add.user_id,
+                 message_id: poll_vote_add.message_id,
+                 answer_id: poll_vote_add.answer_id
+               },
+               %{data: poll_vote_add},
+               context
+             ) do
+          {:ok, _} ->
             :ok
 
           {:error, error} ->
@@ -48,26 +49,23 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.Vote do
       nil ->
         :ok
 
-      resource ->
-        # Delete the poll vote by user_id, message_id, and answer_id
-        query =
-          resource
-          |> Ash.Query.filter(user_id == ^poll_vote_remove.user_id)
-          |> Ash.Query.filter(message_id == ^poll_vote_remove.message_id)
-          |> Ash.Query.filter(answer_id == ^poll_vote_remove.answer_id)
-
-        case Ash.bulk_destroy(query, :destroy, %{},
-               context: %{
-                 private: %{ash_discord?: true},
-                 shared: %{private: %{ash_discord?: true}}
-               }
+      _resource ->
+        case Handler.invoke_configured_action(
+               :MESSAGE_POLL_VOTE_REMOVE,
+               %{
+                 user_id: poll_vote_remove.user_id,
+                 message_id: poll_vote_remove.message_id,
+                 answer_id: poll_vote_remove.answer_id
+               },
+               %{},
+               context
              ) do
-          %Ash.BulkResult{status: :success} ->
+          {:ok, _} ->
             :ok
 
-          result ->
+          {:error, error} ->
             Logger.error(
-              "Failed to delete poll vote for user #{poll_vote_remove.user_id} on message #{poll_vote_remove.message_id}: #{inspect(result)}"
+              "Failed to delete poll vote for user #{poll_vote_remove.user_id} on message #{poll_vote_remove.message_id}: #{inspect(error)}"
             )
 
             :ok

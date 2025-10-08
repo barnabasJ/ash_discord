@@ -27,9 +27,11 @@ defmodule AshDiscord.Consumer.Payloads.GuildMemberRemove do
   Accepts a tuple `{guild_id, old_member}` where old_member is a `Nostrum.Struct.Guild.Member.t()`.
   """
   def new({guild_id, %Nostrum.Struct.Guild.Member{} = old_member}) when is_integer(guild_id) do
+    {:ok, member_payload} = AshDiscord.Consumer.Payloads.Member.new(old_member)
+
     super(%{
       guild_id: guild_id,
-      member: AshDiscord.Consumer.Payloads.Member.new(old_member)
+      member: member_payload
     })
   end
 end

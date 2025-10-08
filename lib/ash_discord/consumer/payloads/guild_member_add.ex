@@ -27,9 +27,11 @@ defmodule AshDiscord.Consumer.Payloads.GuildMemberAdd do
   Accepts a tuple `{guild_id, new_member}` where new_member is a `Nostrum.Struct.Guild.Member.t()`.
   """
   def new({guild_id, %Nostrum.Struct.Guild.Member{} = new_member}) when is_integer(guild_id) do
+    {:ok, member_payload} = AshDiscord.Consumer.Payloads.Member.new(new_member)
+
     super(%{
       guild_id: guild_id,
-      member: AshDiscord.Consumer.Payloads.Member.new(new_member)
+      member: member_payload
     })
   end
 end

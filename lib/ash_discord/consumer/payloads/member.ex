@@ -56,7 +56,25 @@ defmodule AshDiscord.Consumer.Payloads.Member do
   end
 
   def new(%Nostrum.Struct.Guild.Member{} = nostrum_member) do
-    super(Map.from_struct(nostrum_member))
+    member_map = Map.from_struct(nostrum_member)
+
+    # Convert joined_at from ISO8601 string to Unix timestamp if present
+    member_map =
+      case member_map.joined_at do
+        nil ->
+          member_map
+
+        timestamp when is_binary(timestamp) ->
+          case DateTime.from_iso8601(timestamp) do
+            {:ok, dt, _offset} -> %{member_map | joined_at: DateTime.to_unix(dt)}
+            _ -> member_map
+          end
+
+        timestamp when is_integer(timestamp) ->
+          member_map
+      end
+
+    super(member_map)
   end
 
   # Handle plain maps (for testing/edge cases)

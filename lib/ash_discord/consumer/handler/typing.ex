@@ -10,7 +10,7 @@ defmodule AshDiscord.Consumer.Handler.Typing do
   def start(typing_start, _ws_state, context) do
     case Handler.invoke_configured_action(
            :TYPING_START,
-           %{user_id: typing_start.user_id, channel_id: typing_start.channel_id},
+           %{user_discord_id: typing_start.user_id, channel_discord_id: typing_start.channel_id},
            %{data: typing_start},
            context
          ) do

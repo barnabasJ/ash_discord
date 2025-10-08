@@ -32,10 +32,20 @@ defmodule AshDiscord.Consumer.Payloads.GuildMemberUpdate do
   """
   def new({guild_id, old_member, %Nostrum.Struct.Guild.Member{} = new_member})
       when is_integer(guild_id) do
+    {:ok, new_member_payload} = AshDiscord.Consumer.Payloads.Member.new(new_member)
+
+    old_member_payload =
+      if old_member do
+        {:ok, payload} = AshDiscord.Consumer.Payloads.Member.new(old_member)
+        payload
+      else
+        nil
+      end
+
     super(%{
       guild_id: guild_id,
-      old_member: old_member && AshDiscord.Consumer.Payloads.Member.new(old_member),
-      new_member: AshDiscord.Consumer.Payloads.Member.new(new_member)
+      old_member: old_member_payload,
+      new_member: new_member_payload
     })
   end
 end

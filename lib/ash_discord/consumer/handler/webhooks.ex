@@ -10,7 +10,10 @@ defmodule AshDiscord.Consumer.Handler.Webhooks do
   def update(webhooks_update, _ws_state, context) do
     case Handler.invoke_configured_action(
            :WEBHOOKS_UPDATE,
-           %{guild_id: webhooks_update.guild_id, channel_id: webhooks_update.channel_id},
+           %{
+             guild_discord_id: webhooks_update.guild_id,
+             channel_discord_id: webhooks_update.channel_id
+           },
            %{data: webhooks_update},
            context
          ) do

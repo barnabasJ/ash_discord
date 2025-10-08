@@ -10,7 +10,7 @@ defmodule AshDiscord.Consumer.Handler.Voice do
   def update(voice_state, _ws_state, context) do
     case Handler.invoke_configured_action(
            :VOICE_STATE_UPDATE,
-           %{user_id: voice_state.user_id, guild_id: voice_state.guild_id},
+           %{user_discord_id: voice_state.user_id, guild_discord_id: voice_state.guild_id},
            %{data: voice_state},
            context
          ) do
@@ -27,7 +27,7 @@ defmodule AshDiscord.Consumer.Handler.Voice do
   def ready(voice_ready, _ws_state, context) do
     case Handler.invoke_configured_action(
            :VOICE_READY,
-           %{ssrc: voice_ready.ssrc},
+           %{channel_discord_id: voice_ready.channel_id, guild_discord_id: voice_ready.guild_id},
            %{data: voice_ready},
            context
          ) do
@@ -44,7 +44,10 @@ defmodule AshDiscord.Consumer.Handler.Voice do
   def speaking(voice_speaking_update, _ws_state, context) do
     case Handler.invoke_configured_action(
            :VOICE_SPEAKING_UPDATE,
-           %{user_id: voice_speaking_update.user_id, ssrc: voice_speaking_update.ssrc},
+           %{
+             channel_discord_id: voice_speaking_update.channel_id,
+             guild_discord_id: voice_speaking_update.guild_id
+           },
            %{data: voice_speaking_update},
            context
          ) do
@@ -70,7 +73,7 @@ defmodule AshDiscord.Consumer.Handler.Voice do
   def server(voice_server_update, _ws_state, context) do
     case Handler.invoke_configured_action(
            :VOICE_SERVER_UPDATE,
-           %{guild_id: voice_server_update.guild_id},
+           %{guild_discord_id: voice_server_update.guild_id},
            %{data: voice_server_update},
            context
          ) do

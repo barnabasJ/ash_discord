@@ -35,7 +35,12 @@ defmodule AshDiscord.Consumer.Payloads.ThreadMember do
   Create a ThreadMember TypedStruct from a Nostrum ThreadMember struct.
 
   Accepts a `Nostrum.Struct.ThreadMember.t()` and creates an AshDiscord ThreadMember TypedStruct.
+  Also handles being passed a ThreadMember payload (no-op for already-converted payloads).
   """
+  def new(%__MODULE__{} = thread_member_payload) do
+    {:ok, thread_member_payload}
+  end
+
   def new(%Nostrum.Struct.ThreadMember{} = nostrum_thread_member) do
     super(Map.from_struct(nostrum_thread_member))
   end

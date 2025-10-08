@@ -30,7 +30,12 @@ defmodule AshDiscord.Consumer.Payloads.ThreadMembersUpdateEvent do
   Create a ThreadMembersUpdateEvent TypedStruct from a Nostrum ThreadMembersUpdate event struct.
 
   Accepts a `Nostrum.Struct.Event.ThreadMembersUpdate.t()` and creates an AshDiscord ThreadMembersUpdateEvent TypedStruct.
+  Also handles being passed a ThreadMembersUpdateEvent payload (no-op for already-converted payloads).
   """
+  def new(%__MODULE__{} = event_payload) do
+    {:ok, event_payload}
+  end
+
   def new(%Nostrum.Struct.Event.ThreadMembersUpdate{} = nostrum_event) do
     super(Map.from_struct(nostrum_event))
   end

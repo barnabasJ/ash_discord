@@ -25,11 +25,19 @@ defmodule AshDiscord.Consumer.Payloads.ThreadUpdate do
   Create a ThreadUpdate TypedStruct from Nostrum thread update event data.
 
   Accepts a tuple `{old_thread, new_thread}` where each is a `Nostrum.Struct.Channel.t()`.
+  Also handles being passed a ThreadUpdate payload (no-op for already-converted payloads).
   """
+  def new(%__MODULE__{} = update_payload) do
+    {:ok, update_payload}
+  end
+
   def new({old_thread, %Nostrum.Struct.Channel{} = new_thread}) do
+    {:ok, old_thread_payload} = old_thread && AshDiscord.Consumer.Payloads.Thread.new(old_thread)
+    {:ok, new_thread_payload} = AshDiscord.Consumer.Payloads.Thread.new(new_thread)
+
     super(%{
-      old_thread: old_thread && AshDiscord.Consumer.Payloads.Thread.new(old_thread),
-      new_thread: AshDiscord.Consumer.Payloads.Thread.new(new_thread)
+      old_thread: old_thread_payload,
+      new_thread: new_thread_payload
     })
   end
 end

@@ -63,8 +63,8 @@ defmodule AshDiscord.Consumer.Handler.Thread do
   def list_sync(sync_event, _ws_state, context) do
     case Handler.invoke_configured_action(
            :THREAD_LIST_SYNC,
-           %{discord_id: sync_event.id},
-           %{identity: sync_event.id, data: sync_event},
+           %{guild_discord_id: sync_event.guild_id},
+           %{data: sync_event},
            context
          ) do
       {:ok, _} -> :ok

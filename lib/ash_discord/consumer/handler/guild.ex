@@ -8,41 +8,53 @@ defmodule AshDiscord.Consumer.Handler.Guild do
           new_guild :: Payloads.Guild.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: {:ok, Ash.Resource.record()} | {:error, term()}
+        ) :: :ok | {:error, term()}
   def create(guild, _ws_state, context) do
     register_commands(context.consumer, guild)
 
-    Handler.invoke_configured_action(
-      :GUILD_CREATE,
-      %{discord_id: guild.id},
-      %{identity: guild.id, data: guild},
-      context
-    )
+    case Handler.invoke_configured_action(
+           :GUILD_CREATE,
+           %{discord_id: guild.id},
+           %{identity: guild.id, data: guild},
+           context
+         ) do
+      {:ok, _guild} -> :ok
+      {:error, error} -> {:error, error}
+    end
   end
 
   defp register_commands(consumer, guild) do
-    case AshDiscord.Consumer.Info.ash_discord_consumer_domains(consumer) do
-      {:ok, domains} ->
-        commands = AshDiscord.Consumer.collect_commands(domains)
+    if is_nil(guild) do
+      Logger.warning("Cannot register commands: guild is nil")
+      :ok
+    else
+      case AshDiscord.Consumer.Info.ash_discord_consumer_domains(consumer) do
+        {:ok, domains} ->
+          commands = AshDiscord.Consumer.collect_commands(domains)
 
-        guild_commands =
-          commands
-          |> Enum.filter(&(&1.scope == :guild))
-          |> Enum.map(&AshDiscord.Consumer.to_discord_command/1)
+          guild_commands =
+            commands
+            |> Enum.filter(&(&1.scope == :guild))
+            |> Enum.map(&AshDiscord.Consumer.to_discord_command/1)
 
-        case Nostrum.Api.ApplicationCommand.bulk_overwrite_guild_commands(
-               guild.id,
-               guild_commands
-             ) do
-          {:ok, _} ->
-            Logger.info("Registered #{length(guild_commands)} guild command(s) for #{guild.name}")
+          case Nostrum.Api.ApplicationCommand.bulk_overwrite_guild_commands(
+                 guild.id,
+                 guild_commands
+               ) do
+            {:ok, _} ->
+              Logger.info(
+                "Registered #{length(guild_commands)} guild command(s) for #{guild.name}"
+              )
 
-          {:error, error} ->
-            Logger.error("Failed to register guild commands for #{guild.name}: #{inspect(error)}")
-        end
+            {:error, error} ->
+              Logger.error(
+                "Failed to register guild commands for #{guild.name}: #{inspect(error)}"
+              )
+          end
 
-      _ ->
-        :ok
+        _ ->
+          :ok
+      end
     end
   end
 
@@ -75,12 +87,15 @@ defmodule AshDiscord.Consumer.Handler.Guild do
       ) do
     case unavailable do
       unavailable when unavailable in [nil, false] ->
-        Handler.invoke_configured_action(
-          :GUILD_DELETE,
-          %{discord_id: old_guild.id},
-          %{},
-          context
-        )
+        case Handler.invoke_configured_action(
+               :GUILD_DELETE,
+               %{discord_id: old_guild.id},
+               %{},
+               context
+             ) do
+          {:ok, _guild} -> :ok
+          {:error, error} -> {:error, error}
+        end
 
       true ->
         # Temporary unavailability - guild still exists but bot can't access it

@@ -16,7 +16,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.RoleTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Role,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}}
       }
 
       {:ok, role_payload} = Payloads.Role.new(role_data)
@@ -54,7 +55,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.RoleTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Role,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}}
       }
 
       {:ok, old_role_payload} = Payloads.Role.new(old_role)
@@ -108,7 +110,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.RoleTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Role,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}}
       }
 
       guild_role_delete = %Payloads.GuildRoleDelete{
@@ -136,7 +139,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.RoleTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Role,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}}
       }
 
       {:ok, role_payload} = Payloads.Role.new(role_data)

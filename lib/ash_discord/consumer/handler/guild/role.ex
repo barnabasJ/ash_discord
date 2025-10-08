@@ -1,7 +1,7 @@
 defmodule AshDiscord.Consumer.Handler.Guild.Role do
-  require Ash.Query
   require Logger
 
+  alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 
   @spec create(
@@ -10,18 +10,13 @@ defmodule AshDiscord.Consumer.Handler.Guild.Role do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def create(%Payloads.GuildRoleCreate{guild_id: guild_id, role: role}, _ws_state, context) do
-    context.resource
-    |> Ash.Changeset.for_create(:from_discord, %{
-      data: role,
-      identity: %{role_id: role.id, guild_id: guild_id}
-    })
-    |> Ash.Changeset.set_context(%{
-      private: %{ash_discord?: true},
-      shared: %{private: %{ash_discord?: true}}
-    })
-    |> Ash.create()
-    |> case do
-      {:ok, _role_record} -> :ok
+    case Handler.invoke_configured_action(
+           :GUILD_ROLE_CREATE,
+           %{discord_id: role.id, guild_id: guild_id},
+           %{data: role, identity: %{role_id: role.id, guild_id: guild_id}},
+           context
+         ) do
+      {:ok, _} -> :ok
       {:error, _error} = error -> error
     end
   end
@@ -32,18 +27,13 @@ defmodule AshDiscord.Consumer.Handler.Guild.Role do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def update(%Payloads.GuildRoleUpdate{guild_id: guild_id, new_role: role}, _ws_state, context) do
-    context.resource
-    |> Ash.Changeset.for_create(:from_discord, %{
-      data: role,
-      identity: %{role_id: role.id, guild_id: guild_id}
-    })
-    |> Ash.Changeset.set_context(%{
-      private: %{ash_discord?: true},
-      shared: %{private: %{ash_discord?: true}}
-    })
-    |> Ash.create()
-    |> case do
-      {:ok, _role_record} -> :ok
+    case Handler.invoke_configured_action(
+           :GUILD_ROLE_UPDATE,
+           %{discord_id: role.id, guild_id: guild_id},
+           %{data: role, identity: %{role_id: role.id, guild_id: guild_id}},
+           context
+         ) do
+      {:ok, _} -> :ok
       {:error, _error} = error -> error
     end
   end
@@ -54,21 +44,14 @@ defmodule AshDiscord.Consumer.Handler.Guild.Role do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def delete(%Payloads.GuildRoleDelete{guild_id: guild_id, role: role}, _ws_state, context) do
-    query =
-      context.resource
-      |> Ash.Query.filter(discord_id == ^role.id and guild_id == ^guild_id)
-
-    case Ash.bulk_destroy(query, :destroy, %{},
-           context: %{
-             private: %{ash_discord?: true},
-             shared: %{private: %{ash_discord?: true}}
-           }
+    case Handler.invoke_configured_action(
+           :GUILD_ROLE_DELETE,
+           %{discord_id: role.id, guild_id: guild_id},
+           %{},
+           context
          ) do
-      %Ash.BulkResult{status: :success} ->
-        :ok
-
-      result ->
-        {:error, result}
+      {:ok, _} -> :ok
+      {:error, error} -> {:error, error}
     end
   end
 end

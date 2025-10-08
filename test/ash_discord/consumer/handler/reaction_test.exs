@@ -43,10 +43,10 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
       assert length(reactions) == 1
 
       created_reaction = hd(reactions)
-      assert created_reaction.user_id == user_id
-      assert created_reaction.message_id == message_id
-      assert created_reaction.channel_id == channel_id
-      assert created_reaction.guild_id == guild_id
+      assert created_reaction.user_discord_id == user_id
+      assert created_reaction.message_discord_id == message_id
+      assert created_reaction.channel_discord_id == channel_id
+      assert created_reaction.guild_discord_id == guild_id
       assert created_reaction.emoji_name == "👍"
       assert created_reaction.emoji_id == nil
     end
@@ -385,7 +385,7 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
       # Verify only message2 reaction remains
       reactions_after = TestApp.Discord.MessageReaction.read!()
       assert length(reactions_after) == 1
-      assert hd(reactions_after).message_id == message2_id
+      assert hd(reactions_after).message_discord_id == message2_id
     end
 
     test "handles empty message gracefully" do

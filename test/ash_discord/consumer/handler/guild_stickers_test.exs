@@ -34,7 +34,7 @@ defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
       }
 
       assert :ok =
-               Stickers.update(
+               GuildStickers.update(
                  guild_stickers_update,
                  %Nostrum.Struct.WSState{},
                  context
@@ -98,7 +98,7 @@ defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
       }
 
       assert :ok =
-               Stickers.update(
+               GuildStickers.update(
                  guild_stickers_update,
                  %Nostrum.Struct.WSState{},
                  context
@@ -135,7 +135,7 @@ defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
 
       # Should not crash with empty list
       assert :ok =
-               Stickers.update(
+               GuildStickers.update(
                  guild_stickers_update,
                  %Nostrum.Struct.WSState{},
                  context
@@ -179,7 +179,7 @@ defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
       }
 
       assert :ok =
-               Stickers.update(
+               GuildStickers.update(
                  guild_stickers_update,
                  %Nostrum.Struct.WSState{},
                  context

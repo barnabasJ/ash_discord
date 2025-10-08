@@ -47,7 +47,7 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
       }
 
       assert :ok =
-               Member.add(
+               GuildMember.add(
                  TestConsumer,
                  guild_member_add,
                  %Nostrum.Struct.WSState{},
@@ -101,7 +101,7 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
       }
 
       assert :ok =
-               Member.update(
+               GuildMember.update(
                  TestConsumer,
                  guild_member_update,
                  %Nostrum.Struct.WSState{},
@@ -171,7 +171,7 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
       }
 
       assert :ok =
-               Member.remove(
+               GuildMember.remove(
                  TestConsumer,
                  guild_member_remove,
                  %Nostrum.Struct.WSState{},
@@ -209,7 +209,7 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
 
       # Should not crash when member doesn't exist
       assert :ok =
-               Member.remove(
+               GuildMember.remove(
                  TestConsumer,
                  guild_member_remove,
                  %Nostrum.Struct.WSState{},
@@ -238,7 +238,7 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
       }
 
       assert :ok =
-               Member.chunk(
+               GuildMember.chunk(
                  TestConsumer,
                  chunk_event,
                  %Nostrum.Struct.WSState{},
@@ -284,7 +284,7 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
       }
 
       assert :ok =
-               Member.chunk(
+               GuildMember.chunk(
                  TestConsumer,
                  chunk_event,
                  %Nostrum.Struct.WSState{},

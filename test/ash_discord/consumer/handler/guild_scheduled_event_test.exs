@@ -30,7 +30,7 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
         status: 1,
         entity_type: 3,
         entity_id: nil,
-        entity_metadata: %Nostrum.Struct.Guild.ScheduledEvent.EntityMetadata{
+        entity_metadata: %Nostrum.Struct.Guild.GuildScheduledEvent.EntityMetadata{
           location: "Discord HQ"
         },
         creator: nil,
@@ -48,7 +48,7 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
       }
 
       assert :ok =
-               ScheduledEvent.create(
+               GuildScheduledEvent.create(
                  TestConsumer,
                  event_payload,
                  %Nostrum.Struct.WSState{},
@@ -93,7 +93,7 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
         status: 1,
         entity_type: 3,
         entity_id: nil,
-        entity_metadata: %Nostrum.Struct.Guild.ScheduledEvent.EntityMetadata{
+        entity_metadata: %Nostrum.Struct.Guild.GuildScheduledEvent.EntityMetadata{
           location: "Old Location"
         },
         creator: nil,
@@ -112,7 +112,7 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
 
       # Create the event
       :ok =
-        ScheduledEvent.create(
+        GuildScheduledEvent.create(
           TestConsumer,
           initial_payload,
           %Nostrum.Struct.WSState{},
@@ -133,7 +133,7 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
         status: 2,
         entity_type: 3,
         entity_id: nil,
-        entity_metadata: %Nostrum.Struct.Guild.ScheduledEvent.EntityMetadata{
+        entity_metadata: %Nostrum.Struct.Guild.GuildScheduledEvent.EntityMetadata{
           location: "New Location"
         },
         creator: nil,
@@ -143,7 +143,7 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
       {:ok, updated_payload} = Payloads.GuildScheduledEvent.new(updated_event)
 
       assert :ok =
-               ScheduledEvent.update(
+               GuildScheduledEvent.update(
                  TestConsumer,
                  updated_payload,
                  %Nostrum.Struct.WSState{},
@@ -203,7 +203,7 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
       }
 
       :ok =
-        ScheduledEvent.create(
+        GuildScheduledEvent.create(
           TestConsumer,
           event_payload,
           %Nostrum.Struct.WSState{},
@@ -220,7 +220,7 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
 
       # Delete the event
       assert :ok =
-               ScheduledEvent.delete(
+               GuildScheduledEvent.delete(
                  TestConsumer,
                  event_payload,
                  %Nostrum.Struct.WSState{},
@@ -268,7 +268,7 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
 
       # Deleting non-existent event should succeed (idempotent)
       assert :ok =
-               ScheduledEvent.delete(
+               GuildScheduledEvent.delete(
                  TestConsumer,
                  event_payload,
                  %Nostrum.Struct.WSState{},
@@ -294,7 +294,7 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
       }
 
       assert :ok =
-               ScheduledEvent.user_add(
+               GuildScheduledEvent.user_add(
                  TestConsumer,
                  event_add,
                  %Nostrum.Struct.WSState{},
@@ -320,7 +320,7 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
       }
 
       assert :ok =
-               ScheduledEvent.user_remove(
+               GuildScheduledEvent.user_remove(
                  TestConsumer,
                  event_remove,
                  %Nostrum.Struct.WSState{},

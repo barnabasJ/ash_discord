@@ -31,7 +31,7 @@ defmodule AshDiscord.Consumer.Handler.GuildEmojisTest do
       }
 
       assert :ok =
-               Emojis.update(
+               GuildEmojis.update(
                  guild_emojis_update,
                  %Nostrum.Struct.WSState{},
                  context
@@ -92,7 +92,7 @@ defmodule AshDiscord.Consumer.Handler.GuildEmojisTest do
       }
 
       assert :ok =
-               Emojis.update(
+               GuildEmojis.update(
                  guild_emojis_update,
                  %Nostrum.Struct.WSState{},
                  context
@@ -126,7 +126,7 @@ defmodule AshDiscord.Consumer.Handler.GuildEmojisTest do
 
       # Should not crash with empty list
       assert :ok =
-               Emojis.update(
+               GuildEmojis.update(
                  guild_emojis_update,
                  %Nostrum.Struct.WSState{},
                  context
@@ -167,7 +167,7 @@ defmodule AshDiscord.Consumer.Handler.GuildEmojisTest do
       }
 
       assert :ok =
-               Emojis.update(
+               GuildEmojis.update(
                  guild_emojis_update,
                  %Nostrum.Struct.WSState{},
                  context

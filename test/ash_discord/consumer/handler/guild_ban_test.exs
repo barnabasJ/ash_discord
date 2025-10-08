@@ -28,7 +28,7 @@ defmodule AshDiscord.Consumer.Handler.GuildBanTest do
       }
 
       assert :ok =
-               Ban.add(
+               GuildBan.add(
                  guild_ban_add,
                  %Nostrum.Struct.WSState{},
                  context
@@ -65,7 +65,7 @@ defmodule AshDiscord.Consumer.Handler.GuildBanTest do
 
       # Create ban first time
       assert :ok =
-               Ban.add(
+               GuildBan.add(
                  guild_ban_add,
                  %Nostrum.Struct.WSState{},
                  context
@@ -73,7 +73,7 @@ defmodule AshDiscord.Consumer.Handler.GuildBanTest do
 
       # Create again (should upsert)
       assert :ok =
-               Ban.add(
+               GuildBan.add(
                  guild_ban_add,
                  %Nostrum.Struct.WSState{},
                  context
@@ -118,7 +118,7 @@ defmodule AshDiscord.Consumer.Handler.GuildBanTest do
       }
 
       assert :ok =
-               Ban.remove(
+               GuildBan.remove(
                  guild_ban_remove,
                  %Nostrum.Struct.WSState{},
                  context
@@ -150,7 +150,7 @@ defmodule AshDiscord.Consumer.Handler.GuildBanTest do
 
       # Should not crash when ban doesn't exist
       assert :ok =
-               Ban.remove(
+               GuildBan.remove(
                  guild_ban_remove,
                  %Nostrum.Struct.WSState{},
                  context
@@ -199,7 +199,7 @@ defmodule AshDiscord.Consumer.Handler.GuildBanTest do
       }
 
       assert :ok =
-               Ban.remove(
+               GuildBan.remove(
                  guild_ban_remove,
                  %Nostrum.Struct.WSState{},
                  context

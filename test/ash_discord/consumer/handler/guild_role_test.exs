@@ -20,7 +20,7 @@ defmodule AshDiscord.Consumer.Handler.GuildRoleTest do
         context: %{private: %{ash_discord?: true}}
       }
 
-      {:ok, role_payload} = Payloads.Role.new(role_data)
+      {:ok, role_payload} = Payloads.GuildRole.new(role_data)
 
       guild_role_create = %Payloads.GuildRoleCreate{
         guild_id: guild_id,
@@ -28,14 +28,14 @@ defmodule AshDiscord.Consumer.Handler.GuildRoleTest do
       }
 
       assert :ok =
-               Role.create(
+               GuildRole.create(
                  guild_role_create,
                  %Nostrum.Struct.WSState{},
                  context
                )
 
       # Verify role was created in database
-      roles = TestApp.Discord.Role.read!()
+      roles = TestApp.Discord.GuildRole.read!()
       assert length(roles) == 1
 
       created_role = hd(roles)
@@ -59,8 +59,8 @@ defmodule AshDiscord.Consumer.Handler.GuildRoleTest do
         context: %{private: %{ash_discord?: true}}
       }
 
-      {:ok, old_role_payload} = Payloads.Role.new(old_role)
-      {:ok, new_role_payload} = Payloads.Role.new(new_role)
+      {:ok, old_role_payload} = Payloads.GuildRole.new(old_role)
+      {:ok, new_role_payload} = Payloads.GuildRole.new(new_role)
 
       guild_role_update = %Payloads.GuildRoleUpdate{
         guild_id: guild_id,
@@ -69,14 +69,14 @@ defmodule AshDiscord.Consumer.Handler.GuildRoleTest do
       }
 
       assert :ok =
-               Role.update(
+               GuildRole.update(
                  guild_role_update,
                  %Nostrum.Struct.WSState{},
                  context
                )
 
       # Verify role was updated (upserted) in database
-      roles = TestApp.Discord.Role.read!()
+      roles = TestApp.Discord.GuildRole.read!()
       assert length(roles) == 1
 
       updated_role = hd(roles)
@@ -92,7 +92,7 @@ defmodule AshDiscord.Consumer.Handler.GuildRoleTest do
       role_data = role()
 
       # First create the role
-      {:ok, role_payload} = Payloads.Role.new(role_data)
+      {:ok, role_payload} = Payloads.GuildRole.new(role_data)
 
       {:ok, _created} =
         TestApp.Discord.Role
@@ -103,7 +103,7 @@ defmodule AshDiscord.Consumer.Handler.GuildRoleTest do
         |> Ash.create()
 
       # Verify role exists
-      roles_before = TestApp.Discord.Role.read!()
+      roles_before = TestApp.Discord.GuildRole.read!()
       assert length(roles_before) == 1
 
       context = %AshDiscord.Context{
@@ -120,14 +120,14 @@ defmodule AshDiscord.Consumer.Handler.GuildRoleTest do
       }
 
       assert :ok =
-               Role.delete(
+               GuildRole.delete(
                  guild_role_delete,
                  %Nostrum.Struct.WSState{},
                  context
                )
 
       # Verify role was deleted from database
-      roles_after = TestApp.Discord.Role.read!()
+      roles_after = TestApp.Discord.GuildRole.read!()
       assert length(roles_after) == 0
     end
 
@@ -143,7 +143,7 @@ defmodule AshDiscord.Consumer.Handler.GuildRoleTest do
         context: %{private: %{ash_discord?: true}}
       }
 
-      {:ok, role_payload} = Payloads.Role.new(role_data)
+      {:ok, role_payload} = Payloads.GuildRole.new(role_data)
 
       guild_role_delete = %Payloads.GuildRoleDelete{
         guild_id: guild_id,
@@ -152,7 +152,7 @@ defmodule AshDiscord.Consumer.Handler.GuildRoleTest do
 
       # Should not crash when role doesn't exist
       assert :ok =
-               Role.delete(
+               GuildRole.delete(
                  guild_role_delete,
                  %Nostrum.Struct.WSState{},
                  context

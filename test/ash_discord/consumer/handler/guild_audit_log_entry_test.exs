@@ -32,7 +32,7 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
       }
 
       assert :ok =
-               Entry.create(
+               GuildAuditLogEntry.create(
                  audit_log_entry_event,
                  %Nostrum.Struct.WSState{},
                  context
@@ -80,7 +80,7 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
 
       # Create entry first time
       assert :ok =
-               Entry.create(
+               GuildAuditLogEntry.create(
                  audit_log_entry_event,
                  %Nostrum.Struct.WSState{},
                  context
@@ -90,7 +90,7 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
       updated_event = %{audit_log_entry_event | reason: "Updated reason"}
 
       assert :ok =
-               Entry.create(
+               GuildAuditLogEntry.create(
                  updated_event,
                  %Nostrum.Struct.WSState{},
                  context
@@ -125,7 +125,7 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
       }
 
       assert :ok =
-               Entry.create(
+               GuildAuditLogEntry.create(
                  audit_log_entry_event,
                  %Nostrum.Struct.WSState{},
                  context
@@ -171,7 +171,7 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
         }
 
         assert :ok =
-                 Entry.create(
+                 GuildAuditLogEntry.create(
                    audit_log_entry_event,
                    %Nostrum.Struct.WSState{},
                    context

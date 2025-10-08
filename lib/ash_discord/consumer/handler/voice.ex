@@ -1,4 +1,5 @@
 defmodule AshDiscord.Consumer.Handler.Voice do
+  alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 
   @spec update(
@@ -7,15 +8,13 @@ defmodule AshDiscord.Consumer.Handler.Voice do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def update(voice_state, _ws_state, context) do
-    context.resource
-    |> Ash.Changeset.for_create(:from_discord, %{data: voice_state})
-    |> Ash.Changeset.set_context(%{
-      private: %{ash_discord?: true},
-      shared: %{private: %{ash_discord?: true}}
-    })
-    |> Ash.create()
-    |> case do
-      {:ok, _voice_state_record} -> :ok
+    case Handler.invoke_configured_action(
+           :VOICE_STATE_UPDATE,
+           %{user_id: voice_state.user_id, guild_id: voice_state.guild_id},
+           %{data: voice_state},
+           context
+         ) do
+      {:ok, _} -> :ok
       {:error, _error} = error -> error
     end
   end
@@ -26,15 +25,13 @@ defmodule AshDiscord.Consumer.Handler.Voice do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def ready(voice_ready, _ws_state, context) do
-    context.resource
-    |> Ash.Changeset.for_create(:from_discord, %{data: voice_ready})
-    |> Ash.Changeset.set_context(%{
-      private: %{ash_discord?: true},
-      shared: %{private: %{ash_discord?: true}}
-    })
-    |> Ash.create()
-    |> case do
-      {:ok, _voice_ready_record} -> :ok
+    case Handler.invoke_configured_action(
+           :VOICE_READY,
+           %{ssrc: voice_ready.ssrc},
+           %{data: voice_ready},
+           context
+         ) do
+      {:ok, _} -> :ok
       {:error, _error} = error -> error
     end
   end
@@ -45,15 +42,13 @@ defmodule AshDiscord.Consumer.Handler.Voice do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def speaking(voice_speaking_update, _ws_state, context) do
-    context.resource
-    |> Ash.Changeset.for_create(:from_discord, %{data: voice_speaking_update})
-    |> Ash.Changeset.set_context(%{
-      private: %{ash_discord?: true},
-      shared: %{private: %{ash_discord?: true}}
-    })
-    |> Ash.create()
-    |> case do
-      {:ok, _voice_speaking_update_record} -> :ok
+    case Handler.invoke_configured_action(
+           :VOICE_SPEAKING_UPDATE,
+           %{user_id: voice_speaking_update.user_id, ssrc: voice_speaking_update.ssrc},
+           %{data: voice_speaking_update},
+           context
+         ) do
+      {:ok, _} -> :ok
       {:error, _error} = error -> error
     end
   end
@@ -73,15 +68,13 @@ defmodule AshDiscord.Consumer.Handler.Voice do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def server(voice_server_update, _ws_state, context) do
-    context.resource
-    |> Ash.Changeset.for_create(:from_discord, %{data: voice_server_update})
-    |> Ash.Changeset.set_context(%{
-      private: %{ash_discord?: true},
-      shared: %{private: %{ash_discord?: true}}
-    })
-    |> Ash.create()
-    |> case do
-      {:ok, _voice_server_update_record} -> :ok
+    case Handler.invoke_configured_action(
+           :VOICE_SERVER_UPDATE,
+           %{guild_id: voice_server_update.guild_id},
+           %{data: voice_server_update},
+           context
+         ) do
+      {:ok, _} -> :ok
       {:error, _error} = error -> error
     end
   end

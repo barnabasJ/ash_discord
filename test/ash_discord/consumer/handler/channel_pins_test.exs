@@ -1,9 +1,9 @@
-defmodule AshDiscord.Consumer.Handler.Channel.PinsTest do
+defmodule AshDiscord.Consumer.Handler.ChannelPinsTest do
   use TestApp.DataCase, async: true
 
   import AshDiscord.Test.Generators
 
-  alias AshDiscord.Consumer.Handler.Channel.Pins
+  alias AshDiscord.Consumer.Handler.ChannelPins
   alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 
@@ -21,7 +21,7 @@ defmodule AshDiscord.Consumer.Handler.Channel.PinsTest do
 
       {:ok, pins_payload} = Payloads.ChannelPinsUpdateEvent.new(pins_data)
 
-      assert :ok = Pins.update(pins_payload, %Nostrum.Struct.WSState{}, context)
+      assert :ok = ChannelPins.update(pins_payload, %Nostrum.Struct.WSState{}, context)
 
       # Verify channel pins update was created in database
       pins_updates = TestApp.Discord.ChannelPinsUpdate.read!()
@@ -57,7 +57,7 @@ defmodule AshDiscord.Consumer.Handler.Channel.PinsTest do
         })
 
       {:ok, first_payload} = Payloads.ChannelPinsUpdateEvent.new(first_pins_data)
-      assert :ok = Pins.update(first_payload, %Nostrum.Struct.WSState{}, context)
+      assert :ok = ChannelPins.update(first_payload, %Nostrum.Struct.WSState{}, context)
 
       # Second update with new timestamp
       second_pins_data =
@@ -68,7 +68,7 @@ defmodule AshDiscord.Consumer.Handler.Channel.PinsTest do
         })
 
       {:ok, second_payload} = Payloads.ChannelPinsUpdateEvent.new(second_pins_data)
-      assert :ok = Pins.update(second_payload, %Nostrum.Struct.WSState{}, context)
+      assert :ok = ChannelPins.update(second_payload, %Nostrum.Struct.WSState{}, context)
 
       # Verify only one record exists with updated timestamp
       pins_updates = TestApp.Discord.ChannelPinsUpdate.read!()
@@ -96,7 +96,7 @@ defmodule AshDiscord.Consumer.Handler.Channel.PinsTest do
 
       {:ok, pins_payload} = Payloads.ChannelPinsUpdateEvent.new(pins_data)
 
-      assert :ok = Pins.update(pins_payload, %Nostrum.Struct.WSState{}, context)
+      assert :ok = ChannelPins.update(pins_payload, %Nostrum.Struct.WSState{}, context)
 
       # Verify channel pins update was created
       pins_updates = TestApp.Discord.ChannelPinsUpdate.read!()

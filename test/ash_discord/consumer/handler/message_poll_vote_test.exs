@@ -1,9 +1,9 @@
-defmodule AshDiscord.Consumer.Handler.Message.Poll.VoteTest do
+defmodule AshDiscord.Consumer.Handler.MessagePollVoteTest do
   use TestApp.DataCase, async: true
 
   import AshDiscord.Test.Generators
 
-  alias AshDiscord.Consumer.Handler.Message.Poll.Vote
+  alias AshDiscord.Consumer.Handler.MessagePollVote
   alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 
@@ -21,7 +21,7 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.VoteTest do
 
       {:ok, poll_vote_payload} = Payloads.PollVoteChangeEvent.new(poll_vote_event)
 
-      assert :ok = Vote.add(poll_vote_payload, %Nostrum.Struct.WSState{}, context)
+      assert :ok = MessagePollVote.add(poll_vote_payload, %Nostrum.Struct.WSState{}, context)
 
       poll_votes = TestApp.Discord.MessagePollVote.read!()
       assert length(poll_votes) == 1
@@ -46,8 +46,8 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.VoteTest do
       {:ok, poll_vote_payload} = Payloads.PollVoteChangeEvent.new(poll_vote_event)
 
       # Add the same vote twice
-      assert :ok = Vote.add(poll_vote_payload, %Nostrum.Struct.WSState{}, context)
-      assert :ok = Vote.add(poll_vote_payload, %Nostrum.Struct.WSState{}, context)
+      assert :ok = MessagePollVote.add(poll_vote_payload, %Nostrum.Struct.WSState{}, context)
+      assert :ok = MessagePollVote.add(poll_vote_payload, %Nostrum.Struct.WSState{}, context)
 
       poll_votes = TestApp.Discord.MessagePollVote.read!()
       # Should only have one vote due to upsert
@@ -72,8 +72,8 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.VoteTest do
       {:ok, payload1} = Payloads.PollVoteChangeEvent.new(vote1)
       {:ok, payload2} = Payloads.PollVoteChangeEvent.new(vote2)
 
-      assert :ok = Vote.add(payload1, %Nostrum.Struct.WSState{}, context)
-      assert :ok = Vote.add(payload2, %Nostrum.Struct.WSState{}, context)
+      assert :ok = MessagePollVote.add(payload1, %Nostrum.Struct.WSState{}, context)
+      assert :ok = MessagePollVote.add(payload2, %Nostrum.Struct.WSState{}, context)
 
       poll_votes = TestApp.Discord.MessagePollVote.read!()
       assert length(poll_votes) == 2
@@ -108,7 +108,7 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.VoteTest do
 
       {:ok, remove_payload} = Payloads.PollVoteChangeEvent.new(remove_event)
 
-      assert :ok = Vote.remove(remove_payload, %Nostrum.Struct.WSState{}, context)
+      assert :ok = MessagePollVote.remove(remove_payload, %Nostrum.Struct.WSState{}, context)
 
       votes_after = TestApp.Discord.MessagePollVote.read!()
       assert length(votes_after) == 0
@@ -148,7 +148,7 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.VoteTest do
 
       {:ok, remove_payload} = Payloads.PollVoteChangeEvent.new(remove_event)
 
-      assert :ok = Vote.remove(remove_payload, %Nostrum.Struct.WSState{}, context)
+      assert :ok = MessagePollVote.remove(remove_payload, %Nostrum.Struct.WSState{}, context)
 
       votes_after = TestApp.Discord.MessagePollVote.read!()
       assert length(votes_after) == 1
@@ -171,7 +171,7 @@ defmodule AshDiscord.Consumer.Handler.Message.Poll.VoteTest do
       {:ok, poll_vote_payload} = Payloads.PollVoteChangeEvent.new(poll_vote_event)
 
       # Should not error when trying to remove non-existent vote
-      assert :ok = Vote.remove(poll_vote_payload, %Nostrum.Struct.WSState{}, context)
+      assert :ok = MessagePollVote.remove(poll_vote_payload, %Nostrum.Struct.WSState{}, context)
     end
   end
 end

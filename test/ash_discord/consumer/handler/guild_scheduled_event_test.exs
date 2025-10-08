@@ -30,7 +30,7 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
         status: 1,
         entity_type: 3,
         entity_id: nil,
-        entity_metadata: %Nostrum.Struct.Guild.GuildScheduledEvent.EntityMetadata{
+        entity_metadata: %Nostrum.Struct.Guild.ScheduledEvent.EntityMetadata{
           location: "Discord HQ"
         },
         creator: nil,
@@ -93,7 +93,7 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
         status: 1,
         entity_type: 3,
         entity_id: nil,
-        entity_metadata: %Nostrum.Struct.Guild.GuildScheduledEvent.EntityMetadata{
+        entity_metadata: %Nostrum.Struct.Guild.ScheduledEvent.EntityMetadata{
           location: "Old Location"
         },
         creator: nil,
@@ -133,7 +133,7 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
         status: 2,
         entity_type: 3,
         entity_id: nil,
-        entity_metadata: %Nostrum.Struct.Guild.GuildScheduledEvent.EntityMetadata{
+        entity_metadata: %Nostrum.Struct.Guild.ScheduledEvent.EntityMetadata{
           location: "New Location"
         },
         creator: nil,

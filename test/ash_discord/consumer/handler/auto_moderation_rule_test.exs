@@ -1,9 +1,9 @@
-defmodule AshDiscord.Consumer.Handler.Auto.Moderation.RuleTest do
+defmodule AshDiscord.Consumer.Handler.AutoModerationRuleTest do
   use TestApp.DataCase, async: true
 
   import AshDiscord.Test.Generators
 
-  alias AshDiscord.Consumer.Handler.Auto.Moderation.Rule
+  alias AshDiscord.Consumer.Handler.AutoModerationRule
   alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 
@@ -24,7 +24,7 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.RuleTest do
 
       {:ok, rule_payload} = Payloads.AutoModerationRule.new(rule_data)
 
-      assert :ok = Rule.create(rule_payload, %Nostrum.Struct.WSState{}, context)
+      assert :ok = AutoModerationRule.create(rule_payload, %Nostrum.Struct.WSState{}, context)
 
       # Verify rule was created in database
       rules = TestApp.Discord.AutoModerationRule.read!()
@@ -60,7 +60,7 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.RuleTest do
 
       {:ok, new_rule_payload} = Payloads.AutoModerationRule.new(new_rule)
 
-      assert :ok = Rule.update(new_rule_payload, %Nostrum.Struct.WSState{}, context)
+      assert :ok = AutoModerationRule.update(new_rule_payload, %Nostrum.Struct.WSState{}, context)
 
       # Verify rule was updated (upserted) in database
       rules = TestApp.Discord.AutoModerationRule.read!()
@@ -102,7 +102,7 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.RuleTest do
         }
       }
 
-      assert :ok = Rule.delete(rule_payload, %Nostrum.Struct.WSState{}, context)
+      assert :ok = AutoModerationRule.delete(rule_payload, %Nostrum.Struct.WSState{}, context)
 
       # Verify rule was deleted from database
       rules_after = TestApp.Discord.AutoModerationRule.read!()
@@ -126,7 +126,7 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.RuleTest do
       {:ok, rule_payload} = Payloads.AutoModerationRule.new(rule_data)
 
       # Should not crash when rule doesn't exist
-      assert :ok = Rule.delete(rule_payload, %Nostrum.Struct.WSState{}, context)
+      assert :ok = AutoModerationRule.delete(rule_payload, %Nostrum.Struct.WSState{}, context)
     end
   end
 
@@ -147,7 +147,7 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.RuleTest do
 
       {:ok, execute_payload} = Payloads.AutoModerationRuleExecute.new(execute_data)
 
-      assert :ok = Rule.execute(execute_payload, %Nostrum.Struct.WSState{}, context)
+      assert :ok = AutoModerationRule.execute(execute_payload, %Nostrum.Struct.WSState{}, context)
 
       # Verify execution event was created in database
       executions = TestApp.Discord.AutoModerationRuleExecute.read!()
@@ -185,7 +185,7 @@ defmodule AshDiscord.Consumer.Handler.Auto.Moderation.RuleTest do
 
       {:ok, execute_payload} = Payloads.AutoModerationRuleExecute.new(execute_data)
 
-      assert :ok = Rule.execute(execute_payload, %Nostrum.Struct.WSState{}, context)
+      assert :ok = AutoModerationRule.execute(execute_payload, %Nostrum.Struct.WSState{}, context)
 
       # Verify execution event was created with nil fields
       executions = TestApp.Discord.AutoModerationRuleExecute.read!()

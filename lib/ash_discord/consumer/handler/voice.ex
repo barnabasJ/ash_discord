@@ -61,8 +61,16 @@ defmodule AshDiscord.Consumer.Handler.Voice do
           ws_state :: Nostrum.Struct.VoiceWSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def incoming(_data, _ws_state, _context) do
-    :ok
+  def incoming(data, _ws_state, context) do
+    case Handler.invoke_configured_action(
+           :VOICE_INCOMING_PACKET,
+           %{},
+           %{data: data},
+           context
+         ) do
+      {:ok, _} -> :ok
+      {:error, error} -> {:error, error}
+    end
   end
 
   @spec server(

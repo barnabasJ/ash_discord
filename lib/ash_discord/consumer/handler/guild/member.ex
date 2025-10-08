@@ -16,29 +16,21 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
         _ws_state,
         context
       ) do
-    case context.resource do
-      nil ->
+    case Handler.invoke_configured_action(
+           :GUILD_MEMBER_ADD,
+           %{guild_id: guild_id, user_id: member.user_id},
+           %{data: member, identity: %{guild_id: guild_id, user_id: user_discord_id}},
+           context
+         ) do
+      {:ok, _member} ->
         :ok
 
-      _resource ->
-        user_discord_id = member.user_id
+      {:error, error} ->
+        Logger.warning(
+          "Failed to create guild member #{user_discord_id} in guild #{guild_id}: #{inspect(error)}"
+        )
 
-        case Handler.invoke_configured_action(
-               :GUILD_MEMBER_ADD,
-               %{guild_id: guild_id, user_id: user_discord_id},
-               %{data: member, identity: %{guild_id: guild_id, user_id: user_discord_id}},
-               context
-             ) do
-          {:ok, _member} ->
-            :ok
-
-          {:error, error} ->
-            Logger.warning(
-              "Failed to create guild member #{user_discord_id} in guild #{guild_id}: #{inspect(error)}"
-            )
-
-            :ok
-        end
+        :ok
     end
   end
 
@@ -54,29 +46,21 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
         _ws_state,
         context
       ) do
-    case context.resource do
-      nil ->
+    case Handler.invoke_configured_action(
+           :GUILD_MEMBER_UPDATE,
+           %{guild_id: guild_id, user_id: member.user_id},
+           %{data: member, identity: %{guild_id: guild_id, user_id: user_discord_id}},
+           context
+         ) do
+      {:ok, _member} ->
         :ok
 
-      _resource ->
-        user_discord_id = member.user_id
+      {:error, error} ->
+        Logger.warning(
+          "Failed to update guild member #{user_discord_id} in guild #{guild_id}: #{inspect(error)}"
+        )
 
-        case Handler.invoke_configured_action(
-               :GUILD_MEMBER_UPDATE,
-               %{guild_id: guild_id, user_id: user_discord_id},
-               %{data: member, identity: %{guild_id: guild_id, user_id: user_discord_id}},
-               context
-             ) do
-          {:ok, _member} ->
-            :ok
-
-          {:error, error} ->
-            Logger.warning(
-              "Failed to update guild member #{user_discord_id} in guild #{guild_id}: #{inspect(error)}"
-            )
-
-            :ok
-        end
+        :ok
     end
   end
 
@@ -92,30 +76,22 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
         _ws_state,
         context
       ) do
-    case context.resource do
-      nil ->
+    case Handler.invoke_configured_action(
+           :GUILD_MEMBER_REMOVE,
+           %{guild_id: guild_id, user_id: member.user_id},
+           %{},
+           context
+         ) do
+      {:ok, _} ->
+        Logger.info("Deleted guild member #{user_discord_id} from guild #{guild_id}")
         :ok
 
-      _resource ->
-        user_discord_id = member.user_id
+      {:error, error} ->
+        Logger.warning(
+          "Failed to delete guild member #{user_discord_id} from guild #{guild_id}: #{inspect(error)}"
+        )
 
-        case Handler.invoke_configured_action(
-               :GUILD_MEMBER_REMOVE,
-               %{guild_id: guild_id, user_id: user_discord_id},
-               %{},
-               context
-             ) do
-          {:ok, _} ->
-            Logger.info("Deleted guild member #{user_discord_id} from guild #{guild_id}")
-            :ok
-
-          {:error, error} ->
-            Logger.warning(
-              "Failed to delete guild member #{user_discord_id} from guild #{guild_id}: #{inspect(error)}"
-            )
-
-            :ok
-        end
+        :ok
     end
   end
 

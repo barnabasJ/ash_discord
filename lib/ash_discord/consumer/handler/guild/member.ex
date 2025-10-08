@@ -119,6 +119,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.Member do
           {:ok, member_payload} ->
             user_id = member_payload.user_id
 
+            # TODO: make the handler action take in a list of members for bulk processing
             Handler.invoke_configured_action(
               :GUILD_MEMBERS_CHUNK,
               %{guild_id: guild_id, user_id: user_id},

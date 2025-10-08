@@ -15,6 +15,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.Stickers do
         context
       ) do
     # Process each sticker in the new_stickers list
+    # TODO: make the handler accept a list of stickers to reduce the number of calls
     results =
       Enum.map(stickers, fn sticker ->
         Handler.invoke_configured_action(

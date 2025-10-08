@@ -47,8 +47,8 @@ defmodule AshDiscord.Consumer.Handler.Reaction do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def remove(%Payloads.MessageReactionRemoveEvent{} = reaction_remove, _ws_state, context) do
-    user_id = reaction_remove.user_id
-    message_id = reaction_remove.message_id
+    user_discord_id = reaction_remove.user_id
+    message_discord_id = reaction_remove.message_id
     emoji_name = reaction_remove.emoji.name
     emoji_id = reaction_remove.emoji.id
 
@@ -56,7 +56,8 @@ defmodule AshDiscord.Consumer.Handler.Reaction do
     query =
       context.resource
       |> Ash.Query.filter(
-        user_id == ^user_id and message_id == ^message_id and emoji_name == ^emoji_name
+        user_discord_id == ^user_discord_id and message_discord_id == ^message_discord_id and
+          emoji_name == ^emoji_name
       )
       |> then(fn q ->
         if is_nil(emoji_id) do
@@ -97,13 +98,15 @@ defmodule AshDiscord.Consumer.Handler.Reaction do
         _ws_state,
         context
       ) do
-    message_id = reaction_remove_all.message_id
-    channel_id = reaction_remove_all.channel_id
+    message_discord_id = reaction_remove_all.message_id
+    channel_discord_id = reaction_remove_all.channel_id
 
     # Remove all reactions for this message
     query =
       context.resource
-      |> Ash.Query.filter(message_id == ^message_id and channel_id == ^channel_id)
+      |> Ash.Query.filter(
+        message_discord_id == ^message_discord_id and channel_discord_id == ^channel_discord_id
+      )
 
     case Ash.bulk_destroy(query, :destroy, %{},
            context: %{
@@ -134,8 +137,8 @@ defmodule AshDiscord.Consumer.Handler.Reaction do
         _ws_state,
         context
       ) do
-    message_id = reaction_remove_emoji.message_id
-    channel_id = reaction_remove_emoji.channel_id
+    message_discord_id = reaction_remove_emoji.message_id
+    channel_discord_id = reaction_remove_emoji.channel_id
     emoji_name = reaction_remove_emoji.emoji.name
     emoji_id = reaction_remove_emoji.emoji.id
 
@@ -143,7 +146,8 @@ defmodule AshDiscord.Consumer.Handler.Reaction do
     query =
       context.resource
       |> Ash.Query.filter(
-        message_id == ^message_id and channel_id == ^channel_id and emoji_name == ^emoji_name
+        message_discord_id == ^message_discord_id and channel_discord_id == ^channel_discord_id and
+          emoji_name == ^emoji_name
       )
       |> then(fn q ->
         if is_nil(emoji_id) do

@@ -45,7 +45,7 @@ defmodule AshDiscord.MixProject do
 
       # Development and testing
       {:usage_rules, "~> 0.1", only: [:dev]},
-      {:faker, "~> 0.18", only: [:test]},
+      {:faker, "~> 0.18", only: [:dev, :test]},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test]},
       {:igniter, "~> 0.6", only: [:dev, :test]},
       {:sourceror, "~> 1.0", only: [:dev, :test], runtime: false},

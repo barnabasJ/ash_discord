@@ -29,7 +29,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.Integrations do
 
     case Handler.invoke_configured_action(
            :GUILD_INTEGRATIONS_UPDATE,
-           guild_id,
+           %{discord_id: guild_id},
            %{guild_id: guild_id, data: event},
            context
          ) do

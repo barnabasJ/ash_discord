@@ -17,7 +17,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.Audit.Log.EntryTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildAuditLogEntry,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       audit_log_entry_event = %Payloads.GuildAuditLogEntryCreateEvent{
@@ -63,7 +64,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.Audit.Log.EntryTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildAuditLogEntry,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       audit_log_entry_event = %Payloads.GuildAuditLogEntryCreateEvent{
@@ -108,7 +110,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.Audit.Log.EntryTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildAuditLogEntry,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       audit_log_entry_event = %Payloads.GuildAuditLogEntryCreateEvent{
@@ -147,7 +150,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.Audit.Log.EntryTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildAuditLogEntry,
         guild: nil,
-        user: nil
+        user: nil,
+        context: nil
       }
 
       # Create entries with different action types

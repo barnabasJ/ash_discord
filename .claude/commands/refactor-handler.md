@@ -424,7 +424,7 @@ context = %AshDiscord.Context{
   resource: MyResource,
   guild: nil,
   user: nil,
-  context: nil  # Or %{private: %{ash_discord?: true}, shared: %{...}}
+  context: %{private: %{ash_discord?: true}, shared: %{...}}
 }
 
 # Or let build_context/3 handle it
@@ -504,7 +504,7 @@ context = %AshDiscord.Context{
   resource: TestApp.Discord.Guild,
   guild: nil,
   user: nil,
-  context: nil  # Add this field
+  context: %{private: %{ash_discord?: true}, shared: %{...}}
 }
 ```
 
@@ -708,4 +708,5 @@ If you encounter patterns not covered in this guide:
 
 ---
 
-**Last Updated:** Based on commits through `17d7155` (2025-10-07)
+Follow this guide to refactor the [$ARGUMENTS] handler to use the new
+`invoke_configured_action/4` pattern for cleaner, more maintainable code!

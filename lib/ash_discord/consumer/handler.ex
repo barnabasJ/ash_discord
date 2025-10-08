@@ -277,17 +277,20 @@ defmodule AshDiscord.Consumer.Handler do
           opts :: keyword()
         ) :: {:ok, Ash.Query.t()} | {:error, any()}
   defp build_query(resource, identity, _opts) do
+    require Ash.Query
     query = Ash.Query.new(resource)
 
     case identity do
       id when is_list(id) ->
-        {:ok, Ash.Query.filter(query, id)}
+        # Use filter_input for runtime filters
+        {:ok, Ash.Query.filter_input(query, id)}
 
       id when is_map(id) ->
-        {:ok, Ash.Query.filter(query, id)}
+        # Use filter_input for runtime filters with map
+        {:ok, Ash.Query.filter_input(query, id)}
 
       id when is_integer(id) or is_binary(id) ->
-        {:ok, Ash.Query.filter(Ash.Query.new(resource), id: id)}
+        {:ok, Ash.Query.filter(query, id == ^id)}
     end
   end
 
@@ -299,6 +302,15 @@ defmodule AshDiscord.Consumer.Handler do
 
   defp format_bulk_result(%Ash.BulkResult{status: :success, records: []}, :single) do
     {:ok, nil}
+  end
+
+  defp format_bulk_result(%Ash.BulkResult{status: :success, records: records}, :single)
+       when is_list(records) and length(records) > 1 do
+    Logger.warning(
+      "Expected single record but got #{length(records)} records, returning first record"
+    )
+
+    {:ok, hd(records)}
   end
 
   defp format_bulk_result(%Ash.BulkResult{status: :success, records: records}, :bulk) do

@@ -12,7 +12,7 @@ defmodule AshDiscord.Consumer.Handler.Channel do
   def create(channel, _ws_state, context) do
     case Handler.invoke_configured_action(
            :CHANNEL_CREATE,
-           channel.id,
+           %{discord_id: channel.id},
            %{identity: channel.id, data: channel},
            context
          ) do
@@ -29,7 +29,7 @@ defmodule AshDiscord.Consumer.Handler.Channel do
   def update(%Payloads.ChannelUpdate{new_channel: channel}, _ws_state, context) do
     case Handler.invoke_configured_action(
            :CHANNEL_UPDATE,
-           channel.id,
+           %{discord_id: channel.id},
            %{identity: channel.id, data: channel},
            context
          ) do

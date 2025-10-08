@@ -1,7 +1,7 @@
 defmodule AshDiscord.Consumer.Handler.Guild.Ban do
-  require Ash.Query
   require Logger
 
+  alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 
   @spec add(
@@ -10,17 +10,13 @@ defmodule AshDiscord.Consumer.Handler.Guild.Ban do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def add(%Payloads.GuildBanAddEvent{guild_id: guild_id, user: user}, _ws_state, context) do
-    context.resource
-    |> Ash.Changeset.for_create(:from_discord, %{
-      data: %{guild_id: guild_id, user: user}
-    })
-    |> Ash.Changeset.set_context(%{
-      private: %{ash_discord?: true},
-      shared: %{private: %{ash_discord?: true}}
-    })
-    |> Ash.create()
-    |> case do
-      {:ok, _ban_record} -> :ok
+    case Handler.invoke_configured_action(
+           :GUILD_BAN_ADD,
+           user.id,
+           %{data: %{guild_id: guild_id, user: user}},
+           context
+         ) do
+      {:ok, _} -> :ok
       {:error, _error} = error -> error
     end
   end
@@ -31,21 +27,14 @@ defmodule AshDiscord.Consumer.Handler.Guild.Ban do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def remove(%Payloads.GuildBanRemoveEvent{guild_id: guild_id, user: user}, _ws_state, context) do
-    query =
-      context.resource
-      |> Ash.Query.filter(discord_id == ^user.id and guild_id == ^guild_id)
-
-    case Ash.bulk_destroy(query, :destroy, %{},
-           context: %{
-             private: %{ash_discord?: true},
-             shared: %{private: %{ash_discord?: true}}
-           }
+    case Handler.invoke_configured_action(
+           :GUILD_BAN_REMOVE,
+           %{discord_id: user.id, guild_id: guild_id},
+           %{},
+           context
          ) do
-      %Ash.BulkResult{status: :success} ->
-        :ok
-
-      result ->
-        {:error, result}
+      {:ok, _} -> :ok
+      {:error, _error} = error -> error
     end
   end
 end

@@ -16,7 +16,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.BanTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildBan,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
       {:ok, user_payload} = Payloads.User.new(user_data)
@@ -51,7 +52,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.BanTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildBan,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
       {:ok, user_payload} = Payloads.User.new(user_data)
@@ -106,7 +108,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.BanTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildBan,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
       guild_ban_remove = %Payloads.GuildBanRemoveEvent{
@@ -134,7 +137,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.BanTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildBan,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
       {:ok, user_payload} = Payloads.User.new(user_data)
@@ -184,7 +188,8 @@ defmodule AshDiscord.Consumer.Handler.Guild.BanTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildBan,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
       # Remove ban from guild 1 only

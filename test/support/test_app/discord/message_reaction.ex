@@ -53,17 +53,17 @@ defmodule TestApp.Discord.MessageReaction do
       public?: true
     )
 
-    attribute(:message_id, :integer,
+    attribute(:message_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
 
-    attribute(:channel_id, :integer,
+    attribute(:channel_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
 
-    attribute(:guild_id, :integer,
+    attribute(:guild_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
@@ -71,34 +71,35 @@ defmodule TestApp.Discord.MessageReaction do
 
   relationships do
     belongs_to :user, TestApp.Discord.User do
-      source_attribute(:user_id)
+      source_attribute(:user_discord_id)
       destination_attribute(:discord_id)
       allow_nil?(true)
     end
 
     belongs_to :message, TestApp.Discord.Message do
-      source_attribute(:message_id)
+      source_attribute(:message_discord_id)
       destination_attribute(:discord_id)
       allow_nil?(true)
     end
 
     belongs_to :channel, TestApp.Discord.Channel do
-      source_attribute(:channel_id)
+      source_attribute(:channel_discord_id)
       destination_attribute(:discord_id)
       allow_nil?(true)
     end
 
     belongs_to :guild, TestApp.Discord.Guild do
-      source_attribute(:guild_id)
+      source_attribute(:guild_discord_id)
       destination_attribute(:discord_id)
       allow_nil?(true)
     end
   end
 
   identities do
-    # Use user_id, message_id, and either emoji_id (for custom) or emoji_name (for standard)
+    # Use user_id, message_discord_id, and either emoji_id (for custom) or emoji_name (for standard)
     # We'll exclude emoji_id from the identity and handle uniqueness through a combination
-    identity :discord_id, [:user_id, :message_id, :emoji_name] do
+    identity :discord_id,
+             [:user_id, :message_discord_id, :guild_discord_id, :emoji_name, :emoji_id] do
       pre_check_with(TestApp.Discord)
     end
   end
@@ -137,9 +138,9 @@ defmodule TestApp.Discord.MessageReaction do
         :me,
         :emoji_animated,
         :user_id,
-        :message_id,
-        :channel_id,
-        :guild_id
+        :message_discord_id,
+        :channel_discord_id,
+        :guild_discord_id
       ])
     end
 
@@ -153,9 +154,9 @@ defmodule TestApp.Discord.MessageReaction do
         :me,
         :emoji_animated,
         :user_id,
-        :message_id,
-        :channel_id,
-        :guild_id
+        :message_discord_id,
+        :channel_discord_id,
+        :guild_discord_id
       ])
     end
   end

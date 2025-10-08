@@ -32,10 +32,20 @@ defmodule AshDiscord.Consumer.Payloads.GuildRoleUpdate do
   """
   def new({guild_id, old_role, %Nostrum.Struct.Guild.Role{} = new_role})
       when is_integer(guild_id) do
+    {:ok, new_role_payload} = AshDiscord.Consumer.Payloads.Role.new(new_role)
+
+    old_role_payload =
+      if old_role do
+        {:ok, payload} = AshDiscord.Consumer.Payloads.Role.new(old_role)
+        payload
+      else
+        nil
+      end
+
     super(%{
       guild_id: guild_id,
-      old_role: old_role && AshDiscord.Consumer.Payloads.Role.new(old_role),
-      new_role: AshDiscord.Consumer.Payloads.Role.new(new_role)
+      old_role: old_role_payload,
+      new_role: new_role_payload
     })
   end
 end

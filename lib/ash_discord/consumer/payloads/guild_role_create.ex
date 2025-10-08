@@ -27,9 +27,11 @@ defmodule AshDiscord.Consumer.Payloads.GuildRoleCreate do
   Accepts a tuple `{guild_id, new_role}` where new_role is a `Nostrum.Struct.Guild.Role.t()`.
   """
   def new({guild_id, %Nostrum.Struct.Guild.Role{} = new_role}) when is_integer(guild_id) do
+    {:ok, role_payload} = AshDiscord.Consumer.Payloads.Role.new(new_role)
+
     super(%{
       guild_id: guild_id,
-      role: AshDiscord.Consumer.Payloads.Role.new(new_role)
+      role: role_payload
     })
   end
 end

@@ -24,7 +24,15 @@ defmodule AshDiscord.Consumer.Handler.User do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def settings(_data, _ws_state, _context) do
-    :ok
+  def settings(data, _ws_state, context) do
+    case Handler.invoke_configured_action(
+           :USER_SETTINGS_UPDATE,
+           %{},
+           %{data: data},
+           context
+         ) do
+      {:ok, _} -> :ok
+      {:error, error} -> {:error, error}
+    end
   end
 end

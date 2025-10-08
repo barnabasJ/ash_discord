@@ -113,10 +113,11 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEvent do
     case Handler.invoke_configured_action(
            :GUILD_SCHEDULED_EVENT_USER_ADD,
            %{
-             guild_scheduled_event_discord_id: event.guild_scheduled_event_id,
-             user_discord_id: event.user_id
+             guild_scheduled_event_id: event.guild_scheduled_event_id,
+             user_id: event.user_id,
+             guild_id: event.guild_id
            },
-           %{data: event},
+           %{},
            context
          ) do
       {:ok, _} -> :ok
@@ -136,8 +137,8 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEvent do
     case Handler.invoke_configured_action(
            :GUILD_SCHEDULED_EVENT_USER_REMOVE,
            %{
-             guild_scheduled_event_discord_id: event.guild_scheduled_event_id,
-             user_discord_id: event.user_id
+             guild_scheduled_event_id: event.guild_scheduled_event_id,
+             user_id: event.user_id
            },
            %{},
            context

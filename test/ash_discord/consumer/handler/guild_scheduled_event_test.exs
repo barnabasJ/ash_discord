@@ -287,7 +287,7 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: TestApp.Discord.GuildScheduledEvent,
+        resource: TestApp.Discord.GuildScheduledEventUser,
         guild: nil,
         user: nil,
         context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
@@ -313,7 +313,7 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: TestApp.Discord.GuildScheduledEvent,
+        resource: TestApp.Discord.GuildScheduledEventUser,
         guild: nil,
         user: nil,
         context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}

@@ -37,7 +37,15 @@ defmodule TestApp.Discord.GuildScheduledEventUser do
   end
 
   actions do
-    defaults([:read, :destroy, :create])
+    defaults([:read, :destroy])
+
+    create :create do
+      primary?(true)
+      accept([:guild_scheduled_event_id, :user_id, :guild_id])
+      upsert?(true)
+      upsert_identity(:event_user)
+      upsert_fields([:guild_id])
+    end
 
     update :update do
       primary?(true)

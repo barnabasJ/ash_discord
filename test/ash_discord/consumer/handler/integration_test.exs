@@ -15,7 +15,8 @@ defmodule AshDiscord.Consumer.Handler.IntegrationTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Integration,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
       {:ok, integration_payload} = Payloads.Integration.new(integration_data)
@@ -55,7 +56,8 @@ defmodule AshDiscord.Consumer.Handler.IntegrationTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Integration,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
       {:ok, new_integration_payload} = Payloads.Integration.new(new_integration)
@@ -101,7 +103,8 @@ defmodule AshDiscord.Consumer.Handler.IntegrationTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Integration,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
       # Create delete event
@@ -129,7 +132,8 @@ defmodule AshDiscord.Consumer.Handler.IntegrationTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Integration,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
       delete_event = integration_delete_event()

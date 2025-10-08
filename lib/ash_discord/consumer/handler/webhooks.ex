@@ -1,4 +1,5 @@
 defmodule AshDiscord.Consumer.Handler.Webhooks do
+  alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 
   @spec update(
@@ -7,15 +8,13 @@ defmodule AshDiscord.Consumer.Handler.Webhooks do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def update(webhooks_update, _ws_state, context) do
-    context.resource
-    |> Ash.Changeset.for_create(:from_discord, %{data: webhooks_update})
-    |> Ash.Changeset.set_context(%{
-      private: %{ash_discord?: true},
-      shared: %{private: %{ash_discord?: true}}
-    })
-    |> Ash.create()
-    |> case do
-      {:ok, _webhooks_update_record} -> :ok
+    case Handler.invoke_configured_action(
+           :WEBHOOKS_UPDATE,
+           %{guild_id: webhooks_update.guild_id, channel_id: webhooks_update.channel_id},
+           %{data: webhooks_update},
+           context
+         ) do
+      {:ok, _} -> :ok
       {:error, _error} = error -> error
     end
   end

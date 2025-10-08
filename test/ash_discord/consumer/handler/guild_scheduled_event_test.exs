@@ -1,4 +1,4 @@
-defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEventTest do
+defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
   use TestApp.DataCase, async: true
 
   import AshDiscord.Test.Generators
@@ -6,7 +6,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.ScheduledEventTest do
 
   require Ash.Query
 
-  alias AshDiscord.Consumer.Handler.Guild.ScheduledEvent
+  alias AshDiscord.Consumer.Handler.GuildScheduledEvent
   alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 

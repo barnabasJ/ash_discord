@@ -1,9 +1,9 @@
-defmodule AshDiscord.Consumer.Handler.Guild.RoleTest do
+defmodule AshDiscord.Consumer.Handler.GuildRoleTest do
   use TestApp.DataCase, async: true
 
   import AshDiscord.Test.Generators
 
-  alias AshDiscord.Consumer.Handler.Guild.Role
+  alias AshDiscord.Consumer.Handler.GuildRole
   alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 

@@ -1,9 +1,9 @@
-defmodule AshDiscord.Consumer.Handler.Guild.Audit.Log.EntryTest do
+defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
   use TestApp.DataCase, async: true
 
   import AshDiscord.Test.Generators
 
-  alias AshDiscord.Consumer.Handler.Guild.Audit.Log.Entry
+  alias AshDiscord.Consumer.Handler.GuildAuditLogEntry
   alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 

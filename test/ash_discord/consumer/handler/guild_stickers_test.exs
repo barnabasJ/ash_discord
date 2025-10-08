@@ -1,9 +1,9 @@
-defmodule AshDiscord.Consumer.Handler.Guild.StickersTest do
+defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
   use TestApp.DataCase, async: true
 
   import AshDiscord.Test.Generators
 
-  alias AshDiscord.Consumer.Handler.Guild.Stickers
+  alias AshDiscord.Consumer.Handler.GuildStickers
   alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 

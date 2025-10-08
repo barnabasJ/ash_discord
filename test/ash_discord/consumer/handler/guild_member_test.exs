@@ -1,4 +1,4 @@
-defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
+defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
   use TestApp.DataCase, async: true
 
   import AshDiscord.Test.Generators
@@ -6,7 +6,7 @@ defmodule AshDiscord.Consumer.Handler.Guild.MemberTest do
 
   require Ash.Query
 
-  alias AshDiscord.Consumer.Handler.Guild.Member
+  alias AshDiscord.Consumer.Handler.GuildMember
   alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 

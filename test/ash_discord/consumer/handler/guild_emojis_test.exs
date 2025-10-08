@@ -1,9 +1,9 @@
-defmodule AshDiscord.Consumer.Handler.Guild.EmojisTest do
+defmodule AshDiscord.Consumer.Handler.GuildEmojisTest do
   use TestApp.DataCase, async: true
 
   import AshDiscord.Test.Generators
 
-  alias AshDiscord.Consumer.Handler.Guild.Emojis
+  alias AshDiscord.Consumer.Handler.GuildEmojis
   alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 

@@ -113,6 +113,8 @@ defmodule TestApp.Discord do
 
     resource(TestApp.Discord.GuildScheduledEventUser)
 
+    resource(TestApp.Discord.VoiceIncoming)
+
     resource TestApp.Discord.Integration do
       define(:integration_from_discord, action: :from_discord)
     end

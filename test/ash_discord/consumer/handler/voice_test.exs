@@ -360,20 +360,27 @@ defmodule AshDiscord.Consumer.Handler.VoiceTest do
   end
 
   describe "incoming/3" do
-    test "returns :ok without error (informational handler)" do
-      # VOICE_INCOMING_PACKET is a special case - it's raw audio data
-      # The handler exists for compatibility but doesn't process the data
+    import ExUnit.CaptureLog
+
+    test "calls configured action and logs packet data" do
+      # VOICE_INCOMING_PACKET can have a configured action for logging/analytics
       context = %AshDiscord.Context{
         consumer: TestConsumer,
-        resource: nil,
+        resource: TestApp.Discord.VoiceIncoming,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}}
       }
 
       # Simulate rtp_opus tuple: {{sequence, timestamp, ssrc}, opus_packet}
       rtp_data = {{12345, 98765, 54321}, <<1, 2, 3, 4, 5>>}
 
-      assert :ok = Voice.incoming(rtp_data, %Nostrum.Struct.VoiceWSState{}, context)
+      log =
+        capture_log(fn ->
+          assert :ok = Voice.incoming(rtp_data, %Nostrum.Struct.VoiceWSState{}, context)
+        end)
+
+      assert log =~ "Voice packet received"
     end
   end
 end

@@ -68,6 +68,7 @@ defmodule AshDiscord.Consumer.Handler.Voice do
            %{data: data},
            context
          ) do
+      :ok -> :ok
       {:ok, _} -> :ok
       {:error, error} -> {:error, error}
     end

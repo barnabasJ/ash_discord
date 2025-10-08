@@ -13,8 +13,8 @@ defmodule AshDiscord.Consumer.Payloads.MessageDeleteBulkEvent do
 
   typed_struct do
     field :deleted_messages, {:array, AshDiscord.Consumer.Payloads.Message},
-      allow_nil?: false,
-      description: "The cached deleted messages"
+      allow_nil?: true,
+      description: "The cached deleted messages (may be nil if not cached)"
 
     field :channel_id, :integer,
       allow_nil?: false,

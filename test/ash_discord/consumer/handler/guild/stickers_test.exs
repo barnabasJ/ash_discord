@@ -17,7 +17,11 @@ defmodule AshDiscord.Consumer.Handler.Guild.StickersTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Sticker,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{
+          private: %{ash_discord?: true},
+          shared: %{private: %{ash_discord?: true}}
+        }
       }
 
       {:ok, sticker1_payload} = Payloads.Sticker.new(sticker1_data)
@@ -61,7 +65,11 @@ defmodule AshDiscord.Consumer.Handler.Guild.StickersTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Sticker,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{
+          private: %{ash_discord?: true},
+          shared: %{private: %{ash_discord?: true}}
+        }
       }
 
       # Create initial sticker
@@ -112,7 +120,11 @@ defmodule AshDiscord.Consumer.Handler.Guild.StickersTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Sticker,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{
+          private: %{ash_discord?: true},
+          shared: %{private: %{ash_discord?: true}}
+        }
       }
 
       guild_stickers_update = %Payloads.GuildStickersUpdate{
@@ -147,7 +159,11 @@ defmodule AshDiscord.Consumer.Handler.Guild.StickersTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Sticker,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{
+          private: %{ash_discord?: true},
+          shared: %{private: %{ash_discord?: true}}
+        }
       }
 
       sticker_payloads =

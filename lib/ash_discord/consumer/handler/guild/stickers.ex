@@ -1,7 +1,7 @@
 defmodule AshDiscord.Consumer.Handler.Guild.Stickers do
-  require Ash.Query
   require Logger
 
+  alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 
   @spec update(
@@ -17,16 +17,15 @@ defmodule AshDiscord.Consumer.Handler.Guild.Stickers do
     # Process each sticker in the new_stickers list
     results =
       Enum.map(stickers, fn sticker ->
-        context.resource
-        |> Ash.Changeset.for_create(:from_discord, %{
-          data: sticker,
-          identity: sticker.id
-        })
-        |> Ash.Changeset.set_context(%{
-          private: %{ash_discord?: true},
-          shared: %{private: %{ash_discord?: true}}
-        })
-        |> Ash.create()
+        Handler.invoke_configured_action(
+          :GUILD_STICKERS_UPDATE,
+          %{discord_id: sticker.id},
+          %{
+            data: sticker,
+            identity: sticker.id
+          },
+          context
+        )
       end)
 
     # Check if any failed

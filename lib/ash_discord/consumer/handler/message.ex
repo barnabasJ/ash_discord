@@ -1,7 +1,7 @@
 defmodule AshDiscord.Consumer.Handler.Message do
   require Logger
-  require Ash.Query
 
+  alias AshDiscord.Consumer.Handler
   alias AshDiscord.Consumer.Payloads
 
   @spec create(
@@ -10,42 +10,31 @@ defmodule AshDiscord.Consumer.Handler.Message do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def create(message, _ws_state, context) do
-    # Use resource from context (auto-discovered via AshDiscord.Resource extension)
-    case context.resource do
-      nil ->
-        # No resource configured for this event
-        :ok
+    consumer = context.consumer
 
-      message_resource ->
-        consumer = context.consumer
+    {:ok, store_bot_messages} =
+      AshDiscord.Consumer.Info.ash_discord_consumer_store_bot_messages(consumer)
 
-        {:ok, store_bot_messages} =
-          AshDiscord.Consumer.Info.ash_discord_consumer_store_bot_messages(consumer)
+    Logger.debug("Message resource found: #{inspect(context.resource)}")
 
-        Logger.debug("Message resource found: #{inspect(message_resource)}")
-
-        # Skip bot messages if store_bot_messages is false
-        if message.author.bot && !store_bot_messages do
+    # Skip bot messages if store_bot_messages is false
+    if message.author.bot && !store_bot_messages do
+      :ok
+    else
+      case Handler.invoke_configured_action(
+             :MESSAGE_CREATE,
+             %{discord_id: message.id},
+             %{data: message},
+             context
+           ) do
+        {:ok, _} ->
           :ok
-        else
-          case message_resource
-               |> Ash.Changeset.for_create(:from_discord, %{
-                 data: message
-               })
-               |> Ash.Changeset.set_context(%{
-                 private: %{ash_discord?: true},
-                 shared: %{private: %{ash_discord?: true}}
-               })
-               |> Ash.create() do
-            {:ok, _message_record} ->
-              :ok
 
-            {:error, error} ->
-              Logger.error("Failed to save message #{message.id}: #{inspect(error)}")
-              # Don't crash the consumer
-              :ok
-          end
-        end
+        {:error, error} ->
+          Logger.error("Failed to save message #{message.id}: #{inspect(error)}")
+          # Don't crash the consumer
+          :ok
+      end
     end
   end
 
@@ -55,29 +44,19 @@ defmodule AshDiscord.Consumer.Handler.Message do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def update(%Payloads.MessageUpdate{updated_message: message}, _ws_state, context) do
-    case context.resource do
-      nil ->
+    case Handler.invoke_configured_action(
+           :MESSAGE_UPDATE,
+           %{discord_id: message.id},
+           %{data: message},
+           context
+         ) do
+      {:ok, _} ->
         :ok
 
-      message_resource ->
-        # Update the existing message - provide channel and guild IDs from the message struct
-        case message_resource
-             |> Ash.Changeset.for_create(:from_discord, %{
-               data: message
-             })
-             |> Ash.Changeset.set_context(%{
-               private: %{ash_discord?: true},
-               shared: %{private: %{ash_discord?: true}}
-             })
-             |> Ash.create() do
-          {:ok, _message_record} ->
-            :ok
-
-          {:error, error} ->
-            Logger.error("Failed to update message #{message.id}: #{inspect(error)}")
-            # Don't crash the consumer
-            :ok
-        end
+      {:error, error} ->
+        Logger.error("Failed to update message #{message.id}: #{inspect(error)}")
+        # Don't crash the consumer
+        :ok
     end
   end
 
@@ -87,31 +66,18 @@ defmodule AshDiscord.Consumer.Handler.Message do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def delete(message_delete, _ws_state, context) do
-    case context.resource do
-      nil ->
+    case Handler.invoke_configured_action(
+           :MESSAGE_DELETE,
+           %{discord_id: message_delete.id},
+           %{},
+           context
+         ) do
+      {:ok, _} ->
         :ok
 
-      message_resource ->
-        require Ash.Query
-
-        # Delete the message by discord_id
-        query =
-          message_resource
-          |> Ash.Query.filter(discord_id: message_delete.id)
-
-        case Ash.bulk_destroy(query, :destroy, %{},
-               context: %{
-                 private: %{ash_discord?: true},
-                 shared: %{private: %{ash_discord?: true}}
-               }
-             ) do
-          %Ash.BulkResult{status: :success} ->
-            :ok
-
-          result ->
-            Logger.error("Failed to delete message #{message_delete.id}: #{inspect(result)}")
-            :ok
-        end
+      {:error, error} ->
+        Logger.error("Failed to delete message #{message_delete.id}: #{inspect(error)}")
+        :ok
     end
   end
 
@@ -121,35 +87,23 @@ defmodule AshDiscord.Consumer.Handler.Message do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def delete_bulk(message_delete_bulk, _ws_state, context) do
-    case context.resource do
-      nil ->
-        :ok
-
-      message_resource ->
-        # Handle empty IDs list gracefully
-        if message_delete_bulk.ids == [] do
+    # Handle empty IDs list gracefully
+    if message_delete_bulk.ids == [] do
+      :ok
+    else
+      case Handler.invoke_configured_action(
+             :MESSAGE_DELETE_BULK,
+             %{"discord_id" => %{"in" => message_delete_bulk.ids}},
+             %{},
+             context
+           ) do
+        {:ok, _} ->
           :ok
-        else
-          # Delete all messages by discord_id
-          # We need to build a filter that checks if discord_id is in the list
-          query =
-            message_resource
-            |> Ash.Query.filter(discord_id in ^message_delete_bulk.ids)
 
-          case Ash.bulk_destroy(query, :destroy, %{},
-                 context: %{
-                   private: %{ash_discord?: true},
-                   shared: %{private: %{ash_discord?: true}}
-                 }
-               ) do
-            %Ash.BulkResult{status: :success} ->
-              :ok
-
-            result ->
-              Logger.error("Failed to bulk delete messages: #{inspect(result)}")
-              :ok
-          end
-        end
+        {:error, error} ->
+          Logger.error("Failed to bulk delete messages: #{inspect(error)}")
+          :ok
+      end
     end
   end
 

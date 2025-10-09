@@ -48,16 +48,16 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       result =
         TestApp.Discord.guild_member_from_discord(%{
           data: member_struct,
-          identity: %{guild_id: 555_666_777}
+          identity: %{guild_discord_id: 555_666_777}
         })
 
       assert {:ok, created_member} = result
-      assert created_member.user_id == member_struct.user_id
+      assert created_member.user_discord_id == member_struct.user_id
       assert created_member.nick == member_struct.nick
       assert created_member.joined_at == ~U[2023-01-15 10:30:00Z]
       assert created_member.deaf == false
       assert created_member.mute == false
-      assert created_member.guild_id == 555_666_777
+      assert created_member.guild_discord_id == 555_666_777
     end
 
     test "handles member without nickname" do
@@ -75,11 +75,11 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       result =
         TestApp.Discord.guild_member_from_discord(%{
           data: member_struct,
-          identity: %{guild_id: 555_666_777}
+          identity: %{guild_discord_id: 555_666_777}
         })
 
       assert {:ok, created_member} = result
-      assert created_member.user_id == member_struct.user_id
+      assert created_member.user_discord_id == member_struct.user_id
       assert created_member.nick == nil
       assert created_member.joined_at == ~U[2023-02-20 15:45:00Z]
     end
@@ -99,11 +99,11 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       result =
         TestApp.Discord.guild_member_from_discord(%{
           data: member_struct,
-          identity: %{guild_id: 555_666_777}
+          identity: %{guild_discord_id: 555_666_777}
         })
 
       assert {:ok, created_member} = result
-      assert created_member.user_id == member_struct.user_id
+      assert created_member.user_discord_id == member_struct.user_id
       assert created_member.deaf == true
       assert created_member.mute == false
     end
@@ -123,11 +123,11 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       result =
         TestApp.Discord.guild_member_from_discord(%{
           data: member_struct,
-          identity: %{guild_id: 555_666_777}
+          identity: %{guild_discord_id: 555_666_777}
         })
 
       assert {:ok, created_member} = result
-      assert created_member.user_id == member_struct.user_id
+      assert created_member.user_discord_id == member_struct.user_id
       assert created_member.deaf == false
       assert created_member.mute == true
     end
@@ -147,11 +147,11 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       result =
         TestApp.Discord.guild_member_from_discord(%{
           data: member_struct,
-          identity: %{guild_id: 555_666_777}
+          identity: %{guild_discord_id: 555_666_777}
         })
 
       assert {:ok, created_member} = result
-      assert created_member.user_id == member_struct.user_id
+      assert created_member.user_discord_id == member_struct.user_id
       assert created_member.deaf == true
       assert created_member.mute == true
     end
@@ -187,12 +187,12 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
       result =
         TestApp.Discord.guild_member_from_discord(%{
-          identity: %{guild_id: guild_id, user_id: user_id}
+          identity: %{guild_discord_id: guild_id, user_discord_id: user_id}
         })
 
       assert {:ok, created_member} = result
-      assert created_member.user_id == user_id
-      assert created_member.guild_id == guild_id
+      assert created_member.user_discord_id == user_id
+      assert created_member.guild_discord_id == guild_id
       assert created_member.nick == "API_Fetched_Nick"
       assert created_member.mute == true
       assert created_member.deaf == false
@@ -211,7 +211,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
       result =
         TestApp.Discord.guild_member_from_discord(%{
-          identity: %{guild_id: guild_id, user_id: user_id}
+          identity: %{guild_discord_id: guild_id, user_discord_id: user_id}
         })
 
       assert {:error, error} = result
@@ -220,11 +220,11 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
     end
 
     test "requires complete identity map with guild_id and user_id" do
-      result = TestApp.Discord.guild_member_from_discord(%{identity: %{guild_id: 999_888_777}})
+      result = TestApp.Discord.guild_member_from_discord(%{identity: %{guild_discord_id: 999_888_777}})
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "guild_id" and error_message =~ "user_id"
+      assert error_message =~ "guild_discord_id" and error_message =~ "user_discord_id"
     end
 
     test "requires data or identity for guild member creation" do
@@ -232,7 +232,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
 
       assert {:error, error} = result
       error_message = Exception.message(error)
-      assert error_message =~ "guild_id" and error_message =~ "user_id"
+      assert error_message =~ "guild_discord_id" and error_message =~ "user_discord_id"
     end
   end
 
@@ -256,7 +256,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       {:ok, original_member} =
         TestApp.Discord.guild_member_from_discord(%{
           data: initial_struct,
-          identity: %{guild_id: guild_id}
+          identity: %{guild_discord_id: guild_id}
         })
 
       # Update same member with new data
@@ -272,13 +272,13 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       {:ok, updated_member} =
         TestApp.Discord.guild_member_from_discord(%{
           data: updated_struct,
-          identity: %{guild_id: guild_id}
+          identity: %{guild_discord_id: guild_id}
         })
 
       # Should be same record (same Ash ID)
       assert updated_member.id == original_member.id
-      assert updated_member.user_id == original_member.user_id
-      assert updated_member.guild_id == original_member.guild_id
+      assert updated_member.user_discord_id == original_member.user_discord_id
+      assert updated_member.guild_discord_id == original_member.guild_discord_id
 
       # But with updated attributes
       assert updated_member.nick == "UpdatedNick"
@@ -305,7 +305,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       {:ok, original_member} =
         TestApp.Discord.guild_member_from_discord(%{
           data: initial_struct,
-          identity: %{guild_id: guild_id}
+          identity: %{guild_discord_id: guild_id}
         })
 
       # Remove nickname
@@ -321,13 +321,13 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       {:ok, updated_member} =
         TestApp.Discord.guild_member_from_discord(%{
           data: updated_struct,
-          identity: %{guild_id: guild_id}
+          identity: %{guild_discord_id: guild_id}
         })
 
       # Should be same record
       assert updated_member.id == original_member.id
-      assert updated_member.user_id == user_id
-      assert updated_member.guild_id == guild_id
+      assert updated_member.user_discord_id == user_id
+      assert updated_member.guild_discord_id == guild_id
 
       # But with removed nickname
       assert updated_member.nick == nil
@@ -350,7 +350,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       result =
         TestApp.Discord.guild_member_from_discord(%{
           data: invalid_struct,
-          identity: %{guild_id: 555_666_777}
+          identity: %{guild_discord_id: 555_666_777}
         })
 
       assert {:error, error} = result
@@ -372,7 +372,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       result =
         TestApp.Discord.guild_member_from_discord(%{
           data: member_struct,
-          identity: %{guild_id: 555_666_777}
+          identity: %{guild_discord_id: 555_666_777}
         })
 
       # This might succeed with nil joined_at or fail with validation error
@@ -380,7 +380,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       case result do
         {:ok, created_member} ->
           # If it succeeds, joined_at should be handled gracefully
-          assert created_member.user_id == member_struct.user_id
+          assert created_member.user_discord_id == member_struct.user_id
 
         {:error, error} ->
           # If it fails, should be a validation error

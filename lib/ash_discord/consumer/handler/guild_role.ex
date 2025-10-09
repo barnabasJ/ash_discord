@@ -14,7 +14,6 @@ defmodule AshDiscord.Consumer.Handler.GuildRole do
            :GUILD_ROLE_CREATE,
            %{discord_id: role.id, guild_id: guild_id},
            %{
-             discord_id: role.id,
              data: role,
              identity: %{role_id: role.id, guild_id: guild_id}
            },
@@ -35,7 +34,6 @@ defmodule AshDiscord.Consumer.Handler.GuildRole do
            :GUILD_ROLE_UPDATE,
            %{discord_id: role.id, guild_id: guild_id},
            %{
-             discord_id: role.id,
              data: role,
              identity: %{role_id: role.id, guild_id: guild_id}
            },

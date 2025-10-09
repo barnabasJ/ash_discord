@@ -287,9 +287,8 @@ defmodule AshDiscord.Consumer.EventMap do
   # TODO: Implement guild audit log handler
   def handler_for(:GUILD_AUDIT_LOG_ENTRY_CREATE),
     do:
-      {AshDiscord.Consumer.Handler.GuildAuditLogEntry, :create,
-       :guild_audit_log_entry_resource, :handle_guild_audit_log_entry_create,
-       Payloads.GuildAuditLogEntryCreate}
+      {AshDiscord.Consumer.Handler.GuildAuditLogEntry, :create, :guild_audit_log_entry_resource,
+       :handle_guild_audit_log_entry_create, Payloads.GuildAuditLogEntryCreate}
 
   def handler_for(:GUILD_AVAILABLE),
     do:
@@ -588,5 +587,5 @@ defmodule AshDiscord.Consumer.EventMap do
   def handler_for(:WEBHOOKS_UPDATE),
     do:
       {AshDiscord.Consumer.Handler.Webhooks, :update, :webhooks_resource, :handle_webhooks_update,
-       Payloads.WebhooksUpdate}
+       Payloads.WebhooksUpdateEvent}
 end

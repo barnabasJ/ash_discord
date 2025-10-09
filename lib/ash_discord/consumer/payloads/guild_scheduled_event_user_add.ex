@@ -33,4 +33,9 @@ defmodule AshDiscord.Consumer.Payloads.GuildScheduledEventUserAdd do
   def new(%Nostrum.Struct.Event.GuildScheduledEventUserAdd{} = nostrum_event) do
     super(Map.from_struct(nostrum_event))
   end
+
+  # Handle plain maps (for testing/edge cases)
+  def new(attrs) when is_map(attrs) do
+    super(attrs)
+  end
 end

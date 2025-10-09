@@ -37,4 +37,9 @@ defmodule AshDiscord.Consumer.Payloads.IntegrationDelete do
       application_id: event.application_id
     })
   end
+
+  # Handle plain maps (for testing/edge cases)
+  def new(attrs) when is_map(attrs) do
+    super(attrs)
+  end
 end

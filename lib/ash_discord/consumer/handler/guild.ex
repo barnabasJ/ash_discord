@@ -8,19 +8,16 @@ defmodule AshDiscord.Consumer.Handler.Guild do
           new_guild :: Payloads.Guild.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: :ok | {:error, term()}
+        ) :: {:ok, any()} | Ash.BulkResult.t() | :ok | {:error, term()}
   def create(guild, _ws_state, context) do
     register_commands(context.consumer, guild)
 
-    case Handler.invoke_configured_action(
-           :GUILD_CREATE,
-           %{discord_id: guild.id},
-           %{identity: guild.id, data: guild},
-           context
-         ) do
-      {:ok, _guild} -> :ok
-      {:error, error} -> {:error, error}
-    end
+    Handler.invoke_configured_action(
+      :GUILD_CREATE,
+      %{discord_id: guild.id},
+      %{identity: guild.id, data: guild},
+      context
+    )
   end
 
   defp register_commands(consumer, guild) do

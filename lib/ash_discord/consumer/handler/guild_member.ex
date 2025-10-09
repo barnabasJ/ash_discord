@@ -5,13 +5,11 @@ defmodule AshDiscord.Consumer.Handler.GuildMember do
   alias AshDiscord.Consumer.Payloads
 
   @spec add(
-          consumer :: module(),
           member_add :: Payloads.GuildMemberAdd.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def add(
-        _consumer,
         %Payloads.GuildMemberAdd{guild_id: guild_id, member: member},
         _ws_state,
         context
@@ -20,8 +18,13 @@ defmodule AshDiscord.Consumer.Handler.GuildMember do
 
     case Handler.invoke_configured_action(
            :GUILD_MEMBER_ADD,
-           %{guild_id: guild_id, user_id: user_discord_id},
-           %{data: member, identity: %{guild_id: guild_id, user_id: user_discord_id}},
+           %{guild_discord_id: guild_id, user_discord_id: user_discord_id},
+           %{
+             guild_discord_id: guild_id,
+             user_discord_id: user_discord_id,
+             data: member,
+             identity: %{guild_discord_id: guild_id, user_discord_id: user_discord_id}
+           },
            context
          ) do
       {:ok, _member} ->
@@ -37,13 +40,11 @@ defmodule AshDiscord.Consumer.Handler.GuildMember do
   end
 
   @spec update(
-          consumer :: module(),
           member_update :: Payloads.GuildMemberUpdate.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def update(
-        _consumer,
         %Payloads.GuildMemberUpdate{guild_id: guild_id, new_member: member},
         _ws_state,
         context
@@ -52,8 +53,13 @@ defmodule AshDiscord.Consumer.Handler.GuildMember do
 
     case Handler.invoke_configured_action(
            :GUILD_MEMBER_UPDATE,
-           %{guild_id: guild_id, user_id: user_discord_id},
-           %{data: member, identity: %{guild_id: guild_id, user_id: user_discord_id}},
+           %{guild_discord_id: guild_id, user_discord_id: user_discord_id},
+           %{
+             guild_discord_id: guild_id,
+             user_discord_id: user_discord_id,
+             data: member,
+             identity: %{guild_discord_id: guild_id, user_discord_id: user_discord_id}
+           },
            context
          ) do
       {:ok, _member} ->
@@ -69,13 +75,11 @@ defmodule AshDiscord.Consumer.Handler.GuildMember do
   end
 
   @spec remove(
-          consumer :: module(),
           member_remove :: Payloads.GuildMemberRemove.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def remove(
-        _consumer,
         %Payloads.GuildMemberRemove{guild_id: guild_id, member: member},
         _ws_state,
         context
@@ -84,7 +88,7 @@ defmodule AshDiscord.Consumer.Handler.GuildMember do
 
     case Handler.invoke_configured_action(
            :GUILD_MEMBER_REMOVE,
-           %{guild_id: guild_id, user_id: user_discord_id},
+           %{guild_discord_id: guild_id, user_discord_id: user_discord_id},
            %{},
            context
          ) do
@@ -102,12 +106,11 @@ defmodule AshDiscord.Consumer.Handler.GuildMember do
   end
 
   @spec chunk(
-          consumer :: module(),
           chunk_event :: Payloads.GuildMembersChunkEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def chunk(_consumer, %Payloads.GuildMembersChunkEvent{data: data}, _ws_state, context) do
+  def chunk(%Payloads.GuildMembersChunkEvent{data: data}, _ws_state, context) do
     guild_id = Map.get(data, :guild_id)
     members = Map.get(data, :members, [])
 
@@ -122,8 +125,13 @@ defmodule AshDiscord.Consumer.Handler.GuildMember do
             # TODO: make the handler action take in a list of members for bulk processing
             Handler.invoke_configured_action(
               :GUILD_MEMBERS_CHUNK,
-              %{guild_id: guild_id, user_id: user_id},
-              %{data: member_payload, identity: %{guild_id: guild_id, user_id: user_id}},
+              %{guild_discord_id: guild_id, user_discord_id: user_id},
+              %{
+                guild_discord_id: guild_id,
+                user_discord_id: user_id,
+                data: member_payload,
+                identity: %{guild_discord_id: guild_id, user_discord_id: user_id}
+              },
               context
             )
 

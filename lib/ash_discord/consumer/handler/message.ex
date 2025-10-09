@@ -112,15 +112,8 @@ defmodule AshDiscord.Consumer.Handler.Message do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def ack(data, _ws_state, context) do
-    case Handler.invoke_configured_action(
-           :MESSAGE_ACK,
-           %{},
-           %{data: data},
-           context
-         ) do
-      {:ok, _} -> :ok
-      {:error, error} -> {:error, error}
-    end
+  def ack(_data, _ws_state, _context) do
+    # MESSAGE_ACK is an acknowledgement event that doesn't require database operations
+    :ok
   end
 end

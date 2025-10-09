@@ -21,15 +21,18 @@ defmodule AshDiscord.Consumer.Handler.Reaction do
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
   def add(%Payloads.MessageReactionAddEvent{} = reaction_add, _ws_state, context) do
+    identity = %{
+      user_discord_id: reaction_add.user_id,
+      message_discord_id: reaction_add.message_id,
+      guild_discord_id: reaction_add.guild_id,
+      emoji_name: reaction_add.emoji.name,
+      emoji_id: reaction_add.emoji.id
+    }
+
     case Handler.invoke_configured_action(
            :MESSAGE_REACTION_ADD,
-           %{
-             user_id: reaction_add.user_id,
-             message_id: reaction_add.message_id,
-             emoji_name: reaction_add.emoji.name,
-             emoji_id: reaction_add.emoji.id
-           },
-           %{data: reaction_add},
+           identity,
+           %{data: reaction_add, identity: identity},
            context
          ) do
       {:ok, _reaction} -> :ok

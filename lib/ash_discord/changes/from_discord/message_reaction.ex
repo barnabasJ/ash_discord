@@ -37,7 +37,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReaction do
 
           case fetch_reaction_from_identity(identity) do
             {:ok, reaction_data} ->
-              transform_message_reaction(changeset, reaction_data)
+              transform_message_reaction(changeset, reaction_data, identity)
 
             {:error, reason} ->
               Ash.Changeset.add_error(changeset, reason)
@@ -46,7 +46,9 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReaction do
 
       data when is_map(data) ->
         # Data provided directly - set attributes immediately for validation
-        transform_message_reaction(changeset, data)
+        # Also get identity argument if available
+        identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
+        transform_message_reaction(changeset, data, identity)
 
       other ->
         Ash.Changeset.add_error(
@@ -117,9 +119,19 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReaction do
     end
   end
 
-  defp transform_message_reaction(changeset, reaction_data) do
+  defp transform_message_reaction(changeset, reaction_data, identity) do
     # Handle emoji data - emoji is a plain map, not a struct
     emoji_data = reaction_data.emoji
+
+    # Prefer identity values if provided, otherwise use reaction_data
+    # Identity is always passed by the handler for proper upsert matching
+    guild_discord_id =
+      (identity && (identity[:guild_discord_id] || identity["guild_discord_id"])) ||
+        reaction_data.guild_id
+
+    emoji_id =
+      (identity && (identity[:emoji_id] || identity["emoji_id"])) ||
+        (emoji_data && Map.get(emoji_data, :id))
 
     changeset
     # Set both _discord_id and _id versions to support both naming conventions
@@ -129,9 +141,11 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReaction do
     |> maybe_set_attribute(:message_id, reaction_data.message_id)
     |> maybe_set_attribute(:channel_discord_id, reaction_data.channel_id)
     |> maybe_set_attribute(:channel_id, reaction_data.channel_id)
-    |> maybe_set_attribute(:guild_discord_id, reaction_data.guild_id)
-    |> maybe_set_attribute(:guild_id, reaction_data.guild_id)
-    |> maybe_set_attribute(:emoji_id, emoji_data && Map.get(emoji_data, :id))
+    # Always set guild_discord_id even if nil - required for identity matching
+    |> force_set_attribute(:guild_discord_id, guild_discord_id)
+    |> force_set_attribute(:guild_id, guild_discord_id)
+    # Always set emoji_id even if nil - required for identity matching
+    |> force_set_attribute(:emoji_id, emoji_id)
     |> maybe_set_attribute(:emoji_name, emoji_data && Map.get(emoji_data, :name))
     |> maybe_set_attribute(:emoji_animated, emoji_data && Map.get(emoji_data, :animated, false))
   end
@@ -139,6 +153,15 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReaction do
   defp maybe_set_attribute(changeset, _field, nil), do: changeset
 
   defp maybe_set_attribute(changeset, field, value) do
+    if Ash.Resource.Info.attribute(changeset.resource, field) do
+      Ash.Changeset.force_change_attribute(changeset, field, value)
+    else
+      changeset
+    end
+  end
+
+  # Always set attribute, even if nil - used for identity fields
+  defp force_set_attribute(changeset, field, value) do
     if Ash.Resource.Info.attribute(changeset.resource, field) do
       Ash.Changeset.force_change_attribute(changeset, field, value)
     else

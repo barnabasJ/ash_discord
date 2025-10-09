@@ -96,12 +96,12 @@ defmodule TestApp.Discord.MessageReaction do
   end
 
   identities do
-    # Use user_discord_id, message_discord_id, and either emoji_id (for custom) or emoji_name (for standard)
-    # We'll exclude emoji_id from the identity and handle uniqueness through a combination
-    identity :discord_id,
-             [:user_discord_id, :message_discord_id, :guild_discord_id, :emoji_name, :emoji_id] do
-      pre_check_with(TestApp.Discord)
-    end
+    # Use user_discord_id, message_discord_id, guild_discord_id, and emoji_name for identity
+    # emoji_id is excluded because it's nil for Unicode emojis but not for custom emojis
+    # emoji_name is sufficient to identify the emoji uniquely
+    identity(:discord_id, [:user_discord_id, :message_discord_id, :guild_discord_id, :emoji_name],
+      pre_check_with: TestApp.Domain
+    )
   end
 
   code_interface do
@@ -125,6 +125,82 @@ defmodule TestApp.Discord.MessageReaction do
         description:
           "Map with channel_id, message_id, emoji_name, emoji_id (optional), and user_discord_id for API fallback"
       )
+
+      # Set identity fields BEFORE the main change module runs - required for upsert matching
+      change(fn changeset, _context ->
+        identity = Ash.Changeset.get_argument(changeset, :identity)
+        data = Ash.Changeset.get_argument(changeset, :data)
+
+        # Set user_discord_id from identity or data
+        changeset =
+          case {identity, data} do
+            {%{user_discord_id: user_discord_id}, _} when not is_nil(user_discord_id) ->
+              Ash.Changeset.force_change_attribute(changeset, :user_discord_id, user_discord_id)
+
+            {_, %{user_id: user_id}} when not is_nil(user_id) ->
+              Ash.Changeset.force_change_attribute(changeset, :user_discord_id, user_id)
+
+            _ ->
+              changeset
+          end
+
+        # Set message_discord_id from identity or data
+        changeset =
+          case {identity, data} do
+            {%{message_discord_id: message_discord_id}, _} when not is_nil(message_discord_id) ->
+              Ash.Changeset.force_change_attribute(
+                changeset,
+                :message_discord_id,
+                message_discord_id
+              )
+
+            {_, %{message_id: message_id}} when not is_nil(message_id) ->
+              Ash.Changeset.force_change_attribute(changeset, :message_discord_id, message_id)
+
+            _ ->
+              changeset
+          end
+
+        # Set guild_discord_id from identity or data - always set even if nil
+        guild_discord_id =
+          case {identity, data} do
+            {%{guild_discord_id: guild_discord_id}, _} -> guild_discord_id
+            {_, %{guild_id: guild_id}} -> guild_id
+            _ -> nil
+          end
+
+        changeset =
+          Ash.Changeset.force_change_attribute(changeset, :guild_discord_id, guild_discord_id)
+
+        # Set emoji_name from identity or data
+        changeset =
+          case {identity, data} do
+            {%{emoji_name: emoji_name}, _} when not is_nil(emoji_name) ->
+              Ash.Changeset.force_change_attribute(changeset, :emoji_name, emoji_name)
+
+            {_, %{emoji: emoji}} when not is_nil(emoji) ->
+              emoji_name = Map.get(emoji, :name)
+              Ash.Changeset.force_change_attribute(changeset, :emoji_name, emoji_name)
+
+            _ ->
+              changeset
+          end
+
+        # Set emoji_id from identity or data - always set even if nil
+        emoji_id =
+          case {identity, data} do
+            {%{emoji_id: emoji_id}, _} ->
+              emoji_id
+
+            {_, %{emoji: emoji}} when not is_nil(emoji) ->
+              Map.get(emoji, :id)
+
+            _ ->
+              nil
+          end
+
+        Ash.Changeset.force_change_attribute(changeset, :emoji_id, emoji_id)
+      end)
 
       change(AshDiscord.Changes.FromDiscord.MessageReaction)
 

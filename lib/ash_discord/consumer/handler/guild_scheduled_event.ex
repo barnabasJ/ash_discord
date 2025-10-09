@@ -107,22 +107,10 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEvent do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def user_add(_consumer, event, _ws_state, context) do
+  def user_add(_consumer, _event, _ws_state, _context) do
     # GUILD_SCHEDULED_EVENT_USER_ADD is an informational event sent when a user
-    # subscribes to a scheduled event.
-    case Handler.invoke_configured_action(
-           :GUILD_SCHEDULED_EVENT_USER_ADD,
-           %{
-             guild_scheduled_event_id: event.guild_scheduled_event_id,
-             user_id: event.user_id,
-             guild_id: event.guild_id
-           },
-           %{},
-           context
-         ) do
-      {:ok, _} -> :ok
-      {:error, error} -> {:error, error}
-    end
+    # subscribes to a scheduled event. This event doesn't require database operations.
+    :ok
   end
 
   @spec user_remove(
@@ -131,20 +119,9 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEvent do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def user_remove(_consumer, event, _ws_state, context) do
+  def user_remove(_consumer, _event, _ws_state, _context) do
     # GUILD_SCHEDULED_EVENT_USER_REMOVE is an informational event sent when a user
-    # unsubscribes from a scheduled event.
-    case Handler.invoke_configured_action(
-           :GUILD_SCHEDULED_EVENT_USER_REMOVE,
-           %{
-             guild_scheduled_event_id: event.guild_scheduled_event_id,
-             user_id: event.user_id
-           },
-           %{},
-           context
-         ) do
-      {:ok, _} -> :ok
-      {:error, error} -> {:error, error}
-    end
+    # unsubscribes from a scheduled event. This event doesn't require database operations.
+    :ok
   end
 end

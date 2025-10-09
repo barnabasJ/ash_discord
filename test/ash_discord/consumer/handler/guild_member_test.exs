@@ -56,14 +56,14 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
       # Verify guild member was created in database for this specific guild
       members =
         TestApp.Discord.GuildMember
-        |> Ash.Query.filter(guild_id: guild_id)
+        |> Ash.Query.filter(guild_discord_id: guild_id)
         |> Ash.read!()
 
       assert length(members) == 1
 
       created_member = hd(members)
-      assert created_member.user_id == member_data.user_id
-      assert created_member.guild_id == guild_id
+      assert created_member.user_discord_id == member_data.user_id
+      assert created_member.guild_discord_id == guild_id
     end
   end
 
@@ -109,14 +109,14 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
       # Verify guild member was updated (upserted) in database for this specific guild
       members =
         TestApp.Discord.GuildMember
-        |> Ash.Query.filter(guild_id: guild_id)
+        |> Ash.Query.filter(guild_discord_id: guild_id)
         |> Ash.read!()
 
       assert length(members) == 1
 
       updated_member = hd(members)
-      assert updated_member.user_id == new_member.user_id
-      assert updated_member.guild_id == guild_id
+      assert updated_member.user_discord_id == new_member.user_id
+      assert updated_member.guild_discord_id == guild_id
       assert updated_member.nick == "New Nick"
     end
   end
@@ -140,14 +140,14 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
         TestApp.Discord.GuildMember
         |> Ash.Changeset.for_create(:from_discord, %{
           data: member_data,
-          identity: %{guild_id: guild_id}
+          identity: %{guild_discord_id: guild_id, user_discord_id: member_data.user_id}
         })
         |> Ash.create()
 
       # Verify member exists for this specific guild
       members_before =
         TestApp.Discord.GuildMember
-        |> Ash.Query.filter(guild_id: guild_id)
+        |> Ash.Query.filter(guild_discord_id: guild_id)
         |> Ash.read!()
 
       assert length(members_before) == 1
@@ -178,7 +178,7 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
       # Verify guild member was deleted from database for this specific guild
       members_after =
         TestApp.Discord.GuildMember
-        |> Ash.Query.filter(guild_id: guild_id)
+        |> Ash.Query.filter(guild_discord_id: guild_id)
         |> Ash.read!()
 
       assert length(members_after) == 0
@@ -289,16 +289,16 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
       members = TestApp.Discord.GuildMember.read!()
       assert length(members) == 2
 
-      member_user_ids = Enum.map(members, & &1.user_id)
+      member_user_ids = Enum.map(members, & &1.user_discord_id)
       assert user_id_1 in member_user_ids
       assert user_id_2 in member_user_ids
 
-      member1 = Enum.find(members, &(&1.user_id == user_id_1))
-      assert member1.guild_id == guild_id
+      member1 = Enum.find(members, &(&1.user_discord_id == user_id_1))
+      assert member1.guild_discord_id == guild_id
       assert member1.nick == "TestUser1"
 
-      member2 = Enum.find(members, &(&1.user_id == user_id_2))
-      assert member2.guild_id == guild_id
+      member2 = Enum.find(members, &(&1.user_discord_id == user_id_2))
+      assert member2.guild_discord_id == guild_id
       assert member2.nick == "TestUser2"
     end
   end

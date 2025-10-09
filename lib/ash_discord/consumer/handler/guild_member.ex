@@ -20,8 +20,6 @@ defmodule AshDiscord.Consumer.Handler.GuildMember do
            :GUILD_MEMBER_ADD,
            %{guild_discord_id: guild_id, user_discord_id: user_discord_id},
            %{
-             guild_discord_id: guild_id,
-             user_discord_id: user_discord_id,
              data: member,
              identity: %{guild_discord_id: guild_id, user_discord_id: user_discord_id}
            },
@@ -55,8 +53,6 @@ defmodule AshDiscord.Consumer.Handler.GuildMember do
            :GUILD_MEMBER_UPDATE,
            %{guild_discord_id: guild_id, user_discord_id: user_discord_id},
            %{
-             guild_discord_id: guild_id,
-             user_discord_id: user_discord_id,
              data: member,
              identity: %{guild_discord_id: guild_id, user_discord_id: user_discord_id}
            },
@@ -127,8 +123,6 @@ defmodule AshDiscord.Consumer.Handler.GuildMember do
               :GUILD_MEMBERS_CHUNK,
               %{guild_discord_id: guild_id, user_discord_id: user_id},
               %{
-                guild_discord_id: guild_id,
-                user_discord_id: user_id,
                 data: member_payload,
                 identity: %{guild_discord_id: guild_id, user_discord_id: user_id}
               },

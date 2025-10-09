@@ -19,8 +19,8 @@ defmodule TestApp.Discord.GuildMember do
   attributes do
     uuid_primary_key(:id)
 
-    attribute(:guild_id, :integer, allow_nil?: false, public?: true)
-    attribute(:user_id, :integer, allow_nil?: false, public?: true)
+    attribute(:guild_discord_id, :integer, allow_nil?: false, public?: true)
+    attribute(:user_discord_id, :integer, allow_nil?: false, public?: true)
     attribute(:nick, :string, public?: true)
     attribute(:roles, {:array, :integer}, public?: true, default: [])
     attribute(:joined_at, :utc_datetime, public?: true)
@@ -35,7 +35,7 @@ defmodule TestApp.Discord.GuildMember do
   end
 
   identities do
-    identity(:discord_id, [:guild_id, :user_id], pre_check_with: TestApp.Domain)
+    identity(:discord_id, [:guild_discord_id, :user_discord_id], pre_check_with: TestApp.Domain)
   end
 
   actions do
@@ -43,7 +43,7 @@ defmodule TestApp.Discord.GuildMember do
 
     create :create do
       primary?(true)
-      accept([:guild_id, :user_id, :nick, :roles, :joined_at])
+      accept([:guild_discord_id, :user_discord_id, :nick, :roles, :joined_at])
     end
 
     create :from_discord do
@@ -69,26 +69,26 @@ defmodule TestApp.Discord.GuildMember do
 
       argument(:identity, :map,
         allow_nil?: true,
-        description: "Map with guild_id and user_id for API fallback"
+        description: "Map with guild_discord_id and user_discord_id for API fallback"
       )
 
       change(fn changeset, _context ->
-        # Set guild_id and user_id from identity or data
+        # Set guild_discord_id and user_discord_id from identity or data
         identity = Ash.Changeset.get_argument(changeset, :identity)
         data = Ash.Changeset.get_argument(changeset, :data)
 
         changeset =
           case {identity, data} do
-            {%{guild_id: guild_id}, _} when not is_nil(guild_id) ->
-              Ash.Changeset.force_change_attribute(changeset, :guild_id, guild_id)
+            {%{guild_discord_id: guild_discord_id}, _} when not is_nil(guild_discord_id) ->
+              Ash.Changeset.force_change_attribute(changeset, :guild_discord_id, guild_discord_id)
 
             _ ->
               changeset
           end
 
         case data do
-          %{user_id: user_id} when not is_nil(user_id) ->
-            Ash.Changeset.force_change_attribute(changeset, :user_id, user_id)
+          %{user_id: user_discord_id} when not is_nil(user_discord_id) ->
+            Ash.Changeset.force_change_attribute(changeset, :user_discord_id, user_discord_id)
 
           _ ->
             changeset
@@ -108,12 +108,12 @@ defmodule TestApp.Discord.GuildMember do
     # TODO: use the regular ids
     belongs_to(:guild, TestApp.Discord.Guild,
       destination_attribute: :discord_id,
-      source_attribute: :guild_id
+      source_attribute: :guild_discord_id
     )
 
     belongs_to(:user, TestApp.Discord.User,
       destination_attribute: :discord_id,
-      source_attribute: :user_id
+      source_attribute: :user_discord_id
     )
   end
 

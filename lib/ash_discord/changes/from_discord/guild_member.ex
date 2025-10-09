@@ -9,7 +9,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMember do
   ## Arguments
 
   - `:data` - TypedStruct `AshDiscord.Consumer.Payloads.Member.t()` with Discord member data
-  - `:identity` - Map with `%{guild_id: integer, user_id: integer}` for API fallback
+  - `:identity` - Map with `%{guild_discord_id: integer, user_discord_id: integer}` for API fallback
 
   ## Example
 
@@ -37,9 +37,12 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMember do
 
           # Validate identity has required fields for API fetch
           case identity do
-            %{guild_id: guild_id, user_id: user_id}
-            when not is_nil(guild_id) and not is_nil(user_id) ->
-              case ApiFetchers.fetch_member(identity) do
+            %{guild_discord_id: guild_discord_id, user_discord_id: user_discord_id}
+            when not is_nil(guild_discord_id) and not is_nil(user_discord_id) ->
+              # ApiFetchers.fetch_member expects guild_id and user_id keys
+              api_identity = %{guild_id: guild_discord_id, user_id: user_discord_id}
+
+              case ApiFetchers.fetch_member(api_identity) do
                 {:ok, %Payloads.Member{} = member_data} ->
                   transform_guild_member(changeset, member_data, identity)
 
@@ -50,7 +53,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMember do
             _ ->
               Ash.Changeset.add_error(
                 changeset,
-                "GuildMember requires data argument with Member payload, or identity argument with %{guild_id: integer, user_id: integer}"
+                "GuildMember requires data argument with Member payload, or identity argument with %{guild_discord_id: integer, user_discord_id: integer}"
               )
           end
 
@@ -71,13 +74,13 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMember do
 
   defp transform_guild_member(changeset, member_data, identity) do
     # Get guild_discord_id from identity map
-    guild_discord_id = identity[:guild_id] || identity["guild_id"]
+    guild_discord_id = identity[:guild_discord_id] || identity["guild_discord_id"]
     user_discord_id = member_data.user_id
 
     # Validate required fields
     changeset =
       if is_nil(user_discord_id) do
-        Ash.Changeset.add_error(changeset, field: :user_id, message: "is required")
+        Ash.Changeset.add_error(changeset, field: :user_discord_id, message: "is required")
       else
         changeset
       end

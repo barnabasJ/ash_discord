@@ -509,7 +509,7 @@ defmodule AshDiscord.Consumer.EventMap do
   def handler_for(:RESUMED),
     do:
       {AshDiscord.Consumer.Handler.Resumed, :handle, :resumed_resource, :handle_resumed,
-       Payloads.Resumed}
+       Payloads.ResumedEvent}
 
   # TODO: Implement thread handlers
   def handler_for(:THREAD_CREATE),

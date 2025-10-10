@@ -6,16 +6,13 @@ defmodule AshDiscord.Consumer.Handler.Resumed do
           data :: map(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
-        ) :: :ok | {:error, term()}
-  def resumed(_consumer, data, _ws_state, context) do
-    case Handler.invoke_configured_action(
+        ) :: :ok | {:ok, term()} | Ash.BulkResult.t() | {:error, term()}
+  def resumed(_consumer, _data, _ws_state, context) do
+    Handler.invoke_configured_action(
            :RESUMED,
+           nil,
            %{},
-           %{data: data},
            context
-         ) do
-      {:ok, _} -> :ok
-      {:error, error} -> {:error, error}
-    end
+         ) 
   end
 end

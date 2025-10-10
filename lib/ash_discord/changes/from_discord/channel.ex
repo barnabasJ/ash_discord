@@ -28,11 +28,9 @@ defmodule AshDiscord.Changes.FromDiscord.Channel do
 
   @impl true
   def change(changeset, _opts, _context) do
-    Ash.Changeset.before_transaction(changeset, fn changeset ->
-      # API calls happen here, OUTSIDE transaction
-      case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
-        nil ->
-          # No data provided, fetch from API using identity
+    case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
+      nil ->
+        Ash.Changeset.before_transaction(changeset, fn changeset ->
           identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
 
           case ApiFetchers.fetch_channel(identity) do
@@ -42,18 +40,18 @@ defmodule AshDiscord.Changes.FromDiscord.Channel do
             {:error, reason} ->
               Ash.Changeset.add_error(changeset, reason)
           end
+        end)
 
-        %Payloads.Channel{} = channel_data ->
-          # Data provided directly, use it
-          transform_channel(changeset, channel_data)
+      %Payloads.Channel{} = channel_data ->
+        # Data provided directly, use it
+        transform_channel(changeset, channel_data)
 
-        other ->
-          Ash.Changeset.add_error(
-            changeset,
-            "Invalid data argument: expected %AshDiscord.Consumer.Payloads.Channel{}, got: #{inspect(other)}"
-          )
-      end
-    end)
+      other ->
+        Ash.Changeset.add_error(
+          changeset,
+          "Invalid data argument: expected %AshDiscord.Consumer.Payloads.Channel{}, got: #{inspect(other)}"
+        )
+    end
   end
 
   defp transform_channel(changeset, channel_data) do

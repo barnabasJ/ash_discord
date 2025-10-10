@@ -28,11 +28,9 @@ defmodule AshDiscord.Changes.FromDiscord.Message do
 
   @impl true
   def change(changeset, _opts, _context) do
-    Ash.Changeset.before_transaction(changeset, fn changeset ->
-      # API calls happen here, OUTSIDE transaction
-      case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
-        nil ->
-          # No data provided, fetch from API using identity
+    case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
+      nil ->
+        Ash.Changeset.before_transaction(changeset, fn changeset ->
           identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
 
           case ApiFetchers.fetch_message(identity) do
@@ -42,18 +40,18 @@ defmodule AshDiscord.Changes.FromDiscord.Message do
             {:error, reason} ->
               Ash.Changeset.add_error(changeset, reason)
           end
+        end)
 
-        %Payloads.Message{} = message_data ->
-          # Data provided directly, use it
-          transform_message(changeset, message_data)
+      %Payloads.Message{} = message_data ->
+        # Data provided directly, use it
+        transform_message(changeset, message_data)
 
-        other ->
-          Ash.Changeset.add_error(
-            changeset,
-            "Invalid data argument: expected %AshDiscord.Consumer.Payloads.Message{}, got: #{inspect(other)}"
-          )
-      end
-    end)
+      other ->
+        Ash.Changeset.add_error(
+          changeset,
+          "Invalid data argument: expected %AshDiscord.Consumer.Payloads.Message{}, got: #{inspect(other)}"
+        )
+    end
   end
 
   defp transform_message(changeset, message_data) do

@@ -233,7 +233,8 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
           error
       end
     rescue
-      ArgumentError -> {:error, :api_unavailable}
+      ArgumentError ->
+        {:error, :api_unavailable}
     end
   end
 

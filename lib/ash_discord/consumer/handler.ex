@@ -246,7 +246,8 @@ defmodule AshDiscord.Consumer.Handler do
           Keyword.merge(opts,
             return_records?: true,
             return_errors?: true,
-            stop_on_error?: true
+            stop_on_error?: true,
+            skip_unknown_inputs: [:identity, :data]
           )
         )
 

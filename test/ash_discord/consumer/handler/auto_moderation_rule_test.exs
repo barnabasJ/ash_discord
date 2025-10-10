@@ -8,8 +8,15 @@ defmodule AshDiscord.Consumer.Handler.AutoModerationRuleTest do
   alias TestApp.TestConsumer
 
   describe "create/3" do
+    @tag :fixed
     test "creates auto moderation rule in database" do
-      rule_data = auto_moderation_rule()
+      guild = guild()
+      creator = user()
+
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: creator}, authorize?: false)
+
+      rule_data = auto_moderation_rule(%{guild_id: guild.id, creator_id: creator.id})
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -26,15 +33,12 @@ defmodule AshDiscord.Consumer.Handler.AutoModerationRuleTest do
 
       assert :ok = AutoModerationRule.create(rule_payload, %Nostrum.Struct.WSState{}, context)
 
-      # Verify rule was created in database
-      rules = TestApp.Discord.AutoModerationRule.read!()
-      assert length(rules) == 1
+      assert [created_rule] = TestApp.Discord.AutoModerationRule.read!()
 
-      created_rule = hd(rules)
       assert created_rule.discord_id == rule_data.id
       assert created_rule.name == rule_data.name
-      assert created_rule.guild_id == rule_data.guild_id
-      assert created_rule.creator_id == rule_data.creator_id
+      assert created_rule.guild_discord_id == rule_data.guild_id
+      assert created_rule.creator_discord_id == rule_data.creator_id
       assert created_rule.event_type == rule_data.event_type
       assert created_rule.trigger_type == rule_data.trigger_type
       assert created_rule.enabled == rule_data.enabled

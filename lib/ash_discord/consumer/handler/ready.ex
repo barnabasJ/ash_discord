@@ -1,15 +1,16 @@
 defmodule AshDiscord.Consumer.Handler.Ready do
+  alias AshDiscord.Consumer.Handler
+
   require Logger
 
   @spec ready(
-          consumer :: module(),
-          data :: Nostrum.Struct.Event.Ready.t(),
+          data :: AshDiscord.Consumer.Payloads.ReadyEvent.t(),
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def ready(consumer, _data, _ws_state, _context) do
+  def ready(data, _ws_state, context) do
     # Register Discord commands when bot is ready
-    with {:ok, domains} <- AshDiscord.Consumer.Info.ash_discord_consumer_domains(consumer) do
+    with {:ok, domains} <- AshDiscord.Consumer.Info.ash_discord_consumer_domains(context.consumer) do
       commands = AshDiscord.Consumer.collect_commands(domains)
 
       # Filter by scope and register appropriately
@@ -30,6 +31,11 @@ defmodule AshDiscord.Consumer.Handler.Ready do
       end
     end
 
-    :ok
+    Handler.invoke_configured_action(
+      :READY,
+      nil,
+      %{data: data},
+      context
+    )
   end
 end

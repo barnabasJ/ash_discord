@@ -16,6 +16,20 @@ defmodule TestApp.Discord.AutoModerationRule do
     private?(true)
   end
 
+  relationships do
+    belongs_to :guild, TestApp.Discord.Guild do
+      public?(true)
+      destination_attribute(:discord_id)
+      source_attribute(:guild_discord_id)
+    end
+
+    belongs_to :creator, TestApp.Discord.User do
+      public?(true)
+      destination_attribute(:discord_id)
+      source_attribute(:creator_discord_id)
+    end
+  end
+
   attributes do
     uuid_primary_key(:id)
 
@@ -24,7 +38,7 @@ defmodule TestApp.Discord.AutoModerationRule do
       public?: true
     )
 
-    attribute(:guild_id, :integer,
+    attribute(:guild_discord_id, :integer,
       allow_nil?: false,
       public?: true
     )
@@ -34,7 +48,7 @@ defmodule TestApp.Discord.AutoModerationRule do
       public?: true
     )
 
-    attribute(:creator_id, :integer,
+    attribute(:creator_discord_id, :integer,
       allow_nil?: false,
       public?: true
     )
@@ -90,17 +104,17 @@ defmodule TestApp.Discord.AutoModerationRule do
 
     create :create do
       accept([
-        :discord_id,
-        :guild_id,
-        :name,
-        :creator_id,
-        :event_type,
-        :trigger_type,
-        :trigger_metadata,
         :actions,
+        :creator_discord_id,
+        :discord_id,
         :enabled,
+        :event_type,
+        :exempt_channels,
         :exempt_roles,
-        :exempt_channels
+        :guild_discord_id,
+        :name,
+        :trigger_metadata,
+        :trigger_type
       ])
     end
 
@@ -124,16 +138,16 @@ defmodule TestApp.Discord.AutoModerationRule do
       upsert_identity(:discord_id)
 
       upsert_fields([
-        :guild_id,
-        :name,
-        :creator_id,
-        :event_type,
-        :trigger_type,
-        :trigger_metadata,
         :actions,
+        :creator_discord_id,
         :enabled,
+        :event_type,
+        :exempt_channels,
         :exempt_roles,
-        :exempt_channels
+        :guild_discord_id,
+        :name,
+        :trigger_metadata,
+        :trigger_type
       ])
     end
 
@@ -141,16 +155,16 @@ defmodule TestApp.Discord.AutoModerationRule do
       primary?(true)
 
       accept([
-        :guild_id,
-        :name,
-        :creator_id,
-        :event_type,
-        :trigger_type,
-        :trigger_metadata,
         :actions,
+        :creator_discord_id,
         :enabled,
+        :event_type,
+        :exempt_channels,
         :exempt_roles,
-        :exempt_channels
+        :guild_discord_id,
+        :name,
+        :trigger_metadata,
+        :trigger_type
       ])
     end
   end

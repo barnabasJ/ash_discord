@@ -87,7 +87,6 @@ defmodule AshDiscord.Consumer.Handler.AutoModerationRuleTest do
 
       assert :ok = AutoModerationRule.update(new_rule_payload, %Nostrum.Struct.WSState{}, context)
 
-      # Verify rule was updated (upserted) in database
       assert [updated_rule] = TestApp.Discord.AutoModerationRule.read!(authorize?: false)
 
       assert updated_rule.discord_id == new_rule.id
@@ -97,22 +96,31 @@ defmodule AshDiscord.Consumer.Handler.AutoModerationRuleTest do
   end
 
   describe "delete/3" do
+    @tag :fixed
     test "deletes auto moderation rule from database" do
-      rule_data = auto_moderation_rule()
+      guild = guild()
+      creator = user()
 
-      # First create the rule
-      {:ok, rule_payload} = Payloads.AutoModerationRule.new(rule_data)
-
-      {:ok, _created} =
-        TestApp.Discord.AutoModerationRule
-        |> Ash.Changeset.for_create(:from_discord, %{
-          data: rule_payload
+      rule =
+        auto_moderation_rule(%{
+          name: "old-name",
+          enabled: false,
+          guild_id: guild.id,
+          creator_id: creator.id
         })
-        |> Ash.create()
 
-      # Verify rule exists
-      rules_before = TestApp.Discord.AutoModerationRule.read!()
-      assert length(rules_before) == 1
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: creator}, authorize?: false)
+      TestApp.Discord.auto_moderation_rule_from_discord!(%{data: rule}, authorize?: false)
+
+      rule_payload =
+        auto_moderation_rule(%{
+          id: rule.id,
+          guild_id: guild.id,
+          creator_id: creator.id,
+          name: "new-name",
+          enabled: true
+        })
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -127,9 +135,7 @@ defmodule AshDiscord.Consumer.Handler.AutoModerationRuleTest do
 
       assert :ok = AutoModerationRule.delete(rule_payload, %Nostrum.Struct.WSState{}, context)
 
-      # Verify rule was deleted from database
-      rules_after = TestApp.Discord.AutoModerationRule.read!()
-      assert length(rules_after) == 0
+      assert [] = TestApp.Discord.AutoModerationRule.read!(authorize?: false)
     end
 
     test "handles missing auto moderation rule gracefully" do

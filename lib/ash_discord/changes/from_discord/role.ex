@@ -28,13 +28,14 @@ defmodule AshDiscord.Changes.FromDiscord.Role do
 
   @impl true
   def change(changeset, _opts, _context) do
-    Ash.Changeset.before_transaction(changeset, fn changeset ->
-      # API calls happen here, OUTSIDE transaction
-      case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
-        nil ->
-          # No data provided, fetch from API using identity
-          identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
+    # Get data and identity arguments
+    data = Ash.Changeset.get_argument_or_attribute(changeset, :data)
+    identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
 
+    case data do
+      nil ->
+        # No data provided, fetch from API using identity - wrap in before_transaction for API calls
+        Ash.Changeset.before_transaction(changeset, fn changeset ->
           case fetch_role_from_identity(identity) do
             {:ok, %Payloads.Role{} = role_data} ->
               transform_role(changeset, role_data, identity)
@@ -42,19 +43,18 @@ defmodule AshDiscord.Changes.FromDiscord.Role do
             {:error, reason} ->
               Ash.Changeset.add_error(changeset, reason)
           end
+        end)
 
-        %Payloads.Role{} = role_data ->
-          # Data provided directly, use it
-          identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
-          transform_role(changeset, role_data, identity)
+      %Payloads.Role{} = role_data ->
+        # Data provided directly - set attributes immediately for validation
+        transform_role(changeset, role_data, identity)
 
-        other ->
-          Ash.Changeset.add_error(
-            changeset,
-            "Invalid data argument: expected %AshDiscord.Consumer.Payloads.Role{}, got: #{inspect(other)}"
-          )
-      end
-    end)
+      other ->
+        Ash.Changeset.add_error(
+          changeset,
+          "Invalid data argument: expected %AshDiscord.Consumer.Payloads.Role{}, got: #{inspect(other)}"
+        )
+    end
   end
 
   defp fetch_role_from_identity(%{guild_id: guild_id, role_id: role_id}) do

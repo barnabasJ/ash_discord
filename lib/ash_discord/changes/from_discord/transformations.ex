@@ -169,7 +169,7 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
     Ash.Changeset.manage_relationship(
       changeset,
       :guild,
-      %{discord_id: guild_id, identity: guild_id},
+      %{discord_id: guild_id, identity: %{discord_id: guild_id}},
       type: :append_and_remove,
       use_identities: [:discord_id],
       on_no_match: {:create, :from_discord}

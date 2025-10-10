@@ -28,33 +28,29 @@ defmodule AshDiscord.Changes.FromDiscord.AutoModerationRule do
 
   @impl true
   def change(changeset, _opts, _context) do
-    Ash.Changeset.before_transaction(changeset, fn changeset ->
-      # API calls happen here, OUTSIDE transaction
-      case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
-        nil ->
-          # No data provided, fetch from API using identity
-          identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
+    case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
+      nil ->
+        identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
 
+        Ash.Changeset.before_transaction(changeset, fn changeset ->
           case fetch_auto_moderation_rule(identity) do
             {:ok, %Payloads.AutoModerationRule{} = rule_data} ->
-              transform_auto_moderation_rule(changeset, rule_data, identity)
+              transform_auto_moderation_rule(changeset, rule_data)
 
             {:error, reason} ->
               Ash.Changeset.add_error(changeset, reason)
           end
+        end)
 
-        %Payloads.AutoModerationRule{} = rule_data ->
-          # Data provided directly, use it
-          identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
-          transform_auto_moderation_rule(changeset, rule_data, identity)
+      %Payloads.AutoModerationRule{} = rule_data ->
+        transform_auto_moderation_rule(changeset, rule_data)
 
-        other ->
-          Ash.Changeset.add_error(
-            changeset,
-            "Invalid data argument: expected %AshDiscord.Consumer.Payloads.AutoModerationRule{}, got: #{inspect(other)}"
-          )
-      end
-    end)
+      other ->
+        Ash.Changeset.add_error(
+          changeset,
+          "Invalid data argument: expected %AshDiscord.Consumer.Payloads.AutoModerationRule{}, got: #{inspect(other)}"
+        )
+    end
   end
 
   defp fetch_auto_moderation_rule(%{guild_id: guild_id, rule_id: rule_id}) do
@@ -69,16 +65,10 @@ defmodule AshDiscord.Changes.FromDiscord.AutoModerationRule do
   defp fetch_auto_moderation_rule(_),
     do: {:error, "Identity must be a map with guild_id and rule_id"}
 
-  defp transform_auto_moderation_rule(changeset, rule_data, identity) do
-    guild_discord_id =
-      (identity && (identity[:guild_id] || identity["guild_id"])) || rule_data.guild_id
-
+  defp transform_auto_moderation_rule(changeset, rule_data) do
     changeset
     |> maybe_set_attribute(:discord_id, rule_data.id)
-    |> maybe_set_attribute(:guild_discord_id, guild_discord_id)
-    |> maybe_set_attribute(:guild_id, guild_discord_id)
     |> maybe_set_attribute(:name, rule_data.name)
-    |> maybe_set_attribute(:creator_id, rule_data.creator_id)
     |> maybe_set_attribute(:event_type, rule_data.event_type)
     |> maybe_set_attribute(:trigger_type, rule_data.trigger_type)
     |> maybe_set_attribute(:trigger_metadata, rule_data.trigger_metadata)
@@ -86,10 +76,9 @@ defmodule AshDiscord.Changes.FromDiscord.AutoModerationRule do
     |> maybe_set_attribute(:enabled, rule_data.enabled)
     |> maybe_set_attribute(:exempt_roles, rule_data.exempt_roles)
     |> maybe_set_attribute(:exempt_channels, rule_data.exempt_channels)
-    |> maybe_manage_guild_relationship(guild_discord_id)
+    |> maybe_manage_guild_relationship(rule_data.guild_id)
+    |> maybe_manage_creator_relationship(rule_data.creator_id)
   end
-
-  defp maybe_set_attribute(changeset, _field, nil), do: changeset
 
   defp maybe_set_attribute(changeset, field, value) do
     if Ash.Resource.Info.attribute(changeset.resource, field) do
@@ -99,7 +88,13 @@ defmodule AshDiscord.Changes.FromDiscord.AutoModerationRule do
     end
   end
 
-  defp maybe_manage_guild_relationship(changeset, nil), do: changeset
+  defp maybe_manage_creator_relationship(changeset, guild_discord_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :creator) do
+      Transformations.manage_user_relationship(changeset, guild_discord_id, :creator)
+    else
+      changeset
+    end
+  end
 
   defp maybe_manage_guild_relationship(changeset, guild_discord_id) do
     if Ash.Resource.Info.relationship(changeset.resource, :guild) do

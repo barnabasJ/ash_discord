@@ -31,12 +31,6 @@ defmodule TestApp.Discord.MessageReaction do
       default: false
     )
 
-    attribute(:emoji_animated, :boolean,
-      allow_nil?: true,
-      public?: true,
-      default: false
-    )
-
     # Foreign key attributes for relationships
     attribute(:emoji_discord_id, :integer,
       allow_nil?: true,
@@ -134,7 +128,6 @@ defmodule TestApp.Discord.MessageReaction do
         :emoji_name,
         :count,
         :me,
-        :emoji_animated,
         :user_discord_id,
         :message_discord_id,
         :channel_discord_id,
@@ -163,7 +156,6 @@ defmodule TestApp.Discord.MessageReaction do
         :emoji_name,
         :count,
         :me,
-        :emoji_animated,
         :user_discord_id,
         :message_discord_id,
         :channel_discord_id,

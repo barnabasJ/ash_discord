@@ -24,9 +24,8 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
         TestApp.Discord.message_reaction_from_discord(%{data: reaction_event})
 
       assert {:ok, created_reaction} = result
-      assert created_reaction.emoji_id == nil
+      assert created_reaction.emoji_discord_id == nil
       assert created_reaction.emoji_name == "👍"
-      assert created_reaction.emoji_animated == false
       assert created_reaction.count == 1
       assert created_reaction.me == false
     end
@@ -45,9 +44,8 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
         TestApp.Discord.message_reaction_from_discord(%{data: reaction_event})
 
       assert {:ok, created_reaction} = result
-      assert created_reaction.emoji_id == 987_654_321
+      assert created_reaction.emoji_discord_id == 987_654_321
       assert created_reaction.emoji_name == "custom_emoji"
-      assert created_reaction.emoji_animated == false
       assert created_reaction.count == 1
       assert created_reaction.me == false
     end
@@ -66,9 +64,8 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
         TestApp.Discord.message_reaction_from_discord(%{data: reaction_event})
 
       assert {:ok, created_reaction} = result
-      assert created_reaction.emoji_id == 555_666_777
+      assert created_reaction.emoji_discord_id == 555_666_777
       assert created_reaction.emoji_name == "animated_party"
-      assert created_reaction.emoji_animated == true
       assert created_reaction.count == 1
     end
 
@@ -169,8 +166,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       assert {:ok, created_reaction} = result
       assert created_reaction.emoji_name == emoji_name
-      assert created_reaction.emoji_id == nil
-      assert created_reaction.emoji_animated == false
+      assert created_reaction.emoji_discord_id == nil
       assert created_reaction.user_discord_id == user_id
       assert created_reaction.message_discord_id == message_id
       assert created_reaction.channel_discord_id == channel_id
@@ -212,8 +208,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
 
       assert {:ok, created_reaction} = result
       assert created_reaction.emoji_name == emoji_name
-      assert created_reaction.emoji_id == emoji_id
-      assert created_reaction.emoji_animated == true
+      assert created_reaction.emoji_discord_id == emoji_id
       assert created_reaction.user_discord_id == user_id
     end
 
@@ -380,7 +375,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
       assert updated_reaction.user_discord_id == original_reaction.user_discord_id
       assert updated_reaction.message_discord_id == original_reaction.message_discord_id
       assert updated_reaction.emoji_name == original_reaction.emoji_name
-      assert updated_reaction.emoji_id == nil
+      assert updated_reaction.emoji_discord_id == nil
     end
 
     test "upsert works with custom emoji reactions" do
@@ -418,10 +413,9 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
       assert updated_reaction.id == original_reaction.id
       assert updated_reaction.user_discord_id == user_id
       assert updated_reaction.message_discord_id == message_id
-      assert updated_reaction.emoji_id == emoji_id
+      assert updated_reaction.emoji_discord_id == emoji_id
 
       # But with updated attributes
-      assert updated_reaction.emoji_animated == true
     end
   end
 

@@ -89,7 +89,6 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
       created_reaction = hd(reactions)
       assert created_reaction.emoji_name == "custom_emoji"
       assert created_reaction.emoji_discord_id == emoji_data.id
-      assert created_reaction.emoji_animated == true
     end
 
     test "upserts existing reaction" do

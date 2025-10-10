@@ -1581,6 +1581,20 @@ defmodule AshDiscord.Test.Generators do
   end
 
   @doc """
+  Generates a Discord Resumed event map.
+
+  ## Options
+
+  ## Examples
+
+      iex> event = resumed_event()
+      %{}
+  """
+  def resumed_event(attrs \\ %{}) do
+     merge_attrs(%{}, attrs)
+  end
+
+  @doc """
   Generates a Discord ThreadMember struct.
 
   ## Options

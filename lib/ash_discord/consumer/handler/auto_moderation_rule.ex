@@ -10,8 +10,8 @@ defmodule AshDiscord.Consumer.Handler.AutoModerationRule do
   def create(rule, _ws_state, context) do
     case Handler.invoke_configured_action(
            :AUTO_MODERATION_RULE_CREATE,
-           rule.id,
-           %{identity: %{guild_id: rule.guild_id, rule_id: rule.id}, data: rule},
+           %{discord_id: rule.id, guild_discord_id: rule.guild_id},
+           %{identity: %{discord_id: rule.id, guild_discord_id: rule.guild_id}, data: rule},
            context
          ) do
       {:ok, _} -> :ok
@@ -27,8 +27,8 @@ defmodule AshDiscord.Consumer.Handler.AutoModerationRule do
   def delete(rule, _ws_state, context) do
     case Handler.invoke_configured_action(
            :AUTO_MODERATION_RULE_DELETE,
-           %{discord_id: rule.id},
-           %{},
+           %{discord_id: rule.id, guild_discord_id: rule.guild_id},
+           %{identity: %{discord_id: rule.id, guild_discord_id: rule.guild_id}, data: rule},
            context
          ) do
       {:ok, _} -> :ok
@@ -44,8 +44,8 @@ defmodule AshDiscord.Consumer.Handler.AutoModerationRule do
   def update(rule, _ws_state, context) do
     case Handler.invoke_configured_action(
            :AUTO_MODERATION_RULE_UPDATE,
-           rule.id,
-           %{identity: %{guild_id: rule.guild_id, rule_id: rule.id}, data: rule},
+           %{discord_id: rule.id, guild_discord_id: rule.guild_id},
+           %{identity: %{discord_id: rule.id, guild_discord_id: rule.guild_id}, data: rule},
            context
          ) do
       {:ok, _} -> :ok

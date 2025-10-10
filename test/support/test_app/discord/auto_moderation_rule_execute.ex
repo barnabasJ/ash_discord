@@ -18,20 +18,52 @@ defmodule TestApp.Discord.AutoModerationRuleExecute do
     private?(true)
   end
 
+  relationships do
+    belongs_to :guild, TestApp.Discord.Guild do
+      public?(true)
+      destination_attribute(:discord_id)
+      source_attribute(:guild_discord_id)
+    end
+
+    belongs_to :user, TestApp.Discord.User do
+      public?(true)
+      destination_attribute(:discord_id)
+      source_attribute(:user_discord_id)
+    end
+
+    belongs_to :rule, TestApp.Discord.AutoModerationRule do
+      public?(true)
+      destination_attribute(:discord_id)
+      source_attribute(:rule_discord_id)
+    end
+
+    belongs_to :channel, TestApp.Discord.Channel do
+      public?(true)
+      destination_attribute(:discord_id)
+      source_attribute(:channel_discord_id)
+    end
+
+    belongs_to :message, TestApp.Discord.Message do
+      public?(true)
+      destination_attribute(:discord_id)
+      source_attribute(:message_discord_id)
+    end
+  end
+
   attributes do
     uuid_primary_key(:id)
-
-    attribute(:guild_id, :integer,
-      allow_nil?: false,
-      public?: true
-    )
 
     attribute(:action, :map,
       allow_nil?: false,
       public?: true
     )
 
-    attribute(:rule_id, :integer,
+    attribute(:guild_discord_id, :integer,
+      allow_nil?: false,
+      public?: true
+    )
+
+    attribute(:rule_discord_id, :integer,
       allow_nil?: false,
       public?: true
     )
@@ -41,22 +73,22 @@ defmodule TestApp.Discord.AutoModerationRuleExecute do
       public?: true
     )
 
-    attribute(:user_id, :integer,
+    attribute(:user_discord_id, :integer,
       allow_nil?: false,
       public?: true
     )
 
-    attribute(:channel_id, :integer,
+    attribute(:channel_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
 
-    attribute(:message_id, :integer,
+    attribute(:message_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
 
-    attribute(:alert_system_message_id, :integer,
+    attribute(:alert_system_message_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
@@ -82,14 +114,14 @@ defmodule TestApp.Discord.AutoModerationRuleExecute do
 
     create :create do
       accept([
-        :guild_id,
+        :guild_discord_id,
         :action,
-        :rule_id,
+        :rule_discord_id,
         :rule_trigger_type,
-        :user_id,
-        :channel_id,
-        :message_id,
-        :alert_system_message_id,
+        :user_discord_id,
+        :channel_discord_id,
+        :message_discord_id,
+        :alert_system_message_discord_id,
         :content,
         :matched_keyword,
         :matched_content
@@ -112,14 +144,14 @@ defmodule TestApp.Discord.AutoModerationRuleExecute do
       primary?(true)
 
       accept([
-        :guild_id,
+        :guild_discord_id,
         :action,
-        :rule_id,
+        :rule_discord_id,
         :rule_trigger_type,
-        :user_id,
-        :channel_id,
-        :message_id,
-        :alert_system_message_id,
+        :user_discord_id,
+        :channel_discord_id,
+        :message_discord_id,
+        :alert_system_message_discord_id,
         :content,
         :matched_keyword,
         :matched_content

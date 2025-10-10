@@ -288,6 +288,47 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
   def manage_message_relationship(changeset, _nil_message_id), do: changeset
 
   @doc """
+  Manages emoji relationship.
+
+  Sets up relationship management for emoji associations using Ash's
+  relationship management
+
+  ## Parameters
+
+  - `changeset` - The Ash changeset to modify
+  - `emoji_id` - The Discord guild ID to associate
+
+  ## Returns
+
+  Updated changeset with emoji relationship managed.
+
+  ## Examples
+
+      changeset = manage_emoji_relationship(changeset, discord_data.emoji_id)
+
+  """
+  def manage_emoji_relationship(changeset, emoji_id, emoji_name, emoji)
+      when not is_nil(emoji_id) or not is_nil(emoji) do
+    # Pass both discord_id (for lookup) and identity (for API fetch if not found)
+    discord_id = emoji_id || emoji.id
+    name = emoji_id || emoji.name
+
+    Ash.Changeset.manage_relationship(
+      changeset,
+      :emoji,
+      %{
+        discord_id: discord_id,
+        name: name,
+        identity: %{discord_id: emoji_id, name: emoji_name},
+        data: emoji
+      },
+      type: :append_and_remove,
+      use_identities: [:discord_id],
+      on_no_match: {:create, :from_discord}
+    )
+  end
+
+  @doc """
   Transforms Discord permission overwrites to a standardized map format.
 
   Converts Discord permission overwrite data structures into a consistent

@@ -23,10 +23,11 @@ defmodule AshDiscord.Consumer.Handler.Reaction do
   def add(%Payloads.MessageReactionAddEvent{} = reaction_add, _ws_state, context) do
     identity = %{
       user_discord_id: reaction_add.user_id,
+      channel_discord_id: reaction_add.channel_id,
       message_discord_id: reaction_add.message_id,
       guild_discord_id: reaction_add.guild_id,
-      emoji_name: reaction_add.emoji.name,
-      emoji_id: reaction_add.emoji.id
+      emoji_discord_id: reaction_add.emoji.id,
+      emoji_name: reaction_add.emoji.name
     }
 
     case Handler.invoke_configured_action(

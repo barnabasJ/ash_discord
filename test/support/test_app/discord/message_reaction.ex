@@ -19,16 +19,6 @@ defmodule TestApp.Discord.MessageReaction do
   attributes do
     uuid_primary_key(:id)
 
-    attribute(:emoji_id, :integer,
-      allow_nil?: true,
-      public?: true
-    )
-
-    attribute(:emoji_name, :string,
-      allow_nil?: true,
-      public?: true
-    )
-
     attribute(:count, :integer,
       allow_nil?: false,
       public?: true,
@@ -48,6 +38,16 @@ defmodule TestApp.Discord.MessageReaction do
     )
 
     # Foreign key attributes for relationships
+    attribute(:emoji_discord_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:emoji_name, :string,
+      allow_nil?: true,
+      public?: true
+    )
+
     attribute(:user_discord_id, :integer,
       allow_nil?: true,
       public?: true
@@ -70,6 +70,11 @@ defmodule TestApp.Discord.MessageReaction do
   end
 
   relationships do
+    has_one :emoji, TestApp.Discord.Emoji do
+      no_attributes?(true)
+      filter(expr(discord_id == ^parent(:emoji_discord_id) and name == ^parent(:emoji_name)))
+    end
+
     belongs_to :user, TestApp.Discord.User do
       source_attribute(:user_discord_id)
       destination_attribute(:discord_id)
@@ -99,9 +104,16 @@ defmodule TestApp.Discord.MessageReaction do
     # Use user_discord_id, message_discord_id, guild_discord_id, and emoji_name for identity
     # emoji_id is excluded because it's nil for Unicode emojis but not for custom emojis
     # emoji_name is sufficient to identify the emoji uniquely
-    identity(:discord_id, [:user_discord_id, :message_discord_id, :guild_discord_id, :emoji_name],
-      pre_check_with: TestApp.Domain
-    )
+    identity :discord_id, [
+      :user_discord_id,
+      :message_discord_id,
+      :guild_discord_id,
+      :channel_discord_id,
+      :emoji_name,
+      :emoji_discord_id
+    ] do
+      pre_check_with(TestApp.Discord)
+    end
   end
 
   code_interface do
@@ -114,6 +126,20 @@ defmodule TestApp.Discord.MessageReaction do
     create :from_discord do
       description("Create message reaction from Discord data")
       primary?(true)
+      upsert?(true)
+      upsert_identity(:discord_id)
+
+      upsert_fields([
+        :emoji_discord_id,
+        :emoji_name,
+        :count,
+        :me,
+        :emoji_animated,
+        :user_discord_id,
+        :message_discord_id,
+        :channel_discord_id,
+        :guild_discord_id
+      ])
 
       argument(:data, AshDiscord.Consumer.Payloads.MessageReactionAddEvent,
         allow_nil?: true,
@@ -126,105 +152,14 @@ defmodule TestApp.Discord.MessageReaction do
           "Map with channel_id, message_id, emoji_name, emoji_id (optional), and user_discord_id for API fallback"
       )
 
-      # Set identity fields BEFORE the main change module runs - required for upsert matching
-      change(fn changeset, _context ->
-        identity = Ash.Changeset.get_argument(changeset, :identity)
-        data = Ash.Changeset.get_argument(changeset, :data)
-
-        # Set user_discord_id from identity or data
-        changeset =
-          case {identity, data} do
-            {%{user_discord_id: user_discord_id}, _} when not is_nil(user_discord_id) ->
-              Ash.Changeset.force_change_attribute(changeset, :user_discord_id, user_discord_id)
-
-            {_, %{user_id: user_id}} when not is_nil(user_id) ->
-              Ash.Changeset.force_change_attribute(changeset, :user_discord_id, user_id)
-
-            _ ->
-              changeset
-          end
-
-        # Set message_discord_id from identity or data
-        changeset =
-          case {identity, data} do
-            {%{message_discord_id: message_discord_id}, _} when not is_nil(message_discord_id) ->
-              Ash.Changeset.force_change_attribute(
-                changeset,
-                :message_discord_id,
-                message_discord_id
-              )
-
-            {_, %{message_id: message_id}} when not is_nil(message_id) ->
-              Ash.Changeset.force_change_attribute(changeset, :message_discord_id, message_id)
-
-            _ ->
-              changeset
-          end
-
-        # Set guild_discord_id from identity or data - always set even if nil
-        guild_discord_id =
-          case {identity, data} do
-            {%{guild_discord_id: guild_discord_id}, _} -> guild_discord_id
-            {_, %{guild_id: guild_id}} -> guild_id
-            _ -> nil
-          end
-
-        changeset =
-          Ash.Changeset.force_change_attribute(changeset, :guild_discord_id, guild_discord_id)
-
-        # Set emoji_name from identity or data
-        changeset =
-          case {identity, data} do
-            {%{emoji_name: emoji_name}, _} when not is_nil(emoji_name) ->
-              Ash.Changeset.force_change_attribute(changeset, :emoji_name, emoji_name)
-
-            {_, %{emoji: emoji}} when not is_nil(emoji) ->
-              emoji_name = Map.get(emoji, :name)
-              Ash.Changeset.force_change_attribute(changeset, :emoji_name, emoji_name)
-
-            _ ->
-              changeset
-          end
-
-        # Set emoji_id from identity or data - always set even if nil
-        emoji_id =
-          case {identity, data} do
-            {%{emoji_id: emoji_id}, _} ->
-              emoji_id
-
-            {_, %{emoji: emoji}} when not is_nil(emoji) ->
-              Map.get(emoji, :id)
-
-            _ ->
-              nil
-          end
-
-        Ash.Changeset.force_change_attribute(changeset, :emoji_id, emoji_id)
-      end)
-
       change(AshDiscord.Changes.FromDiscord.MessageReaction)
-
-      upsert?(true)
-      upsert_identity(:discord_id)
-
-      upsert_fields([
-        :emoji_id,
-        :emoji_name,
-        :count,
-        :me,
-        :emoji_animated,
-        :user_discord_id,
-        :message_discord_id,
-        :channel_discord_id,
-        :guild_discord_id
-      ])
     end
 
     update :update do
       primary?(true)
 
       accept([
-        :emoji_id,
+        :emoji_discord_id,
         :emoji_name,
         :count,
         :me,

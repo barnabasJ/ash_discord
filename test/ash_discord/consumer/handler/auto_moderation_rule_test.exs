@@ -33,7 +33,7 @@ defmodule AshDiscord.Consumer.Handler.AutoModerationRuleTest do
 
       assert :ok = AutoModerationRule.create(rule_payload, %Nostrum.Struct.WSState{}, context)
 
-      assert [created_rule] = TestApp.Discord.AutoModerationRule.read!()
+      assert [created_rule] = TestApp.Discord.AutoModerationRule.read!(authorize?: false)
 
       assert created_rule.discord_id == rule_data.id
       assert created_rule.name == rule_data.name
@@ -46,10 +46,31 @@ defmodule AshDiscord.Consumer.Handler.AutoModerationRuleTest do
   end
 
   describe "update/3" do
+    @tag :fixed
     test "updates existing auto moderation rule in database" do
-      rule_id = generate_snowflake()
-      _old_rule = auto_moderation_rule(%{id: rule_id, name: "old-name", enabled: false})
-      new_rule = auto_moderation_rule(%{id: rule_id, name: "new-name", enabled: true})
+      guild = guild()
+      creator = user()
+
+      rule =
+        auto_moderation_rule(%{
+          name: "old-name",
+          enabled: false,
+          guild_id: guild.id,
+          creator_id: creator.id
+        })
+
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: creator}, authorize?: false)
+      TestApp.Discord.auto_moderation_rule_from_discord!(%{data: rule}, authorize?: false)
+
+      new_rule =
+        auto_moderation_rule(%{
+          id: rule.id,
+          guild_id: guild.id,
+          creator_id: creator.id,
+          name: "new-name",
+          enabled: true
+        })
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -62,15 +83,13 @@ defmodule AshDiscord.Consumer.Handler.AutoModerationRuleTest do
         }
       }
 
-      {:ok, new_rule_payload} = Payloads.AutoModerationRule.new(new_rule)
+      new_rule_payload = Payloads.AutoModerationRule.new!(new_rule)
 
       assert :ok = AutoModerationRule.update(new_rule_payload, %Nostrum.Struct.WSState{}, context)
 
       # Verify rule was updated (upserted) in database
-      rules = TestApp.Discord.AutoModerationRule.read!()
-      assert length(rules) == 1
+      assert [updated_rule] = TestApp.Discord.AutoModerationRule.read!(authorize?: false)
 
-      updated_rule = hd(rules)
       assert updated_rule.discord_id == new_rule.id
       assert updated_rule.name == "new-name"
       assert updated_rule.enabled == true

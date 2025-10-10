@@ -220,7 +220,8 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
     end
 
     test "requires complete identity map with guild_id and user_id" do
-      result = TestApp.Discord.guild_member_from_discord(%{identity: %{guild_discord_id: 999_888_777}})
+      result =
+        TestApp.Discord.guild_member_from_discord(%{identity: %{guild_discord_id: 999_888_777}})
 
       assert {:error, error} = result
       error_message = Exception.message(error)

@@ -24,10 +24,10 @@ defmodule AshDiscord.Consumer.Handler.ResumedTest do
       }
 
       log =
-      ExUnit.CaptureLog.capture_log(fn ->
-        assert :ok =
-                 Resumed.resumed(TestConsumer, ready_data, %Nostrum.Struct.WSState{}, context)
-      end) 
+        ExUnit.CaptureLog.capture_log(fn ->
+          assert :ok =
+                   Resumed.resumed(TestConsumer, ready_data, %Nostrum.Struct.WSState{}, context)
+        end)
 
       assert log =~ "Resumed action invoked"
     end

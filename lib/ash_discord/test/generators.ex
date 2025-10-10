@@ -1567,6 +1567,7 @@ defmodule AshDiscord.Test.Generators do
   """
   def ready_event(attrs \\ %{}) do
     defaults = %{
+      v: 1,
       user: user(%{bot: true}),
       guilds: [],
       session_id: Faker.UUID.v4(),
@@ -1574,7 +1575,8 @@ defmodule AshDiscord.Test.Generators do
         id: generate_snowflake(),
         flags: 0
       },
-      shard: nil
+      shard: nil,
+      resume_gateway_url: Faker.Internet.url()
     }
 
     struct(Nostrum.Struct.Event.Ready, merge_attrs(defaults, attrs))
@@ -1591,7 +1593,7 @@ defmodule AshDiscord.Test.Generators do
       %{}
   """
   def resumed_event(attrs \\ %{}) do
-     merge_attrs(%{}, attrs)
+    merge_attrs(%{}, attrs)
   end
 
   @doc """

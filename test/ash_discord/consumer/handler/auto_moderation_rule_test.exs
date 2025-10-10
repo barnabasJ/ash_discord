@@ -154,14 +154,38 @@ defmodule AshDiscord.Consumer.Handler.AutoModerationRuleTest do
 
       {:ok, rule_payload} = Payloads.AutoModerationRule.new(rule_data)
 
-      # Should not crash when rule doesn't exist
       assert :ok = AutoModerationRule.delete(rule_payload, %Nostrum.Struct.WSState{}, context)
     end
   end
 
   describe "execute/3" do
+    @tag :fixed
     test "creates auto moderation rule execution event in database" do
-      execute_data = auto_moderation_rule_execute()
+      guild = guild()
+      user = user()
+      guild_member = guild_member(%{guild_id: guild.id, user_id: user.id})
+      channel = channel(%{guild_id: guild.id})
+
+      message =
+        message(%{guild_id: guild.id, author: user, member: guild_member, channel_id: channel.id})
+
+      rule = auto_moderation_rule(%{guild_id: guild.id, creator_id: user.id})
+
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user}, authorize?: false)
+      TestApp.Discord.guild_member_from_discord!(%{data: guild_member}, authorize?: false)
+      TestApp.Discord.channel_from_discord!(%{data: channel}, authorize?: false)
+      TestApp.Discord.message_from_discord!(%{data: message}, authorize?: false)
+      TestApp.Discord.auto_moderation_rule_from_discord!(%{data: rule}, authorize?: false)
+
+      execute_data =
+        auto_moderation_rule_execute(%{
+          user_id: user.id,
+          guild_id: guild.id,
+          message_id: message.id,
+          channel_id: channel.id,
+          rule_id: rule.id
+        })
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -176,16 +200,18 @@ defmodule AshDiscord.Consumer.Handler.AutoModerationRuleTest do
 
       {:ok, execute_payload} = Payloads.AutoModerationRuleExecute.new(execute_data)
 
-      assert :ok = AutoModerationRule.execute(execute_payload, %Nostrum.Struct.WSState{}, context)
+      assert :ok =
+               AutoModerationRule.execute(
+                 execute_payload,
+                 %Nostrum.Struct.WSState{},
+                 context
+               )
 
-      # Verify execution event was created in database
-      executions = TestApp.Discord.AutoModerationRuleExecute.read!()
-      assert length(executions) == 1
+      [created_execution] = TestApp.Discord.AutoModerationRuleExecute.read!(authorize?: false)
 
-      created_execution = hd(executions)
-      assert created_execution.guild_id == execute_data.guild_id
-      assert created_execution.rule_id == execute_data.rule_id
-      assert created_execution.user_id == execute_data.user_id
+      assert created_execution.guild_discord_id == execute_data.guild_id
+      assert created_execution.rule_discord_id == execute_data.rule_id
+      assert created_execution.user_discord_id == execute_data.user_id
       assert created_execution.content == execute_data.content
       assert created_execution.matched_keyword == execute_data.matched_keyword
       assert created_execution.matched_content == execute_data.matched_content

@@ -20,7 +20,7 @@ defmodule TestApp.Discord.Emoji do
     uuid_primary_key(:id)
 
     attribute(:discord_id, :integer,
-      allow_nil?: false,
+      allow_nil?: true,
       public?: true
     )
 
@@ -55,7 +55,7 @@ defmodule TestApp.Discord.Emoji do
   end
 
   identities do
-    identity :discord_id, [:discord_id] do
+    identity :discord_id, [:discord_id, :name] do
       pre_check_with(TestApp.Discord)
     end
   end
@@ -78,7 +78,7 @@ defmodule TestApp.Discord.Emoji do
 
       argument(:identity, :map,
         allow_nil?: true,
-        description: "Map with guild_id and emoji_id for API fallback"
+        description: "A map with either discord_id or name for API fallback"
       )
 
       change(AshDiscord.Changes.FromDiscord.Emoji)

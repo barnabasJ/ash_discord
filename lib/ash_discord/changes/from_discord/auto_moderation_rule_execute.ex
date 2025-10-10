@@ -21,6 +21,7 @@ defmodule AshDiscord.Changes.FromDiscord.AutoModerationRuleExecute do
   use Ash.Resource.Change
 
   alias AshDiscord.Consumer.Payloads
+  alias AshDiscord.Changes.FromDiscord.Transformations
 
   @impl true
   def change(changeset, _opts, _context) do
@@ -41,17 +42,17 @@ defmodule AshDiscord.Changes.FromDiscord.AutoModerationRuleExecute do
 
   defp transform_execution_event(changeset, event_data) do
     changeset
-    |> maybe_set_attribute(:guild_id, event_data.guild_id)
     |> maybe_set_attribute(:action, event_data.action)
-    |> maybe_set_attribute(:rule_id, event_data.rule_id)
     |> maybe_set_attribute(:rule_trigger_type, event_data.rule_trigger_type)
-    |> maybe_set_attribute(:user_id, event_data.user_id)
-    |> maybe_set_attribute(:channel_id, event_data.channel_id)
-    |> maybe_set_attribute(:message_id, event_data.message_id)
     |> maybe_set_attribute(:alert_system_message_id, event_data.alert_system_message_id)
     |> maybe_set_attribute(:content, event_data.content)
     |> maybe_set_attribute(:matched_keyword, event_data.matched_keyword)
     |> maybe_set_attribute(:matched_content, event_data.matched_content)
+    |> maybe_manage_user_relationship(event_data.user_id)
+    |> maybe_manage_guild_relationship(event_data.guild_id)
+    |> maybe_manage_rule_relationship(event_data.rule_id)
+    |> maybe_manage_channel_relationship(event_data.channel_id)
+    |> maybe_manage_message_relationship(event_data.message_id)
   end
 
   defp maybe_set_attribute(changeset, _field, nil), do: changeset
@@ -59,6 +60,56 @@ defmodule AshDiscord.Changes.FromDiscord.AutoModerationRuleExecute do
   defp maybe_set_attribute(changeset, field, value) do
     if Ash.Resource.Info.attribute(changeset.resource, field) do
       Ash.Changeset.force_change_attribute(changeset, field, value)
+    else
+      changeset
+    end
+  end
+
+  defp maybe_manage_user_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_user_relationship(changeset, user_discord_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :user) do
+      Transformations.manage_user_relationship(changeset, user_discord_id)
+    else
+      changeset
+    end
+  end
+
+  defp maybe_manage_guild_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_guild_relationship(changeset, guild_discord_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :guild) do
+      Transformations.manage_guild_relationship(changeset, guild_discord_id)
+    else
+      changeset
+    end
+  end
+
+  defp maybe_manage_rule_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_rule_relationship(changeset, rule_discord_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :rule) do
+      Transformations.manage_rule_relationship(changeset, rule_discord_id)
+    else
+      changeset
+    end
+  end
+
+  defp maybe_manage_channel_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_channel_relationship(changeset, channel_discord_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :channel) do
+      Transformations.manage_channel_relationship(changeset, channel_discord_id)
+    else
+      changeset
+    end
+  end
+
+  defp maybe_manage_message_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_message_relationship(changeset, message_discord_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :message) do
+      Transformations.manage_message_relationship(changeset, message_discord_id)
     else
       changeset
     end

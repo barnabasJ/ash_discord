@@ -19,7 +19,11 @@ defmodule AshDiscord.Consumer.Handler.ReadyTest do
         consumer: TestConsumer,
         resource: TestApp.Discord.Event,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{
+          private: %{ash_discord?: true},
+          shared: %{private: %{ash_discord?: true}}
+        }
       }
 
       log =

@@ -6,6 +6,7 @@ defmodule TestApp.Discord.AutoModerationRule do
   use Ash.Resource,
     extensions: [AshDiscord.Resource],
     domain: TestApp.Discord,
+    authorizers: [Ash.Policy.Authorizer],
     data_layer: Ash.DataLayer.Ets
 
   ash_discord do
@@ -14,6 +15,12 @@ defmodule TestApp.Discord.AutoModerationRule do
 
   ets do
     private?(true)
+  end
+
+  policies do
+    bypass AshDiscord.Checks.AshDiscordInteraction do
+      authorize_if(always())
+    end
   end
 
   relationships do

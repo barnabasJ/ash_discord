@@ -39,7 +39,7 @@ defmodule AshDiscord.MixProject do
   defp deps do
     [
       # Core dependencies
-      {:ash, "~> 3.0"},
+      {:ash, path: "../ash", overrride: true},
       {:spark, "~> 2.0"},
       {:nostrum, "~> 0.10", runtime: Mix.env() != :test},
 

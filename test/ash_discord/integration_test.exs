@@ -180,7 +180,6 @@ defmodule AshDiscord.IntegrationTest do
   end
 
   describe "error handling" do
-    @tag :focus
     test "handles invalid interaction gracefully" do
       invalid_interaction =
         interaction(%{

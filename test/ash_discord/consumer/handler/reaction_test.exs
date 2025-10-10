@@ -1,6 +1,8 @@
 defmodule AshDiscord.Consumer.Handler.ReactionTest do
   use TestApp.DataCase, async: true
 
+  require Ash.Query
+
   import AshDiscord.Test.Generators
 
   alias AshDiscord.Consumer.Handler.Reaction
@@ -90,6 +92,7 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
       assert created_reaction.emoji_animated == true
     end
 
+    @tag :focus
     test "upserts existing reaction" do
       user_id = generate_snowflake()
       message_id = generate_snowflake()
@@ -114,11 +117,22 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
 
       # Add reaction twice
       assert :ok = Reaction.add(reaction_add, %Nostrum.Struct.WSState{}, context)
+
+      assert [_reactions] =
+               TestApp.Discord.MessageReaction.read!(
+                 query:
+                   Ash.Query.filter(
+                     TestApp.Discord.MessageReaction,
+                     user_discord_id == ^user_id and message_discord_id == ^message_id and
+                       emoji_name == "👍" and
+                       is_nil(guild_discord_id) and is_nil(emoji_discord_id)
+                   )
+               )
+
       assert :ok = Reaction.add(reaction_add, %Nostrum.Struct.WSState{}, context)
 
       # Verify only one reaction exists (upserted)
-      reactions = TestApp.Discord.MessageReaction.read!()
-      assert length(reactions) == 1
+      assert [_reactions] = TestApp.Discord.MessageReaction.read!()
     end
   end
 

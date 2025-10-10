@@ -208,7 +208,7 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
     Ash.Changeset.manage_relationship(
       changeset,
       relationship_name,
-      %{discord_id: user_id, identity: user_id},
+      %{discord_id: user_id, identity: %{discord_id: user_id}},
       type: :append_and_remove,
       use_identities: [:discord_id],
       on_no_match: {:create, :from_discord}
@@ -273,12 +273,17 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
       changeset = manage_message_relationship(changeset, discord_data.message_id)
 
   """
-  def manage_message_relationship(changeset, message_id) when not is_nil(message_id) do
+  def manage_message_relationship(changeset, message_id, channel_id)
+      when not is_nil(message_id) and not is_nil(channel_id) do
     # Pass both discord_id (for lookup) and identity (for API fetch if not found)
     Ash.Changeset.manage_relationship(
       changeset,
       :message,
-      %{discord_id: message_id, identity: message_id},
+      %{
+        discord_id: message_id,
+        channel_discord_id: channel_id,
+        identity: %{discord_id: message_id, channel_discord_id: channel_id}
+      },
       type: :append_and_remove,
       use_identities: [:discord_id],
       on_no_match: {:create, :from_discord}
@@ -286,6 +291,37 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
   end
 
   def manage_message_relationship(changeset, _nil_message_id), do: changeset
+
+  @doc """
+  Manages rule relationship
+
+  ## Parameters
+
+  - `changeset` - The Ash changeset to modify
+  - `rule_id` - The Discord message ID to associate
+
+  ## Returns
+
+  Updated changeset with rule relationship managed.
+
+  ## Examples
+
+      changeset = manage_rule_relationship(changeset, discord_data.rule_id)
+
+  """
+  def manage_rule_relationship(changeset, rule_id) when not is_nil(rule_id) do
+    # Pass both discord_id (for lookup) and identity (for API fetch if not found)
+    Ash.Changeset.manage_relationship(
+      changeset,
+      :rule,
+      %{discord_id: rule_id, identity: %{discord_id: rule_id}},
+      type: :append_and_remove,
+      use_identities: [:discord_id],
+      on_no_match: {:create, :from_discord}
+    )
+  end
+
+  def manage_rule_relationship(changeset, _nil_rule_id), do: changeset
 
   @doc """
   Manages emoji relationship.

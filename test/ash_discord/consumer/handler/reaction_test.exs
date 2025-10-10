@@ -50,7 +50,7 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
       assert created_reaction.channel_discord_id == channel_id
       assert created_reaction.guild_discord_id == guild_id
       assert created_reaction.emoji_name == "👍"
-      assert created_reaction.emoji_id == nil
+      assert created_reaction.emoji_discord_id == nil
     end
 
     test "creates reaction with custom emoji" do
@@ -88,11 +88,10 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
 
       created_reaction = hd(reactions)
       assert created_reaction.emoji_name == "custom_emoji"
-      assert created_reaction.emoji_id == emoji_data.id
+      assert created_reaction.emoji_discord_id == emoji_data.id
       assert created_reaction.emoji_animated == true
     end
 
-    @tag :focus
     test "upserts existing reaction" do
       user_id = generate_snowflake()
       message_id = generate_snowflake()
@@ -241,7 +240,7 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
       # Verify only emoji2 reaction remains
       reactions_after = TestApp.Discord.MessageReaction.read!()
       assert length(reactions_after) == 1
-      assert hd(reactions_after).emoji_id == emoji2.id
+      assert hd(reactions_after).emoji_discord_id == emoji2.id
     end
 
     test "handles missing reaction gracefully" do
@@ -567,7 +566,7 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
       # Verify only other_emoji reaction remains
       reactions_after = TestApp.Discord.MessageReaction.read!()
       assert length(reactions_after) == 1
-      assert hd(reactions_after).emoji_id == other_emoji.id
+      assert hd(reactions_after).emoji_discord_id == other_emoji.id
     end
 
     test "handles missing emoji gracefully" do

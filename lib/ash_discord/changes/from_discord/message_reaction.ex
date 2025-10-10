@@ -126,6 +126,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReaction do
     |> maybe_set_attribute(:guild_discord_id, reaction_data.guild_id)
     |> maybe_set_attribute(:emoji_discord_id, emoji.id)
     |> maybe_set_attribute(:emoji_name, emoji.name)
+    |> maybe_set_attribute(:emoji_animated, emoji.animated)
     |> AshDiscord.Changes.FromDiscord.Transformations.manage_emoji_relationship(
       emoji.id,
       emoji.name,

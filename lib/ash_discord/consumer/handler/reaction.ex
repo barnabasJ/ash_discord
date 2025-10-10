@@ -60,11 +60,11 @@ defmodule AshDiscord.Consumer.Handler.Reaction do
         emoji_name: reaction_remove.emoji.name
       ] ++
         if is_nil(reaction_remove.emoji.id) do
-          # For unicode emojis, filter where emoji_id is nil
-          [emoji_id: [is_nil: true]]
+          # For unicode emojis, filter where emoji_discord_id is nil
+          [emoji_discord_id: [is_nil: true]]
         else
-          # For custom emojis, match by emoji_id
-          [emoji_id: reaction_remove.emoji.id]
+          # For custom emojis, match by emoji_discord_id
+          [emoji_discord_id: reaction_remove.emoji.id]
         end
 
     case Handler.invoke_configured_action(
@@ -130,11 +130,11 @@ defmodule AshDiscord.Consumer.Handler.Reaction do
         emoji_name: reaction_remove_emoji.emoji.name
       ] ++
         if is_nil(reaction_remove_emoji.emoji.id) do
-          # For unicode emojis, filter where emoji_id is nil
-          [emoji_id: [is_nil: true]]
+          # For unicode emojis, filter where emoji_discord_id is nil
+          [emoji_discord_id: [is_nil: true]]
         else
-          # For custom emojis, match by emoji_id
-          [emoji_id: reaction_remove_emoji.emoji.id]
+          # For custom emojis, match by emoji_discord_id
+          [emoji_discord_id: reaction_remove_emoji.emoji.id]
         end
 
     case Handler.invoke_configured_action(

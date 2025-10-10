@@ -24,7 +24,7 @@ defmodule AshDiscord.Consumer.Payloads.Emoji do
       allow_nil?: true,
       description: "Roles this emoji is whitelisted to (array of role ID snowflake integers)"
 
-    field :user, :map,
+    field :user, AshDiscord.Consumer.Payloads.User,
       allow_nil?: true,
       description: "User that created this emoji"
 

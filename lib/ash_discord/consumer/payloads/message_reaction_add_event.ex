@@ -29,7 +29,9 @@ defmodule AshDiscord.Consumer.Payloads.MessageReactionAddEvent do
     field :member, AshDiscord.Consumer.Payloads.Member,
       description: "Member who added the reaction (if in a guild)"
 
-    field :emoji, :map, allow_nil?: false, description: "Emoji used to react"
+    field :emoji, AshDiscord.Consumer.Payloads.Emoji,
+      allow_nil?: false,
+      description: "Emoji used to react"
   end
 
   @doc """

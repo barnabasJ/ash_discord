@@ -49,7 +49,7 @@ defmodule TestApp.Discord.Guild do
         description: "Discord guild TypedStruct payload"
       )
 
-      argument(:identity, :integer,
+      argument(:identity, :map,
         allow_nil?: true,
         description: "Discord guild ID for API fallback"
       )

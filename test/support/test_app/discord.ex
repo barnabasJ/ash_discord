@@ -134,6 +134,8 @@ defmodule TestApp.Discord do
     resource TestApp.Discord.ThreadMembersUpdate do
       define(:thread_members_update_from_discord, action: :from_discord)
     end
+
+    resource(TestApp.Discord.Event)
   end
 
   discord do

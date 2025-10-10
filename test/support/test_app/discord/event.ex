@@ -1,12 +1,19 @@
 defmodule TestApp.Discord.Event do
   use Ash.Resource,
     extensions: [AshDiscord.Resource],
+    authorizers: [Ash.Policy.Authorizer],
     domain: TestApp.Discord
 
   ash_discord do
     events do
       on(:READY, :ready)
       on(:RESUMED, :resume)
+    end
+  end
+
+  policies do
+    bypass AshDiscord.Checks.AshDiscordInteraction do
+      authorize_if(always())
     end
   end
 

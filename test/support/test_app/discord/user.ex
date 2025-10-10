@@ -29,7 +29,7 @@ defmodule TestApp.Discord.User do
   end
 
   identities do
-    identity(:discord_id, [:discord_id], pre_check_with: TestApp.Domain)
+    identity(:discord_id, [:discord_id], pre_check_with: TestApp.Discord)
   end
 
   actions do

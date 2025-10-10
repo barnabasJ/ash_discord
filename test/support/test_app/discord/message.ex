@@ -34,7 +34,7 @@ defmodule TestApp.Discord.Message do
   end
 
   identities do
-    identity(:unique_discord_id, [:discord_id], pre_check_with: TestApp.Domain)
+    identity(:unique_discord_id, [:discord_id], pre_check_with: TestApp.Discord)
   end
 
   actions do

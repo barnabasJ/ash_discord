@@ -35,7 +35,7 @@ defmodule TestApp.Discord.GuildMember do
   end
 
   identities do
-    identity(:discord_id, [:guild_discord_id, :user_discord_id], pre_check_with: TestApp.Domain)
+    identity(:discord_id, [:guild_discord_id, :user_discord_id], pre_check_with: TestApp.Discord)
   end
 
   actions do

@@ -5,13 +5,24 @@ defmodule TestApp.Discord.Event do
 
   ash_discord do
     events do
+      on(:READY, :ready)
       on(:RESUMED, :resume)
     end
   end
 
   actions do
+    action :ready do
+      argument(:data, AshDiscord.Consumer.Payloads.ReadyEvent, allow_nil?: false)
+
+      run(fn input, _context ->
+        require Logger
+        Logger.error("Ready action invoked: #{inspect(input.arguments.data)}")
+        :ok
+      end)
+    end
+
     action :resume do
-      run(fn _record, _context ->
+      run(fn _input, _context ->
         require Logger
         Logger.error("Resumed action invoked")
         :ok

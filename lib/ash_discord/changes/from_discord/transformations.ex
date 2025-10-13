@@ -309,19 +309,20 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
       changeset = manage_rule_relationship(changeset, discord_data.rule_id)
 
   """
-  def manage_rule_relationship(changeset, rule_id) when not is_nil(rule_id) do
-    # Pass both discord_id (for lookup) and identity (for API fetch if not found)
+  def manage_rule_relationship(changeset, rule_id, guild_id)
+      when not is_nil(rule_id) and not is_nil(guild_id) do
     Ash.Changeset.manage_relationship(
       changeset,
       :rule,
-      %{discord_id: rule_id, identity: %{discord_id: rule_id}},
+      %{discord_id: rule_id, guild_discord_id: guild_id},
       type: :append_and_remove,
       use_identities: [:discord_id],
-      on_no_match: {:create, :from_discord}
+      on_no_match: :error,
+      authorize?: false
     )
   end
 
-  def manage_rule_relationship(changeset, _nil_rule_id), do: changeset
+  def manage_rule_relationship(changeset, _nil_rule_id, _nil_guild_id), do: changeset
 
   @doc """
   Manages emoji relationship.

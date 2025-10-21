@@ -101,9 +101,7 @@ defmodule TestApp.Discord.AutoModerationRule do
   end
 
   identities do
-    identity :discord_id, [:discord_id] do
-      pre_check_with(TestApp.Discord)
-    end
+    identity(:discord_id, [:discord_id, :guild_discord_id])
   end
 
   actions do

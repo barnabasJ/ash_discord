@@ -160,6 +160,7 @@ defmodule AshDiscord.Consumer.Handler.AutoModerationRuleTest do
 
   describe "execute/3" do
     @tag :fixed
+    @tag :focus
     test "creates auto moderation rule execution event in database" do
       guild = guild()
       user = user()
@@ -176,16 +177,19 @@ defmodule AshDiscord.Consumer.Handler.AutoModerationRuleTest do
       TestApp.Discord.guild_member_from_discord!(%{data: guild_member}, authorize?: false)
       TestApp.Discord.channel_from_discord!(%{data: channel}, authorize?: false)
       TestApp.Discord.message_from_discord!(%{data: message}, authorize?: false)
+
       TestApp.Discord.auto_moderation_rule_from_discord!(%{data: rule}, authorize?: false)
 
-      execute_data =
-        auto_moderation_rule_execute(%{
+      execute_attrs =
+        %{
           user_id: user.id,
           guild_id: guild.id,
           message_id: message.id,
           channel_id: channel.id,
           rule_id: rule.id
-        })
+        }
+
+      execute_data = auto_moderation_rule_execute(execute_attrs)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -217,9 +221,20 @@ defmodule AshDiscord.Consumer.Handler.AutoModerationRuleTest do
       assert created_execution.matched_content == execute_data.matched_content
     end
 
+    @tag :fixed
     test "handles optional fields in execution event" do
+      guild = guild()
+      user = user()
+      rule = auto_moderation_rule(%{guild_id: guild.id, creator_id: user.id})
+
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user}, authorize?: false)
+
       execute_data =
         auto_moderation_rule_execute(%{
+          guild_id: guild.id,
+          user_id: user.id,
+          rule_id: rule.id,
           channel_id: nil,
           message_id: nil,
           alert_system_message_id: nil,
@@ -242,16 +257,13 @@ defmodule AshDiscord.Consumer.Handler.AutoModerationRuleTest do
 
       assert :ok = AutoModerationRule.execute(execute_payload, %Nostrum.Struct.WSState{}, context)
 
-      # Verify execution event was created with nil fields
-      executions = TestApp.Discord.AutoModerationRuleExecute.read!()
-      assert length(executions) == 1
+      [created_execution] = TestApp.Discord.AutoModerationRuleExecute.read!()
 
-      created_execution = hd(executions)
-      assert created_execution.guild_id == execute_data.guild_id
-      assert created_execution.rule_id == execute_data.rule_id
-      assert created_execution.user_id == execute_data.user_id
-      assert created_execution.channel_id == nil
-      assert created_execution.message_id == nil
+      assert created_execution.guild_discord_id == execute_data.guild_id
+      assert created_execution.rule_discord_id == execute_data.rule_id
+      assert created_execution.user_discord_id == execute_data.user_id
+      assert created_execution.channel_discord_id == nil
+      assert created_execution.message_discord_id == nil
       assert created_execution.matched_keyword == nil
     end
   end

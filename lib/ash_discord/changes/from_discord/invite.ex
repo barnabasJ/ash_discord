@@ -62,7 +62,8 @@ defmodule AshDiscord.Changes.FromDiscord.Invite do
       {:error, reason} -> {:error, reason}
     end
   rescue
-    ArgumentError -> {:error, :api_unavailable}
+    ArgumentError ->
+      {:error, :api_unavailable}
   end
 
   defp fetch_invite(_), do: {:error, "Identity must be a string invite code"}

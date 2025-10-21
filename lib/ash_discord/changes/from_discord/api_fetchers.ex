@@ -61,7 +61,8 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
       error -> error
     end
   rescue
-    ArgumentError -> {:error, :api_unavailable}
+    ArgumentError ->
+      {:error, :api_unavailable}
   end
 
   @doc """
@@ -73,7 +74,8 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
       error -> error
     end
   rescue
-    ArgumentError -> {:error, :api_unavailable}
+    ArgumentError ->
+      {:error, :api_unavailable}
   end
 
   def fetch_message(_invalid_identity) do
@@ -266,7 +268,8 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
             error -> error
           end
         rescue
-          ArgumentError -> {:error, :api_unavailable}
+          ArgumentError ->
+            {:error, :api_unavailable}
         end
       else
         {:error, :requires_guild_and_user_ids}
@@ -289,7 +292,8 @@ defmodule AshDiscord.Changes.FromDiscord.ApiFetchers do
             error -> error
           end
         rescue
-          ArgumentError -> {:error, :api_unavailable}
+          ArgumentError ->
+            {:error, :api_unavailable}
         end
       else
         {:error, :requires_channel_and_message_ids}

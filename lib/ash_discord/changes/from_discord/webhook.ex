@@ -61,7 +61,8 @@ defmodule AshDiscord.Changes.FromDiscord.Webhook do
       {:error, reason} -> {:error, reason}
     end
   rescue
-    ArgumentError -> {:error, :api_unavailable}
+    ArgumentError ->
+      {:error, :api_unavailable}
   end
 
   defp fetch_webhook(_), do: {:error, "Identity must be an integer Discord webhook ID"}

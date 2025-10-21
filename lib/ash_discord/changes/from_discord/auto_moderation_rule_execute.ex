@@ -50,7 +50,7 @@ defmodule AshDiscord.Changes.FromDiscord.AutoModerationRuleExecute do
     |> maybe_set_attribute(:matched_content, event_data.matched_content)
     |> maybe_manage_user_relationship(event_data.user_id)
     |> maybe_manage_guild_relationship(event_data.guild_id)
-    |> maybe_manage_rule_relationship(event_data.rule_id)
+    |> maybe_manage_rule_relationship(event_data.rule_id, event_data.guild_id)
     |> maybe_manage_channel_relationship(event_data.channel_id)
     |> maybe_manage_message_relationship(event_data.message_id)
   end
@@ -85,11 +85,16 @@ defmodule AshDiscord.Changes.FromDiscord.AutoModerationRuleExecute do
     end
   end
 
-  defp maybe_manage_rule_relationship(changeset, nil), do: changeset
+  defp maybe_manage_rule_relationship(changeset, rule_discord_id, guild_discord_id)
+       when nil in [rule_discord_id, guild_discord_id],
+       do: changeset
 
-  defp maybe_manage_rule_relationship(changeset, rule_discord_id) do
+  defp maybe_manage_rule_relationship(changeset, rule_discord_id, guild_discord_id) do
     if Ash.Resource.Info.relationship(changeset.resource, :rule) do
-      Transformations.manage_rule_relationship(changeset, rule_discord_id)
+      changeset
+      |> maybe_set_attribute(:guild_discord_id, guild_discord_id)
+      |> maybe_set_attribute(:rule_discord_id, rule_discord_id)
+      |> Transformations.manage_rule_relationship(rule_discord_id, guild_discord_id)
     else
       changeset
     end

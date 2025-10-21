@@ -53,13 +53,14 @@ defmodule AshDiscord.Changes.FromDiscord.AutoModerationRule do
     end
   end
 
-  defp fetch_auto_moderation_rule(%{guild_id: guild_id, rule_id: rule_id}) do
+  defp fetch_auto_moderation_rule(%{guild_discord_id: guild_id, discord_id: rule_id}) do
     case Nostrum.Api.AutoModeration.rule(guild_id, rule_id) do
       {:ok, rule} -> {:ok, Payloads.AutoModerationRule.new(rule)}
       {:error, reason} -> {:error, reason}
     end
   rescue
-    ArgumentError -> {:error, :api_unavailable}
+    ArgumentError ->
+      {:error, :api_unavailable}
   end
 
   defp fetch_auto_moderation_rule(_),

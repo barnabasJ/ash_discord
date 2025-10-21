@@ -65,7 +65,8 @@ defmodule AshDiscord.Changes.FromDiscord.Emoji do
         {:error, reason}
     end
   rescue
-    ArgumentError -> {:error, :api_unavailable}
+    ArgumentError ->
+      {:error, :api_unavailable}
   end
 
   defp fetch_emoji_from_identity(_),

@@ -31,10 +31,17 @@ defmodule TestApp.Discord.AutoModerationRuleExecute do
       source_attribute(:user_discord_id)
     end
 
-    belongs_to :rule, TestApp.Discord.AutoModerationRule do
+    has_one :rule, TestApp.Discord.AutoModerationRule do
       public?(true)
-      destination_attribute(:discord_id)
-      source_attribute(:rule_discord_id)
+      no_attributes?(true)
+      could_be_related_at_creation?(true)
+
+      filter(
+        expr(
+          discord_id == parent(:rule_discord_id) and
+            guild_discord_id == parent(:guild_discord_id)
+        )
+      )
     end
 
     belongs_to :channel, TestApp.Discord.Channel do

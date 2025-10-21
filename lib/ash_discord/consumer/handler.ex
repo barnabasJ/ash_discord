@@ -198,7 +198,7 @@ defmodule AshDiscord.Consumer.Handler do
     Logger.debug("Invoking bulk create action #{action.name} on #{inspect(resource)}")
 
     result =
-      Ash.bulk_create(
+      Ash.bulk_create!(
         [attributes],
         resource,
         action.name,

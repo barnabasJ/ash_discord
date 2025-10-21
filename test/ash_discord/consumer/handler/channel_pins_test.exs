@@ -8,6 +8,7 @@ defmodule AshDiscord.Consumer.Handler.ChannelPinsTest do
   alias TestApp.TestConsumer
 
   describe "update/3" do
+    @tag :fixed
     test "creates channel pins update in database" do
       pins_data = channel_pins_update()
 
@@ -19,20 +20,18 @@ defmodule AshDiscord.Consumer.Handler.ChannelPinsTest do
         context: nil
       }
 
-      {:ok, pins_payload} = Payloads.ChannelPinsUpdateEvent.new(pins_data)
+      pins_payload = Payloads.ChannelPinsUpdateEvent.new!(pins_data)
 
       assert :ok = ChannelPins.update(pins_payload, %Nostrum.Struct.WSState{}, context)
 
-      # Verify channel pins update was created in database
-      pins_updates = TestApp.Discord.ChannelPinsUpdate.read!()
-      assert length(pins_updates) == 1
+      [created_pins] = TestApp.Discord.ChannelPinsUpdate.read!(authorize?: false)
 
-      created_pins = hd(pins_updates)
       assert created_pins.channel_id == pins_data.channel_id
       assert created_pins.guild_id == pins_data.guild_id
       assert created_pins.discord_id == pins_data.channel_id
     end
 
+    @tag :fixed
     test "upserts channel pins update on subsequent calls" do
       channel_id = generate_snowflake()
       guild_id = generate_snowflake()
@@ -48,7 +47,6 @@ defmodule AshDiscord.Consumer.Handler.ChannelPinsTest do
         context: nil
       }
 
-      # First update
       first_pins_data =
         channel_pins_update(%{
           channel_id: channel_id,
@@ -56,10 +54,9 @@ defmodule AshDiscord.Consumer.Handler.ChannelPinsTest do
           last_pin_timestamp: first_timestamp
         })
 
-      {:ok, first_payload} = Payloads.ChannelPinsUpdateEvent.new(first_pins_data)
+      first_payload = Payloads.ChannelPinsUpdateEvent.new!(first_pins_data)
       assert :ok = ChannelPins.update(first_payload, %Nostrum.Struct.WSState{}, context)
 
-      # Second update with new timestamp
       second_pins_data =
         channel_pins_update(%{
           channel_id: channel_id,
@@ -67,22 +64,19 @@ defmodule AshDiscord.Consumer.Handler.ChannelPinsTest do
           last_pin_timestamp: second_timestamp
         })
 
-      {:ok, second_payload} = Payloads.ChannelPinsUpdateEvent.new(second_pins_data)
+      second_payload = Payloads.ChannelPinsUpdateEvent.new!(second_pins_data)
       assert :ok = ChannelPins.update(second_payload, %Nostrum.Struct.WSState{}, context)
 
-      # Verify only one record exists with updated timestamp
-      pins_updates = TestApp.Discord.ChannelPinsUpdate.read!()
-      assert length(pins_updates) == 1
+      [updated_pins] = TestApp.Discord.ChannelPinsUpdate.read!(authorize?: false)
 
-      updated_pins = hd(pins_updates)
       assert updated_pins.channel_id == channel_id
       assert updated_pins.guild_id == guild_id
 
-      # The timestamp should be the second (newer) one (within 1 second tolerance for DateTime precision)
       assert DateTime.diff(updated_pins.last_pin_timestamp, second_timestamp, :second) |> abs() <=
                1
     end
 
+    @tag :fixed
     test "handles pins update without guild_id (DM channels)" do
       pins_data = channel_pins_update(%{guild_id: nil})
 
@@ -94,15 +88,12 @@ defmodule AshDiscord.Consumer.Handler.ChannelPinsTest do
         context: nil
       }
 
-      {:ok, pins_payload} = Payloads.ChannelPinsUpdateEvent.new(pins_data)
+      pins_payload = Payloads.ChannelPinsUpdateEvent.new!(pins_data)
 
       assert :ok = ChannelPins.update(pins_payload, %Nostrum.Struct.WSState{}, context)
 
-      # Verify channel pins update was created
-      pins_updates = TestApp.Discord.ChannelPinsUpdate.read!()
-      assert length(pins_updates) == 1
+      [created_pins] = TestApp.Discord.ChannelPinsUpdate.read!(authorize?: false)
 
-      created_pins = hd(pins_updates)
       assert created_pins.channel_id == pins_data.channel_id
       assert created_pins.guild_id == nil
     end

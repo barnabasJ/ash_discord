@@ -317,7 +317,6 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
       %{discord_id: rule_id, guild_discord_id: guild_id},
       type: :append_and_remove,
       use_identities: [:discord_id],
-      on_no_match: :error,
       authorize?: false
     )
   end

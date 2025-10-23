@@ -47,9 +47,12 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdate do
 
   defp transform_channel_pins_update(changeset, pins_data) do
     changeset
-    |> maybe_set_attribute(:discord_id, pins_data.channel_id)
-    |> maybe_set_attribute(:channel_id, pins_data.channel_id)
-    |> maybe_set_attribute(:guild_id, pins_data.guild_id)
+    |> AshDiscord.Changes.FromDiscord.Transformations.manage_guild_relationship(
+      pins_data.guild_id
+    )
+    |> AshDiscord.Changes.FromDiscord.Transformations.manage_channel_relationship(
+      pins_data.channel_id
+    )
     |> maybe_set_attribute(:last_pin_timestamp, pins_data.last_pin_timestamp)
   end
 

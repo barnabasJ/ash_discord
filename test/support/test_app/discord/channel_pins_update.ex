@@ -21,19 +21,13 @@ defmodule TestApp.Discord.ChannelPinsUpdate do
   attributes do
     uuid_primary_key(:id)
 
-    attribute(:discord_id, :integer,
-      allow_nil?: false,
-      public?: true,
-      description: "The Discord channel ID (used as identity)"
-    )
-
-    attribute(:channel_id, :integer,
+    attribute(:channel_discord_id, :integer,
       allow_nil?: false,
       public?: true,
       description: "The ID of the channel where pins were updated"
     )
 
-    attribute(:guild_id, :integer,
+    attribute(:guild_discord_id, :integer,
       allow_nil?: true,
       public?: true,
       description: "The ID of the guild (if in a guild channel)"
@@ -46,14 +40,23 @@ defmodule TestApp.Discord.ChannelPinsUpdate do
     )
   end
 
-  identities do
-    identity :discord_id, [:discord_id] do
-      pre_check_with(TestApp.Discord)
-    end
-  end
-
   code_interface do
     define(:read)
+  end
+
+  relationships do
+    belongs_to :guild, TestApp.Discord.Guild do
+      description "The guild this channel pins update belongs to"
+      public? true
+      destination_attribute(:discord_id)
+      source_attribute(:guild_discord_id)
+    end
+
+    belongs_to :channel, TestApp.Discord.Channel do
+      public?(true)
+      destination_attribute(:discord_id)
+      source_attribute(:channel_discord_id)
+    end
   end
 
   actions do
@@ -64,20 +67,18 @@ defmodule TestApp.Discord.ChannelPinsUpdate do
       primary?(true)
 
       argument(:data, AshDiscord.Consumer.Payloads.ChannelPinsUpdateEvent,
-        allow_nil?: true,
+        allow_nil?: false,
         description: "Discord channel pins update TypedStruct data"
       )
 
       change(AshDiscord.Changes.FromDiscord.ChannelPinsUpdate)
 
-      upsert?(true)
-      upsert_identity(:discord_id)
-      upsert_fields([:channel_id, :guild_id, :last_pin_timestamp])
+      upsert_fields([:channel_discord_id, :guild_discord_id, :last_pin_timestamp])
     end
 
     update :update do
       primary?(true)
-      accept([:channel_id, :guild_id, :last_pin_timestamp])
+      accept([:channel_discord_id, :guild_discord_id, :last_pin_timestamp])
     end
   end
 end

@@ -160,7 +160,6 @@ defmodule AshDiscord.Consumer.Handler.AutoModerationRuleTest do
 
   describe "execute/3" do
     @tag :fixed
-    @tag :focus
     test "creates auto moderation rule execution event in database" do
       guild = guild()
       user = user()
@@ -229,6 +228,7 @@ defmodule AshDiscord.Consumer.Handler.AutoModerationRuleTest do
 
       TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
       TestApp.Discord.user_from_discord!(%{data: user}, authorize?: false)
+      TestApp.Discord.auto_moderation_rule_from_discord!(%{data: rule}, authorize?: false)
 
       execute_data =
         auto_moderation_rule_execute(%{

@@ -329,7 +329,29 @@ defmodule AshDiscord.Test.Generators do
       last_message_id: nil,
       bitrate: 64_000,
       user_limit: 0,
-      rate_limit_per_user: 0
+      rate_limit_per_user: 0,
+      parent_id: nil,
+      permission_overwrites: [],
+      recipients: nil,
+      icon: nil,
+      owner_id: nil,
+      application_id: nil,
+      last_pin_timestamp: nil,
+      rtc_region: nil,
+      video_quality_mode: nil,
+      message_count: nil,
+      member_count: nil,
+      thread_metadata: nil,
+      member: nil,
+      default_auto_archive_duration: nil,
+      permissions: nil,
+      newly_created: nil,
+      available_tags: nil,
+      applied_tags: nil,
+      default_reaction_emoji: nil,
+      default_thread_rate_limit_per_user: nil,
+      default_sort_order: nil,
+      default_forum_layout: nil
     }
 
     struct(Nostrum.Struct.Channel, merge_attrs(defaults, attrs))

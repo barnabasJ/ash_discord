@@ -72,6 +72,7 @@ defmodule AshDiscord.Test.Generators do
   - `integration_account/1` - Integration accounts
   - `integration_application/1` - Integration applications
   - `integration_delete_event/1` - Integration delete events
+  - `guild_audit_log_entry/1` - Guild audit log entries
 
   ## Utilities
 
@@ -178,6 +179,10 @@ defmodule AshDiscord.Test.Generators do
 
   def generate(%Nostrum.Struct.Event.Ready{} = ready) do
     AshDiscord.Consumer.Payloads.ReadyEvent.new!(ready)
+  end
+
+  def generate(%Nostrum.Struct.Guild.AuditLogEntry{} = audit_log_entry) do
+    AshDiscord.Consumer.Payloads.GuildAuditLogEntryCreateEvent.new!(audit_log_entry)
   end
 
   def generate(struct) do
@@ -1896,6 +1901,58 @@ defmodule AshDiscord.Test.Generators do
     }
 
     struct(Nostrum.Struct.Event.PollVoteChange, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
+  Generates a Discord Guild Audit Log Entry struct.
+
+  ## Options
+
+  - `:id` - Audit log entry ID (defaults to generated snowflake)
+  - `:action_type` - Type of action that occurred (defaults to 1 = GUILD_UPDATE)
+  - `:changes` - Changes made to the target (defaults to nil)
+  - `:options` - Optional audit entry info (defaults to nil)
+  - `:reason` - Reason for the change (defaults to nil)
+  - `:target_id` - ID of the affected entity as string (defaults to nil)
+  - `:user_id` - ID of the user who made the changes (defaults to nil)
+
+  ## Examples
+
+      iex> entry = guild_audit_log_entry(%{action_type: 1, reason: "Updated server"})
+      iex> entry.action_type
+      1
+      iex> entry.reason
+      "Updated server"
+
+      iex> entry = guild_audit_log_entry(%{
+      ...>   action_type: 11,
+      ...>   changes: [%{"key" => "name", "old_value" => "old", "new_value" => "new"}]
+      ...> })
+      iex> length(entry.changes)
+      1
+  """
+  def guild_audit_log_entry(attrs \\ %{}) do
+    # Common audit log action types:
+    # 1 = GUILD_UPDATE
+    # 10-12 = CHANNEL_* (CREATE, UPDATE, DELETE)
+    # 20-22 = CHANNEL_OVERWRITE_* (CREATE, UPDATE, DELETE)
+    # 30-32 = MEMBER_KICK, PRUNE, BAN_ADD, etc.
+    # 40-42 = MEMBER_* (UPDATE, ROLE_UPDATE, etc.)
+    # 50-52 = ROLE_* (CREATE, UPDATE, DELETE)
+    # 72 = MESSAGE_DELETE
+    action_types = [1, 10, 11, 12, 20, 21, 22, 30, 40, 50, 51, 52, 72]
+
+    defaults = %{
+      id: generate_snowflake(),
+      action_type: Faker.Util.pick(action_types),
+      changes: nil,
+      options: nil,
+      reason: nil,
+      target_id: nil,
+      user_id: nil
+    }
+
+    struct(Nostrum.Struct.Guild.AuditLogEntry, merge_attrs(defaults, attrs))
   end
 
   # Private helper functions

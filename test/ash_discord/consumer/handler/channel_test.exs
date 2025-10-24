@@ -8,8 +8,11 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
   alias TestApp.TestConsumer
 
   describe "create/3" do
+    @tag :fixed
     test "creates channel in database" do
-      channel_data = channel()
+      guild = guild()
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
+      channel = channel(%{guild_id: guild.id})
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -19,24 +22,25 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
         context: nil
       }
 
-      {:ok, channel_payload} = Payloads.Channel.new(channel_data)
+      {:ok, channel_payload} = Payloads.Channel.new(channel)
 
       assert :ok = Channel.create(channel_payload, %Nostrum.Struct.WSState{}, context)
 
-      # Verify channel was created in database
-      channels = TestApp.Discord.Channel.read!()
-      assert length(channels) == 1
+      assert [created_channel] = TestApp.Discord.Channel.read!()
 
-      created_channel = hd(channels)
-      assert created_channel.discord_id == channel_data.id
-      assert created_channel.name == channel_data.name
+      assert created_channel.discord_id == channel.id
+      assert created_channel.name == channel.name
     end
   end
 
   describe "update/3" do
+    @tag :fixed
     test "updates existing channel in database" do
-      old_channel = channel(%{name: "old-name"})
-      new_channel = channel(%{id: old_channel.id, name: "new-name"})
+      guild = guild()
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
+
+      old_channel = channel(%{guild_id: guild.id, name: "old-name"})
+      new_channel = channel(%{id: old_channel.id, guild_id: guild.id, name: "new-name"})
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -46,8 +50,8 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
         context: nil
       }
 
-      {:ok, old_channel_payload} = Payloads.Channel.new(old_channel)
-      {:ok, new_channel_payload} = Payloads.Channel.new(new_channel)
+      old_channel_payload = Payloads.Channel.new!(old_channel)
+      new_channel_payload = Payloads.Channel.new!(new_channel)
 
       channel_update = %Payloads.ChannelUpdate{
         old_channel: old_channel_payload,
@@ -61,33 +65,26 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
                  context
                )
 
-      # Verify channel was updated (upserted) in database
-      channels = TestApp.Discord.Channel.read!()
-      assert length(channels) == 1
+      [updated_channel] = TestApp.Discord.Channel.read!(authorize?: false)
 
-      updated_channel = hd(channels)
       assert updated_channel.discord_id == new_channel.id
       assert updated_channel.name == "new-name"
     end
   end
 
   describe "delete/3" do
+    @tag :fixed
     test "deletes channel from database" do
-      channel_data = channel()
+      guild = guild()
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
 
-      # First create the channel
-      {:ok, channel_payload} = Payloads.Channel.new(channel_data)
+      channel_data = channel(%{guild_id: guild.id})
 
-      {:ok, _created} =
-        TestApp.Discord.Channel
-        |> Ash.Changeset.for_create(:from_discord, %{
-          data: channel_payload
-        })
-        |> Ash.create()
+      channel_payload = Payloads.Channel.new!(channel_data)
 
-      # Verify channel exists
-      channels_before = TestApp.Discord.Channel.read!()
-      assert length(channels_before) == 1
+      TestApp.Discord.channel_from_discord!(%{data: channel_payload}, authorize?: false)
+
+      [_channel] = TestApp.Discord.Channel.read!(authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -100,13 +97,15 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
       assert :ok =
                Channel.delete(channel_payload, %Nostrum.Struct.WSState{}, context)
 
-      # Verify channel was deleted from database
-      channels_after = TestApp.Discord.Channel.read!()
-      assert length(channels_after) == 0
+      [] = TestApp.Discord.Channel.read!(authorize?: false)
     end
 
+    @tag :fixed
     test "handles missing channel gracefully" do
-      channel_data = channel()
+      guild = guild()
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
+
+      channel_data = channel(%{guild_id: guild.id})
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -116,11 +115,162 @@ defmodule AshDiscord.Consumer.Handler.ChannelTest do
         context: nil
       }
 
-      {:ok, channel_payload} = Payloads.Channel.new(channel_data)
+      channel_payload = Payloads.Channel.new!(channel_data)
 
-      # Should not crash when channel doesn't exist
       assert :ok =
                Channel.delete(channel_payload, %Nostrum.Struct.WSState{}, context)
+    end
+  end
+
+  describe "relationship attributes" do
+    @tag :fixed
+    test "creates DM channel with owner_discord_id attribute" do
+      owner_user = user()
+      TestApp.Discord.user_from_discord!(%{data: owner_user}, authorize?: false)
+
+      dm_channel =
+        channel(%{
+          type: 1,
+          guild_id: nil,
+          owner_id: owner_user.id
+        })
+
+      context = %AshDiscord.Context{
+        consumer: TestConsumer,
+        resource: TestApp.Discord.Channel,
+        guild: nil,
+        user: nil,
+        context: nil
+      }
+
+      channel_payload = Payloads.Channel.new!(dm_channel)
+
+      assert :ok = Channel.create(channel_payload, %Nostrum.Struct.WSState{}, context)
+
+      [created_channel] = TestApp.Discord.Channel.read!(authorize?: false)
+
+      assert created_channel.owner_discord_id == owner_user.id
+    end
+  end
+
+  describe "new fields" do
+    @tag :fixed
+    test "creates voice channel with voice-specific attributes" do
+      guild = guild()
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
+
+      voice_channel =
+        channel(%{
+          guild_id: guild.id,
+          type: 2,
+          bitrate: 128_000,
+          user_limit: 10,
+          rtc_region: "us-west",
+          video_quality_mode: 1
+        })
+
+      context = %AshDiscord.Context{
+        consumer: TestConsumer,
+        resource: TestApp.Discord.Channel,
+        guild: nil,
+        user: nil,
+        context: nil
+      }
+
+      channel_payload = Payloads.Channel.new!(voice_channel)
+
+      assert :ok = Channel.create(channel_payload, %Nostrum.Struct.WSState{}, context)
+
+      [created_channel] = TestApp.Discord.Channel.read!(authorize?: false)
+
+      assert created_channel.bitrate == 128_000
+      assert created_channel.user_limit == 10
+      assert created_channel.rtc_region == "us-west"
+      assert created_channel.video_quality_mode == 1
+    end
+
+    @tag :fixed
+    test "creates thread channel with thread-specific attributes" do
+      guild = guild()
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
+
+      parent_channel = channel(%{guild_id: guild.id, type: 0})
+      parent_payload = Payloads.Channel.new!(parent_channel)
+
+      TestApp.Discord.channel_from_discord!(%{data: parent_payload}, authorize?: false)
+
+      thread_channel =
+        channel(%{
+          guild_id: guild.id,
+          parent_id: parent_channel.id,
+          type: 11,
+          message_count: 42,
+          member_count: 5,
+          thread_metadata: %{
+            archived: false,
+            auto_archive_duration: 1440,
+            archive_timestamp: DateTime.utc_now(),
+            locked: false
+          }
+        })
+
+      context = %AshDiscord.Context{
+        consumer: TestConsumer,
+        resource: TestApp.Discord.Channel,
+        guild: nil,
+        user: nil,
+        context: nil
+      }
+
+      channel_payload = Payloads.Channel.new!(thread_channel)
+
+      assert :ok = Channel.create(channel_payload, %Nostrum.Struct.WSState{}, context)
+
+      [created_channel] =
+        TestApp.Discord.Channel.read!(authorize?: false)
+        |> Enum.filter(&(&1.discord_id == thread_channel.id))
+
+      assert created_channel.message_count == 42
+      assert created_channel.member_count == 5
+      assert created_channel.thread_metadata != nil
+    end
+
+    @tag :fixed
+    test "creates forum channel with forum-specific attributes" do
+      guild = guild()
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
+
+      forum_channel =
+        channel(%{
+          guild_id: guild.id,
+          type: 15,
+          available_tags: [
+            %{id: 1, name: "Help", moderated: false, emoji_name: "❓"},
+            %{id: 2, name: "Bug", moderated: false, emoji_name: "🐛"}
+          ],
+          default_reaction_emoji: %{emoji_name: "👍"},
+          default_sort_order: 0,
+          default_forum_layout: 1
+        })
+
+      context = %AshDiscord.Context{
+        consumer: TestConsumer,
+        resource: TestApp.Discord.Channel,
+        guild: nil,
+        user: nil,
+        context: nil
+      }
+
+      channel_payload = Payloads.Channel.new!(forum_channel)
+
+      assert :ok = Channel.create(channel_payload, %Nostrum.Struct.WSState{}, context)
+
+      [created_channel] = TestApp.Discord.Channel.read!(authorize?: false)
+
+      assert length(created_channel.available_tags) == 2
+      assert created_channel.default_reaction_emoji != nil
+      assert created_channel.default_sort_order == 0
+      assert created_channel.default_forum_layout == 1
     end
   end
 end

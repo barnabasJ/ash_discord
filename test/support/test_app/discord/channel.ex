@@ -86,11 +86,6 @@ defmodule TestApp.Discord.Channel do
       public?: true
     )
 
-    attribute(:owner_discord_id, :integer,
-      allow_nil?: true,
-      public?: true
-    )
-
     attribute(:application_discord_id, :integer,
       allow_nil?: true,
       public?: true
@@ -175,14 +170,39 @@ defmodule TestApp.Discord.Channel do
       allow_nil?: true,
       public?: true
     )
+
+    attribute(:parent_discord_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:last_message_discord_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:owner_discord_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
   end
 
   relationships do
     belongs_to :parent, TestApp.Discord.Channel do
+      source_attribute(:parent_discord_id)
+      destination_attribute(:discord_id)
       attribute_writable?(true)
     end
 
     belongs_to :last_message, TestApp.Discord.Message do
+      source_attribute(:last_message_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+
+    belongs_to :owner, TestApp.Discord.User do
+      source_attribute(:owner_discord_id)
+      destination_attribute(:discord_id)
       attribute_writable?(true)
     end
   end

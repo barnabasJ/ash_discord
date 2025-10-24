@@ -24,7 +24,7 @@ defmodule TestApp.Discord.Role do
       public?: true
     )
 
-    attribute(:guild_id, :integer,
+    attribute(:guild_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
@@ -74,6 +74,14 @@ defmodule TestApp.Discord.Role do
     end
   end
 
+  relationships do
+    belongs_to :guild, TestApp.Discord.Guild do
+      source_attribute(:guild_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+  end
+
   code_interface do
     define(:read)
   end
@@ -98,7 +106,7 @@ defmodule TestApp.Discord.Role do
       change(fn changeset, _context ->
         case Ash.Changeset.get_argument(changeset, :identity) do
           %{guild_id: guild_id} ->
-            Ash.Changeset.force_change_attribute(changeset, :guild_id, guild_id)
+            Ash.Changeset.force_change_attribute(changeset, :guild_discord_id, guild_id)
 
           _ ->
             changeset
@@ -111,7 +119,7 @@ defmodule TestApp.Discord.Role do
       upsert_identity(:discord_id)
 
       upsert_fields([
-        :guild_id,
+        :guild_discord_id,
         :name,
         :color,
         :permissions,
@@ -124,7 +132,17 @@ defmodule TestApp.Discord.Role do
 
     update :update do
       primary?(true)
-      accept([:guild_id, :name, :color, :permissions, :hoist, :position, :managed, :mentionable])
+
+      accept([
+        :guild_discord_id,
+        :name,
+        :color,
+        :permissions,
+        :hoist,
+        :position,
+        :managed,
+        :mentionable
+      ])
     end
   end
 end

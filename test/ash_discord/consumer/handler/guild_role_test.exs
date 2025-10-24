@@ -8,9 +8,12 @@ defmodule AshDiscord.Consumer.Handler.GuildRoleTest do
   alias TestApp.TestConsumer
 
   describe "create/3" do
+    @tag :fixed
     test "creates role in database" do
-      guild_id = generate_snowflake()
+      guild = guild()
       role_data = role()
+
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -20,10 +23,10 @@ defmodule AshDiscord.Consumer.Handler.GuildRoleTest do
         context: %{private: %{ash_discord?: true}}
       }
 
-      {:ok, role_payload} = Payloads.Role.new(role_data)
+      role_payload = Payloads.Role.new!(role_data)
 
       guild_role_create = %Payloads.GuildRoleCreate{
-        guild_id: guild_id,
+        guild_id: guild.id,
         role: role_payload
       }
 
@@ -34,22 +37,22 @@ defmodule AshDiscord.Consumer.Handler.GuildRoleTest do
                  context
                )
 
-      # Verify role was created in database
-      roles = TestApp.Discord.Role.read!()
-      assert length(roles) == 1
+      [created_role] = TestApp.Discord.Role.read!(authorize?: false)
 
-      created_role = hd(roles)
       assert created_role.discord_id == role_data.id
       assert created_role.name == role_data.name
-      assert created_role.guild_id == guild_id
+      assert created_role.guild_discord_id == guild.id
     end
   end
 
   describe "update/3" do
+    @tag :fixed
     test "updates existing role in database" do
-      guild_id = generate_snowflake()
+      guild = guild()
       old_role = role(%{name: "Old Role"})
       new_role = role(%{id: old_role.id, name: "New Role"})
+
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -59,11 +62,11 @@ defmodule AshDiscord.Consumer.Handler.GuildRoleTest do
         context: %{private: %{ash_discord?: true}}
       }
 
-      {:ok, old_role_payload} = Payloads.Role.new(old_role)
-      {:ok, new_role_payload} = Payloads.Role.new(new_role)
+      old_role_payload = Payloads.Role.new!(old_role)
+      new_role_payload = Payloads.Role.new!(new_role)
 
       guild_role_update = %Payloads.GuildRoleUpdate{
-        guild_id: guild_id,
+        guild_id: guild.id,
         old_role: old_role_payload,
         new_role: new_role_payload
       }
@@ -75,36 +78,33 @@ defmodule AshDiscord.Consumer.Handler.GuildRoleTest do
                  context
                )
 
-      # Verify role was updated (upserted) in database
-      roles = TestApp.Discord.Role.read!()
-      assert length(roles) == 1
+      [updated_role] = TestApp.Discord.Role.read!(authorize?: false)
 
-      updated_role = hd(roles)
       assert updated_role.discord_id == new_role.id
       assert updated_role.name == "New Role"
-      assert updated_role.guild_id == guild_id
+      assert updated_role.guild_discord_id == guild.id
     end
   end
 
   describe "delete/3" do
+    @tag :fixed
     test "deletes role from database" do
-      guild_id = generate_snowflake()
+      guild = guild()
       role_data = role()
 
-      # First create the role
-      {:ok, role_payload} = Payloads.Role.new(role_data)
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
 
-      {:ok, _created} =
-        TestApp.Discord.Role
-        |> Ash.Changeset.for_create(:from_discord, %{
+      role_payload = Payloads.Role.new!(role_data)
+
+      TestApp.Discord.role_from_discord!(
+        %{
           data: role_payload,
-          identity: %{role_id: role_data.id, guild_id: guild_id}
-        })
-        |> Ash.create()
+          identity: %{role_id: role_data.id, guild_id: guild.id}
+        },
+        authorize?: false
+      )
 
-      # Verify role exists
-      roles_before = TestApp.Discord.Role.read!()
-      assert length(roles_before) == 1
+      [_created] = TestApp.Discord.Role.read!(authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -115,7 +115,7 @@ defmodule AshDiscord.Consumer.Handler.GuildRoleTest do
       }
 
       guild_role_delete = %Payloads.GuildRoleDelete{
-        guild_id: guild_id,
+        guild_id: guild.id,
         role: role_payload
       }
 
@@ -126,14 +126,15 @@ defmodule AshDiscord.Consumer.Handler.GuildRoleTest do
                  context
                )
 
-      # Verify role was deleted from database
-      roles_after = TestApp.Discord.Role.read!()
-      assert length(roles_after) == 0
+      [] = TestApp.Discord.Role.read!(authorize?: false)
     end
 
+    @tag :fixed
     test "handles missing role gracefully" do
-      guild_id = generate_snowflake()
+      guild = guild()
       role_data = role()
+
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -143,14 +144,13 @@ defmodule AshDiscord.Consumer.Handler.GuildRoleTest do
         context: %{private: %{ash_discord?: true}}
       }
 
-      {:ok, role_payload} = Payloads.Role.new(role_data)
+      role_payload = Payloads.Role.new!(role_data)
 
       guild_role_delete = %Payloads.GuildRoleDelete{
-        guild_id: guild_id,
+        guild_id: guild.id,
         role: role_payload
       }
 
-      # Should not crash when role doesn't exist
       assert :ok =
                GuildRole.delete(
                  guild_role_delete,

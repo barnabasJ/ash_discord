@@ -2,7 +2,6 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
   use TestApp.DataCase, async: true
 
   import AshDiscord.Test.Generators
-  use Mimic
 
   require Ash.Query
 
@@ -10,25 +9,15 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
   alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 
-  setup do
-    copy(Nostrum.Api.User)
-    copy(Nostrum.Api.Guild)
-    :ok
-  end
-
   describe "add/4" do
+    @tag :fixed
     test "creates guild member in database" do
-      guild_id = generate_snowflake()
-      member_data = member()
+      guild = guild()
+      user = user()
+      member_data = member(%{user_id: user.id})
 
-      # Mock API calls for relationships
-      expect(Nostrum.Api.User, :get, fn user_id ->
-        {:ok, user(%{id: user_id})}
-      end)
-
-      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
-        {:ok, guild(%{id: guild_id})}
-      end)
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -38,11 +27,10 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
         context: nil
       }
 
-      # Create GuildMemberAdd payload
-      {:ok, member_payload} = Payloads.Member.new(member_data)
+      member_payload = Payloads.Member.new!(member_data)
 
       guild_member_add = %Payloads.GuildMemberAdd{
-        guild_id: guild_id,
+        guild_id: guild.id,
         member: member_payload
       }
 
@@ -53,34 +41,25 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
                  context
                )
 
-      # Verify guild member was created in database for this specific guild
-      members =
+      [created_member] =
         TestApp.Discord.GuildMember
-        |> Ash.Query.filter(guild_discord_id: guild_id)
-        |> Ash.read!()
+        |> Ash.Query.filter(guild_discord_id: guild.id)
+        |> Ash.read!(authorize?: false)
 
-      assert length(members) == 1
-
-      created_member = hd(members)
       assert created_member.user_discord_id == member_data.user_id
-      assert created_member.guild_discord_id == guild_id
+      assert created_member.guild_discord_id == guild.id
     end
   end
 
   describe "update/4" do
+    @tag :fixed
     test "updates existing guild member in database" do
-      guild_id = generate_snowflake()
-      old_member = member(%{nick: "Old Nick"})
-      new_member = member(%{user_id: old_member.user_id, nick: "New Nick"})
+      guild = guild()
+      user = user()
+      new_member = member(%{user_id: user.id, nick: "New Nick"})
 
-      # Mock API calls for relationships
-      expect(Nostrum.Api.User, :get, fn user_id ->
-        {:ok, user(%{id: user_id})}
-      end)
-
-      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
-        {:ok, guild(%{id: guild_id})}
-      end)
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -90,11 +69,10 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
         context: nil
       }
 
-      # Create GuildMemberUpdate payload
-      {:ok, new_member_payload} = Payloads.Member.new(new_member)
+      new_member_payload = Payloads.Member.new!(new_member)
 
       guild_member_update = %Payloads.GuildMemberUpdate{
-        guild_id: guild_id,
+        guild_id: guild.id,
         old_member: nil,
         new_member: new_member_payload
       }
@@ -106,51 +84,39 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
                  context
                )
 
-      # Verify guild member was updated (upserted) in database for this specific guild
-      members =
+      [updated_member] =
         TestApp.Discord.GuildMember
-        |> Ash.Query.filter(guild_discord_id: guild_id)
-        |> Ash.read!()
+        |> Ash.Query.filter(guild_discord_id: guild.id)
+        |> Ash.read!(authorize?: false)
 
-      assert length(members) == 1
-
-      updated_member = hd(members)
       assert updated_member.user_discord_id == new_member.user_id
-      assert updated_member.guild_discord_id == guild_id
+      assert updated_member.guild_discord_id == guild.id
       assert updated_member.nick == "New Nick"
     end
   end
 
   describe "remove/4" do
+    @tag :fixed
     test "removes guild member from database" do
-      guild_id = generate_snowflake()
-      member_data = member()
+      guild = guild()
+      user = user()
+      member_data = member(%{user_id: user.id})
 
-      # Mock API calls for relationships
-      expect(Nostrum.Api.User, :get, fn user_id ->
-        {:ok, user(%{id: user_id})}
-      end)
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user}, authorize?: false)
 
-      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
-        {:ok, guild(%{id: guild_id})}
-      end)
-
-      # First create the guild member
-      {:ok, _created} =
-        TestApp.Discord.GuildMember
-        |> Ash.Changeset.for_create(:from_discord, %{
+      TestApp.Discord.guild_member_from_discord!(
+        %{
           data: member_data,
-          identity: %{guild_discord_id: guild_id, user_discord_id: member_data.user_id}
-        })
-        |> Ash.create()
+          identity: %{guild_discord_id: guild.id, user_discord_id: member_data.user_id}
+        },
+        authorize?: false
+      )
 
-      # Verify member exists for this specific guild
-      members_before =
+      [_member] =
         TestApp.Discord.GuildMember
-        |> Ash.Query.filter(guild_discord_id: guild_id)
-        |> Ash.read!()
-
-      assert length(members_before) == 1
+        |> Ash.Query.filter(guild_discord_id: guild.id)
+        |> Ash.read!(authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -160,11 +126,10 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
         context: nil
       }
 
-      # Create GuildMemberRemove payload
-      {:ok, member_payload} = Payloads.Member.new(member_data)
+      member_payload = Payloads.Member.new!(member_data)
 
       guild_member_remove = %Payloads.GuildMemberRemove{
-        guild_id: guild_id,
+        guild_id: guild.id,
         member: member_payload
       }
 
@@ -175,18 +140,20 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
                  context
                )
 
-      # Verify guild member was deleted from database for this specific guild
-      members_after =
+      [] =
         TestApp.Discord.GuildMember
-        |> Ash.Query.filter(guild_discord_id: guild_id)
-        |> Ash.read!()
-
-      assert length(members_after) == 0
+        |> Ash.Query.filter(guild_discord_id: guild.id)
+        |> Ash.read!(authorize?: false)
     end
 
+    @tag :fixed
     test "handles missing member gracefully" do
-      guild_id = generate_snowflake()
-      member_data = member()
+      guild = guild()
+      user = user()
+      member_data = member(%{user_id: user.id})
+
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -196,15 +163,13 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
         context: nil
       }
 
-      # Create GuildMemberRemove payload
-      {:ok, member_payload} = Payloads.Member.new(member_data)
+      member_payload = Payloads.Member.new!(member_data)
 
       guild_member_remove = %Payloads.GuildMemberRemove{
-        guild_id: guild_id,
+        guild_id: guild.id,
         member: member_payload
       }
 
-      # Should not crash when member doesn't exist
       assert :ok =
                GuildMember.remove(
                  guild_member_remove,
@@ -215,7 +180,12 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
   end
 
   describe "chunk/4" do
+    @tag :fixed
     test "handles GUILD_MEMBERS_CHUNK event and returns :ok" do
+      guild = guild()
+
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
+
       context = %AshDiscord.Context{
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildMember,
@@ -226,7 +196,7 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
 
       chunk_event = %Payloads.GuildMembersChunkEvent{
         data: %{
-          guild_id: generate_snowflake(),
+          guild_id: guild.id,
           members: [],
           chunk_index: 0,
           chunk_count: 1
@@ -241,21 +211,15 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
                )
     end
 
+    @tag :fixed
     test "creates guild members from chunk event data" do
-      guild_id = generate_snowflake()
-      user_id_1 = generate_snowflake()
-      user_id_2 = generate_snowflake()
+      guild = guild()
+      user1 = user()
+      user2 = user()
 
-      # Mock API calls for relationships
-      # Each member requires user lookup
-      expect(Nostrum.Api.User, :get, 2, fn user_id ->
-        {:ok, user(%{id: user_id})}
-      end)
-
-      # Guild is fetched once and cached for all members
-      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
-        {:ok, guild(%{id: guild_id})}
-      end)
+      TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user1}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user2}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -267,10 +231,10 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
 
       chunk_event = %Payloads.GuildMembersChunkEvent{
         data: %{
-          guild_id: guild_id,
+          guild_id: guild.id,
           members: [
-            %{user_id: user_id_1, nick: "TestUser1", roles: []},
-            %{user_id: user_id_2, nick: "TestUser2", roles: []}
+            %{user_id: user1.id, nick: "TestUser1", roles: []},
+            %{user_id: user2.id, nick: "TestUser2", roles: []}
           ],
           chunk_index: 0,
           chunk_count: 1,
@@ -285,20 +249,19 @@ defmodule AshDiscord.Consumer.Handler.GuildMemberTest do
                  context
                )
 
-      # Verify members were created
-      members = TestApp.Discord.GuildMember.read!()
+      members = TestApp.Discord.GuildMember.read!(authorize?: false)
       assert length(members) == 2
 
       member_user_ids = Enum.map(members, & &1.user_discord_id)
-      assert user_id_1 in member_user_ids
-      assert user_id_2 in member_user_ids
+      assert user1.id in member_user_ids
+      assert user2.id in member_user_ids
 
-      member1 = Enum.find(members, &(&1.user_discord_id == user_id_1))
-      assert member1.guild_discord_id == guild_id
+      member1 = Enum.find(members, &(&1.user_discord_id == user1.id))
+      assert member1.guild_discord_id == guild.id
       assert member1.nick == "TestUser1"
 
-      member2 = Enum.find(members, &(&1.user_discord_id == user_id_2))
-      assert member2.guild_discord_id == guild_id
+      member2 = Enum.find(members, &(&1.user_discord_id == user2.id))
+      assert member2.guild_discord_id == guild.id
       assert member2.nick == "TestUser2"
     end
   end

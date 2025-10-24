@@ -8,6 +8,7 @@ defmodule AshDiscord.Consumer.Handler.GuildBanTest do
   alias TestApp.TestConsumer
 
   describe "add/3" do
+    @tag :fixed
     test "creates ban record in database" do
       guild_id = generate_snowflake()
       user_data = user()
@@ -20,7 +21,7 @@ defmodule AshDiscord.Consumer.Handler.GuildBanTest do
         context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
-      {:ok, user_payload} = Payloads.User.new(user_data)
+      user_payload = Payloads.User.new!(user_data)
 
       guild_ban_add = %Payloads.GuildBanAddEvent{
         guild_id: guild_id,
@@ -34,16 +35,14 @@ defmodule AshDiscord.Consumer.Handler.GuildBanTest do
                  context
                )
 
-      # Verify ban was created in database
-      bans = TestApp.Discord.GuildBan.read!()
-      assert length(bans) == 1
+      [created_ban] = TestApp.Discord.GuildBan.read!(authorize?: false)
 
-      created_ban = hd(bans)
       assert created_ban.discord_id == user_data.id
       assert created_ban.guild_id == guild_id
       assert created_ban.user_id == user_data.id
     end
 
+    @tag :fixed
     test "upserts ban record if already exists" do
       guild_id = generate_snowflake()
       user_data = user()
@@ -56,14 +55,13 @@ defmodule AshDiscord.Consumer.Handler.GuildBanTest do
         context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
-      {:ok, user_payload} = Payloads.User.new(user_data)
+      user_payload = Payloads.User.new!(user_data)
 
       guild_ban_add = %Payloads.GuildBanAddEvent{
         guild_id: guild_id,
         user: user_payload
       }
 
-      # Create ban first time
       assert :ok =
                GuildBan.add(
                  guild_ban_add,
@@ -71,7 +69,6 @@ defmodule AshDiscord.Consumer.Handler.GuildBanTest do
                  context
                )
 
-      # Create again (should upsert)
       assert :ok =
                GuildBan.add(
                  guild_ban_add,
@@ -79,30 +76,24 @@ defmodule AshDiscord.Consumer.Handler.GuildBanTest do
                  context
                )
 
-      # Verify only one ban exists
-      bans = TestApp.Discord.GuildBan.read!()
-      assert length(bans) == 1
+      [_ban] = TestApp.Discord.GuildBan.read!(authorize?: false)
     end
   end
 
   describe "remove/3" do
+    @tag :fixed
     test "deletes ban from database" do
       guild_id = generate_snowflake()
       user_data = user()
 
-      # First create the ban
-      {:ok, user_payload} = Payloads.User.new(user_data)
+      user_payload = Payloads.User.new!(user_data)
 
-      {:ok, _created} =
-        TestApp.Discord.GuildBan
-        |> Ash.Changeset.for_create(:from_discord, %{
-          data: %{guild_id: guild_id, user: user_payload}
-        })
-        |> Ash.create()
+      TestApp.Discord.guild_ban_from_discord!(
+        %{data: %{guild_id: guild_id, user: user_payload}},
+        authorize?: false
+      )
 
-      # Verify ban exists
-      bans_before = TestApp.Discord.GuildBan.read!()
-      assert length(bans_before) == 1
+      [_ban] = TestApp.Discord.GuildBan.read!(authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -124,11 +115,10 @@ defmodule AshDiscord.Consumer.Handler.GuildBanTest do
                  context
                )
 
-      # Verify ban was deleted from database
-      bans_after = TestApp.Discord.GuildBan.read!()
-      assert length(bans_after) == 0
+      [] = TestApp.Discord.GuildBan.read!(authorize?: false)
     end
 
+    @tag :fixed
     test "handles missing ban gracefully" do
       guild_id = generate_snowflake()
       user_data = user()
@@ -141,14 +131,13 @@ defmodule AshDiscord.Consumer.Handler.GuildBanTest do
         context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
-      {:ok, user_payload} = Payloads.User.new(user_data)
+      user_payload = Payloads.User.new!(user_data)
 
       guild_ban_remove = %Payloads.GuildBanRemoveEvent{
         guild_id: guild_id,
         user: user_payload
       }
 
-      # Should not crash when ban doesn't exist
       assert :ok =
                GuildBan.remove(
                  guild_ban_remove,
@@ -157,32 +146,25 @@ defmodule AshDiscord.Consumer.Handler.GuildBanTest do
                )
     end
 
+    @tag :fixed
     test "only deletes ban for specific guild" do
       guild_id_1 = generate_snowflake()
       guild_id_2 = generate_snowflake()
       user_data = user()
 
-      {:ok, user_payload} = Payloads.User.new(user_data)
+      user_payload = Payloads.User.new!(user_data)
 
-      # Create ban in guild 1
-      {:ok, _ban1} =
-        TestApp.Discord.GuildBan
-        |> Ash.Changeset.for_create(:from_discord, %{
-          data: %{guild_id: guild_id_1, user: user_payload}
-        })
-        |> Ash.create()
+      TestApp.Discord.guild_ban_from_discord!(
+        %{data: %{guild_id: guild_id_1, user: user_payload}},
+        authorize?: false
+      )
 
-      # Create ban in guild 2 with same user
-      {:ok, _ban2} =
-        TestApp.Discord.GuildBan
-        |> Ash.Changeset.for_create(:from_discord, %{
-          data: %{guild_id: guild_id_2, user: user_payload}
-        })
-        |> Ash.create()
+      TestApp.Discord.guild_ban_from_discord!(
+        %{data: %{guild_id: guild_id_2, user: user_payload}},
+        authorize?: false
+      )
 
-      # Verify 2 bans exist
-      bans_before = TestApp.Discord.GuildBan.read!()
-      assert length(bans_before) == 2
+      [_ban1, _ban2] = TestApp.Discord.GuildBan.read!(authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -192,7 +174,6 @@ defmodule AshDiscord.Consumer.Handler.GuildBanTest do
         context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
-      # Remove ban from guild 1 only
       guild_ban_remove = %Payloads.GuildBanRemoveEvent{
         guild_id: guild_id_1,
         user: user_payload
@@ -205,10 +186,7 @@ defmodule AshDiscord.Consumer.Handler.GuildBanTest do
                  context
                )
 
-      # Verify only guild 2 ban remains
-      bans_after = TestApp.Discord.GuildBan.read!()
-      assert length(bans_after) == 1
-      remaining_ban = hd(bans_after)
+      [remaining_ban] = TestApp.Discord.GuildBan.read!(authorize?: false)
       assert remaining_ban.guild_id == guild_id_2
     end
   end

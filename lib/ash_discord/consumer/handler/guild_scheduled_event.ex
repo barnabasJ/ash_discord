@@ -107,10 +107,31 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEvent do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def user_add(_consumer, _event, _ws_state, _context) do
-    # GUILD_SCHEDULED_EVENT_USER_ADD is an informational event sent when a user
-    # subscribes to a scheduled event. This event doesn't require database operations.
-    :ok
+  def user_add(
+        _consumer,
+        %Payloads.GuildScheduledEventUserAdd{
+          guild_scheduled_event_id: event_id,
+          user_id: user_id
+        } = event,
+        _ws_state,
+        context
+      ) do
+    case Handler.invoke_configured_action(
+           :GUILD_SCHEDULED_EVENT_USER_ADD,
+           %{event_discord_id: event_id, user_discord_id: user_id},
+           %{data: event},
+           context
+         ) do
+      {:ok, _subscription} ->
+        :ok
+
+      {:error, error} ->
+        Logger.warning(
+          "Failed to create event user subscription for event #{event_id}, user #{user_id}: #{inspect(error)}"
+        )
+
+        :ok
+    end
   end
 
   @spec user_remove(
@@ -119,9 +140,30 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEvent do
           ws_state :: Nostrum.Struct.WSState.t(),
           context :: AshDiscord.Context.t()
         ) :: :ok | {:error, term()}
-  def user_remove(_consumer, _event, _ws_state, _context) do
-    # GUILD_SCHEDULED_EVENT_USER_REMOVE is an informational event sent when a user
-    # unsubscribes from a scheduled event. This event doesn't require database operations.
-    :ok
+  def user_remove(
+        _consumer,
+        %Payloads.GuildScheduledEventUserRemove{
+          guild_scheduled_event_id: event_id,
+          user_id: user_id
+        },
+        _ws_state,
+        context
+      ) do
+    case Handler.invoke_configured_action(
+           :GUILD_SCHEDULED_EVENT_USER_REMOVE,
+           %{event_discord_id: event_id, user_discord_id: user_id},
+           %{},
+           context
+         ) do
+      {:ok, _} ->
+        :ok
+
+      {:error, error} ->
+        Logger.warning(
+          "Failed to delete event user subscription for event #{event_id}, user #{user_id}: #{inspect(error)}"
+        )
+
+        :ok
+    end
   end
 end

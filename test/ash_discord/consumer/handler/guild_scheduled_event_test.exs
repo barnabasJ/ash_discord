@@ -170,14 +170,40 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
   end
 
   describe "user_add/4" do
-    test "returns :ok for informational event" do
-      event_add = %Payloads.GuildScheduledEventUserAdd{
-        guild_scheduled_event_id: generate_snowflake(),
-        user_id: generate_snowflake(),
-        guild_id: generate_snowflake()
-      }
+    @tag :fixed
+    test "creates guild scheduled event user subscription in database" do
+      event_data = guild_scheduled_event()
+      guild_data = guild(%{id: event_data.guild_id})
+      user_data = user()
+
+      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
+
+      event_payload = Payloads.GuildScheduledEvent.new!(event_data)
 
       context = %AshDiscord.Context{
+        consumer: TestConsumer,
+        resource: TestApp.Discord.GuildScheduledEvent,
+        guild: nil,
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
+      }
+
+      :ok =
+        GuildScheduledEvent.create(
+          TestConsumer,
+          event_payload,
+          %Nostrum.Struct.WSState{},
+          context
+        )
+
+      event_add = %Payloads.GuildScheduledEventUserAdd{
+        guild_scheduled_event_id: event_data.id,
+        user_id: user_data.id,
+        guild_id: event_data.guild_id
+      }
+
+      user_context = %AshDiscord.Context{
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildScheduledEventUser,
         guild: nil,
@@ -190,20 +216,52 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
                  TestConsumer,
                  event_add,
                  %Nostrum.Struct.WSState{},
-                 context
+                 user_context
                )
+
+      [subscription] = TestApp.Discord.GuildScheduledEventUser.read!(authorize?: false)
+
+      assert subscription.event_discord_id == event_data.id
+      assert subscription.user_discord_id == user_data.id
+      assert subscription.guild_discord_id == event_data.guild_id
     end
   end
 
   describe "user_remove/4" do
-    test "returns :ok for informational event" do
-      event_remove = %Payloads.GuildScheduledEventUserRemove{
-        guild_scheduled_event_id: generate_snowflake(),
-        user_id: generate_snowflake(),
-        guild_id: generate_snowflake()
-      }
+    @tag :fixed
+    test "removes guild scheduled event user subscription from database" do
+      event_data = guild_scheduled_event()
+      guild_data = guild(%{id: event_data.guild_id})
+      user_data = user()
+
+      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
+
+      event_payload = Payloads.GuildScheduledEvent.new!(event_data)
 
       context = %AshDiscord.Context{
+        consumer: TestConsumer,
+        resource: TestApp.Discord.GuildScheduledEvent,
+        guild: nil,
+        user: nil,
+        context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
+      }
+
+      :ok =
+        GuildScheduledEvent.create(
+          TestConsumer,
+          event_payload,
+          %Nostrum.Struct.WSState{},
+          context
+        )
+
+      event_add = %Payloads.GuildScheduledEventUserAdd{
+        guild_scheduled_event_id: event_data.id,
+        user_id: user_data.id,
+        guild_id: event_data.guild_id
+      }
+
+      user_context = %AshDiscord.Context{
         consumer: TestConsumer,
         resource: TestApp.Discord.GuildScheduledEventUser,
         guild: nil,
@@ -211,13 +269,31 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
         context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
+      :ok =
+        GuildScheduledEvent.user_add(
+          TestConsumer,
+          event_add,
+          %Nostrum.Struct.WSState{},
+          user_context
+        )
+
+      [_subscription] = TestApp.Discord.GuildScheduledEventUser.read!(authorize?: false)
+
+      event_remove = %Payloads.GuildScheduledEventUserRemove{
+        guild_scheduled_event_id: event_data.id,
+        user_id: user_data.id,
+        guild_id: event_data.guild_id
+      }
+
       assert :ok =
                GuildScheduledEvent.user_remove(
                  TestConsumer,
                  event_remove,
                  %Nostrum.Struct.WSState{},
-                 context
+                 user_context
                )
+
+      [] = TestApp.Discord.GuildScheduledEventUser.read!(authorize?: false)
     end
   end
 end

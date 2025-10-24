@@ -13,7 +13,7 @@ defmodule TestApp.Discord.GuildScheduledEventUser do
 
   ash_discord do
     events do
-      on(:GUILD_SCHEDULED_EVENT_USER_ADD, :create)
+      on(:GUILD_SCHEDULED_EVENT_USER_ADD, :from_discord)
       on(:GUILD_SCHEDULED_EVENT_USER_REMOVE, :destroy)
     end
   end
@@ -25,26 +25,54 @@ defmodule TestApp.Discord.GuildScheduledEventUser do
   attributes do
     uuid_primary_key(:id)
 
-    attribute(:guild_scheduled_event_id, :integer, allow_nil?: false, public?: true)
-    attribute(:user_id, :integer, allow_nil?: false, public?: true)
-    attribute(:guild_id, :integer, allow_nil?: false, public?: true)
+    attribute(:event_discord_id, :integer, allow_nil?: false, public?: true)
+    attribute(:user_discord_id, :integer, allow_nil?: false, public?: true)
+    attribute(:guild_discord_id, :integer, allow_nil?: false, public?: true)
 
     timestamps()
   end
 
   identities do
-    identity(:event_user, [:guild_scheduled_event_id, :user_id], pre_check_with: TestApp.Discord)
+    identity(:discord_id, [:event_discord_id, :user_discord_id], pre_check_with: TestApp.Discord)
+  end
+
+  relationships do
+    belongs_to :guild_scheduled_event, TestApp.Discord.GuildScheduledEvent do
+      source_attribute(:event_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+
+    belongs_to :user, TestApp.Discord.User do
+      source_attribute(:user_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+
+    belongs_to :guild, TestApp.Discord.Guild do
+      source_attribute(:guild_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
   end
 
   actions do
     defaults([:read, :destroy])
 
-    create :create do
+    create :from_discord do
+      description("Create guild scheduled event user subscription from Discord data")
       primary?(true)
-      accept([:guild_scheduled_event_id, :user_id, :guild_id])
+
+      argument(:data, AshDiscord.Consumer.Payloads.GuildScheduledEventUserAdd,
+        allow_nil?: false,
+        description: "Discord guild scheduled event user add payload"
+      )
+
+      change(AshDiscord.Changes.FromDiscord.GuildScheduledEventUser)
+
       upsert?(true)
-      upsert_identity(:event_user)
-      upsert_fields([:guild_id])
+      upsert_identity(:discord_id)
+      upsert_fields([:guild_discord_id])
     end
 
     update :update do
@@ -54,7 +82,7 @@ defmodule TestApp.Discord.GuildScheduledEventUser do
   end
 
   code_interface do
-    define(:create)
+    define(:from_discord)
     define(:update)
     define(:read)
     define(:destroy)

@@ -76,8 +76,16 @@ defmodule AshDiscord.Changes.FromDiscord.Emoji do
     # Determine if this is a custom emoji (has an ID)
     custom = if emoji_data.id, do: true, else: false
 
+    # Get guild_id from identity argument if available
+    guild_id =
+      case Ash.Changeset.get_argument_or_attribute(changeset, :identity) do
+        %{guild_id: guild_id} -> guild_id
+        _ -> nil
+      end
+
     changeset
     |> maybe_set_attribute(:discord_id, emoji_data.id)
+    |> maybe_set_attribute(:guild_discord_id, guild_id)
     |> maybe_set_attribute(:name, emoji_data.name)
     |> maybe_set_attribute(:animated, emoji_data.animated || false)
     |> maybe_set_attribute(:custom, custom)

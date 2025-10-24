@@ -24,6 +24,12 @@ defmodule TestApp.Discord.Emoji do
       public?: true
     )
 
+    attribute(:guild_discord_id, :integer,
+      allow_nil?: false,
+      public?: true,
+      description: "Discord guild ID that owns this emoji"
+    )
+
     attribute(:name, :string,
       allow_nil?: false,
       public?: true
@@ -54,14 +60,23 @@ defmodule TestApp.Discord.Emoji do
     )
   end
 
+  relationships do
+    belongs_to :guild, TestApp.Discord.Guild do
+      source_attribute(:guild_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+  end
+
   identities do
-    identity :discord_id, [:discord_id, :name] do
+    identity :discord_id, [:discord_id, :guild_discord_id] do
       pre_check_with(TestApp.Discord)
     end
   end
 
   code_interface do
     define(:read)
+    define(:from_discord)
   end
 
   actions do
@@ -85,7 +100,7 @@ defmodule TestApp.Discord.Emoji do
 
       upsert?(true)
       upsert_identity(:discord_id)
-      upsert_fields([:name, :animated, :custom, :managed, :require_colons])
+      upsert_fields([:guild_discord_id, :name, :animated, :custom, :managed, :require_colons])
     end
 
     update :update do

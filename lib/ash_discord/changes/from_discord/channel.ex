@@ -11,6 +11,17 @@ defmodule AshDiscord.Changes.FromDiscord.Channel do
   - `:data` - TypedStruct `AshDiscord.Consumer.Payloads.Channel.t()` with Discord channel data
   - `:identity` - Integer Discord channel ID for API fallback when data not provided
 
+  ## Transformations
+
+  Maps all Discord Channel attributes including:
+  - Basic attributes: name, type, position, topic, nsfw
+  - Voice channel attributes: bitrate, user_limit, rtc_region, video_quality_mode
+  - Thread attributes: thread_metadata, message_count, member_count, newly_created
+  - Forum attributes: available_tags, applied_tags, default_reaction_emoji, default_sort_order, default_forum_layout
+  - DM attributes: recipients, icon, owner_discord_id
+  - Timestamps: last_pin_timestamp
+  - Relationships: guild, parent channel, last_message
+
   ## Example
 
       create :from_discord do
@@ -62,13 +73,43 @@ defmodule AshDiscord.Changes.FromDiscord.Channel do
     |> maybe_set_attribute(:position, channel_data.position)
     |> maybe_set_attribute(:topic, channel_data.topic)
     |> maybe_set_attribute(:nsfw, channel_data.nsfw)
-    |> maybe_set_attribute(:parent_id, channel_data.parent_id)
     |> maybe_set_attribute(:guild_id, channel_data.guild_id)
+    |> maybe_set_attribute(:bitrate, channel_data.bitrate)
+    |> maybe_set_attribute(:user_limit, channel_data.user_limit)
+    |> maybe_set_attribute(:rate_limit_per_user, channel_data.rate_limit_per_user)
+    |> maybe_set_attribute(:recipients, channel_data.recipients)
+    |> maybe_set_attribute(:icon, channel_data.icon)
+    |> maybe_set_attribute(:owner_discord_id, channel_data.owner_id)
+    |> maybe_set_attribute(:application_discord_id, channel_data.application_id)
+    |> maybe_set_attribute(:rtc_region, channel_data.rtc_region)
+    |> maybe_set_attribute(:video_quality_mode, channel_data.video_quality_mode)
+    |> maybe_set_attribute(:message_count, channel_data.message_count)
+    |> maybe_set_attribute(:member_count, channel_data.member_count)
+    |> maybe_set_attribute(:thread_metadata, channel_data.thread_metadata)
+    |> maybe_set_attribute(:member, channel_data.member)
+    |> maybe_set_attribute(
+      :default_auto_archive_duration,
+      channel_data.default_auto_archive_duration
+    )
+    |> maybe_set_attribute(:permissions, channel_data.permissions)
+    |> maybe_set_attribute(:newly_created, channel_data.newly_created)
+    |> maybe_set_attribute(:available_tags, channel_data.available_tags)
+    |> maybe_set_attribute(:applied_tags, channel_data.applied_tags)
+    |> maybe_set_attribute(:default_reaction_emoji, channel_data.default_reaction_emoji)
+    |> maybe_set_attribute(
+      :default_thread_rate_limit_per_user,
+      channel_data.default_thread_rate_limit_per_user
+    )
+    |> maybe_set_attribute(:default_sort_order, channel_data.default_sort_order)
+    |> maybe_set_attribute(:default_forum_layout, channel_data.default_forum_layout)
     |> maybe_set_attribute(
       :permission_overwrites,
       Transformations.transform_permission_overwrites(channel_data.permission_overwrites)
     )
+    |> maybe_set_datetime_attribute(:last_pin_timestamp, channel_data.last_pin_timestamp)
     |> maybe_manage_guild_relationship(channel_data.guild_id)
+    |> maybe_manage_parent_relationship(channel_data.parent_id)
+    |> maybe_manage_last_message_relationship(channel_data.last_message_id, channel_data.id)
   end
 
   defp maybe_set_attribute(changeset, _field, nil), do: changeset
@@ -83,11 +124,61 @@ defmodule AshDiscord.Changes.FromDiscord.Channel do
     end
   end
 
+  defp maybe_set_datetime_attribute(changeset, _field, nil), do: changeset
+
+  defp maybe_set_datetime_attribute(changeset, field, value) do
+    resource = changeset.resource
+
+    if Ash.Resource.Info.attribute(resource, field) do
+      Transformations.set_datetime_field(changeset, field, value)
+    else
+      changeset
+    end
+  end
+
   defp maybe_manage_guild_relationship(changeset, nil), do: changeset
 
   defp maybe_manage_guild_relationship(changeset, guild_id) do
     if Ash.Resource.Info.relationship(changeset.resource, :guild) do
       Transformations.manage_guild_relationship(changeset, guild_id)
+    else
+      changeset
+    end
+  end
+
+  defp maybe_manage_parent_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_parent_relationship(changeset, parent_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :parent) do
+      Ash.Changeset.manage_relationship(
+        changeset,
+        :parent,
+        %{discord_id: parent_id, identity: parent_id},
+        type: :append_and_remove,
+        use_identities: [:discord_id],
+        on_no_match: {:create, :from_discord}
+      )
+    else
+      changeset
+    end
+  end
+
+  defp maybe_manage_last_message_relationship(changeset, nil, _channel_id), do: changeset
+
+  defp maybe_manage_last_message_relationship(changeset, message_id, channel_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :last_message) do
+      Ash.Changeset.manage_relationship(
+        changeset,
+        :last_message,
+        %{
+          discord_id: message_id,
+          channel_discord_id: channel_id,
+          identity: %{discord_id: message_id, channel_discord_id: channel_id}
+        },
+        type: :append_and_remove,
+        use_identities: [:discord_id],
+        on_no_match: {:create, :from_discord}
+      )
     else
       changeset
     end

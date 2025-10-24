@@ -70,8 +70,8 @@ defmodule AshDiscord.Changes.FromDiscord.GuildAuditLogEntry do
     |> maybe_set_attribute(:changes, changes)
     |> maybe_set_attribute(:options, options)
     |> maybe_set_attribute(:reason, reason)
-    |> maybe_set_attribute(:target_id, target_id)
-    |> maybe_set_attribute(:user_id, user_id)
+    |> maybe_set_attribute(:target_discord_id, target_id)
+    |> maybe_set_attribute(:user_discord_id, user_id)
   end
 
   defp maybe_set_attribute(changeset, _field, nil), do: changeset

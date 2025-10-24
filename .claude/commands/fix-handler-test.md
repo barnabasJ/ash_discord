@@ -59,15 +59,40 @@ item = hd(items)
 
 ### 4. Correct Field Name Assertions
 
-- All Discord-sourced IDs should use `*_discord_id` field names
+- **CRITICAL**: All Discord-sourced IDs must use `*_discord_id` field names (per
+  CLAUDE.md project instructions)
 - Match against the generator data's non-prefixed field names
+- This applies to ALL Discord IDs: user, guild, channel, role, owner, target,
+  etc.
 
 ```elixir
-# Generator creates: %{guild_id: 123, user_id: 456}
-# Resource stores as: guild_discord_id, user_discord_id
+# Generator creates: %{guild_id: 123, user_id: 456, owner_id: 789}
+# Resource stores as: guild_discord_id, user_discord_id, owner_discord_id
 
 assert created.guild_discord_id == data.guild_id
 assert created.user_discord_id == data.user_id
+assert created.owner_discord_id == data.owner_id
+```
+
+**Relationships for Discord IDs:**
+
+- Resources should have `belongs_to` relationships for non-polymorphic Discord
+  IDs
+- Test that relationships work by checking the attribute values
+- Polymorphic fields (like audit log `target_discord_id`) are attributes only,
+  no relationships
+
+```elixir
+# In resource definition:
+belongs_to :user, TestApp.Discord.User do
+  source_attribute(:user_discord_id)
+  destination_attribute(:discord_id)
+  attribute_writable?(true)
+end
+
+# In test assertions:
+assert created.user_discord_id == data.user_id
+# Could also test relationship loading if needed
 ```
 
 ### 5. Use `new!` vs `new` Appropriately
@@ -117,7 +142,10 @@ resources = Resource.read!()
    - Fix data setup (create dependency chains)
    - Add `authorize?: false` throughout
    - Convert to pattern matching
-   - Fix field name assertions (`*_discord_id`)
+   - **Fix field name assertions** - ALL Discord IDs must use `*_discord_id`
+     suffix
+   - **Verify relationships** - Check if resource has proper `belongs_to`
+     relationships for Discord IDs
    - Use `new!` where appropriate
    - Remove redundant comments
    - Add `@tag :fixed` to refactored tests
@@ -146,7 +174,6 @@ test "creates channel pins update in database" do
   {:ok, pins_payload} = Payloads.ChannelPinsUpdateEvent.new(pins_data)
   assert :ok = ChannelPins.update(pins_payload, ws_state, context)
 
-  # Verify channel pins update was created
   pins_updates = TestApp.Discord.ChannelPinsUpdate.read!()
   assert length(pins_updates) == 1
 

@@ -39,9 +39,8 @@ defmodule AshDiscord.Changes.FromDiscord.GuildBan do
 
   defp transform_ban(changeset, guild_id, user) do
     changeset
-    |> maybe_set_attribute(:discord_id, user.id)
-    |> maybe_set_attribute(:guild_id, guild_id)
-    |> maybe_set_attribute(:user_id, user.id)
+    |> maybe_set_attribute(:guild_discord_id, guild_id)
+    |> maybe_set_attribute(:user_discord_id, user.id)
   end
 
   defp maybe_set_attribute(changeset, _field, nil), do: changeset

@@ -37,7 +37,6 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
                  context
                )
 
-      # Verify entry was created in database
       assert [created_entry] = TestApp.Discord.GuildAuditLogEntry.read!()
 
       assert created_entry.discord_id == entry.id
@@ -49,8 +48,8 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
 
       assert created_entry.options == %{"count" => "1"}
       assert created_entry.reason == "Test reason"
-      assert created_entry.target_id == entry.target_id
-      assert created_entry.user_id == entry.user_id
+      assert created_entry.target_discord_id == entry.target_id
+      assert created_entry.user_discord_id == entry.user_id
     end
 
     @tag :fixed
@@ -75,7 +74,6 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
 
       audit_log_entry_event = Payloads.GuildAuditLogEntryCreateEvent.new!(entry)
 
-      # Create entry first time
       assert :ok =
                GuildAuditLogEntry.create(
                  audit_log_entry_event,
@@ -83,7 +81,6 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
                  context
                )
 
-      # Update with new reason (should upsert)
       updated_entry = %{entry | reason: "Updated reason"}
       updated_event = Payloads.GuildAuditLogEntryCreateEvent.new!(updated_entry)
 
@@ -94,7 +91,6 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
                  context
                )
 
-      # Verify only one entry exists with updated reason
       assert [updated_record] = TestApp.Discord.GuildAuditLogEntry.read!()
       assert updated_record.reason == "Updated reason"
     end
@@ -128,7 +124,6 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
                  context
                )
 
-      # Verify entry was created with minimal fields
       assert [created_entry] = TestApp.Discord.GuildAuditLogEntry.read!()
 
       assert created_entry.discord_id == entry.id
@@ -136,8 +131,8 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
       assert is_nil(created_entry.changes)
       assert is_nil(created_entry.options)
       assert is_nil(created_entry.reason)
-      assert is_nil(created_entry.target_id)
-      assert is_nil(created_entry.user_id)
+      assert is_nil(created_entry.target_discord_id)
+      assert is_nil(created_entry.user_discord_id)
     end
 
     @tag :fixed
@@ -150,7 +145,6 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
         context: nil
       }
 
-      # Create entries with different action types
       action_types = [1, 10, 20, 72]
 
       for action_type <- action_types do
@@ -174,7 +168,6 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
                  )
       end
 
-      # Verify all entries were created
       entries = TestApp.Discord.GuildAuditLogEntry.read!()
       assert length(entries) == 4
 

@@ -11,6 +11,7 @@ Follow this systematic approach:
 
 2. **Verify/Create Payload TypedStructs** - Ensure we have payload modules for
    all events in `lib/ash_discord/consumer/payloads/`:
+
    - First, check the Nostrum struct definition in
      `deps/nostrum/lib/nostrum/struct/` to understand the data structure
    - Review any nested structs referenced in the Nostrum struct
@@ -20,6 +21,7 @@ Follow this systematic approach:
 
 3. **Create/Update Handler Module** - Implement the handler at the path
    specified in event_map.ex:
+
    - Use 3-parameter signature: `def function_name(payload, ws_state, context)`
    - For CREATE/UPDATE events: Use
      `Ash.Changeset.for_create(:from_discord, %{data: payload})`
@@ -28,14 +30,30 @@ Follow this systematic approach:
    - Return `:ok` on success or `{:error, reason}` on failure
 
 4. **Create/Update FromDiscord Change** (for CREATE/UPDATE events):
+
    - Create change module in `lib/ash_discord/changes/from_discord/`
    - Implement `change/2` to transform payload data to resource attributes
    - Handle any API fallback needs
    - Note: DELETE events use default :destroy action, no change needed
 
 5. **Create/Update Test Resource** (ALWAYS - for every event):
+
    - Create resource in `test/support/test_app/discord/`
    - Define attributes matching Discord API fields
+   - **CRITICAL**: Follow Discord ID naming convention:
+     - All Discord-sourced IDs must use `*_discord_id` naming (e.g.,
+       `user_discord_id`, `guild_discord_id`, `owner_discord_id`)
+     - Never use bare names like `user_id`, `guild_id` for Discord IDs
+     - See CLAUDE.md project instructions for this requirement
+   - **Relationships**: For non-polymorphic Discord ID references:
+     - Create `belongs_to` relationships with `source_attribute: :*_discord_id`
+       and `destination_attribute: :discord_id`
+     - Add `attribute_writable?(true)` to allow direct ID setting
+     - Example:
+       `belongs_to :user, TestApp.Discord.User do source_attribute(:user_discord_id); destination_attribute(:discord_id); attribute_writable?(true) end`
+   - **Polymorphic Fields**: Fields that can reference multiple entity types
+     (like audit log `target_discord_id`) should be attributes only, NO
+     relationships
    - Create `:from_discord` action with data argument and change (for
      CREATE/UPDATE)
    - Set up upsert with `:discord_id` identity

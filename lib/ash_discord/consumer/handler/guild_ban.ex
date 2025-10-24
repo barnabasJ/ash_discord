@@ -29,7 +29,7 @@ defmodule AshDiscord.Consumer.Handler.GuildBan do
   def remove(%Payloads.GuildBanRemoveEvent{guild_id: guild_id, user: user}, _ws_state, context) do
     case Handler.invoke_configured_action(
            :GUILD_BAN_REMOVE,
-           %{discord_id: user.id, guild_id: guild_id},
+           %{user_discord_id: user.id, guild_discord_id: guild_id},
            %{},
            context
          ) do

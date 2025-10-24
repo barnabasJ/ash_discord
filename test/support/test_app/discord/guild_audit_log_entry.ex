@@ -49,17 +49,25 @@ defmodule TestApp.Discord.GuildAuditLogEntry do
       description: "Reason for the change"
     )
 
-    attribute(:target_id, :string,
+    attribute(:target_discord_id, :string,
       allow_nil?: true,
       public?: true,
-      description: "ID of the affected entity"
+      description: "Discord ID of the affected entity"
     )
 
-    attribute(:user_id, :integer,
+    attribute(:user_discord_id, :integer,
       allow_nil?: true,
       public?: true,
-      description: "ID of the user who made the changes"
+      description: "Discord ID of the user who made the changes"
     )
+  end
+
+  relationships do
+    belongs_to :user, TestApp.Discord.User do
+      source_attribute(:user_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
   end
 
   identities do
@@ -94,14 +102,14 @@ defmodule TestApp.Discord.GuildAuditLogEntry do
         :changes,
         :options,
         :reason,
-        :target_id,
-        :user_id
+        :target_discord_id,
+        :user_discord_id
       ])
     end
 
     update :update do
       primary?(true)
-      accept([:action_type, :changes, :options, :reason, :target_id, :user_id])
+      accept([:action_type, :changes, :options, :reason, :target_discord_id, :user_discord_id])
     end
   end
 end

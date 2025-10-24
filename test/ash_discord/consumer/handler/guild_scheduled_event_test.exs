@@ -2,42 +2,17 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
   use TestApp.DataCase, async: true
 
   import AshDiscord.Test.Generators
-  use Mimic
-
-  require Ash.Query
 
   alias AshDiscord.Consumer.Handler.GuildScheduledEvent
   alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 
-  setup :verify_on_exit!
-
   describe "create/4" do
+    @tag :fixed
     test "creates guild scheduled event in database" do
-      event_id = generate_snowflake()
-      guild_id = generate_snowflake()
+      event_data = guild_scheduled_event()
 
-      event_data = %Nostrum.Struct.Guild.ScheduledEvent{
-        id: event_id,
-        guild_id: guild_id,
-        channel_id: nil,
-        creator_id: generate_snowflake(),
-        name: "Test Event",
-        description: "A test scheduled event",
-        scheduled_start_time: ~U[2025-12-01 10:00:00Z],
-        scheduled_end_time: ~U[2025-12-01 12:00:00Z],
-        privacy_level: 2,
-        status: 1,
-        entity_type: 3,
-        entity_id: nil,
-        entity_metadata: %Nostrum.Struct.Guild.ScheduledEvent.EntityMetadata{
-          location: "Discord HQ"
-        },
-        creator: nil,
-        user_count: 0
-      }
-
-      {:ok, event_payload} = Payloads.GuildScheduledEvent.new(event_data)
+      event_payload = Payloads.GuildScheduledEvent.new!(event_data)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -55,52 +30,33 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
                  context
                )
 
-      # Verify scheduled event was created in database
-      events =
-        TestApp.Discord.GuildScheduledEvent
-        |> Ash.Query.filter(discord_id: event_id)
-        |> Ash.read!()
+      [created_event] = TestApp.Discord.GuildScheduledEvent.read!(authorize?: false)
 
-      assert length(events) == 1
-
-      created_event = hd(events)
-      assert created_event.discord_id == event_id
-      assert created_event.guild_id == guild_id
-      assert created_event.name == "Test Event"
-      assert created_event.description == "A test scheduled event"
-      assert created_event.status == 1
-      assert created_event.entity_type == 3
-      assert created_event.entity_metadata_location == "Discord HQ"
+      assert created_event.discord_id == event_data.id
+      assert created_event.guild_id == event_data.guild_id
+      assert created_event.name == event_data.name
+      assert created_event.description == event_data.description
+      assert created_event.status == event_data.status
+      assert created_event.entity_type == event_data.entity_type
+      assert created_event.entity_metadata_location == event_data.entity_metadata.location
     end
   end
 
   describe "update/4" do
+    @tag :fixed
     test "updates existing guild scheduled event in database" do
-      event_id = generate_snowflake()
-      guild_id = generate_snowflake()
+      initial_event =
+        guild_scheduled_event(%{
+          name: "Original Event",
+          description: "Original description",
+          status: 1,
+          entity_metadata: %Nostrum.Struct.Guild.ScheduledEvent.EntityMetadata{
+            location: "Old Location"
+          },
+          user_count: 5
+        })
 
-      # Create initial event
-      initial_event = %Nostrum.Struct.Guild.ScheduledEvent{
-        id: event_id,
-        guild_id: guild_id,
-        channel_id: nil,
-        creator_id: nil,
-        name: "Original Event",
-        description: "Original description",
-        scheduled_start_time: ~U[2025-12-01 10:00:00Z],
-        scheduled_end_time: nil,
-        privacy_level: 2,
-        status: 1,
-        entity_type: 3,
-        entity_id: nil,
-        entity_metadata: %Nostrum.Struct.Guild.ScheduledEvent.EntityMetadata{
-          location: "Old Location"
-        },
-        creator: nil,
-        user_count: 5
-      }
-
-      {:ok, initial_payload} = Payloads.GuildScheduledEvent.new(initial_event)
+      initial_payload = Payloads.GuildScheduledEvent.new!(initial_event)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -110,7 +66,6 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
         context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
-      # Create the event
       :ok =
         GuildScheduledEvent.create(
           TestConsumer,
@@ -119,28 +74,21 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
           context
         )
 
-      # Update the event
-      updated_event = %Nostrum.Struct.Guild.ScheduledEvent{
-        id: event_id,
-        guild_id: guild_id,
-        channel_id: nil,
-        creator_id: nil,
-        name: "Updated Event",
-        description: "Updated description",
-        scheduled_start_time: ~U[2025-12-01 10:00:00Z],
-        scheduled_end_time: ~U[2025-12-01 14:00:00Z],
-        privacy_level: 2,
-        status: 2,
-        entity_type: 3,
-        entity_id: nil,
-        entity_metadata: %Nostrum.Struct.Guild.ScheduledEvent.EntityMetadata{
-          location: "New Location"
-        },
-        creator: nil,
-        user_count: 10
-      }
+      updated_event =
+        guild_scheduled_event(%{
+          id: initial_event.id,
+          guild_id: initial_event.guild_id,
+          name: "Updated Event",
+          description: "Updated description",
+          scheduled_end_time: ~U[2025-12-01 14:00:00Z],
+          status: 2,
+          entity_metadata: %Nostrum.Struct.Guild.ScheduledEvent.EntityMetadata{
+            location: "New Location"
+          },
+          user_count: 10
+        })
 
-      {:ok, updated_payload} = Payloads.GuildScheduledEvent.new(updated_event)
+      updated_payload = Payloads.GuildScheduledEvent.new!(updated_event)
 
       assert :ok =
                GuildScheduledEvent.update(
@@ -150,16 +98,9 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
                  context
                )
 
-      # Verify event was updated in database
-      events =
-        TestApp.Discord.GuildScheduledEvent
-        |> Ash.Query.filter(discord_id: event_id)
-        |> Ash.read!()
+      [updated] = TestApp.Discord.GuildScheduledEvent.read!(authorize?: false)
 
-      assert length(events) == 1
-
-      updated = hd(events)
-      assert updated.discord_id == event_id
+      assert updated.discord_id == updated_event.id
       assert updated.name == "Updated Event"
       assert updated.description == "Updated description"
       assert updated.status == 2
@@ -169,30 +110,11 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
   end
 
   describe "delete/4" do
+    @tag :fixed
     test "deletes guild scheduled event from database" do
-      event_id = generate_snowflake()
-      guild_id = generate_snowflake()
+      event_data = guild_scheduled_event(%{entity_type: 1, entity_metadata: nil})
 
-      # Create the event first
-      event_data = %Nostrum.Struct.Guild.ScheduledEvent{
-        id: event_id,
-        guild_id: guild_id,
-        channel_id: nil,
-        creator_id: nil,
-        name: "Event to Delete",
-        description: nil,
-        scheduled_start_time: ~U[2025-12-01 10:00:00Z],
-        scheduled_end_time: nil,
-        privacy_level: 2,
-        status: 1,
-        entity_type: 1,
-        entity_id: nil,
-        entity_metadata: nil,
-        creator: nil,
-        user_count: nil
-      }
-
-      {:ok, event_payload} = Payloads.GuildScheduledEvent.new(event_data)
+      event_payload = Payloads.GuildScheduledEvent.new!(event_data)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -210,15 +132,8 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
           context
         )
 
-      # Verify event exists
-      events_before =
-        TestApp.Discord.GuildScheduledEvent
-        |> Ash.Query.filter(discord_id: event_id)
-        |> Ash.read!()
+      [_created] = TestApp.Discord.GuildScheduledEvent.read!(authorize?: false)
 
-      assert length(events_before) == 1
-
-      # Delete the event
       assert :ok =
                GuildScheduledEvent.delete(
                  TestConsumer,
@@ -227,36 +142,14 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
                  context
                )
 
-      # Verify event was deleted
-      events_after =
-        TestApp.Discord.GuildScheduledEvent
-        |> Ash.Query.filter(discord_id: event_id)
-        |> Ash.read!()
-
-      assert length(events_after) == 0
+      [] = TestApp.Discord.GuildScheduledEvent.read!(authorize?: false)
     end
 
+    @tag :fixed
     test "returns :ok when event does not exist" do
-      event_id = generate_snowflake()
-      guild_id = generate_snowflake()
+      event_data = guild_scheduled_event(%{entity_type: 1, entity_metadata: nil})
 
-      event_payload = %Payloads.GuildScheduledEvent{
-        id: event_id,
-        guild_id: guild_id,
-        channel_id: nil,
-        creator_id: nil,
-        name: "Non-existent Event",
-        description: nil,
-        scheduled_start_time: ~U[2025-12-01 10:00:00Z],
-        scheduled_end_time: nil,
-        privacy_level: 2,
-        status: 1,
-        entity_type: 1,
-        entity_id: nil,
-        entity_metadata: nil,
-        creator: nil,
-        user_count: nil
-      }
+      event_payload = Payloads.GuildScheduledEvent.new!(event_data)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -266,7 +159,6 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
         context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
-      # Deleting non-existent event should succeed (idempotent)
       assert :ok =
                GuildScheduledEvent.delete(
                  TestConsumer,

@@ -72,6 +72,7 @@ defmodule AshDiscord.Test.Generators do
   - `integration_account/1` - Integration accounts
   - `integration_application/1` - Integration applications
   - `integration_delete_event/1` - Integration delete events
+  - `guild_scheduled_event/1` - Guild scheduled events
   - `guild_audit_log_entry/1` - Guild audit log entries
 
   ## Utilities
@@ -1901,6 +1902,70 @@ defmodule AshDiscord.Test.Generators do
     }
 
     struct(Nostrum.Struct.Event.PollVoteChange, merge_attrs(defaults, attrs))
+  end
+
+  @doc """
+  Generates a Discord Guild Scheduled Event struct.
+
+  ## Options
+
+  - `:id` - Event ID (defaults to generated snowflake)
+  - `:guild_id` - Guild ID (defaults to generated snowflake)
+  - `:channel_id` - Channel ID for voice/stage events (defaults to nil)
+  - `:creator_id` - User ID of event creator (defaults to nil)
+  - `:name` - Event name (defaults to generated event name)
+  - `:description` - Event description (defaults to generated sentence)
+  - `:scheduled_start_time` - When event starts (defaults to 7 days from now)
+  - `:scheduled_end_time` - When event ends (defaults to nil)
+  - `:privacy_level` - Privacy level (defaults to 2 = GUILD_ONLY)
+  - `:status` - Event status: 1=SCHEDULED, 2=ACTIVE, 3=COMPLETED, 4=CANCELED (defaults to 1)
+  - `:entity_type` - Type: 1=STAGE_INSTANCE, 2=VOICE, 3=EXTERNAL (defaults to 3)
+  - `:entity_id` - Entity ID for voice/stage events (defaults to nil)
+  - `:entity_metadata` - Metadata for external events (defaults to %{location: generated})
+  - `:creator` - Creator user struct (defaults to nil)
+  - `:user_count` - Number of users subscribed (defaults to 0)
+
+  ## Examples
+
+      iex> event = guild_scheduled_event(%{name: "Game Night"})
+      iex> event.name
+      "Game Night"
+
+      iex> event = guild_scheduled_event(%{entity_type: 1, channel_id: 123456789})
+      iex> event.entity_type
+      1
+      iex> event.channel_id
+      123456789
+  """
+  def guild_scheduled_event(attrs \\ %{}) do
+    # Use default start time of 7 days from now
+    default_start =
+      DateTime.utc_now()
+      |> DateTime.add(7, :day)
+      |> DateTime.truncate(:second)
+
+    defaults = %{
+      id: generate_snowflake(),
+      guild_id: generate_snowflake(),
+      channel_id: nil,
+      creator_id: nil,
+      name:
+        "#{Faker.Util.pick(["Community", "Weekly", "Monthly"])} #{Faker.Util.pick(["Meetup", "Game Night", "Discussion", "Event"])}",
+      description: Faker.Lorem.sentence(5..15),
+      scheduled_start_time: default_start,
+      scheduled_end_time: nil,
+      privacy_level: 2,
+      status: 1,
+      entity_type: 3,
+      entity_id: nil,
+      entity_metadata: %Nostrum.Struct.Guild.ScheduledEvent.EntityMetadata{
+        location: "#{Faker.Address.city()}, #{Faker.Address.state_abbr()}"
+      },
+      creator: nil,
+      user_count: 0
+    }
+
+    struct(Nostrum.Struct.Guild.ScheduledEvent, merge_attrs(defaults, attrs))
   end
 
   @doc """

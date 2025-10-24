@@ -66,6 +66,16 @@ defmodule TestApp.Discord.Role do
       public?: true,
       default: true
     )
+
+    attribute(:icon, :string,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:unicode_emoji, :string,
+      allow_nil?: true,
+      public?: true
+    )
   end
 
   identities do
@@ -124,6 +134,8 @@ defmodule TestApp.Discord.Role do
         :color,
         :permissions,
         :hoist,
+        :icon,
+        :unicode_emoji,
         :position,
         :managed,
         :mentionable
@@ -139,6 +151,8 @@ defmodule TestApp.Discord.Role do
         :color,
         :permissions,
         :hoist,
+        :icon,
+        :unicode_emoji,
         :position,
         :managed,
         :mentionable

@@ -11,6 +11,9 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
     @tag :fixed
     test "creates guild scheduled event in database" do
       event_data = guild_scheduled_event()
+      guild_data = guild(%{id: event_data.guild_id})
+
+      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
 
       event_payload = Payloads.GuildScheduledEvent.new!(event_data)
 
@@ -30,10 +33,13 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
                  context
                )
 
-      [created_event] = TestApp.Discord.GuildScheduledEvent.read!(authorize?: false)
+      [created_event] =
+        TestApp.Discord.GuildScheduledEvent
+        |> Ash.Query.load(:guild)
+        |> Ash.read!(authorize?: false)
 
       assert created_event.discord_id == event_data.id
-      assert created_event.guild_discord_id == event_data.guild_id
+      assert created_event.guild.discord_id == event_data.guild_id
       assert created_event.name == event_data.name
       assert created_event.description == event_data.description
       assert created_event.status == event_data.status
@@ -55,6 +61,9 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
           },
           user_count: 5
         })
+
+      guild_data = guild(%{id: initial_event.guild_id})
+      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
 
       initial_payload = Payloads.GuildScheduledEvent.new!(initial_event)
 
@@ -98,9 +107,13 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
                  context
                )
 
-      [updated] = TestApp.Discord.GuildScheduledEvent.read!(authorize?: false)
+      [updated] =
+        TestApp.Discord.GuildScheduledEvent
+        |> Ash.Query.load(:guild)
+        |> Ash.read!(authorize?: false)
 
       assert updated.discord_id == updated_event.id
+      assert updated.guild.discord_id == updated_event.guild_id
       assert updated.name == "Updated Event"
       assert updated.description == "Updated description"
       assert updated.status == 2
@@ -219,11 +232,14 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
                  user_context
                )
 
-      [subscription] = TestApp.Discord.GuildScheduledEventUser.read!(authorize?: false)
+      [subscription] =
+        TestApp.Discord.GuildScheduledEventUser
+        |> Ash.Query.load([:guild_scheduled_event, :user, :guild])
+        |> Ash.read!(authorize?: false)
 
-      assert subscription.event_discord_id == event_data.id
-      assert subscription.user_discord_id == user_data.id
-      assert subscription.guild_discord_id == event_data.guild_id
+      assert subscription.guild_scheduled_event.discord_id == event_data.id
+      assert subscription.user.discord_id == user_data.id
+      assert subscription.guild.discord_id == event_data.guild_id
     end
   end
 
@@ -277,7 +293,14 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
           user_context
         )
 
-      [_subscription] = TestApp.Discord.GuildScheduledEventUser.read!(authorize?: false)
+      [subscription] =
+        TestApp.Discord.GuildScheduledEventUser
+        |> Ash.Query.load([:guild_scheduled_event, :user, :guild])
+        |> Ash.read!(authorize?: false)
+
+      assert subscription.guild_scheduled_event.discord_id == event_data.id
+      assert subscription.user.discord_id == user_data.id
+      assert subscription.guild.discord_id == event_data.guild_id
 
       event_remove = %Payloads.GuildScheduledEventUserRemove{
         guild_scheduled_event_id: event_data.id,

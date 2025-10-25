@@ -9,11 +9,22 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
 
   describe "create/4" do
     @tag :fixed
-    test "creates guild scheduled event in database" do
-      event_data = guild_scheduled_event()
-      guild_data = guild(%{id: event_data.guild_id})
+    test "creates guild scheduled event in database with all relationships" do
+      guild_data = guild()
+      channel_data = channel(%{guild_id: guild_data.id})
+      creator_data = user()
+
+      event_data =
+        guild_scheduled_event(%{
+          guild_id: guild_data.id,
+          channel_id: channel_data.id,
+          creator_id: creator_data.id,
+          entity_type: 2
+        })
 
       TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
+      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: creator_data}, authorize?: false)
 
       event_payload = Payloads.GuildScheduledEvent.new!(event_data)
 
@@ -35,35 +46,42 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
 
       [created_event] =
         TestApp.Discord.GuildScheduledEvent
-        |> Ash.Query.load(:guild)
+        |> Ash.Query.load([:guild, :channel, :creator])
         |> Ash.read!(authorize?: false)
 
       assert created_event.discord_id == event_data.id
       assert created_event.guild.discord_id == event_data.guild_id
+      assert created_event.channel.discord_id == event_data.channel_id
+      assert created_event.creator.discord_id == event_data.creator_id
       assert created_event.name == event_data.name
       assert created_event.description == event_data.description
       assert created_event.status == event_data.status
       assert created_event.entity_type == event_data.entity_type
-      assert created_event.entity_metadata_location == event_data.entity_metadata.location
     end
   end
 
   describe "update/4" do
     @tag :fixed
-    test "updates existing guild scheduled event in database" do
+    test "updates existing guild scheduled event in database with all relationships" do
+      guild_data = guild()
+      channel_data = channel(%{guild_id: guild_data.id})
+      creator_data = user()
+
       initial_event =
         guild_scheduled_event(%{
+          guild_id: guild_data.id,
+          channel_id: channel_data.id,
+          creator_id: creator_data.id,
+          entity_type: 2,
           name: "Original Event",
           description: "Original description",
           status: 1,
-          entity_metadata: %Nostrum.Struct.Guild.ScheduledEvent.EntityMetadata{
-            location: "Old Location"
-          },
           user_count: 5
         })
 
-      guild_data = guild(%{id: initial_event.guild_id})
       TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
+      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: creator_data}, authorize?: false)
 
       initial_payload = Payloads.GuildScheduledEvent.new!(initial_event)
 
@@ -87,13 +105,13 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
         guild_scheduled_event(%{
           id: initial_event.id,
           guild_id: initial_event.guild_id,
+          channel_id: initial_event.channel_id,
+          creator_id: initial_event.creator_id,
+          entity_type: 2,
           name: "Updated Event",
           description: "Updated description",
           scheduled_end_time: ~U[2025-12-01 14:00:00Z],
           status: 2,
-          entity_metadata: %Nostrum.Struct.Guild.ScheduledEvent.EntityMetadata{
-            location: "New Location"
-          },
           user_count: 10
         })
 
@@ -109,15 +127,16 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
 
       [updated] =
         TestApp.Discord.GuildScheduledEvent
-        |> Ash.Query.load(:guild)
+        |> Ash.Query.load([:guild, :channel, :creator])
         |> Ash.read!(authorize?: false)
 
       assert updated.discord_id == updated_event.id
       assert updated.guild.discord_id == updated_event.guild_id
+      assert updated.channel.discord_id == updated_event.channel_id
+      assert updated.creator.discord_id == updated_event.creator_id
       assert updated.name == "Updated Event"
       assert updated.description == "Updated description"
       assert updated.status == 2
-      assert updated.entity_metadata_location == "New Location"
       assert updated.user_count == 10
     end
   end

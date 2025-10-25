@@ -52,7 +52,7 @@ defmodule AshDiscord.Consumer.Handler.Integration do
   def delete(%Payloads.IntegrationDelete{} = integration_delete, _ws_state, context) do
     case Handler.invoke_configured_action(
            :INTEGRATION_DELETE,
-           %{discord_id: integration_delete.id, guild_id: integration_delete.guild_id},
+           %{discord_id: integration_delete.id, guild_discord_id: integration_delete.guild_id},
            %{},
            context
          ) do

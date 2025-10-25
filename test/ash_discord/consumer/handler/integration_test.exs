@@ -8,8 +8,12 @@ defmodule AshDiscord.Consumer.Handler.IntegrationTest do
   alias TestApp.TestConsumer
 
   describe "create/3" do
+    @tag :fixed
     test "creates integration in database" do
-      integration_data = integration()
+      guild_data = guild()
+      integration_data = integration(%{guild_id: guild_data.id})
+
+      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -19,7 +23,7 @@ defmodule AshDiscord.Consumer.Handler.IntegrationTest do
         context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
-      {:ok, integration_payload} = Payloads.Integration.new(integration_data)
+      integration_payload = Payloads.Integration.new!(integration_data)
 
       assert :ok =
                Integration.create(
@@ -28,16 +32,16 @@ defmodule AshDiscord.Consumer.Handler.IntegrationTest do
                  context
                )
 
-      # Verify integration was created in database
-      integrations = TestApp.Discord.Integration.read!()
-      assert length(integrations) == 1
+      [created_integration] =
+        TestApp.Discord.Integration
+        |> Ash.Query.load([:guild])
+        |> Ash.read!(authorize?: false)
 
-      created_integration = hd(integrations)
       assert created_integration.discord_id == integration_data.id
       assert created_integration.name == integration_data.name
       assert created_integration.type == integration_data.type
       assert created_integration.enabled == integration_data.enabled
-      assert created_integration.guild_id == integration_data.guild_id
+      assert created_integration.guild.discord_id == integration_data.guild_id
       assert created_integration.account_id == integration_data.account.id
       assert created_integration.account_name == integration_data.account.name
       assert created_integration.application_id == integration_data.application.id
@@ -46,11 +50,22 @@ defmodule AshDiscord.Consumer.Handler.IntegrationTest do
   end
 
   describe "update/3" do
+    @tag :fixed
     test "updates existing integration in database" do
-      old_integration = integration(%{name: "Old Integration", enabled: true})
+      guild_data = guild()
+
+      old_integration =
+        integration(%{guild_id: guild_data.id, name: "Old Integration", enabled: true})
 
       new_integration =
-        integration(%{id: old_integration.id, name: "New Integration", enabled: false})
+        integration(%{
+          id: old_integration.id,
+          guild_id: guild_data.id,
+          name: "New Integration",
+          enabled: false
+        })
+
+      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -60,7 +75,7 @@ defmodule AshDiscord.Consumer.Handler.IntegrationTest do
         context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
-      {:ok, new_integration_payload} = Payloads.Integration.new(new_integration)
+      new_integration_payload = Payloads.Integration.new!(new_integration)
 
       assert :ok =
                Integration.update(
@@ -69,24 +84,27 @@ defmodule AshDiscord.Consumer.Handler.IntegrationTest do
                  context
                )
 
-      # Verify integration was updated (upserted) in database
-      integrations = TestApp.Discord.Integration.read!()
-      assert length(integrations) == 1
+      [updated_integration] =
+        TestApp.Discord.Integration
+        |> Ash.Query.load([:guild])
+        |> Ash.read!(authorize?: false)
 
-      updated_integration = hd(integrations)
       assert updated_integration.discord_id == new_integration.id
       assert updated_integration.name == "New Integration"
       assert updated_integration.enabled == false
-      assert updated_integration.guild_id == new_integration.guild_id
+      assert updated_integration.guild.discord_id == new_integration.guild_id
     end
   end
 
   describe "delete/3" do
+    @tag :fixed
     test "deletes integration from database" do
-      integration_data = integration()
+      guild_data = guild()
+      integration_data = integration(%{guild_id: guild_data.id})
 
-      # First create the integration
-      {:ok, integration_payload} = Payloads.Integration.new(integration_data)
+      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
+
+      integration_payload = Payloads.Integration.new!(integration_data)
 
       {:ok, _created} =
         TestApp.Discord.Integration
@@ -94,10 +112,9 @@ defmodule AshDiscord.Consumer.Handler.IntegrationTest do
           data: integration_payload,
           identity: %{integration_id: integration_data.id, guild_id: integration_data.guild_id}
         })
-        |> Ash.create()
+        |> Ash.create(authorize?: false)
 
-      # Verify it was created
-      assert length(TestApp.Discord.Integration.read!()) == 1
+      assert [_integration] = TestApp.Discord.Integration.read!(authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -107,14 +124,13 @@ defmodule AshDiscord.Consumer.Handler.IntegrationTest do
         context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
-      # Create delete event
       delete_event =
         integration_delete_event(%{
           id: integration_data.id,
           guild_id: integration_data.guild_id
         })
 
-      {:ok, delete_payload} = Payloads.IntegrationDelete.new(delete_event)
+      delete_payload = Payloads.IntegrationDelete.new!(delete_event)
 
       assert :ok =
                Integration.delete(
@@ -123,10 +139,10 @@ defmodule AshDiscord.Consumer.Handler.IntegrationTest do
                  context
                )
 
-      # Verify integration was deleted
-      assert length(TestApp.Discord.Integration.read!()) == 0
+      assert [] = TestApp.Discord.Integration.read!(authorize?: false)
     end
 
+    @tag :fixed
     test "handles deleting non-existent integration" do
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -137,9 +153,8 @@ defmodule AshDiscord.Consumer.Handler.IntegrationTest do
       }
 
       delete_event = integration_delete_event()
-      {:ok, delete_payload} = Payloads.IntegrationDelete.new(delete_event)
+      delete_payload = Payloads.IntegrationDelete.new!(delete_event)
 
-      # Should succeed even if integration doesn't exist
       assert :ok =
                Integration.delete(
                  delete_payload,

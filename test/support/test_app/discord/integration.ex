@@ -24,7 +24,7 @@ defmodule TestApp.Discord.Integration do
       public?: true
     )
 
-    attribute(:guild_id, :integer,
+    attribute(:guild_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
@@ -66,6 +66,14 @@ defmodule TestApp.Discord.Integration do
     )
   end
 
+  relationships do
+    belongs_to :guild, TestApp.Discord.Guild do
+      source_attribute(:guild_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+  end
+
   identities do
     identity :discord_id, [:discord_id] do
       pre_check_with(TestApp.Discord)
@@ -93,23 +101,13 @@ defmodule TestApp.Discord.Integration do
         description: "Map with guild_id and integration_id for API fallback"
       )
 
-      change(fn changeset, _context ->
-        case Ash.Changeset.get_argument(changeset, :identity) do
-          %{guild_id: guild_id} ->
-            Ash.Changeset.force_change_attribute(changeset, :guild_id, guild_id)
-
-          _ ->
-            changeset
-        end
-      end)
-
       change(AshDiscord.Changes.FromDiscord.Integration)
 
       upsert?(true)
       upsert_identity(:discord_id)
 
       upsert_fields([
-        :guild_id,
+        :guild_discord_id,
         :name,
         :type,
         :enabled,
@@ -124,7 +122,7 @@ defmodule TestApp.Discord.Integration do
       primary?(true)
 
       accept([
-        :guild_id,
+        :guild_discord_id,
         :name,
         :type,
         :enabled,

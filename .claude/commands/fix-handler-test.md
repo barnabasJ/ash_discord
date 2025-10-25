@@ -57,43 +57,73 @@ item = hd(items)
 [item] = Resource.read!(authorize?: false)
 ```
 
-### 4. Correct Field Name Assertions
+### 4. Verify Relationships by Loading and Checking Related Records
 
 - **CRITICAL**: All Discord-sourced IDs must use `*_discord_id` field names (per
   CLAUDE.md project instructions)
-- Match against the generator data's non-prefixed field names
-- This applies to ALL Discord IDs: user, guild, channel, role, owner, target,
-  etc.
+- **ALWAYS verify relationships by loading them**, not just checking foreign key
+  attributes
+- This proves relationships are correctly configured and functional
+- Create all prerequisite records before testing
 
 ```elixir
-# Generator creates: %{guild_id: 123, user_id: 456, owner_id: 789}
-# Resource stores as: guild_discord_id, user_discord_id, owner_discord_id
+# Generator creates: %{guild_id: 123, user_id: 456, channel_id: 789}
+# Resource stores as: guild_discord_id, user_discord_id, channel_discord_id
 
-assert created.guild_discord_id == data.guild_id
-assert created.user_discord_id == data.user_id
-assert created.owner_discord_id == data.owner_id
+# Create prerequisite records
+guild_data = guild(%{id: event_data.guild_id})
+user_data = user(%{id: event_data.user_id})
+channel_data = channel(%{guild_id: guild_data.id, id: event_data.channel_id})
+
+TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
+TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
+TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
+
+# Load ALL relationships when reading
+[created] =
+  Resource
+  |> Ash.Query.load([:guild, :user, :channel])
+  |> Ash.read!(authorize?: false)
+
+# Assert on related records' IDs (not foreign keys)
+assert created.guild.discord_id == event_data.guild_id
+assert created.user.discord_id == event_data.user_id
+assert created.channel.discord_id == event_data.channel_id
 ```
 
-**Relationships for Discord IDs:**
+**Why verify relationships this way:**
 
-- Resources should have `belongs_to` relationships for non-polymorphic Discord
-  IDs
-- Test that relationships work by checking the attribute values
-- Polymorphic fields (like audit log `target_discord_id`) are attributes only,
-  no relationships
+- Proves `belongs_to` relationships are correctly defined
+- Verifies `source_attribute` and `destination_attribute` are correct
+- Confirms related records can be navigated (e.g., `event.guild.discord_id`)
+- Tests realistic usage patterns (handlers often load relationships)
+- Catches configuration errors that checking FKs alone would miss
+
+**Resources should have `belongs_to` relationships:**
 
 ```elixir
 # In resource definition:
+belongs_to :guild, TestApp.Discord.Guild do
+  source_attribute(:guild_discord_id)
+  destination_attribute(:discord_id)
+  attribute_writable?(true)
+end
+
 belongs_to :user, TestApp.Discord.User do
   source_attribute(:user_discord_id)
   destination_attribute(:discord_id)
   attribute_writable?(true)
 end
 
-# In test assertions:
-assert created.user_discord_id == data.user_id
-# Could also test relationship loading if needed
+belongs_to :channel, TestApp.Discord.Channel do
+  source_attribute(:channel_discord_id)
+  destination_attribute(:discord_id)
+  attribute_writable?(true)
+end
 ```
+
+**Note**: Polymorphic fields (like audit log `target_discord_id`) are attributes
+only, no relationships
 
 ### 5. Use `new!` vs `new` Appropriately
 
@@ -136,29 +166,32 @@ resources = Resource.read!()
 ## Execution Steps
 
 1. **Read the test file** to understand current structure
-2. **Analyze patterns** - identify which quality improvements apply
-3. **Create todo list** with specific refactoring tasks
-4. **Apply refactorings systematically**:
-   - Fix data setup (create dependency chains)
+2. **Read the resource definition** to identify all `belongs_to` relationships
+3. **Analyze patterns** - identify which quality improvements apply
+4. **Create todo list** with specific refactoring tasks
+5. **Apply refactorings systematically**:
+   - Fix data setup (create dependency chains for ALL relationships)
+   - Create prerequisite records for all `belongs_to` relationships
    - Add `authorize?: false` throughout
    - Convert to pattern matching
-   - **Fix field name assertions** - ALL Discord IDs must use `*_discord_id`
-     suffix
-   - **Verify relationships** - Check if resource has proper `belongs_to`
-     relationships for Discord IDs
+   - **Load ALL relationships** using
+     `Ash.Query.load([:guild, :user, :channel, ...])`
+   - **Assert on loaded relationships** - check `created.guild.discord_id`, not
+     `created.guild_discord_id`
    - Use `new!` where appropriate
    - Remove redundant comments
    - Add `@tag :fixed` to refactored tests
-5. **Verify changes** - ensure tests still pass
-6. **Commit with descriptive message** following the pattern:
+6. **Verify changes** - ensure tests still pass
+7. **Commit with descriptive message** following the pattern:
 
    ```
    test: apply quality patterns to [handler name] tests
 
-   - Create proper dependency chains for test data
+   - Create proper dependency chains for all relationships
+   - Load and verify all belongs_to relationships
    - Add explicit authorize?: false for test operations
    - Use pattern matching for cleaner assertions
-   - Fix field name assertions to use *_discord_id
+   - Assert on loaded relationships instead of foreign keys
    - Use new! for expected-success payload creation
    - Remove redundant comments
    ```
@@ -168,17 +201,31 @@ resources = Resource.read!()
 ### Before
 
 ```elixir
-test "creates channel pins update in database" do
-  pins_data = channel_pins_update()
+test "creates guild scheduled event in database" do
+  event_id = generate_snowflake()
+  guild_id = generate_snowflake()
 
-  {:ok, pins_payload} = Payloads.ChannelPinsUpdateEvent.new(pins_data)
-  assert :ok = ChannelPins.update(pins_payload, ws_state, context)
+  event_data = %Nostrum.Struct.Guild.ScheduledEvent{
+    id: event_id,
+    guild_id: guild_id,
+    channel_id: nil,
+    creator_id: generate_snowflake(),
+    name: "Test Event",
+    ...
+  }
 
-  pins_updates = TestApp.Discord.ChannelPinsUpdate.read!()
-  assert length(pins_updates) == 1
+  {:ok, event_payload} = Payloads.GuildScheduledEvent.new(event_data)
+  assert :ok = GuildScheduledEvent.create(..., event_payload, ...)
 
-  created_pins = hd(pins_updates)
-  assert created_pins.channel_id == pins_data.channel_id
+  events =
+    TestApp.Discord.GuildScheduledEvent
+    |> Ash.Query.filter(discord_id: event_id)
+    |> Ash.read!()
+
+  assert length(events) == 1
+  created_event = hd(events)
+  assert created_event.discord_id == event_id
+  assert created_event.guild_id == guild_id
 end
 ```
 
@@ -186,25 +233,40 @@ end
 
 ```elixir
 @tag :fixed
-test "creates channel pins update in database" do
-  guild = guild()
-  channel = channel(%{guild_id: guild.id})
+test "creates guild scheduled event in database with all relationships" do
+  # Create prerequisite records for ALL relationships
+  guild_data = guild()
+  channel_data = channel(%{guild_id: guild_data.id})
+  creator_data = user()
 
-  TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
-  TestApp.Discord.channel_from_discord!(%{data: channel}, authorize?: false)
+  event_data =
+    guild_scheduled_event(%{
+      guild_id: guild_data.id,
+      channel_id: channel_data.id,
+      creator_id: creator_data.id,
+      entity_type: 2
+    })
 
-  pins_data = channel_pins_update(%{
-    channel_id: channel.id,
-    guild_id: guild.id
-  })
+  # Persist all prerequisite records
+  TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
+  TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
+  TestApp.Discord.user_from_discord!(%{data: creator_data}, authorize?: false)
 
-  pins_payload = Payloads.ChannelPinsUpdateEvent.new!(pins_data)
-  assert :ok = ChannelPins.update(pins_payload, ws_state, context)
+  event_payload = Payloads.GuildScheduledEvent.new!(event_data)
+  assert :ok = GuildScheduledEvent.create(..., event_payload, ...)
 
-  [created_pins] = TestApp.Discord.ChannelPinsUpdate.read!(authorize?: false)
+  # Load ALL relationships to verify they work
+  [created_event] =
+    TestApp.Discord.GuildScheduledEvent
+    |> Ash.Query.load([:guild, :channel, :creator])
+    |> Ash.read!(authorize?: false)
 
-  assert created_pins.channel_discord_id == pins_data.channel_id
-  assert created_pins.guild_discord_id == pins_data.guild_id
+  # Assert on loaded relationships (not foreign keys)
+  assert created_event.discord_id == event_data.id
+  assert created_event.guild.discord_id == event_data.guild_id
+  assert created_event.channel.discord_id == event_data.channel_id
+  assert created_event.creator.discord_id == event_data.creator_id
+  assert created_event.name == event_data.name
 end
 ```
 

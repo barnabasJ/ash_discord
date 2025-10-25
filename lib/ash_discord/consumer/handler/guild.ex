@@ -15,7 +15,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
     Handler.invoke_configured_action(
       :GUILD_CREATE,
       %{discord_id: guild.id},
-      %{identity: guild.id, data: guild},
+      %{identity: %{discord_id: guild.id}, data: guild},
       context
     )
   end
@@ -64,7 +64,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
     case Handler.invoke_configured_action(
            :GUILD_UPDATE,
            %{discord_id: new_guild.id},
-           %{identity: new_guild.id, data: new_guild},
+           %{identity: %{discord_id: new_guild.id}, data: new_guild},
            context
          ) do
       {:ok, _guild} -> :ok
@@ -113,7 +113,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
     Handler.invoke_configured_action(
       :GUILD_AVAILABLE,
       %{discord_id: guild.id},
-      %{identity: guild.id, data: guild},
+      %{identity: %{discord_id: guild.id}, data: guild},
       context
     )
   end
@@ -127,7 +127,7 @@ defmodule AshDiscord.Consumer.Handler.Guild do
     case Handler.invoke_configured_action(
            :GUILD_UNAVAILABLE,
            %{discord_id: guild.id},
-           %{identity: guild.id, data: guild},
+           %{identity: %{discord_id: guild.id}, data: guild},
            context
          ) do
       {:ok, _guild} -> :ok

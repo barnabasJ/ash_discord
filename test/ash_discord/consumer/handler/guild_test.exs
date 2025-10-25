@@ -1,8 +1,8 @@
 defmodule AshDiscord.Consumer.Handler.GuildTest do
   use TestApp.DataCase, async: true
+  use Mimic
 
   import AshDiscord.Test.Generators
-  use Mimic
 
   alias AshDiscord.Consumer.Handler.Guild
   alias AshDiscord.Consumer.Payloads
@@ -84,6 +84,7 @@ defmodule AshDiscord.Consumer.Handler.GuildTest do
   end
 
   describe "delete/3" do
+    # TODO: think about if this makes sense with the unavailable flag
     @tag :fixed
     test "deletes guild when unavailable is false" do
       guild_data = guild()

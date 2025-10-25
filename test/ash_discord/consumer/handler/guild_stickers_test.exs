@@ -10,9 +10,11 @@ defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
   describe "update/3" do
     @tag :fixed
     test "creates stickers from new_stickers list in database" do
-      guild_id = generate_snowflake()
-      sticker1_data = sticker(%{name: "sticker1"})
-      sticker2_data = sticker(%{name: "sticker2"})
+      guild_data = guild()
+      sticker1_data = sticker(%{name: "sticker1", guild_id: guild_data.id})
+      sticker2_data = sticker(%{name: "sticker2", guild_id: guild_data.id})
+
+      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -29,7 +31,7 @@ defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
       sticker2_payload = Payloads.Sticker.new!(sticker2_data)
 
       guild_stickers_update = %Payloads.GuildStickersUpdate{
-        guild_id: guild_id,
+        guild_id: guild_data.id,
         old_stickers: [],
         new_stickers: [sticker1_payload, sticker2_payload]
       }
@@ -41,7 +43,11 @@ defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
                  context
                )
 
-      stickers = TestApp.Discord.Sticker.read!(authorize?: false)
+      stickers =
+        TestApp.Discord.Sticker
+        |> Ash.Query.load([:guild])
+        |> Ash.read!(authorize?: false)
+
       assert length(stickers) == 2
 
       sticker_ids = Enum.map(stickers, & &1.discord_id) |> Enum.sort()
@@ -50,9 +56,11 @@ defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
 
       created_sticker1 = Enum.find(stickers, &(&1.discord_id == sticker1_data.id))
       assert created_sticker1.name == "sticker1"
+      assert created_sticker1.guild.discord_id == guild_data.id
 
       created_sticker2 = Enum.find(stickers, &(&1.discord_id == sticker2_data.id))
       assert created_sticker2.name == "sticker2"
+      assert created_sticker2.guild.discord_id == guild_data.id
     end
 
     @tag :fixed
@@ -175,6 +183,58 @@ defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
       sticker_names = Enum.map(stickers, & &1.name) |> Enum.sort()
       expected_names = Enum.map(1..sticker_count, &"sticker_#{&1}") |> Enum.sort()
       assert sticker_names == expected_names
+    end
+
+    @tag :fixed
+    test "creates sticker with guild and user relationships" do
+      guild_data = guild()
+      user_data = user()
+
+      sticker_data =
+        sticker(%{
+          name: "test_sticker",
+          guild_id: guild_data.id,
+          user: user_data
+        })
+
+      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
+
+      context = %AshDiscord.Context{
+        consumer: TestConsumer,
+        resource: TestApp.Discord.Sticker,
+        guild: nil,
+        user: nil,
+        context: %{
+          private: %{ash_discord?: true},
+          shared: %{private: %{ash_discord?: true}}
+        }
+      }
+
+      sticker_payload = Payloads.Sticker.new!(sticker_data)
+
+      guild_stickers_update = %Payloads.GuildStickersUpdate{
+        guild_id: guild_data.id,
+        old_stickers: [],
+        new_stickers: [sticker_payload]
+      }
+
+      assert :ok =
+               GuildStickers.update(
+                 guild_stickers_update,
+                 %Nostrum.Struct.WSState{},
+                 context
+               )
+
+      [created] =
+        TestApp.Discord.Sticker
+        |> Ash.Query.load([:guild, :user])
+        |> Ash.read!(authorize?: false)
+
+      assert created.discord_id == sticker_data.id
+      assert created.name == "test_sticker"
+      assert created.guild.discord_id == guild_data.id
+      assert created.user.discord_id == user_data.id
     end
   end
 end

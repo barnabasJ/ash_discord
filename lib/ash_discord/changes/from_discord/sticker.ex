@@ -52,16 +52,15 @@ defmodule AshDiscord.Changes.FromDiscord.Sticker do
   defp transform_sticker(changeset, sticker_data) do
     changeset
     |> maybe_set_attribute(:discord_id, sticker_data.id)
+    |> maybe_set_attribute(:pack_discord_id, sticker_data.pack_id)
     |> maybe_set_attribute(:name, sticker_data.name)
-    |> maybe_set_attribute(:pack_id, sticker_data.pack_id)
     |> maybe_set_attribute(:description, sticker_data.description)
     |> maybe_set_attribute(:tags, sticker_data.tags)
     |> maybe_set_attribute(:type, sticker_data.type)
     |> maybe_set_attribute(:format_type, sticker_data.format_type)
     |> maybe_set_attribute(:available, sticker_data.available)
-    |> maybe_set_attribute(:sort_value, sticker_data.sort_value)
     |> maybe_set_attribute(:guild_discord_id, sticker_data.guild_id)
-    |> maybe_set_attribute(:guild_id, sticker_data.guild_id)
+    |> maybe_set_attribute(:sort_value, sticker_data.sort_value)
     |> maybe_set_user_discord_id(sticker_data.user)
   end
 

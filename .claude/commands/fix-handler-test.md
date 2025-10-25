@@ -54,7 +54,7 @@ assert length(items) == 1
 item = hd(items)
 
 # After
-[item] = Resource.read!(authorize?: false)
+assert [item] = Resource.read!(authorize?: false)
 ```
 
 ### 4. Verify Relationships by Loading and Checking Related Records

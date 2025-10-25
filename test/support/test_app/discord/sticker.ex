@@ -24,6 +24,11 @@ defmodule TestApp.Discord.Sticker do
       public?: true
     )
 
+    attribute(:pack_discord_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
     attribute(:name, :string,
       allow_nil?: false,
       public?: true
@@ -55,10 +60,34 @@ defmodule TestApp.Discord.Sticker do
       default: true
     )
 
-    attribute(:guild_id, :integer,
+    attribute(:guild_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
+
+    attribute(:user_discord_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:sort_value, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+  end
+
+  relationships do
+    belongs_to :guild, TestApp.Discord.Guild do
+      source_attribute(:guild_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+
+    belongs_to :user, TestApp.Discord.User do
+      source_attribute(:user_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
   end
 
   identities do
@@ -92,12 +121,36 @@ defmodule TestApp.Discord.Sticker do
 
       upsert?(true)
       upsert_identity(:discord_id)
-      upsert_fields([:name, :description, :tags, :type, :format_type, :available, :guild_id])
+
+      upsert_fields([
+        :pack_discord_id,
+        :name,
+        :description,
+        :tags,
+        :type,
+        :format_type,
+        :available,
+        :guild_discord_id,
+        :user_discord_id,
+        :sort_value
+      ])
     end
 
     update :update do
       primary?(true)
-      accept([:name, :description, :tags, :type, :format_type, :available, :guild_id])
+
+      accept([
+        :pack_discord_id,
+        :name,
+        :description,
+        :tags,
+        :type,
+        :format_type,
+        :available,
+        :guild_discord_id,
+        :user_discord_id,
+        :sort_value
+      ])
     end
   end
 end

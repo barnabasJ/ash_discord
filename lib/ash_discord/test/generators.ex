@@ -1301,6 +1301,7 @@ defmodule AshDiscord.Test.Generators do
   def sticker(attrs \\ %{}) do
     defaults = %{
       id: generate_snowflake(),
+      pack_id: nil,
       name: Faker.Lorem.word(),
       description: Faker.Lorem.sentence(3..10),
       tags: Enum.join([Faker.Lorem.word(), Faker.Lorem.word()], ","),
@@ -1308,7 +1309,9 @@ defmodule AshDiscord.Test.Generators do
       type: Faker.Util.pick([:standard, :guild]),
       format_type: Faker.Util.pick([:png, :apng, :lottie, :gif]),
       available: true,
-      guild_id: generate_snowflake()
+      guild_id: generate_snowflake(),
+      user: nil,
+      sort_value: nil
     }
 
     struct(Nostrum.Struct.Sticker, merge_attrs(defaults, attrs))

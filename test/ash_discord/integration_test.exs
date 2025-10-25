@@ -24,7 +24,6 @@ defmodule AshDiscord.IntegrationTest do
 
     @impl AshDiscord.Consumer
     def handle_interaction_create(interaction, _ws_state, _context) do
-      # Override to test integration
       command = find_command(String.to_atom(interaction.data.name))
 
       case AshDiscord.InteractionRouter.route_interaction(interaction, command,

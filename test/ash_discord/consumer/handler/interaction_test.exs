@@ -53,17 +53,18 @@ defmodule AshDiscord.Consumer.Handler.InteractionTest do
     end
 
     @tag :fixed
-    test "sends interaction response with correct parameters" do
+    test "sends error response for unknown command" do
       interaction_data =
         interaction(%{
           type: 2,
-          data: %{name: "hello", options: []}
+          data: %{name: "unknown_command", options: []}
         })
 
       expect(Nostrum.Api.Interaction, :create_response, fn interaction_id, token, response ->
         assert interaction_id == interaction_data.id
         assert token == interaction_data.token
         assert response.type == 4
+        assert response.data.flags == 64
         {:ok}
       end)
 
@@ -74,8 +75,7 @@ defmodule AshDiscord.Consumer.Handler.InteractionTest do
         user: nil
       }
 
-      assert {:ok, _response} =
-               Interaction.create(interaction_data, %Nostrum.Struct.WSState{}, context)
+      assert :ok = Interaction.create(interaction_data, %Nostrum.Struct.WSState{}, context)
     end
   end
 end

@@ -10,6 +10,15 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
 
   describe "struct-first pattern" do
     test "creates interaction from discord struct with all attributes" do
+      # Create prerequisite records
+      guild_data = guild(%{id: 111_222_333})
+      channel_data = channel(%{id: 444_555_666, guild_id: 111_222_333})
+      user_data = user(%{id: 777_888_999, username: "test_user"})
+
+      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
+      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
+
       interaction_struct =
         interaction(%{
           id: 123_456_789,
@@ -35,21 +44,32 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
           guild_locale: "en-US"
         })
 
-      result = TestApp.Discord.interaction_from_discord(%{data: interaction_struct})
+      result =
+        TestApp.Discord.interaction_from_discord(%{data: interaction_struct}, authorize?: false)
 
       assert {:ok, created_interaction} = result
-      assert created_interaction.discord_id == interaction_struct.id
-      assert created_interaction.application_id == interaction_struct.application_id
-      assert created_interaction.type == interaction_struct.type
-      assert created_interaction.guild_id == interaction_struct.guild_id
-      assert created_interaction.channel_id == interaction_struct.channel_id
-      assert created_interaction.token == interaction_struct.token
-      assert created_interaction.version == interaction_struct.version
-      assert created_interaction.locale == interaction_struct.locale
-      assert created_interaction.guild_locale == interaction_struct.guild_locale
+
+      # Load relationships to verify they're correctly configured
+      [loaded_interaction] =
+        TestApp.Discord.Interaction
+        |> Ash.Query.load([:guild, :channel, :user])
+        |> Ash.read!(authorize?: false)
+
+      assert loaded_interaction.discord_id == interaction_struct.id
+      assert loaded_interaction.application_id == interaction_struct.application_id
+      assert loaded_interaction.type == interaction_struct.type
+      assert loaded_interaction.token == interaction_struct.token
+      assert loaded_interaction.version == interaction_struct.version
+      assert loaded_interaction.locale == interaction_struct.locale
+      assert loaded_interaction.guild_locale == interaction_struct.guild_locale
+
+      # Verify relationships
+      assert loaded_interaction.guild.discord_id == interaction_struct.guild_id
+      assert loaded_interaction.channel.discord_id == interaction_struct.channel_id
+      assert loaded_interaction.user.discord_id == 777_888_999
 
       # app_permissions is provided in test but doesn't exist in Nostrum struct, so it should be nil
-      assert created_interaction.app_permissions == nil
+      assert loaded_interaction.app_permissions == nil
     end
 
     test "handles slash command interaction" do
@@ -179,7 +199,7 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
 
       assert {:ok, created_interaction} = result
       assert created_interaction.discord_id == interaction_struct.id
-      assert created_interaction.guild_id == nil
+      assert created_interaction.guild_discord_id == nil
     end
 
     test "handles interaction with app permissions" do

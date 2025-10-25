@@ -16,6 +16,30 @@ defmodule TestApp.Discord.Interaction do
     private?(true)
   end
 
+  relationships do
+    belongs_to :guild, TestApp.Discord.Guild do
+      public?(true)
+      destination_attribute(:discord_id)
+      source_attribute(:guild_discord_id)
+      allow_nil?(true)
+      attribute_writable?(true)
+    end
+
+    belongs_to :channel, TestApp.Discord.Channel do
+      public?(true)
+      destination_attribute(:discord_id)
+      source_attribute(:channel_discord_id)
+      attribute_writable?(true)
+    end
+
+    belongs_to :user, TestApp.Discord.User do
+      public?(true)
+      destination_attribute(:discord_id)
+      source_attribute(:user_discord_id)
+      attribute_writable?(true)
+    end
+  end
+
   attributes do
     uuid_primary_key(:id)
 
@@ -34,17 +58,17 @@ defmodule TestApp.Discord.Interaction do
       public?: true
     )
 
-    attribute(:guild_id, :integer,
+    attribute(:guild_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
 
-    attribute(:channel_id, :integer,
+    attribute(:channel_discord_id, :integer,
       allow_nil?: false,
       public?: true
     )
 
-    attribute(:user_id, :integer,
+    attribute(:user_discord_id, :integer,
       allow_nil?: false,
       public?: true
     )
@@ -106,9 +130,9 @@ defmodule TestApp.Discord.Interaction do
       upsert_fields([
         :application_id,
         :type,
-        :guild_id,
-        :channel_id,
-        :user_id,
+        :guild_discord_id,
+        :channel_discord_id,
+        :user_discord_id,
         :token,
         :data,
         :locale,
@@ -124,9 +148,9 @@ defmodule TestApp.Discord.Interaction do
       accept([
         :application_id,
         :type,
-        :guild_id,
-        :channel_id,
-        :user_id,
+        :guild_discord_id,
+        :channel_discord_id,
+        :user_discord_id,
         :token,
         :data,
         :locale,

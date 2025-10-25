@@ -8,6 +8,7 @@ defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
   alias TestApp.TestConsumer
 
   describe "update/3" do
+    @tag :fixed
     test "creates stickers from new_stickers list in database" do
       guild_id = generate_snowflake()
       sticker1_data = sticker(%{name: "sticker1"})
@@ -24,8 +25,8 @@ defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
         }
       }
 
-      {:ok, sticker1_payload} = Payloads.Sticker.new(sticker1_data)
-      {:ok, sticker2_payload} = Payloads.Sticker.new(sticker2_data)
+      sticker1_payload = Payloads.Sticker.new!(sticker1_data)
+      sticker2_payload = Payloads.Sticker.new!(sticker2_data)
 
       guild_stickers_update = %Payloads.GuildStickersUpdate{
         guild_id: guild_id,
@@ -40,15 +41,13 @@ defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
                  context
                )
 
-      # Verify stickers were created in database
-      stickers = TestApp.Discord.Sticker.read!()
+      stickers = TestApp.Discord.Sticker.read!(authorize?: false)
       assert length(stickers) == 2
 
       sticker_ids = Enum.map(stickers, & &1.discord_id) |> Enum.sort()
       expected_ids = Enum.sort([sticker1_data.id, sticker2_data.id])
       assert sticker_ids == expected_ids
 
-      # Verify sticker attributes
       created_sticker1 = Enum.find(stickers, &(&1.discord_id == sticker1_data.id))
       assert created_sticker1.name == "sticker1"
 
@@ -56,6 +55,7 @@ defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
       assert created_sticker2.name == "sticker2"
     end
 
+    @tag :fixed
     test "updates existing stickers via upsert" do
       guild_id = generate_snowflake()
       old_sticker = sticker(%{name: "old_name"})
@@ -72,24 +72,14 @@ defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
         }
       }
 
-      # Create initial sticker
-      {:ok, old_sticker_payload} = Payloads.Sticker.new(old_sticker)
+      old_sticker_payload = Payloads.Sticker.new!(old_sticker)
 
-      {:ok, _created} =
-        TestApp.Discord.Sticker
-        |> Ash.Changeset.for_create(:from_discord, %{
-          data: old_sticker_payload,
-          identity: old_sticker.id
-        })
-        |> Ash.create()
+      TestApp.Discord.sticker_from_discord!(%{data: old_sticker_payload}, authorize?: false)
 
-      # Verify initial state
-      stickers_before = TestApp.Discord.Sticker.read!()
-      assert length(stickers_before) == 1
-      assert hd(stickers_before).name == "old_name"
+      [sticker_before] = TestApp.Discord.Sticker.read!(authorize?: false)
+      assert sticker_before.name == "old_name"
 
-      # Update via handler
-      {:ok, new_sticker_payload} = Payloads.Sticker.new(new_sticker)
+      new_sticker_payload = Payloads.Sticker.new!(new_sticker)
 
       guild_stickers_update = %Payloads.GuildStickersUpdate{
         guild_id: guild_id,
@@ -104,15 +94,12 @@ defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
                  context
                )
 
-      # Verify sticker was updated (not duplicated)
-      stickers_after = TestApp.Discord.Sticker.read!()
-      assert length(stickers_after) == 1
-
-      updated_sticker = hd(stickers_after)
+      [updated_sticker] = TestApp.Discord.Sticker.read!(authorize?: false)
       assert updated_sticker.discord_id == new_sticker.id
       assert updated_sticker.name == "new_name"
     end
 
+    @tag :fixed
     test "handles empty new_stickers list" do
       guild_id = generate_snowflake()
 
@@ -133,7 +120,6 @@ defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
         new_stickers: []
       }
 
-      # Should not crash with empty list
       assert :ok =
                GuildStickers.update(
                  guild_stickers_update,
@@ -141,11 +127,10 @@ defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
                  context
                )
 
-      # Verify no stickers were created
-      stickers = TestApp.Discord.Sticker.read!()
-      assert length(stickers) == 0
+      assert [] = TestApp.Discord.Sticker.read!(authorize?: false)
     end
 
+    @tag :fixed
     test "processes multiple stickers in single update" do
       guild_id = generate_snowflake()
       sticker_count = 5
@@ -168,8 +153,7 @@ defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
 
       sticker_payloads =
         Enum.map(sticker_data_list, fn sticker_data ->
-          {:ok, payload} = Payloads.Sticker.new(sticker_data)
-          payload
+          Payloads.Sticker.new!(sticker_data)
         end)
 
       guild_stickers_update = %Payloads.GuildStickersUpdate{
@@ -185,11 +169,9 @@ defmodule AshDiscord.Consumer.Handler.GuildStickersTest do
                  context
                )
 
-      # Verify all stickers were created
-      stickers = TestApp.Discord.Sticker.read!()
+      stickers = TestApp.Discord.Sticker.read!(authorize?: false)
       assert length(stickers) == sticker_count
 
-      # Verify all names are present
       sticker_names = Enum.map(stickers, & &1.name) |> Enum.sort()
       expected_names = Enum.map(1..sticker_count, &"sticker_#{&1}") |> Enum.sort()
       assert sticker_names == expected_names

@@ -104,6 +104,20 @@ defmodule TestApp.Discord.Invite do
       allow_nil?: false,
       public?: true
     )
+
+    belongs_to(:inviter, TestApp.Discord.User,
+      source_attribute: :inviter_discord_id,
+      destination_attribute: :discord_id,
+      allow_nil?: true,
+      public?: true
+    )
+
+    belongs_to(:target_user, TestApp.Discord.User,
+      source_attribute: :target_user_discord_id,
+      destination_attribute: :discord_id,
+      allow_nil?: true,
+      public?: true
+    )
   end
 
   identities do

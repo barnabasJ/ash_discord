@@ -13,7 +13,8 @@ defmodule AshDiscord.Consumer.Handler.InteractionTest do
   end
 
   describe "create/3" do
-    test "handles application command interaction" do
+    @tag :fixed
+    test "routes application command to interaction router" do
       interaction_data =
         interaction(%{
           type: 2,
@@ -31,15 +32,14 @@ defmodule AshDiscord.Consumer.Handler.InteractionTest do
         user: nil
       }
 
-      # The handler routes to the interaction router which stores in process dict
-      _result = Interaction.create(interaction_data, %Nostrum.Struct.WSState{}, context)
+      assert {:ok, response} =
+               Interaction.create(interaction_data, %Nostrum.Struct.WSState{}, context)
 
-      # Interaction should be processed without error
-      # The actual result depends on command routing which is tested elsewhere
+      assert is_map(response)
     end
 
+    @tag :fixed
     test "handles non-application command interaction types" do
-      # Button interaction (type 3)
       interaction_data = interaction(%{type: 3})
 
       context = %AshDiscord.Context{
@@ -52,7 +52,8 @@ defmodule AshDiscord.Consumer.Handler.InteractionTest do
       assert :ok = Interaction.create(interaction_data, %Nostrum.Struct.WSState{}, context)
     end
 
-    test "handles known command successfully" do
+    @tag :fixed
+    test "sends interaction response with correct parameters" do
       interaction_data =
         interaction(%{
           type: 2,
@@ -62,7 +63,6 @@ defmodule AshDiscord.Consumer.Handler.InteractionTest do
       expect(Nostrum.Api.Interaction, :create_response, fn interaction_id, token, response ->
         assert interaction_id == interaction_data.id
         assert token == interaction_data.token
-        # Success response
         assert response.type == 4
         {:ok}
       end)
@@ -74,7 +74,8 @@ defmodule AshDiscord.Consumer.Handler.InteractionTest do
         user: nil
       }
 
-      Interaction.create(interaction_data, %Nostrum.Struct.WSState{}, context)
+      assert {:ok, _response} =
+               Interaction.create(interaction_data, %Nostrum.Struct.WSState{}, context)
     end
   end
 end

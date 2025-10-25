@@ -2,29 +2,26 @@ defmodule AshDiscord.Consumer.Handler.InviteTest do
   use TestApp.DataCase, async: true
 
   import AshDiscord.Test.Generators
-  use Mimic
 
   alias AshDiscord.Consumer.Handler.Invite
   alias TestApp.TestConsumer
 
-  setup do
-    copy(Nostrum.Api.Guild)
-    copy(Nostrum.Api.Channel)
-    :ok
-  end
-
   describe "create/4" do
-    test "creates invite in database" do
-      invite_data = invite()
+    @tag :fixed
+    test "creates invite in database with all relationships" do
+      # Create prerequisite records for all relationships
+      guild_data = guild()
+      channel_data = channel(%{guild_id: guild_data.id})
 
-      # Mock guild and channel API calls for relationships
-      expect(Nostrum.Api.Guild, :get, fn _guild_id ->
-        {:ok, guild()}
-      end)
+      invite_data =
+        invite(%{
+          guild: guild_data,
+          channel: channel_data
+        })
 
-      expect(Nostrum.Api.Channel, :get, fn _channel_id ->
-        {:ok, channel()}
-      end)
+      # Persist all prerequisite records
+      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
+      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -36,39 +33,35 @@ defmodule AshDiscord.Consumer.Handler.InviteTest do
       assert :ok =
                Invite.create(TestConsumer, invite_data, %Nostrum.Struct.WSState{}, context)
 
-      # Verify invite was created in database
-      invites = TestApp.Discord.Invite.read!()
-      assert length(invites) == 1
+      [created_invite] =
+        TestApp.Discord.Invite
+        |> Ash.Query.load([:guild, :channel])
+        |> Ash.read!(authorize?: false)
 
-      created_invite = hd(invites)
       assert created_invite.code == invite_data.code
+      assert created_invite.guild.discord_id == invite_data.guild.id
+      assert created_invite.channel.discord_id == invite_data.channel.id
     end
   end
 
   describe "delete/4" do
+    @tag :fixed
     test "deletes invite from database" do
-      invite_data = invite()
+      # Create prerequisite records for relationships
+      guild_data = guild()
+      channel_data = channel(%{guild_id: guild_data.id})
 
-      # Mock API calls for creation
-      expect(Nostrum.Api.Guild, :get, fn _guild_id ->
-        {:ok, guild()}
-      end)
-
-      expect(Nostrum.Api.Channel, :get, fn _channel_id ->
-        {:ok, channel()}
-      end)
-
-      # First create the invite
-      {:ok, _created} =
-        TestApp.Discord.Invite
-        |> Ash.Changeset.for_create(:from_discord, %{
-          data: invite_data
+      invite_data =
+        invite(%{
+          guild: guild_data,
+          channel: channel_data
         })
-        |> Ash.create()
 
-      # Verify invite exists
-      invites_before = TestApp.Discord.Invite.read!()
-      assert length(invites_before) == 1
+      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
+      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
+      TestApp.Discord.invite_from_discord!(%{data: invite_data}, authorize?: false)
+
+      assert [_] = TestApp.Discord.Invite.read!(authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -80,11 +73,10 @@ defmodule AshDiscord.Consumer.Handler.InviteTest do
       assert :ok =
                Invite.delete(TestConsumer, invite_data, %Nostrum.Struct.WSState{}, context)
 
-      # Verify invite was deleted from database
-      invites_after = TestApp.Discord.Invite.read!()
-      assert length(invites_after) == 0
+      assert [] = TestApp.Discord.Invite.read!(authorize?: false)
     end
 
+    @tag :fixed
     test "handles missing invite gracefully" do
       invite_data = invite()
 
@@ -95,7 +87,6 @@ defmodule AshDiscord.Consumer.Handler.InviteTest do
         user: nil
       }
 
-      # Should not crash when invite doesn't exist
       assert :ok =
                Invite.delete(TestConsumer, invite_data, %Nostrum.Struct.WSState{}, context)
     end

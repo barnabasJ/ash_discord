@@ -20,9 +20,9 @@ defmodule TestApp.Discord.GuildScheduledEvent do
     uuid_primary_key(:id)
 
     attribute(:discord_id, :integer, allow_nil?: false, public?: true)
-    attribute(:guild_id, :integer, allow_nil?: false, public?: true)
-    attribute(:channel_id, :integer, public?: true)
-    attribute(:creator_id, :integer, public?: true)
+    attribute(:guild_discord_id, :integer, allow_nil?: false, public?: true)
+    attribute(:channel_discord_id, :integer, public?: true)
+    attribute(:creator_discord_id, :integer, public?: true)
     attribute(:name, :string, allow_nil?: false, public?: true)
     attribute(:description, :string, public?: true)
     attribute(:scheduled_start_time, :utc_datetime, allow_nil?: false, public?: true)
@@ -30,7 +30,7 @@ defmodule TestApp.Discord.GuildScheduledEvent do
     attribute(:privacy_level, :integer, allow_nil?: false, public?: true)
     attribute(:status, :integer, allow_nil?: false, public?: true)
     attribute(:entity_type, :integer, allow_nil?: false, public?: true)
-    attribute(:entity_id, :integer, public?: true)
+    attribute(:entity_discord_id, :integer, public?: true)
     attribute(:entity_metadata_location, :string, public?: true)
     attribute(:user_count, :integer, public?: true)
 
@@ -41,6 +41,26 @@ defmodule TestApp.Discord.GuildScheduledEvent do
     identity(:discord_id, [:discord_id], pre_check_with: TestApp.Discord)
   end
 
+  relationships do
+    belongs_to :guild, TestApp.Discord.Guild do
+      source_attribute(:guild_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+
+    belongs_to :channel, TestApp.Discord.Channel do
+      source_attribute(:channel_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+
+    belongs_to :creator, TestApp.Discord.User do
+      source_attribute(:creator_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+  end
+
   actions do
     defaults([:read, :destroy])
 
@@ -49,7 +69,7 @@ defmodule TestApp.Discord.GuildScheduledEvent do
 
       accept([
         :discord_id,
-        :guild_id,
+        :guild_discord_id,
         :name,
         :scheduled_start_time,
         :privacy_level,
@@ -63,9 +83,9 @@ defmodule TestApp.Discord.GuildScheduledEvent do
       upsert_identity(:discord_id)
 
       upsert_fields([
-        :guild_id,
-        :channel_id,
-        :creator_id,
+        :guild_discord_id,
+        :channel_discord_id,
+        :creator_discord_id,
         :name,
         :description,
         :scheduled_start_time,
@@ -73,7 +93,7 @@ defmodule TestApp.Discord.GuildScheduledEvent do
         :privacy_level,
         :status,
         :entity_type,
-        :entity_id,
+        :entity_discord_id,
         :entity_metadata_location,
         :user_count
       ])

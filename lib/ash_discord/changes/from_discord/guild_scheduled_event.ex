@@ -44,9 +44,9 @@ defmodule AshDiscord.Changes.FromDiscord.GuildScheduledEvent do
   defp transform_scheduled_event(changeset, event_data) do
     changeset
     |> Ash.Changeset.force_change_attribute(:discord_id, event_data.id)
-    |> maybe_set_attribute(:guild_id, event_data.guild_id)
-    |> maybe_set_attribute(:channel_id, event_data.channel_id)
-    |> maybe_set_attribute(:creator_id, event_data.creator_id)
+    |> maybe_set_attribute(:guild_discord_id, event_data.guild_id)
+    |> maybe_set_attribute(:channel_discord_id, event_data.channel_id)
+    |> maybe_set_attribute(:creator_discord_id, event_data.creator_id)
     |> maybe_set_attribute(:name, event_data.name)
     |> maybe_set_attribute(:description, event_data.description)
     |> Transformations.set_datetime_field(:scheduled_start_time, event_data.scheduled_start_time)
@@ -54,12 +54,9 @@ defmodule AshDiscord.Changes.FromDiscord.GuildScheduledEvent do
     |> maybe_set_attribute(:privacy_level, event_data.privacy_level)
     |> maybe_set_attribute(:status, event_data.status)
     |> maybe_set_attribute(:entity_type, event_data.entity_type)
-    |> maybe_set_attribute(:entity_id, event_data.entity_id)
+    |> maybe_set_attribute(:entity_discord_id, event_data.entity_id)
     |> maybe_set_attribute(:user_count, event_data.user_count)
     |> maybe_set_entity_metadata(event_data.entity_metadata)
-    |> maybe_manage_guild_relationship(event_data.guild_id)
-    |> maybe_manage_channel_relationship(event_data.channel_id)
-    |> maybe_manage_creator_relationship(event_data.creator_id)
   end
 
   defp maybe_set_attribute(changeset, _field, nil), do: changeset
@@ -81,38 +78,5 @@ defmodule AshDiscord.Changes.FromDiscord.GuildScheduledEvent do
        }) do
     # Store entity metadata location if the resource has the field
     maybe_set_attribute(changeset, :entity_metadata_location, location)
-  end
-
-  # Manage guild relationship if exists on resource
-  defp maybe_manage_guild_relationship(changeset, nil), do: changeset
-
-  defp maybe_manage_guild_relationship(changeset, guild_id) do
-    if Ash.Resource.Info.relationship(changeset.resource, :guild) do
-      Transformations.manage_guild_relationship(changeset, guild_id)
-    else
-      changeset
-    end
-  end
-
-  # Manage channel relationship if exists on resource
-  defp maybe_manage_channel_relationship(changeset, nil), do: changeset
-
-  defp maybe_manage_channel_relationship(changeset, channel_id) do
-    if Ash.Resource.Info.relationship(changeset.resource, :channel) do
-      Transformations.manage_channel_relationship(changeset, channel_id)
-    else
-      changeset
-    end
-  end
-
-  # Manage creator (user) relationship if exists on resource
-  defp maybe_manage_creator_relationship(changeset, nil), do: changeset
-
-  defp maybe_manage_creator_relationship(changeset, creator_id) do
-    if Ash.Resource.Info.relationship(changeset.resource, :creator) do
-      Transformations.manage_user_relationship(changeset, creator_id, :creator)
-    else
-      changeset
-    end
   end
 end

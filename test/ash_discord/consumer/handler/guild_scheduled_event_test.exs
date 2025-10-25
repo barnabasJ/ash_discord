@@ -33,7 +33,7 @@ defmodule AshDiscord.Consumer.Handler.GuildScheduledEventTest do
       [created_event] = TestApp.Discord.GuildScheduledEvent.read!(authorize?: false)
 
       assert created_event.discord_id == event_data.id
-      assert created_event.guild_id == event_data.guild_id
+      assert created_event.guild_discord_id == event_data.guild_id
       assert created_event.name == event_data.name
       assert created_event.description == event_data.description
       assert created_event.status == event_data.status

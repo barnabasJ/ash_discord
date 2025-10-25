@@ -44,10 +44,10 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
           guild_locale: "en-US"
         })
 
-      result =
-        TestApp.Discord.interaction_from_discord(%{data: interaction_struct}, authorize?: false)
-
-      assert {:ok, created_interaction} = result
+      assert {:ok, _} =
+               TestApp.Discord.interaction_from_discord(%{data: interaction_struct},
+                 authorize?: false
+               )
 
       # Load relationships to verify they're correctly configured
       [loaded_interaction] =

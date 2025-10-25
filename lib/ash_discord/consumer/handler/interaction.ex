@@ -1,6 +1,8 @@
 defmodule AshDiscord.Consumer.Handler.Interaction do
   require Logger
 
+  alias AshDiscord.Consumer.Handler
+
   @spec create(
           interaction :: AshDiscord.Consumer.Payload.interaction_create(),
           ws_state :: Nostrum.Struct.WSState.t(),
@@ -8,6 +10,16 @@ defmodule AshDiscord.Consumer.Handler.Interaction do
         ) :: :ok | {:ok, term()} | {:error, term()}
   def create(interaction, _ws_state, context) do
     Logger.debug("Processing Discord interaction: #{interaction.id}")
+
+    # Persist interaction to database if resource is configured
+    if context.resource do
+      Handler.invoke_configured_action(
+        :INTERACTION_CREATE,
+        %{discord_id: interaction.id},
+        %{data: interaction},
+        context
+      )
+    end
 
     case interaction.type do
       # Application command

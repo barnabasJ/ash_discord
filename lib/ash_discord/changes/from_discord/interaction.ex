@@ -104,8 +104,13 @@ defmodule AshDiscord.Changes.FromDiscord.Interaction do
       Ash.Changeset.manage_relationship(
         changeset,
         :channel,
-        %{discord_id: channel_id, guild_discord_id: guild_id},
+        %{
+          discord_id: channel_id,
+          guild_discord_id: guild_id,
+          identity: %{discord_id: channel_id}
+        },
         type: :append_and_remove,
+        use_identities: [:discord_id],
         on_no_match: {:create, :from_discord}
       )
     else

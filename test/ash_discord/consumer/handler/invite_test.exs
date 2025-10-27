@@ -9,7 +9,6 @@ defmodule AshDiscord.Consumer.Handler.InviteTest do
   describe "create/4" do
     @tag :fixed
     test "creates invite in database with all relationships" do
-      # Create prerequisite records for all relationships
       guild_data = guild()
       channel_data = channel(%{guild_id: guild_data.id})
       inviter_data = user()
@@ -24,7 +23,6 @@ defmodule AshDiscord.Consumer.Handler.InviteTest do
           target_user_type: 1
         })
 
-      # Persist all prerequisite records
       TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
       TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
       TestApp.Discord.user_from_discord!(%{data: inviter_data}, authorize?: false)
@@ -56,7 +54,6 @@ defmodule AshDiscord.Consumer.Handler.InviteTest do
   describe "delete/4" do
     @tag :fixed
     test "deletes invite from database" do
-      # Create prerequisite records for relationships
       guild_data = guild()
       channel_data = channel(%{guild_id: guild_data.id})
       inviter_data = user()

@@ -8,8 +8,14 @@ defmodule TestApp.Discord.Message do
     domain: TestApp.Discord,
     data_layer: Ash.DataLayer.Ets
 
+  require Logger
+
   ash_discord do
     discord_entity(:message)
+
+    events do
+      on(:MESSAGE_ACK, :log_ack)
+    end
   end
 
   ets do
@@ -95,6 +101,15 @@ defmodule TestApp.Discord.Message do
         |> Ash.Changeset.change_attribute(:discord_id, System.system_time(:nanosecond))
         |> Ash.Changeset.change_attribute(:channel_discord_id, 123_456_789)
         |> Ash.Changeset.change_attribute(:author_discord_id, 987_654_321)
+      end)
+    end
+
+    action :log_ack do
+      argument(:data, :term, allow_nil?: false)
+
+      run(fn input, _context ->
+        Logger.info("Message acknowledgement received: #{inspect(input.arguments.data)}")
+        :ok
       end)
     end
   end

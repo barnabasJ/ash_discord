@@ -8,13 +8,6 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
   alias AshDiscord.Consumer.Payloads
   alias TestApp.TestConsumer
 
-  setup do
-    copy(Nostrum.Api.Channel)
-    copy(Nostrum.Api.Guild)
-    copy(Nostrum.Api.User)
-    :ok
-  end
-
   describe "create/3" do
     @tag :fixed
     test "creates message from Discord event" do
@@ -258,16 +251,26 @@ defmodule AshDiscord.Consumer.Handler.MessageTest do
   end
 
   describe "ack/3" do
+    import ExUnit.CaptureLog
+
     @tag :fixed
-    test "acknowledges message without error" do
+    test "calls configured action and logs acknowledgement" do
       context = %AshDiscord.Context{
         consumer: TestConsumer,
         resource: TestApp.Discord.Message,
         guild: nil,
-        user: nil
+        user: nil,
+        context: %{private: %{ash_discord?: true}}
       }
 
-      assert :ok = Message.ack(%{}, %Nostrum.Struct.WSState{}, context)
+      ack_data = %{message_id: 123_456_789, channel_id: 987_654_321}
+
+      log =
+        capture_log(fn ->
+          assert :ok = Message.ack(ack_data, %Nostrum.Struct.WSState{}, context)
+        end)
+
+      assert log =~ "Message acknowledgement received"
     end
   end
 end

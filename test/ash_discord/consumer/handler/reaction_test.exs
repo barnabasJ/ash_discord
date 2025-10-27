@@ -10,12 +10,23 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
   alias TestApp.TestConsumer
 
   describe "add/3" do
-    test "creates reaction in database" do
-      user_id = generate_snowflake()
-      message_id = generate_snowflake()
-      channel_id = generate_snowflake()
-      guild_id = generate_snowflake()
+    @tag :fixed
+    test "creates reaction in database with all relationships" do
+      guild_data = guild()
+      channel_data = channel(%{guild_id: guild_data.id})
+      user_data = user()
+      author_data = user()
+
+      message_data =
+        message(%{channel_id: channel_data.id, author: author_data, guild_id: guild_data.id})
+
       emoji_data = emoji(%{name: "👍", id: nil})
+
+      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
+      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: author_data}, authorize?: false)
+      TestApp.Discord.message_from_discord!(%{data: message_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -25,10 +36,10 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
       }
 
       reaction_add = %Payloads.MessageReactionAddEvent{
-        user_id: user_id,
-        message_id: message_id,
-        channel_id: channel_id,
-        guild_id: guild_id,
+        user_id: user_data.id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
+        guild_id: guild_data.id,
         member: nil,
         emoji: emoji_data
       }
@@ -40,24 +51,31 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
                  context
                )
 
-      # Verify reaction was created in database
-      reactions = TestApp.Discord.MessageReaction.read!()
-      assert length(reactions) == 1
+      [created_reaction] =
+        TestApp.Discord.MessageReaction
+        |> Ash.Query.load([:user, :message, :channel, :guild])
+        |> Ash.read!(authorize?: false)
 
-      created_reaction = hd(reactions)
-      assert created_reaction.user_discord_id == user_id
-      assert created_reaction.message_discord_id == message_id
-      assert created_reaction.channel_discord_id == channel_id
-      assert created_reaction.guild_discord_id == guild_id
+      assert created_reaction.user.discord_id == user_data.id
+      assert created_reaction.message.discord_id == message_data.id
+      assert created_reaction.channel.discord_id == channel_data.id
+      assert created_reaction.guild.discord_id == guild_data.id
       assert created_reaction.emoji_name == "👍"
       assert created_reaction.emoji_discord_id == nil
     end
 
+    @tag :fixed
     test "creates reaction with custom emoji" do
-      user_id = generate_snowflake()
-      message_id = generate_snowflake()
-      channel_id = generate_snowflake()
+      channel_data = channel()
+      user_data = user()
+      author_data = user()
+      message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
       emoji_data = emoji(%{name: "custom_emoji", animated: true})
+
+      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: author_data}, authorize?: false)
+      TestApp.Discord.message_from_discord!(%{data: message_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -67,9 +85,9 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
       }
 
       reaction_add = %Payloads.MessageReactionAddEvent{
-        user_id: user_id,
-        message_id: message_id,
-        channel_id: channel_id,
+        user_id: user_data.id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         member: nil,
         emoji: emoji_data
@@ -82,20 +100,30 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
                  context
                )
 
-      # Verify reaction was created with custom emoji
-      reactions = TestApp.Discord.MessageReaction.read!()
-      assert length(reactions) == 1
+      [created_reaction] =
+        TestApp.Discord.MessageReaction
+        |> Ash.Query.load([:user, :message, :channel])
+        |> Ash.read!(authorize?: false)
 
-      created_reaction = hd(reactions)
+      assert created_reaction.user.discord_id == user_data.id
+      assert created_reaction.message.discord_id == message_data.id
+      assert created_reaction.channel.discord_id == channel_data.id
       assert created_reaction.emoji_name == "custom_emoji"
       assert created_reaction.emoji_discord_id == emoji_data.id
     end
 
+    @tag :fixed
     test "upserts existing reaction" do
-      user_id = generate_snowflake()
-      message_id = generate_snowflake()
-      channel_id = generate_snowflake()
+      channel_data = channel()
+      user_data = user()
+      author_data = user()
+      message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
       emoji_data = emoji(%{name: "👍", id: nil})
+
+      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: author_data}, authorize?: false)
+      TestApp.Discord.message_from_discord!(%{data: message_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -105,41 +133,47 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
       }
 
       reaction_add = %Payloads.MessageReactionAddEvent{
-        user_id: user_id,
-        message_id: message_id,
-        channel_id: channel_id,
+        user_id: user_data.id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         member: nil,
         emoji: emoji_data
       }
 
-      # Add reaction twice
       assert :ok = Reaction.add(reaction_add, %Nostrum.Struct.WSState{}, context)
 
-      assert [_reactions] =
+      assert [_reaction] =
                TestApp.Discord.MessageReaction.read!(
                  query:
                    Ash.Query.filter(
                      TestApp.Discord.MessageReaction,
-                     user_discord_id == ^user_id and message_discord_id == ^message_id and
+                     user_discord_id == ^user_data.id and message_discord_id == ^message_data.id and
                        emoji_name == "👍" and
                        is_nil(guild_discord_id) and is_nil(emoji_discord_id)
-                   )
+                   ),
+                 authorize?: false
                )
 
       assert :ok = Reaction.add(reaction_add, %Nostrum.Struct.WSState{}, context)
 
-      # Verify only one reaction exists (upserted)
-      assert [_reactions] = TestApp.Discord.MessageReaction.read!()
+      assert [_reaction] = TestApp.Discord.MessageReaction.read!(authorize?: false)
     end
   end
 
   describe "remove/3" do
+    @tag :fixed
     test "removes reaction from database" do
-      user_id = generate_snowflake()
-      message_id = generate_snowflake()
-      channel_id = generate_snowflake()
+      channel_data = channel()
+      user_data = user()
+      author_data = user()
+      message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
       emoji_data = emoji(%{name: "👍", id: nil})
+
+      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: author_data}, authorize?: false)
+      TestApp.Discord.message_from_discord!(%{data: message_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -148,11 +182,10 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
         user: nil
       }
 
-      # First create the reaction
       reaction_add = %Payloads.MessageReactionAddEvent{
-        user_id: user_id,
-        message_id: message_id,
-        channel_id: channel_id,
+        user_id: user_data.id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         member: nil,
         emoji: emoji_data
@@ -160,15 +193,12 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
 
       assert :ok = Reaction.add(reaction_add, %Nostrum.Struct.WSState{}, context)
 
-      # Verify reaction exists
-      reactions_before = TestApp.Discord.MessageReaction.read!()
-      assert length(reactions_before) == 1
+      assert [_reaction] = TestApp.Discord.MessageReaction.read!(authorize?: false)
 
-      # Now remove it
       reaction_remove = %Payloads.MessageReactionRemoveEvent{
-        user_id: user_id,
-        message_id: message_id,
-        channel_id: channel_id,
+        user_id: user_data.id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         emoji: emoji_data
       }
@@ -180,17 +210,22 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
                  context
                )
 
-      # Verify reaction was deleted
-      reactions_after = TestApp.Discord.MessageReaction.read!()
-      assert length(reactions_after) == 0
+      assert [] = TestApp.Discord.MessageReaction.read!(authorize?: false)
     end
 
+    @tag :fixed
     test "removes only matching custom emoji reaction" do
-      user_id = generate_snowflake()
-      message_id = generate_snowflake()
-      channel_id = generate_snowflake()
+      channel_data = channel()
+      user_data = user()
+      author_data = user()
+      message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
       emoji1 = emoji(%{name: "emoji1"})
       emoji2 = emoji(%{name: "emoji2"})
+
+      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: author_data}, authorize?: false)
+      TestApp.Discord.message_from_discord!(%{data: message_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -199,20 +234,19 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
         user: nil
       }
 
-      # Create two different emoji reactions from same user on same message
       reaction_add1 = %Payloads.MessageReactionAddEvent{
-        user_id: user_id,
-        message_id: message_id,
-        channel_id: channel_id,
+        user_id: user_data.id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         member: nil,
         emoji: emoji1
       }
 
       reaction_add2 = %Payloads.MessageReactionAddEvent{
-        user_id: user_id,
-        message_id: message_id,
-        channel_id: channel_id,
+        user_id: user_data.id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         member: nil,
         emoji: emoji2
@@ -221,32 +255,34 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
       assert :ok = Reaction.add(reaction_add1, %Nostrum.Struct.WSState{}, context)
       assert :ok = Reaction.add(reaction_add2, %Nostrum.Struct.WSState{}, context)
 
-      # Verify both reactions exist
-      reactions_before = TestApp.Discord.MessageReaction.read!()
-      assert length(reactions_before) == 2
+      assert [_, _] = TestApp.Discord.MessageReaction.read!(authorize?: false)
 
-      # Remove only emoji1
       reaction_remove = %Payloads.MessageReactionRemoveEvent{
-        user_id: user_id,
-        message_id: message_id,
-        channel_id: channel_id,
+        user_id: user_data.id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         emoji: emoji1
       }
 
       assert :ok = Reaction.remove(reaction_remove, %Nostrum.Struct.WSState{}, context)
 
-      # Verify only emoji2 reaction remains
-      reactions_after = TestApp.Discord.MessageReaction.read!()
-      assert length(reactions_after) == 1
-      assert hd(reactions_after).emoji_discord_id == emoji2.id
+      assert [remaining] = TestApp.Discord.MessageReaction.read!(authorize?: false)
+      assert remaining.emoji_discord_id == emoji2.id
     end
 
+    @tag :fixed
     test "handles missing reaction gracefully" do
-      user_id = generate_snowflake()
-      message_id = generate_snowflake()
-      channel_id = generate_snowflake()
+      channel_data = channel()
+      user_data = user()
+      author_data = user()
+      message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
       emoji_data = emoji(%{name: "👍", id: nil})
+
+      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: author_data}, authorize?: false)
+      TestApp.Discord.message_from_discord!(%{data: message_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -256,14 +292,13 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
       }
 
       reaction_remove = %Payloads.MessageReactionRemoveEvent{
-        user_id: user_id,
-        message_id: message_id,
-        channel_id: channel_id,
+        user_id: user_data.id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         emoji: emoji_data
       }
 
-      # Should not crash when reaction doesn't exist
       assert :ok =
                Reaction.remove(
                  reaction_remove,
@@ -274,13 +309,21 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
   end
 
   describe "remove_all/3" do
+    @tag :fixed
     test "removes all reactions from a message" do
-      message_id = generate_snowflake()
-      channel_id = generate_snowflake()
-      user1_id = generate_snowflake()
-      user2_id = generate_snowflake()
+      channel_data = channel()
+      author_data = user()
+      message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
+      user1_data = user()
+      user2_data = user()
       emoji1 = emoji(%{name: "👍", id: nil})
       emoji2 = emoji(%{name: "❤️", id: nil})
+
+      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: author_data}, authorize?: false)
+      TestApp.Discord.message_from_discord!(%{data: message_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user1_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user2_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -289,29 +332,28 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
         user: nil
       }
 
-      # Create multiple reactions
       reaction_add1 = %Payloads.MessageReactionAddEvent{
-        user_id: user1_id,
-        message_id: message_id,
-        channel_id: channel_id,
+        user_id: user1_data.id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         member: nil,
         emoji: emoji1
       }
 
       reaction_add2 = %Payloads.MessageReactionAddEvent{
-        user_id: user2_id,
-        message_id: message_id,
-        channel_id: channel_id,
+        user_id: user2_data.id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         member: nil,
         emoji: emoji1
       }
 
       reaction_add3 = %Payloads.MessageReactionAddEvent{
-        user_id: user1_id,
-        message_id: message_id,
-        channel_id: channel_id,
+        user_id: user1_data.id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         member: nil,
         emoji: emoji2
@@ -321,14 +363,11 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
       assert :ok = Reaction.add(reaction_add2, %Nostrum.Struct.WSState{}, context)
       assert :ok = Reaction.add(reaction_add3, %Nostrum.Struct.WSState{}, context)
 
-      # Verify all reactions exist
-      reactions_before = TestApp.Discord.MessageReaction.read!()
-      assert length(reactions_before) == 3
+      assert [_, _, _] = TestApp.Discord.MessageReaction.read!(authorize?: false)
 
-      # Remove all reactions
       reaction_remove_all = %Payloads.MessageReactionRemoveAllEvent{
-        message_id: message_id,
-        channel_id: channel_id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil
       }
 
@@ -339,17 +378,23 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
                  context
                )
 
-      # Verify all reactions were deleted
-      reactions_after = TestApp.Discord.MessageReaction.read!()
-      assert length(reactions_after) == 0
+      assert [] = TestApp.Discord.MessageReaction.read!(authorize?: false)
     end
 
+    @tag :fixed
     test "only removes reactions from specified message" do
-      message1_id = generate_snowflake()
-      message2_id = generate_snowflake()
-      channel_id = generate_snowflake()
-      user_id = generate_snowflake()
+      channel_data = channel()
+      author_data = user()
+      message1_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
+      message2_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
+      user_data = user()
       emoji_data = emoji(%{name: "👍", id: nil})
+
+      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: author_data}, authorize?: false)
+      TestApp.Discord.message_from_discord!(%{data: message1_data}, authorize?: false)
+      TestApp.Discord.message_from_discord!(%{data: message2_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -358,20 +403,19 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
         user: nil
       }
 
-      # Create reactions on two different messages
       reaction_add1 = %Payloads.MessageReactionAddEvent{
-        user_id: user_id,
-        message_id: message1_id,
-        channel_id: channel_id,
+        user_id: user_data.id,
+        message_id: message1_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         member: nil,
         emoji: emoji_data
       }
 
       reaction_add2 = %Payloads.MessageReactionAddEvent{
-        user_id: user_id,
-        message_id: message2_id,
-        channel_id: channel_id,
+        user_id: user_data.id,
+        message_id: message2_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         member: nil,
         emoji: emoji_data
@@ -380,10 +424,9 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
       assert :ok = Reaction.add(reaction_add1, %Nostrum.Struct.WSState{}, context)
       assert :ok = Reaction.add(reaction_add2, %Nostrum.Struct.WSState{}, context)
 
-      # Remove all reactions from message1 only
       reaction_remove_all = %Payloads.MessageReactionRemoveAllEvent{
-        message_id: message1_id,
-        channel_id: channel_id,
+        message_id: message1_data.id,
+        channel_id: channel_data.id,
         guild_id: nil
       }
 
@@ -394,15 +437,23 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
                  context
                )
 
-      # Verify only message2 reaction remains
-      reactions_after = TestApp.Discord.MessageReaction.read!()
-      assert length(reactions_after) == 1
-      assert hd(reactions_after).message_discord_id == message2_id
+      [remaining] =
+        TestApp.Discord.MessageReaction
+        |> Ash.Query.load(:message)
+        |> Ash.read!(authorize?: false)
+
+      assert remaining.message.discord_id == message2_data.id
     end
 
+    @tag :fixed
     test "handles empty message gracefully" do
-      message_id = generate_snowflake()
-      channel_id = generate_snowflake()
+      channel_data = channel()
+      author_data = user()
+      message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
+
+      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: author_data}, authorize?: false)
+      TestApp.Discord.message_from_discord!(%{data: message_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -412,12 +463,11 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
       }
 
       reaction_remove_all = %Payloads.MessageReactionRemoveAllEvent{
-        message_id: message_id,
-        channel_id: channel_id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil
       }
 
-      # Should not crash when no reactions exist
       assert :ok =
                Reaction.remove_all(
                  reaction_remove_all,
@@ -428,13 +478,21 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
   end
 
   describe "remove_emoji/3" do
+    @tag :fixed
     test "removes all reactions with specific emoji from message" do
-      message_id = generate_snowflake()
-      channel_id = generate_snowflake()
-      user1_id = generate_snowflake()
-      user2_id = generate_snowflake()
+      channel_data = channel()
+      author_data = user()
+      message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
+      user1_data = user()
+      user2_data = user()
       emoji_to_remove = emoji(%{name: "👍", id: nil})
       emoji_to_keep = emoji(%{name: "❤️", id: nil})
+
+      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: author_data}, authorize?: false)
+      TestApp.Discord.message_from_discord!(%{data: message_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user1_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user2_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -443,29 +501,28 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
         user: nil
       }
 
-      # Create reactions with two different emojis
       reaction_add1 = %Payloads.MessageReactionAddEvent{
-        user_id: user1_id,
-        message_id: message_id,
-        channel_id: channel_id,
+        user_id: user1_data.id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         member: nil,
         emoji: emoji_to_remove
       }
 
       reaction_add2 = %Payloads.MessageReactionAddEvent{
-        user_id: user2_id,
-        message_id: message_id,
-        channel_id: channel_id,
+        user_id: user2_data.id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         member: nil,
         emoji: emoji_to_remove
       }
 
       reaction_add3 = %Payloads.MessageReactionAddEvent{
-        user_id: user1_id,
-        message_id: message_id,
-        channel_id: channel_id,
+        user_id: user1_data.id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         member: nil,
         emoji: emoji_to_keep
@@ -475,14 +532,11 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
       assert :ok = Reaction.add(reaction_add2, %Nostrum.Struct.WSState{}, context)
       assert :ok = Reaction.add(reaction_add3, %Nostrum.Struct.WSState{}, context)
 
-      # Verify all reactions exist
-      reactions_before = TestApp.Discord.MessageReaction.read!()
-      assert length(reactions_before) == 3
+      assert [_, _, _] = TestApp.Discord.MessageReaction.read!(authorize?: false)
 
-      # Remove all 👍 emoji reactions
       reaction_remove_emoji = %Payloads.MessageReactionRemoveEmojiEvent{
-        message_id: message_id,
-        channel_id: channel_id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         emoji: emoji_to_remove
       }
@@ -494,19 +548,25 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
                  context
                )
 
-      # Verify only ❤️ reaction remains
-      reactions_after = TestApp.Discord.MessageReaction.read!()
-      assert length(reactions_after) == 1
-      assert hd(reactions_after).emoji_name == "❤️"
+      assert [remaining] = TestApp.Discord.MessageReaction.read!(authorize?: false)
+      assert remaining.emoji_name == "❤️"
     end
 
+    @tag :fixed
     test "removes custom emoji reactions correctly" do
-      message_id = generate_snowflake()
-      channel_id = generate_snowflake()
-      user1_id = generate_snowflake()
-      user2_id = generate_snowflake()
+      channel_data = channel()
+      author_data = user()
+      message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
+      user1_data = user()
+      user2_data = user()
       custom_emoji = emoji(%{name: "custom_emoji"})
       other_emoji = emoji(%{name: "other_emoji"})
+
+      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: author_data}, authorize?: false)
+      TestApp.Discord.message_from_discord!(%{data: message_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user1_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: user2_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -515,29 +575,28 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
         user: nil
       }
 
-      # Create reactions with custom emojis
       reaction_add1 = %Payloads.MessageReactionAddEvent{
-        user_id: user1_id,
-        message_id: message_id,
-        channel_id: channel_id,
+        user_id: user1_data.id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         member: nil,
         emoji: custom_emoji
       }
 
       reaction_add2 = %Payloads.MessageReactionAddEvent{
-        user_id: user2_id,
-        message_id: message_id,
-        channel_id: channel_id,
+        user_id: user2_data.id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         member: nil,
         emoji: custom_emoji
       }
 
       reaction_add3 = %Payloads.MessageReactionAddEvent{
-        user_id: user1_id,
-        message_id: message_id,
-        channel_id: channel_id,
+        user_id: user1_data.id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         member: nil,
         emoji: other_emoji
@@ -547,10 +606,9 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
       assert :ok = Reaction.add(reaction_add2, %Nostrum.Struct.WSState{}, context)
       assert :ok = Reaction.add(reaction_add3, %Nostrum.Struct.WSState{}, context)
 
-      # Remove all custom_emoji reactions
       reaction_remove_emoji = %Payloads.MessageReactionRemoveEmojiEvent{
-        message_id: message_id,
-        channel_id: channel_id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         emoji: custom_emoji
       }
@@ -562,16 +620,20 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
                  context
                )
 
-      # Verify only other_emoji reaction remains
-      reactions_after = TestApp.Discord.MessageReaction.read!()
-      assert length(reactions_after) == 1
-      assert hd(reactions_after).emoji_discord_id == other_emoji.id
+      assert [remaining] = TestApp.Discord.MessageReaction.read!(authorize?: false)
+      assert remaining.emoji_discord_id == other_emoji.id
     end
 
+    @tag :fixed
     test "handles missing emoji gracefully" do
-      message_id = generate_snowflake()
-      channel_id = generate_snowflake()
+      channel_data = channel()
+      author_data = user()
+      message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
       emoji_data = emoji(%{name: "👍", id: nil})
+
+      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
+      TestApp.Discord.user_from_discord!(%{data: author_data}, authorize?: false)
+      TestApp.Discord.message_from_discord!(%{data: message_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -581,13 +643,12 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
       }
 
       reaction_remove_emoji = %Payloads.MessageReactionRemoveEmojiEvent{
-        message_id: message_id,
-        channel_id: channel_id,
+        message_id: message_data.id,
+        channel_id: channel_data.id,
         guild_id: nil,
         emoji: emoji_data
       }
 
-      # Should not crash when emoji doesn't exist
       assert :ok =
                Reaction.remove_emoji(
                  reaction_remove_emoji,

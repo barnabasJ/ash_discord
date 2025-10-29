@@ -196,6 +196,13 @@ resources = Resource.read!()
    - Remove redundant comments
    ```
 
+8. **Run comprehensive review** - use `/review` command to verify:
+   - All relationships are correctly implemented
+   - Patterns match established quality standards
+   - No inconsistencies with codebase conventions
+   - Resource schema follows naming conventions (`*_discord_id` suffix)
+   - Tests verify relationships by loading and checking related records
+
 ## Example Transformation
 
 ### Before
@@ -276,3 +283,9 @@ end
 - Run tests after each major change to catch issues early
 - If tests fail, investigate whether it's a test issue or actual bug
 - Some tests may need resource structure investigation to understand field names
+- **Always run `/review` after completing the refactoring** to catch any issues
+  with:
+  - Relationship implementation and verification
+  - Naming convention compliance
+  - Pattern consistency with the codebase
+  - Missing test coverage or edge cases

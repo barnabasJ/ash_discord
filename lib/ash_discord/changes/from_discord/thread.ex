@@ -71,9 +71,9 @@ defmodule AshDiscord.Changes.FromDiscord.Thread do
     |> maybe_set_attribute(:position, thread_data.position)
     |> maybe_set_attribute(:topic, thread_data.topic)
     |> maybe_set_attribute(:nsfw, thread_data.nsfw)
-    |> maybe_set_attribute(:parent_id, thread_data.parent_id)
-    |> maybe_set_attribute(:guild_id, thread_data.guild_id)
-    |> maybe_set_attribute(:owner_id, thread_data.owner_id)
+    |> maybe_set_attribute(:parent_discord_id, thread_data.parent_id)
+    |> maybe_set_attribute(:guild_discord_id, thread_data.guild_id)
+    |> maybe_set_attribute(:owner_discord_id, thread_data.owner_id)
     |> maybe_set_attribute(:message_count, thread_data.message_count)
     |> maybe_set_attribute(:member_count, thread_data.member_count)
     |> maybe_set_attribute(:thread_metadata, thread_data.thread_metadata)
@@ -90,7 +90,6 @@ defmodule AshDiscord.Changes.FromDiscord.Thread do
       :permission_overwrites,
       Transformations.transform_permission_overwrites(thread_data.permission_overwrites)
     )
-    |> maybe_manage_guild_relationship(thread_data.guild_id)
   end
 
   defp maybe_set_attribute(changeset, _field, nil), do: changeset
@@ -110,16 +109,6 @@ defmodule AshDiscord.Changes.FromDiscord.Thread do
   defp maybe_set_datetime_field(changeset, field, value) do
     if Ash.Resource.Info.attribute(changeset.resource, field) do
       Transformations.set_datetime_field(changeset, field, value)
-    else
-      changeset
-    end
-  end
-
-  defp maybe_manage_guild_relationship(changeset, nil), do: changeset
-
-  defp maybe_manage_guild_relationship(changeset, guild_id) do
-    if Ash.Resource.Info.relationship(changeset.resource, :guild) do
-      Transformations.manage_guild_relationship(changeset, guild_id)
     else
       changeset
     end

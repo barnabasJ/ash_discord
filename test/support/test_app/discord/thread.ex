@@ -36,17 +36,17 @@ defmodule TestApp.Discord.Thread do
       public?: true
     )
 
-    attribute(:parent_id, :integer,
+    attribute(:parent_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
 
-    attribute(:guild_id, :integer,
+    attribute(:guild_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
 
-    attribute(:owner_id, :integer,
+    attribute(:owner_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
@@ -105,6 +105,23 @@ defmodule TestApp.Discord.Thread do
     end
   end
 
+  relationships do
+    belongs_to(:parent_channel, TestApp.Discord.Channel,
+      source_attribute: :parent_discord_id,
+      destination_attribute: :discord_id
+    )
+
+    belongs_to(:guild, TestApp.Discord.Guild,
+      source_attribute: :guild_discord_id,
+      destination_attribute: :discord_id
+    )
+
+    belongs_to(:owner, TestApp.Discord.User,
+      source_attribute: :owner_discord_id,
+      destination_attribute: :discord_id
+    )
+  end
+
   actions do
     defaults([:read, :destroy])
 
@@ -113,9 +130,9 @@ defmodule TestApp.Discord.Thread do
         :discord_id,
         :name,
         :type,
-        :parent_id,
-        :guild_id,
-        :owner_id,
+        :parent_discord_id,
+        :guild_discord_id,
+        :owner_discord_id,
         :message_count,
         :member_count,
         :thread_metadata,
@@ -150,9 +167,9 @@ defmodule TestApp.Discord.Thread do
       upsert_fields([
         :name,
         :type,
-        :parent_id,
-        :guild_id,
-        :owner_id,
+        :parent_discord_id,
+        :guild_discord_id,
+        :owner_discord_id,
         :message_count,
         :member_count,
         :thread_metadata,
@@ -171,9 +188,9 @@ defmodule TestApp.Discord.Thread do
       accept([
         :name,
         :type,
-        :parent_id,
-        :guild_id,
-        :owner_id,
+        :parent_discord_id,
+        :guild_discord_id,
+        :owner_discord_id,
         :message_count,
         :member_count,
         :thread_metadata,

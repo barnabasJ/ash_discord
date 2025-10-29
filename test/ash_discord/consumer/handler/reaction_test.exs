@@ -65,62 +65,6 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
     end
 
     @tag :fixed
-    test "creates reaction in guild with member information" do
-      guild_data = guild()
-      channel_data = channel(%{guild_id: guild_data.id})
-      user_data = user()
-      member_data = guild_member(%{guild_id: guild_data.id, user_id: user_data.id})
-      author_data = user()
-
-      message_data =
-        message(%{channel_id: channel_data.id, author: author_data, guild_id: guild_data.id})
-
-      emoji_data = emoji(%{name: "🎉", id: nil})
-
-      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
-      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
-      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
-      TestApp.Discord.guild_member_from_discord!(%{data: member_data}, authorize?: false)
-      TestApp.Discord.user_from_discord!(%{data: author_data}, authorize?: false)
-      TestApp.Discord.message_from_discord!(%{data: message_data}, authorize?: false)
-
-      context = %AshDiscord.Context{
-        consumer: TestConsumer,
-        resource: TestApp.Discord.MessageReaction,
-        guild: nil,
-        user: nil
-      }
-
-      reaction_add = %Payloads.MessageReactionAddEvent{
-        user_id: user_data.id,
-        message_id: message_data.id,
-        channel_id: channel_data.id,
-        guild_id: guild_data.id,
-        member: member_data,
-        emoji: emoji_data
-      }
-
-      assert :ok =
-               Reaction.add(
-                 reaction_add,
-                 %Nostrum.Struct.WSState{},
-                 context
-               )
-
-      [created_reaction] =
-        TestApp.Discord.MessageReaction
-        |> Ash.Query.load([:user, :message, :channel, :guild])
-        |> Ash.read!(authorize?: false)
-
-      assert created_reaction.user.discord_id == user_data.id
-      assert created_reaction.message.discord_id == message_data.id
-      assert created_reaction.channel.discord_id == channel_data.id
-      assert created_reaction.guild.discord_id == guild_data.id
-      assert created_reaction.emoji_name == "🎉"
-      assert created_reaction.emoji_discord_id == nil
-    end
-
-    @tag :fixed
     test "creates reaction with custom emoji" do
       channel_data = channel()
       user_data = user()

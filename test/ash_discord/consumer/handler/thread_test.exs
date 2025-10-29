@@ -8,6 +8,7 @@ defmodule AshDiscord.Consumer.Handler.ThreadTest do
   alias TestApp.TestConsumer
 
   describe "create/3" do
+    @tag :fixed
     test "creates thread from Discord event" do
       thread_data = thread()
       typed_thread = Payloads.Thread.new!(thread_data)
@@ -22,15 +23,13 @@ defmodule AshDiscord.Consumer.Handler.ThreadTest do
 
       assert :ok = Thread.create(typed_thread, %Nostrum.Struct.WSState{}, context)
 
-      threads = TestApp.Discord.Thread.read!()
-      assert length(threads) == 1
-
-      created_thread = hd(threads)
+      assert [created_thread] = TestApp.Discord.Thread.read!(authorize?: false)
       assert created_thread.discord_id == thread_data.id
       assert created_thread.name == thread_data.name
       assert created_thread.type == thread_data.type
     end
 
+    @tag :fixed
     test "handles threads with metadata" do
       thread_data =
         thread(%{
@@ -53,32 +52,21 @@ defmodule AshDiscord.Consumer.Handler.ThreadTest do
 
       assert :ok = Thread.create(typed_thread, %Nostrum.Struct.WSState{}, context)
 
-      threads = TestApp.Discord.Thread.read!()
-      assert length(threads) == 1
-
-      created = hd(threads)
+      assert [created] = TestApp.Discord.Thread.read!(authorize?: false)
       assert created.thread_metadata.archived == true
       assert created.thread_metadata.auto_archive_duration == 4320
     end
   end
 
   describe "delete/3" do
+    @tag :fixed
     test "deletes thread when it exists" do
       thread_data = thread()
 
-      # First create the thread
-      {:ok, _created} =
-        TestApp.Discord.Thread
-        |> Ash.Changeset.for_create(:from_discord, %{
-          data: Payloads.Thread.new!(thread_data)
-        })
-        |> Ash.Changeset.set_context(%{
-          private: %{ash_discord?: true},
-          shared: %{private: %{ash_discord?: true}}
-        })
-        |> Ash.create()
+      TestApp.Discord.thread_from_discord!(%{data: Payloads.Thread.new!(thread_data)},
+        authorize?: false
+      )
 
-      # Now delete it - use the same thread struct for deletion
       typed_delete = Payloads.ThreadDelete.new!(thread_data)
 
       context = %AshDiscord.Context{
@@ -91,12 +79,11 @@ defmodule AshDiscord.Consumer.Handler.ThreadTest do
 
       assert :ok = Thread.delete(typed_delete, %Nostrum.Struct.WSState{}, context)
 
-      threads = TestApp.Discord.Thread.read!()
-      assert Enum.empty?(threads)
+      assert [] = TestApp.Discord.Thread.read!(authorize?: false)
     end
 
+    @tag :fixed
     test "handles deletion of non-existent thread gracefully" do
-      # Create a thread struct for deletion
       thread_data = thread()
       typed_delete = Payloads.ThreadDelete.new!(thread_data)
 
@@ -113,6 +100,7 @@ defmodule AshDiscord.Consumer.Handler.ThreadTest do
   end
 
   describe "update/3" do
+    @tag :fixed
     test "updates existing thread" do
       old_thread = thread(%{name: "Old Thread Name"})
       new_thread = thread(%{id: old_thread.id, name: "New Thread Name"})
@@ -129,14 +117,12 @@ defmodule AshDiscord.Consumer.Handler.ThreadTest do
 
       assert :ok = Thread.update(thread_update, %Nostrum.Struct.WSState{}, context)
 
-      threads = TestApp.Discord.Thread.read!()
-      assert length(threads) == 1
-
-      updated = hd(threads)
+      assert [updated] = TestApp.Discord.Thread.read!(authorize?: false)
       assert updated.discord_id == new_thread.id
       assert updated.name == "New Thread Name"
     end
 
+    @tag :fixed
     test "creates thread if it doesn't exist (upsert)" do
       thread_data = thread()
       thread_update = Payloads.ThreadUpdate.new!({thread_data, thread_data})
@@ -151,12 +137,12 @@ defmodule AshDiscord.Consumer.Handler.ThreadTest do
 
       assert :ok = Thread.update(thread_update, %Nostrum.Struct.WSState{}, context)
 
-      threads = TestApp.Discord.Thread.read!()
-      assert length(threads) == 1
+      assert [_thread] = TestApp.Discord.Thread.read!(authorize?: false)
     end
   end
 
   describe "list_sync/3" do
+    @tag :fixed
     test "processes thread list sync event" do
       thread1 = thread()
       thread2 = thread()
@@ -181,17 +167,14 @@ defmodule AshDiscord.Consumer.Handler.ThreadTest do
 
       assert :ok = Thread.list_sync(typed_sync, %Nostrum.Struct.WSState{}, context)
 
-      # Verify the sync event was recorded
-      syncs = TestApp.Discord.ThreadListSync.read!()
-      assert length(syncs) == 1
-
-      sync = hd(syncs)
+      assert [sync] = TestApp.Discord.ThreadListSync.read!(authorize?: false)
       assert sync.guild_discord_id == guild_id
       assert length(sync.channel_ids) == 2
     end
   end
 
   describe "member_update/3" do
+    @tag :fixed
     test "creates or updates thread member" do
       member_data =
         thread_member(%{
@@ -212,15 +195,13 @@ defmodule AshDiscord.Consumer.Handler.ThreadTest do
 
       assert :ok = Thread.member_update(typed_member, %Nostrum.Struct.WSState{}, context)
 
-      members = TestApp.Discord.ThreadMember.read!()
-      assert length(members) == 1
-
-      created_member = hd(members)
+      assert [created_member] = TestApp.Discord.ThreadMember.read!(authorize?: false)
       assert created_member.thread_discord_id == member_data.id
       assert created_member.user_discord_id == member_data.user_id
       assert created_member.flags == member_data.flags
     end
 
+    @tag :fixed
     test "upserts thread member on duplicate" do
       member_data =
         thread_member(%{
@@ -239,10 +220,8 @@ defmodule AshDiscord.Consumer.Handler.ThreadTest do
         context: %{private: %{ash_discord?: true}, shared: %{private: %{ash_discord?: true}}}
       }
 
-      # Create first time
       assert :ok = Thread.member_update(typed_member, %Nostrum.Struct.WSState{}, context)
 
-      # Update with different flags
       updated_member =
         thread_member(%{
           id: member_data.id,
@@ -254,15 +233,13 @@ defmodule AshDiscord.Consumer.Handler.ThreadTest do
 
       assert :ok = Thread.member_update(typed_updated, %Nostrum.Struct.WSState{}, context)
 
-      members = TestApp.Discord.ThreadMember.read!()
-      assert length(members) == 1
-
-      updated = hd(members)
+      assert [updated] = TestApp.Discord.ThreadMember.read!(authorize?: false)
       assert updated.flags == 3
     end
   end
 
   describe "members_update/3" do
+    @tag :fixed
     test "processes thread members update event" do
       thread_id = generate_snowflake()
       guild_id = generate_snowflake()
@@ -288,11 +265,7 @@ defmodule AshDiscord.Consumer.Handler.ThreadTest do
 
       assert :ok = Thread.members_update(typed_update, %Nostrum.Struct.WSState{}, context)
 
-      # Verify the update event was recorded
-      updates = TestApp.Discord.ThreadMembersUpdate.read!()
-      assert length(updates) == 1
-
-      update = hd(updates)
+      assert [update] = TestApp.Discord.ThreadMembersUpdate.read!(authorize?: false)
       assert update.thread_discord_id == thread_id
       assert update.guild_discord_id == guild_id
       assert update.member_count == 5
@@ -300,6 +273,7 @@ defmodule AshDiscord.Consumer.Handler.ThreadTest do
       assert length(update.removed_member_ids) == 1
     end
 
+    @tag :fixed
     test "handles members update with no changes" do
       thread_id = generate_snowflake()
       guild_id = generate_snowflake()
@@ -324,10 +298,7 @@ defmodule AshDiscord.Consumer.Handler.ThreadTest do
 
       assert :ok = Thread.members_update(typed_update, %Nostrum.Struct.WSState{}, context)
 
-      updates = TestApp.Discord.ThreadMembersUpdate.read!()
-      assert length(updates) == 1
-
-      update = hd(updates)
+      assert [update] = TestApp.Discord.ThreadMembersUpdate.read!(authorize?: false)
       assert update.member_count == 10
       assert Enum.empty?(update.added_members)
       assert Enum.empty?(update.removed_member_ids)

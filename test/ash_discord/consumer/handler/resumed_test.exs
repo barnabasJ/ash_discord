@@ -7,10 +7,6 @@ defmodule AshDiscord.Consumer.Handler.ResumedTest do
   alias AshDiscord.Consumer.Handler.Resumed
   alias TestApp.TestConsumer
 
-  setup do
-    :ok
-  end
-
   describe "ready/4" do
     @tag :fixed
     test "registers global commands via API call" do

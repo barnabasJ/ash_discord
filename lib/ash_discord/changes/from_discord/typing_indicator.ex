@@ -45,11 +45,8 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicator do
   defp transform_typing_indicator(changeset, typing_data) do
     changeset
     |> maybe_set_attribute(:user_discord_id, typing_data.user_id)
-    |> maybe_set_attribute(:user_id, typing_data.user_id)
     |> maybe_set_attribute(:channel_discord_id, typing_data.channel_id)
-    |> maybe_set_attribute(:channel_id, typing_data.channel_id)
     |> maybe_set_attribute(:guild_discord_id, typing_data.guild_id)
-    |> maybe_set_attribute(:guild_id, typing_data.guild_id)
     |> set_typing_timestamp(typing_data)
     |> maybe_set_attribute(:member, convert_member_to_map(typing_data.member))
   end

@@ -21,9 +21,9 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
       result = TestApp.Discord.typing_indicator_from_discord(%{data: typing_struct})
 
       assert {:ok, created_typing} = result
-      assert created_typing.user_id == typing_struct.user_id
-      assert created_typing.channel_id == typing_struct.channel_id
-      assert created_typing.guild_id == typing_struct.guild_id
+      assert created_typing.user_discord_id == typing_struct.user_id
+      assert created_typing.channel_discord_id == typing_struct.channel_id
+      assert created_typing.guild_discord_id == typing_struct.guild_id
       assert created_typing.timestamp == DateTime.from_unix!(typing_struct.timestamp, :second)
     end
 
@@ -40,9 +40,9 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
       result = TestApp.Discord.typing_indicator_from_discord(%{data: typing_struct})
 
       assert {:ok, created_typing} = result
-      assert created_typing.user_id == typing_struct.user_id
-      assert created_typing.channel_id == typing_struct.channel_id
-      assert created_typing.guild_id == nil
+      assert created_typing.user_discord_id == typing_struct.user_id
+      assert created_typing.channel_discord_id == typing_struct.channel_id
+      assert created_typing.guild_discord_id == nil
       assert created_typing.timestamp == DateTime.from_unix!(typing_struct.timestamp, :second)
     end
 
@@ -61,7 +61,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
       result = TestApp.Discord.typing_indicator_from_discord(%{data: typing_struct})
 
       assert {:ok, created_typing} = result
-      assert created_typing.user_id == typing_struct.user_id
+      assert created_typing.user_discord_id == typing_struct.user_id
       assert created_typing.timestamp == DateTime.from_unix!(current_timestamp, :second)
     end
 
@@ -80,7 +80,7 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
       result = TestApp.Discord.typing_indicator_from_discord(%{data: typing_struct})
 
       assert {:ok, created_typing} = result
-      assert created_typing.user_id == typing_struct.user_id
+      assert created_typing.user_discord_id == typing_struct.user_id
       assert created_typing.timestamp == DateTime.from_unix!(old_timestamp, :second)
     end
 
@@ -97,8 +97,8 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
       result = TestApp.Discord.typing_indicator_from_discord(%{data: typing_struct})
 
       assert {:ok, created_typing} = result
-      assert created_typing.user_id == typing_struct.user_id
-      assert created_typing.channel_id == 888_999_111
+      assert created_typing.user_discord_id == typing_struct.user_id
+      assert created_typing.channel_discord_id == 888_999_111
     end
 
     test "handles typing indicator in thread" do
@@ -114,8 +114,8 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
       result = TestApp.Discord.typing_indicator_from_discord(%{data: typing_struct})
 
       assert {:ok, created_typing} = result
-      assert created_typing.user_id == typing_struct.user_id
-      assert created_typing.channel_id == 111_333_555
+      assert created_typing.user_discord_id == typing_struct.user_id
+      assert created_typing.channel_discord_id == 111_333_555
     end
   end
 
@@ -173,8 +173,8 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
 
       # Should be same record (same Ash ID)
       assert updated_typing.id == original_typing.id
-      assert updated_typing.user_id == original_typing.user_id
-      assert updated_typing.channel_id == original_typing.channel_id
+      assert updated_typing.user_discord_id == original_typing.user_discord_id
+      assert updated_typing.channel_discord_id == original_typing.channel_discord_id
 
       # But with updated timestamp
       assert updated_typing.timestamp == DateTime.from_unix!(1_673_788_200, :second)
@@ -210,11 +210,11 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicatorTest do
 
       # Should be same record
       assert updated_typing.id == original_typing.id
-      assert updated_typing.user_id == user_id
-      assert updated_typing.channel_id == channel_id
+      assert updated_typing.user_discord_id == user_id
+      assert updated_typing.channel_discord_id == channel_id
 
       # But with updated guild and timestamp
-      assert updated_typing.guild_id == 666_777_888
+      assert updated_typing.guild_discord_id == 666_777_888
       assert updated_typing.timestamp == DateTime.from_unix!(1_673_788_200, :second)
     end
   end

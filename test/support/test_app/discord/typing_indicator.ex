@@ -19,17 +19,17 @@ defmodule TestApp.Discord.TypingIndicator do
   attributes do
     uuid_primary_key(:id)
 
-    attribute(:user_id, :integer,
+    attribute(:user_discord_id, :integer,
       allow_nil?: false,
       public?: true
     )
 
-    attribute(:channel_id, :integer,
+    attribute(:channel_discord_id, :integer,
       allow_nil?: false,
       public?: true
     )
 
-    attribute(:guild_id, :integer,
+    attribute(:guild_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
@@ -40,8 +40,29 @@ defmodule TestApp.Discord.TypingIndicator do
     )
   end
 
+  relationships do
+    belongs_to :user, TestApp.Discord.User do
+      source_attribute(:user_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+
+    belongs_to :channel, TestApp.Discord.Channel do
+      source_attribute(:channel_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+
+    belongs_to :guild, TestApp.Discord.Guild do
+      source_attribute(:guild_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+      allow_nil?(true)
+    end
+  end
+
   identities do
-    identity :discord_id, [:user_id, :channel_id] do
+    identity :discord_id, [:user_discord_id, :channel_discord_id] do
       pre_check_with(TestApp.Discord)
     end
   end
@@ -66,12 +87,12 @@ defmodule TestApp.Discord.TypingIndicator do
 
       upsert?(true)
       upsert_identity(:discord_id)
-      upsert_fields([:guild_id, :timestamp])
+      upsert_fields([:guild_discord_id, :timestamp])
     end
 
     update :update do
       primary?(true)
-      accept([:guild_id, :timestamp])
+      accept([:guild_discord_id, :timestamp])
     end
   end
 end

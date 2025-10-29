@@ -54,6 +54,18 @@ defmodule TestApp.Discord.ThreadMembersUpdate do
     create_timestamp(:inserted_at)
   end
 
+  relationships do
+    belongs_to(:thread, TestApp.Discord.Thread,
+      source_attribute: :thread_discord_id,
+      destination_attribute: :discord_id
+    )
+
+    belongs_to(:guild, TestApp.Discord.Guild,
+      source_attribute: :guild_discord_id,
+      destination_attribute: :discord_id
+    )
+  end
+
   actions do
     defaults([:read, :destroy])
 

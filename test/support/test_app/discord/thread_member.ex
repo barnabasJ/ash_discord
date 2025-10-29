@@ -48,9 +48,26 @@ defmodule TestApp.Discord.ThreadMember do
   end
 
   identities do
-    identity :thread_user, [:thread_discord_id, :user_discord_id] do
+    identity :discord_id, [:thread_discord_id, :user_discord_id] do
       pre_check_with(TestApp.Discord)
     end
+  end
+
+  relationships do
+    belongs_to(:thread, TestApp.Discord.Thread,
+      source_attribute: :thread_discord_id,
+      destination_attribute: :discord_id
+    )
+
+    belongs_to(:user, TestApp.Discord.User,
+      source_attribute: :user_discord_id,
+      destination_attribute: :discord_id
+    )
+
+    belongs_to(:guild, TestApp.Discord.Guild,
+      source_attribute: :guild_discord_id,
+      destination_attribute: :discord_id
+    )
   end
 
   actions do
@@ -78,7 +95,7 @@ defmodule TestApp.Discord.ThreadMember do
       change(AshDiscord.Changes.FromDiscord.ThreadMember)
 
       upsert?(true)
-      upsert_identity(:thread_user)
+      upsert_identity(:discord_id)
 
       upsert_fields([
         :guild_discord_id,

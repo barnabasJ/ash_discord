@@ -27,13 +27,13 @@ defmodule TestApp.Discord.WebhooksUpdate do
   attributes do
     uuid_primary_key(:id)
 
-    attribute(:guild_id, :integer,
+    attribute(:guild_discord_id, :integer,
       allow_nil?: false,
       public?: true,
       description: "Guild ID where webhooks changed"
     )
 
-    attribute(:channel_id, :integer,
+    attribute(:channel_discord_id, :integer,
       allow_nil?: false,
       public?: true,
       description: "Channel ID where webhooks changed"
@@ -42,8 +42,22 @@ defmodule TestApp.Discord.WebhooksUpdate do
     create_timestamp(:inserted_at)
   end
 
+  relationships do
+    belongs_to :guild, TestApp.Discord.Guild do
+      source_attribute(:guild_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+
+    belongs_to :channel, TestApp.Discord.Channel do
+      source_attribute(:channel_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+  end
+
   identities do
-    identity :discord_id, [:guild_id, :channel_id] do
+    identity :discord_id, [:guild_discord_id, :channel_discord_id] do
       pre_check_with(TestApp.Discord)
     end
   end
@@ -68,8 +82,8 @@ defmodule TestApp.Discord.WebhooksUpdate do
         case Ash.Changeset.get_argument(changeset, :data) do
           %AshDiscord.Consumer.Payloads.WebhooksUpdateEvent{} = data ->
             changeset
-            |> Ash.Changeset.force_change_attribute(:guild_id, data.guild_id)
-            |> Ash.Changeset.force_change_attribute(:channel_id, data.channel_id)
+            |> Ash.Changeset.force_change_attribute(:guild_discord_id, data.guild_id)
+            |> Ash.Changeset.force_change_attribute(:channel_discord_id, data.channel_id)
 
           _ ->
             Ash.Changeset.add_error(
@@ -81,7 +95,7 @@ defmodule TestApp.Discord.WebhooksUpdate do
 
       upsert?(true)
       upsert_identity(:discord_id)
-      upsert_fields([:guild_id, :channel_id])
+      upsert_fields([:guild_discord_id, :channel_discord_id])
     end
   end
 end

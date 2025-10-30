@@ -31,12 +31,14 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
           last_pin_timestamp: ~U[2025-01-15 10:30:00Z]
         })
 
-      result = TestApp.Discord.channel_pins_update_from_discord(%{data: pins_struct})
+      created_pins =
+        TestApp.Discord.channel_pins_update_from_discord!(%{data: pins_struct},
+          load: [:guild, :channel]
+        )
 
-      assert {:ok, created_pins} = result
-      assert created_pins.channel_discord_id == pins_struct.channel_id
-      assert created_pins.guild_discord_id == pins_struct.guild_id
       assert created_pins.last_pin_timestamp == pins_struct.last_pin_timestamp
+      assert created_pins.guild.discord_id == guild_id
+      assert created_pins.channel.discord_id == channel_id
     end
 
     @tag :fixed
@@ -54,12 +56,14 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
           last_pin_timestamp: ~U[2025-01-15 11:00:00Z]
         })
 
-      result = TestApp.Discord.channel_pins_update_from_discord(%{data: pins_struct})
+      created_pins =
+        TestApp.Discord.channel_pins_update_from_discord!(%{data: pins_struct},
+          load: [:guild, :channel]
+        )
 
-      assert {:ok, created_pins} = result
-      assert created_pins.channel_discord_id == pins_struct.channel_id
-      assert created_pins.guild_discord_id == nil
       assert created_pins.last_pin_timestamp == pins_struct.last_pin_timestamp
+      assert created_pins.guild == nil
+      assert created_pins.channel.discord_id == channel_id
     end
 
     @tag :fixed
@@ -82,12 +86,14 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
           last_pin_timestamp: nil
         })
 
-      result = TestApp.Discord.channel_pins_update_from_discord(%{data: pins_struct})
+      created_pins =
+        TestApp.Discord.channel_pins_update_from_discord!(%{data: pins_struct},
+          load: [:guild, :channel]
+        )
 
-      assert {:ok, created_pins} = result
-      assert created_pins.channel_discord_id == pins_struct.channel_id
-      assert created_pins.guild_discord_id == pins_struct.guild_id
       assert created_pins.last_pin_timestamp == nil
+      assert created_pins.guild.discord_id == guild_id
+      assert created_pins.channel.discord_id == channel_id
     end
   end
 
@@ -147,12 +153,15 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
           last_pin_timestamp: ~U[2025-01-15 12:00:00Z]
         })
 
-      {:ok, updated_pins} =
-        TestApp.Discord.channel_pins_update_from_discord(%{data: updated_struct})
+      updated_pins =
+        TestApp.Discord.channel_pins_update_from_discord!(%{data: updated_struct},
+          load: [:guild, :channel]
+        )
 
       assert updated_pins.id == original_pins.id
-      assert updated_pins.channel_discord_id == channel_id
       assert updated_pins.last_pin_timestamp == ~U[2025-01-15 12:00:00Z]
+      assert updated_pins.guild.discord_id == guild_id
+      assert updated_pins.channel.discord_id == channel_id
     end
 
     @tag :fixed
@@ -188,13 +197,15 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
           last_pin_timestamp: ~U[2025-01-15 11:00:00Z]
         })
 
-      {:ok, updated_pins} =
-        TestApp.Discord.channel_pins_update_from_discord(%{data: updated_struct})
+      updated_pins =
+        TestApp.Discord.channel_pins_update_from_discord!(%{data: updated_struct},
+          load: [:guild, :channel]
+        )
 
       assert updated_pins.id == original_pins.id
-      assert updated_pins.channel_discord_id == channel_id
-      assert updated_pins.guild_discord_id == new_guild_id
       assert updated_pins.last_pin_timestamp == ~U[2025-01-15 11:00:00Z]
+      assert updated_pins.guild.discord_id == new_guild_id
+      assert updated_pins.channel.discord_id == channel_id
     end
   end
 end

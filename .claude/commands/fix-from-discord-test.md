@@ -85,37 +85,51 @@ end
 - Inline mock related resource API calls at the start of each test
 - Test various attribute combinations and edge cases
 - No authorization bypass needed - these are action tests, not handler tests
+- **CRITICAL**: Load and assert on relationship records, not just IDs
+  - Pass `load: [:relationship_name]` to the `from_discord` call
+  - Assert on the loaded relationship records (e.g., `record.guild.discord_id`)
+  - This verifies relationships were created correctly via from_discord
+  - Do NOT assert on both IDs and relationships - relationships are sufficient
 
 Example:
 
 ```elixir
-describe "create from data" do
+describe "struct-first pattern" do
   test "creates resource from discord struct with all attributes" do
-    Mimic.expect(Nostrum.Api.User, :get, fn user_id ->
+    user_id = 555_666_777
+    guild_id = 999_888_777
+
+    Mimic.expect(Nostrum.Api.User, :get, fn ^user_id ->
       {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
+    end)
+
+    Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+      {:ok, guild(%{id: guild_id, name: "Test Guild"})}
     end)
 
     resource_struct =
       resource(%{
         id: 123_456_789,
-        user_id: 555_666_777,
+        user_id: user_id,
+        guild_id: guild_id,
         name: "Test Resource"
       })
 
-    result = TestApp.Discord.resource_from_discord(%{data: resource_struct})
+    created =
+      TestApp.Discord.resource_from_discord!(%{data: resource_struct},
+        load: [:user, :guild]
+      )
 
-    assert {:ok, created} = result
-    assert created.discord_id == resource_struct.id
-    assert created.user_discord_id == 555_666_777
     assert created.name == resource_struct.name
+    assert created.user.discord_id == user_id
+    assert created.guild.discord_id == guild_id
   end
 
   test "handles nil optional field" do
     resource_struct = resource(%{id: 987_654_321, optional_field: nil})
 
-    result = TestApp.Discord.resource_from_discord(%{data: resource_struct})
+    created = TestApp.Discord.resource_from_discord!(%{data: resource_struct})
 
-    assert {:ok, created} = result
     assert created.optional_field == nil
   end
 end

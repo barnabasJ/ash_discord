@@ -77,7 +77,6 @@ defmodule AshDiscord.Changes.FromDiscord.Channel do
     |> maybe_set_attribute(:position, channel_data.position)
     |> maybe_set_attribute(:topic, channel_data.topic)
     |> maybe_set_attribute(:nsfw, channel_data.nsfw)
-    |> maybe_set_attribute(:guild_id, channel_data.guild_id)
     |> maybe_set_attribute(:bitrate, channel_data.bitrate)
     |> maybe_set_attribute(:user_limit, channel_data.user_limit)
     |> maybe_set_attribute(:rate_limit_per_user, channel_data.rate_limit_per_user)

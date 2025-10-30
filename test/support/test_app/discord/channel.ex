@@ -56,7 +56,7 @@ defmodule TestApp.Discord.Channel do
       default: []
     )
 
-    attribute(:guild_id, :integer,
+    attribute(:guild_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
@@ -188,6 +188,12 @@ defmodule TestApp.Discord.Channel do
   end
 
   relationships do
+    belongs_to :guild, TestApp.Discord.Guild do
+      source_attribute(:guild_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+
     belongs_to :parent, TestApp.Discord.Channel do
       source_attribute(:parent_discord_id)
       destination_attribute(:discord_id)
@@ -225,7 +231,7 @@ defmodule TestApp.Discord.Channel do
         :topic,
         :nsfw,
         :permission_overwrites,
-        :guild_id,
+        :guild_discord_id,
         :bitrate,
         :user_limit,
         :rate_limit_per_user,
@@ -280,7 +286,7 @@ defmodule TestApp.Discord.Channel do
         :topic,
         :nsfw,
         :permission_overwrites,
-        :guild_id,
+        :guild_discord_id,
         :bitrate,
         :user_limit,
         :rate_limit_per_user,
@@ -319,7 +325,7 @@ defmodule TestApp.Discord.Channel do
         :topic,
         :nsfw,
         :permission_overwrites,
-        :guild_id,
+        :guild_discord_id,
         :bitrate,
         :user_limit,
         :rate_limit_per_user,

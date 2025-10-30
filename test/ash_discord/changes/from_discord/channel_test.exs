@@ -12,28 +12,33 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
 
   describe "struct-first pattern" do
     @tag :fixed
-    test "creates channel from discord struct with all attributes" do
-      parent_id = 987_654_321
+    test "creates channel from discord struct with all attributes and relationships" do
+      parent_data = channel(%{id: 987_654_321, name: "Parent Channel", type: 4, guild_id: nil})
+      guild_id = 555_666_777
 
-      # Mock parent channel API fetch
-      Mimic.expect(Nostrum.Api.Channel, :get, fn ^parent_id ->
-        {:ok, channel(%{id: parent_id, name: "Parent Channel", type: 4})}
+      # Mock Guild API - called once for the main channel's guild
+      Mimic.expect(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild #{id}"})}
+      end)
+
+      # Mock Parent Channel API - parent will be created via API fallback
+      Mimic.expect(Nostrum.Api.Channel, :get, fn 987_654_321 ->
+        {:ok, parent_data}
       end)
 
       channel_struct =
         channel(%{
           id: 123_456_789,
           name: "test-channel",
-          # Text channel
           type: 0,
           position: 1,
           topic: "A test channel topic",
           nsfw: false,
-          parent_id: parent_id,
-          guild_id: 555_666_777
+          parent_id: parent_data.id,
+          guild_id: guild_id
         })
 
-      result = TestApp.Discord.channel_from_discord(%{data: channel_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: channel_struct}, load: [:parent])
 
       assert {:ok, created_channel} = result
       assert created_channel.discord_id == channel_struct.id
@@ -42,8 +47,53 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       assert created_channel.position == channel_struct.position
       assert created_channel.topic == channel_struct.topic
       assert created_channel.nsfw == false
-      assert created_channel.parent_discord_id == parent_id
-      assert created_channel.guild_id == channel_struct.guild_id
+      assert created_channel.guild_discord_id == channel_struct.guild_id
+      assert created_channel.parent.discord_id == parent_data.id
+      assert created_channel.parent.name == parent_data.name
+    end
+
+    @tag :fixed
+    test "creates channel with guild and parent relationships" do
+      guild_id = 111_222_333
+      parent_id = 444_555_666
+      parent_guild_id = 999_888_777
+      channel_id = 123_456_789
+
+      # Mock Guild API - will be called twice (once for parent's guild, once for channel's guild)
+      Mimic.expect(Nostrum.Api.Guild, :get, 2, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild #{id}"})}
+      end)
+
+      # Mock Parent Channel API - parent has its own guild
+      Mimic.expect(Nostrum.Api.Channel, :get, fn ^parent_id ->
+        {:ok,
+         channel(%{id: parent_id, name: "Parent Channel", type: 4, guild_id: parent_guild_id})}
+      end)
+
+      channel_struct =
+        channel(%{
+          id: channel_id,
+          name: "relationship-test",
+          type: 0,
+          guild_id: guild_id,
+          parent_id: parent_id
+        })
+
+      result =
+        TestApp.Discord.channel_from_discord(%{data: channel_struct},
+          load: [:guild, :parent]
+        )
+
+      assert {:ok, created_channel} = result
+      assert created_channel.discord_id == channel_id
+      assert created_channel.name == "relationship-test"
+
+      # Verify both relationships are loaded and correct
+      assert created_channel.guild.discord_id == guild_id
+      assert String.contains?(created_channel.guild.name, "Test Guild")
+
+      assert created_channel.parent.discord_id == parent_id
+      assert created_channel.parent.name == "Parent Channel"
     end
 
     @tag :fixed
@@ -53,6 +103,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
           id: 111_222_333,
           name: "channel-with-permissions",
           type: 0,
+          guild_id: nil,
           permission_overwrites: [
             # Role overwrite
             %{id: 123, type: 0, allow: 1024, deny: 0},
@@ -69,17 +120,14 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       assert created_channel.discord_id == channel_struct.id
       assert created_channel.name == channel_struct.name
 
-      # Verify permission overwrites transformation
       overwrites = created_channel.permission_overwrites
       assert length(overwrites) == 3
 
-      # Check first overwrite (role)
       first_overwrite = Enum.find(overwrites, &(&1["id"] == 123))
       assert first_overwrite["type"] == 0
       assert first_overwrite["allow"] == "1024"
       assert first_overwrite["deny"] == "0"
 
-      # Check second overwrite (member)
       second_overwrite = Enum.find(overwrites, &(&1["id"] == 456))
       assert second_overwrite["type"] == 1
       assert second_overwrite["allow"] == "0"
@@ -93,6 +141,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
           id: 444_555_666,
           name: "channel-no-permissions",
           type: 0,
+          guild_id: nil,
           permission_overwrites: nil
         })
 
@@ -104,6 +153,13 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
 
     @tag :fixed
     test "handles voice channel type" do
+      guild_id = 111_222_333
+
+      # Mock Guild API
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Voice Guild"})}
+      end)
+
       voice_channel_struct =
         channel(%{
           id: 777_888_999,
@@ -111,7 +167,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
           # Voice channel
           type: 2,
           position: 5,
-          guild_id: 111_222_333
+          guild_id: guild_id
         })
 
       result = TestApp.Discord.channel_from_discord(%{data: voice_channel_struct})
@@ -131,7 +187,8 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
           name: "Category",
           # Category channel
           type: 4,
-          position: 0
+          position: 0,
+          guild_id: nil
         })
 
       result = TestApp.Discord.channel_from_discord(%{data: category_struct})
@@ -155,7 +212,8 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
            name: "api-fetched-channel",
            type: 0,
            topic: "Fetched from Discord API",
-           position: 10
+           position: 10,
+           guild_id: nil
          })}
       end)
 
@@ -174,19 +232,18 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
     test "updates existing channel instead of creating duplicate" do
       discord_id = 555_666_777
 
-      # Create initial channel
       initial_struct =
         channel(%{
           id: discord_id,
           name: "original-channel",
           type: 0,
-          topic: "Original topic"
+          topic: "Original topic",
+          guild_id: nil
         })
 
       {:ok, original_channel} =
         TestApp.Discord.channel_from_discord(%{data: initial_struct})
 
-      # Update same channel with new data
       updated_struct =
         channel(%{
           # Same ID
@@ -195,7 +252,8 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
           type: 0,
           topic: "Updated topic",
           position: 5,
-          nsfw: true
+          nsfw: true,
+          guild_id: nil
         })
 
       {:ok, updated_channel} =
@@ -222,6 +280,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
           id: discord_id,
           name: "permissions-channel",
           type: 0,
+          guild_id: nil,
           permission_overwrites: [
             %{id: 123, type: 0, allow: 1024, deny: 0}
           ]
@@ -237,6 +296,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
           id: discord_id,
           name: "permissions-channel",
           type: 0,
+          guild_id: nil,
           permission_overwrites: [
             # Updated permissions
             %{id: 123, type: 0, allow: 2048, deny: 1024},

@@ -25,13 +25,13 @@ defmodule TestApp.Discord.VoiceReady do
   attributes do
     uuid_primary_key(:id)
 
-    attribute(:channel_id, :integer,
+    attribute(:channel_discord_id, :integer,
       allow_nil?: false,
       public?: true,
       description: "Channel ID that voice is ready in"
     )
 
-    attribute(:guild_id, :integer,
+    attribute(:guild_discord_id, :integer,
       allow_nil?: false,
       public?: true,
       description: "Guild ID that voice is ready in"
@@ -40,8 +40,22 @@ defmodule TestApp.Discord.VoiceReady do
     create_timestamp(:inserted_at)
   end
 
+  relationships do
+    belongs_to :channel, TestApp.Discord.Channel do
+      source_attribute(:channel_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+
+    belongs_to :guild, TestApp.Discord.Guild do
+      source_attribute(:guild_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+  end
+
   identities do
-    identity :discord_id, [:channel_id, :guild_id] do
+    identity :discord_id, [:channel_discord_id, :guild_discord_id] do
       pre_check_with(TestApp.Discord)
     end
   end
@@ -66,8 +80,8 @@ defmodule TestApp.Discord.VoiceReady do
         case Ash.Changeset.get_argument(changeset, :data) do
           %AshDiscord.Consumer.Payloads.VoiceReadyEvent{} = data ->
             changeset
-            |> Ash.Changeset.force_change_attribute(:channel_id, data.channel_id)
-            |> Ash.Changeset.force_change_attribute(:guild_id, data.guild_id)
+            |> Ash.Changeset.force_change_attribute(:channel_discord_id, data.channel_id)
+            |> Ash.Changeset.force_change_attribute(:guild_discord_id, data.guild_id)
 
           _ ->
             Ash.Changeset.add_error(
@@ -79,7 +93,7 @@ defmodule TestApp.Discord.VoiceReady do
 
       upsert?(true)
       upsert_identity(:discord_id)
-      upsert_fields([:channel_id, :guild_id])
+      upsert_fields([:channel_discord_id, :guild_discord_id])
     end
   end
 end

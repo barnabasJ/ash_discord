@@ -31,7 +31,7 @@ defmodule TestApp.Discord.VoiceServerUpdate do
       description: "Voice connection token"
     )
 
-    attribute(:guild_id, :integer,
+    attribute(:guild_discord_id, :integer,
       allow_nil?: false,
       public?: true,
       description: "Guild ID this voice server update is for"
@@ -46,8 +46,16 @@ defmodule TestApp.Discord.VoiceServerUpdate do
     create_timestamp(:inserted_at)
   end
 
+  relationships do
+    belongs_to :guild, TestApp.Discord.Guild do
+      source_attribute(:guild_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+  end
+
   identities do
-    identity :discord_id, [:guild_id] do
+    identity :discord_id, [:guild_discord_id] do
       pre_check_with(TestApp.Discord)
     end
   end
@@ -73,7 +81,7 @@ defmodule TestApp.Discord.VoiceServerUpdate do
           %AshDiscord.Consumer.Payloads.VoiceServerUpdateEvent{} = data ->
             changeset
             |> Ash.Changeset.force_change_attribute(:token, data.token)
-            |> Ash.Changeset.force_change_attribute(:guild_id, data.guild_id)
+            |> Ash.Changeset.force_change_attribute(:guild_discord_id, data.guild_id)
             |> maybe_set_endpoint(data.endpoint)
 
           _ ->

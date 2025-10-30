@@ -21,17 +21,17 @@ defmodule TestApp.Discord.VoiceState do
   attributes do
     uuid_primary_key(:id)
 
-    attribute(:user_id, :integer,
+    attribute(:user_discord_id, :integer,
       allow_nil?: false,
       public?: true
     )
 
-    attribute(:channel_id, :integer,
+    attribute(:channel_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
 
-    attribute(:guild_id, :integer,
+    attribute(:guild_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
@@ -89,8 +89,30 @@ defmodule TestApp.Discord.VoiceState do
     )
   end
 
+  relationships do
+    belongs_to :user, TestApp.Discord.User do
+      source_attribute(:user_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+
+    belongs_to :channel, TestApp.Discord.Channel do
+      source_attribute(:channel_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+      allow_nil?(true)
+    end
+
+    belongs_to :guild, TestApp.Discord.Guild do
+      source_attribute(:guild_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+      allow_nil?(true)
+    end
+  end
+
   identities do
-    identity :discord_id, [:user_id, :guild_id] do
+    identity :discord_id, [:user_discord_id, :guild_discord_id] do
       pre_check_with(TestApp.Discord)
     end
   end
@@ -117,8 +139,8 @@ defmodule TestApp.Discord.VoiceState do
       upsert_identity(:discord_id)
 
       upsert_fields([
-        :channel_id,
-        :guild_id,
+        :channel_discord_id,
+        :guild_discord_id,
         :session_id,
         :deaf,
         :mute,
@@ -135,8 +157,8 @@ defmodule TestApp.Discord.VoiceState do
       primary?(true)
 
       accept([
-        :channel_id,
-        :guild_id,
+        :channel_discord_id,
+        :guild_discord_id,
         :session_id,
         :deaf,
         :mute,

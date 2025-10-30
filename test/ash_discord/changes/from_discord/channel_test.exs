@@ -16,12 +16,10 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       parent_data = channel(%{id: 987_654_321, name: "Parent Channel", type: 4, guild_id: nil})
       guild_id = 555_666_777
 
-      # Mock Guild API - called once for the main channel's guild
       Mimic.expect(Nostrum.Api.Guild, :get, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild #{id}"})}
       end)
 
-      # Mock Parent Channel API - parent will be created via API fallback
       Mimic.expect(Nostrum.Api.Channel, :get, fn 987_654_321 ->
         {:ok, parent_data}
       end)

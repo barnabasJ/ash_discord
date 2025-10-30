@@ -2,6 +2,16 @@
 
 Apply quality test patterns to fix a from_discord change test file.
 
+## Cleanup Phase Context
+
+**IMPORTANT**: We are in a cleanup phase of ash_discord where:
+
+- Only tests tagged with `:fixed` are currently passing
+- Tests without `:fixed` tag may not be working yet
+- **DO NOT break any `:fixed` tests** - they represent working functionality
+- After refactoring and verifying tests, **mark them with `@tag :fixed`**
+- This helps track progress through the cleanup phase
+
 ## Command Behavior
 
 When the user provides a test file path, analyze and refactor it using the
@@ -75,7 +85,7 @@ end
 Example:
 
 ```elixir
-describe "struct-first pattern" do
+describe "create from data" do
   test "creates resource from discord struct with all attributes" do
     Mimic.expect(Nostrum.Api.User, :get, fn user_id ->
       {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
@@ -272,7 +282,16 @@ end
    - Remove `Mimic.copy` from setup if present
    - Remove any helper functions - inline mocks instead
 7. **Verify changes** - ensure tests still pass
-8. **Commit with descriptive message** following the pattern:
+8. **Mark tests with :fixed tag** - add `@tag :fixed` to all passing tests:
+   - This tracks which tests have been fixed during cleanup
+   - Only tests tagged with `:fixed` should be passing
+   - Place tag immediately before each test definition
+   - Example:
+     ```elixir
+     @tag :fixed
+     test "creates resource from discord struct" do
+     ```
+9. **Commit with descriptive message** following the pattern:
 
    ```
    test: apply quality patterns to [resource] from_discord tests
@@ -282,13 +301,15 @@ end
    - Test upsert behavior to prevent duplicates (struct-first only)
    - Mock related resource API calls instead of pre-creating records
    - Organize tests into clear describe blocks
+   - Mark all passing tests with :fixed tag
    ```
 
-9. **Run comprehensive review** - use `/review` command to verify:
-   - All test patterns are correctly implemented
-   - Mimic usage follows conventions (no copy in setup)
-   - Upsert behavior is properly verified
-   - API mocks cover all necessary related resources
+10. **Run comprehensive review** - use `/review` command to verify:
+    - All test patterns are correctly implemented
+    - Mimic usage follows conventions (no copy in setup)
+    - Upsert behavior is properly verified
+    - API mocks cover all necessary related resources
+    - All passing tests have :fixed tag
 
 ## Example Transformation
 

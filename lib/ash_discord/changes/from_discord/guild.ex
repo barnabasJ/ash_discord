@@ -35,7 +35,10 @@ defmodule AshDiscord.Changes.FromDiscord.Guild do
           # No data provided, fetch from API using identity
           identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
 
-          case ApiFetchers.fetch_guild(identity) do
+          # Extract discord_id from identity map
+          discord_id = if is_map(identity), do: identity.discord_id, else: identity
+
+          case ApiFetchers.fetch_guild(discord_id) do
             {:ok, %Payloads.Guild{} = guild_data} ->
               transform_guild(changeset, guild_data)
 

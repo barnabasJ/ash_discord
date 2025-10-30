@@ -44,7 +44,11 @@ defmodule AshDiscord.Changes.FromDiscord.Channel do
         Ash.Changeset.before_transaction(changeset, fn changeset ->
           identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
 
-          case ApiFetchers.fetch_channel(identity) do
+          # Extract discord_id from identity (can be integer or map with discord_id key)
+          discord_id =
+            if is_map(identity), do: Map.get(identity, :discord_id, identity), else: identity
+
+          case ApiFetchers.fetch_channel(discord_id) do
             {:ok, %Payloads.Channel{} = channel_data} ->
               transform_channel(changeset, channel_data)
 

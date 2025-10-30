@@ -40,14 +40,18 @@ defmodule TestApp.Discord.ChannelPinsUpdate do
     )
   end
 
+  identities do
+    identity(:channel_discord_id, [:channel_discord_id], pre_check_with: TestApp.Discord)
+  end
+
   code_interface do
     define(:read)
   end
 
   relationships do
     belongs_to :guild, TestApp.Discord.Guild do
-      description "The guild this channel pins update belongs to"
-      public? true
+      description("The guild this channel pins update belongs to")
+      public?(true)
       destination_attribute(:discord_id)
       source_attribute(:guild_discord_id)
     end
@@ -67,13 +71,15 @@ defmodule TestApp.Discord.ChannelPinsUpdate do
       primary?(true)
 
       argument(:data, AshDiscord.Consumer.Payloads.ChannelPinsUpdateEvent,
-        allow_nil?: false,
+        allow_nil?: true,
         description: "Discord channel pins update TypedStruct data"
       )
 
       change(AshDiscord.Changes.FromDiscord.ChannelPinsUpdate)
 
-      upsert_fields([:channel_discord_id, :guild_discord_id, :last_pin_timestamp])
+      upsert?(true)
+      upsert_identity(:channel_discord_id)
+      upsert_fields([:guild_discord_id, :last_pin_timestamp])
     end
 
     update :update do

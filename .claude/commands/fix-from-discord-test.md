@@ -11,10 +11,12 @@ established quality patterns from GuildMember and User from_discord tests.
 
 ### 1. Comprehensive Test Structure
 
-Tests should cover two main areas:
+Tests should cover three main areas:
 
 - **struct-first pattern**: Creating from Discord data structs
-- **upsert behavior**: Verify updates instead of duplicates
+- **API fallback pattern**: Creating from identity using Nostrum API (when
+  applicable)
+- **upsert behavior**: Verify updates instead of duplicates (struct-first only)
 
 ### 2. Mock Related Resource API Calls
 
@@ -105,12 +107,70 @@ describe "struct-first pattern" do
 end
 ```
 
-### 4. Upsert Behavior Tests
+### 4. API Fallback Pattern Tests (When Applicable)
+
+- **CRITICAL**: Only test API fallback if the resource can be fetched from
+  Discord API via Nostrum
+- Check Nostrum.Api modules for available API endpoints (e.g.,
+  `Nostrum.Api.User.get/1`, `Nostrum.Api.Guild.member/2`)
+- Inline mock all Nostrum API calls using Mimic.expect
+- Mock both the primary resource API call AND related resource API calls
+- **Test in separate describe block** - do NOT test in upsert block
+
+Example:
+
+```elixir
+describe "API fallback pattern" do
+  test "fetches resource from API when data not provided" do
+    guild_id = 555_666_777
+    user_id = 999_888_777
+
+    # Mock the primary resource API call
+    Mimic.expect(Nostrum.Api.Guild, :member, fn ^guild_id, ^user_id ->
+      {:ok,
+       guild_member(%{
+         user_id: user_id,
+         nick: "API_Fetched_Nick",
+         joined_at: to_unix_ms("2023-06-15T10:00:00Z"),
+         deaf: false,
+         mute: true
+       })}
+    end)
+
+    # Mock related resource API calls
+    Mimic.expect(Nostrum.Api.User, :get, fn ^user_id ->
+      {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
+    end)
+
+    Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+      {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+    end)
+
+    result =
+      TestApp.Discord.resource_from_discord(%{
+        identity: %{guild_discord_id: guild_id, user_discord_id: user_id}
+      })
+
+    assert {:ok, created} = result
+    assert created.user_discord_id == user_id
+    assert created.guild_discord_id == guild_id
+    assert created.nick == "API_Fetched_Nick"
+  end
+end
+```
+
+**Note**: Skip API fallback tests entirely if:
+
+- No Nostrum API endpoint exists for fetching the resource
+- The resource is only created through events, not fetchable directly
+
+### 5. Upsert Behavior Tests
 
 - Verify that calling `from_discord` twice with same identity updates the record
 - Check that Ash ID remains the same (proves upsert, not duplicate creation)
 - Test attribute updates work correctly
 - Inline mock related resource API calls
+- **IMPORTANT**: Test upsert with struct-first pattern only, NOT API fallback
 
 Example:
 
@@ -172,7 +232,7 @@ describe "upsert behavior" do
 end
 ```
 
-### 5. Test Organization
+### 6. Test Organization
 
 - Group tests by behavior using `describe` blocks
 - Use clear, descriptive test names
@@ -180,7 +240,7 @@ end
 - Add `use Mimic` at module level if any tests need mocking
 - Inline all mocks directly in tests - no helper functions
 
-### 6. Mimic Setup
+### 7. Mimic Setup
 
 - **DO NOT add `Mimic.copy` calls** - already handled in test_helper.exs
 - Only add `use Mimic` at module level if testing needs mocking
@@ -194,29 +254,37 @@ end
    - Required vs optional attributes
    - Foreign key relationships (to know which API calls to mock)
    - Identity fields (for upsert behavior)
-3. **Analyze patterns** - identify which quality improvements apply
-4. **Create todo list** with specific refactoring tasks
-5. **Apply refactorings systematically**:
+3. **Research Nostrum API availability**:
+   - Check if Nostrum.Api has endpoints to fetch this resource
+   - Identify which related resource API calls need mocking
+   - If yes, include API fallback tests
+   - If no, skip API fallback pattern entirely
+4. **Analyze patterns** - identify which quality improvements apply
+5. **Create todo list** with specific refactoring tasks
+6. **Apply refactorings systematically**:
    - Add module documentation
    - Add `use Mimic` if API mocking needed
-   - Organize tests into describe blocks (struct-first, upsert)
+   - Organize tests into describe blocks (struct-first, API fallback if
+     applicable, upsert)
    - Create struct-first pattern tests with inline mocks
-   - Add upsert behavior tests with inline mocks
+   - Add API fallback tests (if applicable) with inline Mimic.expect
+   - Add upsert behavior tests with inline mocks (struct-first only)
    - Remove `Mimic.copy` from setup if present
    - Remove any helper functions - inline mocks instead
-6. **Verify changes** - ensure tests still pass
-7. **Commit with descriptive message** following the pattern:
+7. **Verify changes** - ensure tests still pass
+8. **Commit with descriptive message** following the pattern:
 
    ```
    test: apply quality patterns to [resource] from_discord tests
 
    - Add comprehensive struct-first pattern tests
-   - Test upsert behavior to prevent duplicates
+   - Add API fallback pattern tests (if applicable)
+   - Test upsert behavior to prevent duplicates (struct-first only)
    - Mock related resource API calls instead of pre-creating records
    - Organize tests into clear describe blocks
    ```
 
-8. **Run comprehensive review** - use `/review` command to verify:
+9. **Run comprehensive review** - use `/review` command to verify:
    - All test patterns are correctly implemented
    - Mimic usage follows conventions (no copy in setup)
    - Upsert behavior is properly verified
@@ -252,7 +320,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
   @moduledoc """
   Comprehensive tests for GuildMember entity from_discord transformation.
 
-  Tests struct-first pattern and upsert behavior.
+  Tests struct-first pattern, API fallback pattern, and upsert behavior.
   """
 
   use TestApp.DataCase, async: true
@@ -321,6 +389,46 @@ defmodule AshDiscord.Changes.FromDiscord.GuildMemberTest do
       assert created_member.user_discord_id == member_struct.user_id
       assert created_member.nick == nil
       assert created_member.joined_at == ~U[2023-02-20 15:45:00Z]
+    end
+  end
+
+  describe "API fallback pattern" do
+    test "fetches guild member from API when data not provided" do
+      guild_id = 555_666_777
+      user_id = 999_888_777
+
+      Mimic.expect(Nostrum.Api.Guild, :member, fn ^guild_id, ^user_id ->
+        {:ok,
+         guild_member(%{
+           user_id: user_id,
+           nick: "API_Fetched_Nick",
+           joined_at: to_unix_ms("2023-06-15T10:00:00Z"),
+           deaf: false,
+           mute: true,
+           roles: [123_456, 789_012]
+         })}
+      end)
+
+      Mimic.expect(Nostrum.Api.User, :get, fn ^user_id ->
+        {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
+      end)
+
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
+      result =
+        TestApp.Discord.guild_member_from_discord(%{
+          identity: %{guild_discord_id: guild_id, user_discord_id: user_id}
+        })
+
+      assert {:ok, created_member} = result
+      assert created_member.user_discord_id == user_id
+      assert created_member.guild_discord_id == guild_id
+      assert created_member.nick == "API_Fetched_Nick"
+      assert created_member.mute == true
+      assert created_member.deaf == false
+      assert created_member.roles == [123_456, 789_012]
     end
   end
 

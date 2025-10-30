@@ -16,7 +16,6 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
       channel_id = 123_456_789
       guild_id = 987_654_321
 
-      # Mock related resource API calls
       Mimic.expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
         {:ok, channel(%{id: channel_id, name: "test-channel"})}
       end)
@@ -44,7 +43,6 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
     test "handles channel pins update without guild_id (DM channels)" do
       channel_id = 111_222_333
 
-      # Mock channel API call (no guild for DM channels)
       Mimic.expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
         {:ok, channel(%{id: channel_id, name: "dm-channel", guild_id: nil})}
       end)
@@ -69,7 +67,6 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
       channel_id = 444_555_666
       guild_id = 777_888_999
 
-      # Mock related resource API calls
       Mimic.expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
         {:ok, channel(%{id: channel_id, name: "test-channel"})}
       end)
@@ -97,7 +94,6 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
   describe "data requirement (no API fallback)" do
     @tag :fixed
     test "requires data argument - API fallback not supported for ephemeral events" do
-      # ChannelPinsUpdate events are ephemeral and not fetchable from API
       result = TestApp.Discord.channel_pins_update_from_discord(%{})
 
       assert {:error, error} = result
@@ -125,7 +121,6 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
       channel_id = 555_666_777
       guild_id = 888_999_000
 
-      # Mock related resource API calls
       Mimic.expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
         {:ok, channel(%{id: channel_id, name: "test-channel"})}
       end)
@@ -145,10 +140,8 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
       {:ok, original_pins} =
         TestApp.Discord.channel_pins_update_from_discord(%{data: initial_struct})
 
-      # Update same channel with new timestamp
       updated_struct =
         channel_pins_update(%{
-          # Same channel_id
           channel_id: channel_id,
           guild_id: guild_id,
           last_pin_timestamp: ~U[2025-01-15 12:00:00Z]
@@ -157,11 +150,8 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
       {:ok, updated_pins} =
         TestApp.Discord.channel_pins_update_from_discord(%{data: updated_struct})
 
-      # Should be same record (same Ash ID)
       assert updated_pins.id == original_pins.id
       assert updated_pins.channel_discord_id == channel_id
-
-      # But with updated timestamp
       assert updated_pins.last_pin_timestamp == ~U[2025-01-15 12:00:00Z]
     end
 
@@ -171,12 +161,10 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
       initial_guild_id = 111_111_111
       new_guild_id = 222_222_222
 
-      # Mock channel API call (may be called multiple times)
       Mimic.stub(Nostrum.Api.Channel, :get, fn ^channel_id ->
         {:ok, channel(%{id: channel_id, name: "test-channel"})}
       end)
 
-      # Mock both guild API calls (may be called multiple times)
       Mimic.stub(Nostrum.Api.Guild, :get, fn guild_id
                                              when guild_id in [initial_guild_id, new_guild_id] ->
         {:ok, guild(%{id: guild_id, name: "Test Guild #{guild_id}"})}
@@ -193,10 +181,8 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
       {:ok, original_pins} =
         TestApp.Discord.channel_pins_update_from_discord(%{data: initial_struct})
 
-      # Update with different guild (channel moved to guild B)
       updated_struct =
         channel_pins_update(%{
-          # Same channel_id
           channel_id: channel_id,
           guild_id: new_guild_id,
           last_pin_timestamp: ~U[2025-01-15 11:00:00Z]
@@ -205,11 +191,8 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
       {:ok, updated_pins} =
         TestApp.Discord.channel_pins_update_from_discord(%{data: updated_struct})
 
-      # Should be same record
       assert updated_pins.id == original_pins.id
       assert updated_pins.channel_discord_id == channel_id
-
-      # But with updated guild_id
       assert updated_pins.guild_discord_id == new_guild_id
       assert updated_pins.last_pin_timestamp == ~U[2025-01-15 11:00:00Z]
     end
@@ -231,7 +214,6 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
 
     @tag :fixed
     test "handles missing channel_id in data" do
-      # Create an invalid struct missing channel_id
       pins_struct =
         channel_pins_update(%{
           channel_id: nil,

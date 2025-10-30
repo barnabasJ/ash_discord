@@ -197,34 +197,4 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
       assert updated_pins.last_pin_timestamp == ~U[2025-01-15 11:00:00Z]
     end
   end
-
-  describe "error handling" do
-    @tag :fixed
-    test "handles invalid data argument format" do
-      result = TestApp.Discord.channel_pins_update_from_discord(%{data: "not_a_struct"})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-
-      # The error could be from type casting or from the change validation
-      assert error_message =~ "Invalid" or
-               error_message =~ "expected" or
-               error_message =~ "AshDiscord.Consumer.Payloads.ChannelPinsUpdateEvent"
-    end
-
-    @tag :fixed
-    test "handles missing channel_id in data" do
-      pins_struct =
-        channel_pins_update(%{
-          channel_id: nil,
-          guild_id: 123_456_789
-        })
-
-      result = TestApp.Discord.channel_pins_update_from_discord(%{data: pins_struct})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "is required" or error_message =~ "must not be nil"
-    end
-  end
 end

@@ -28,6 +28,10 @@ Tests should cover three main areas:
   applicable)
 - **upsert behavior**: Verify updates instead of duplicates (struct-first only)
 
+**Note**: Do NOT include error handling tests (invalid data formats, missing
+required fields, etc.). We assume correct data from Discord and focus only on
+successful transformation patterns.
+
 ### 2. Mock Related Resource API Calls
 
 - **CRITICAL**: For resources with relationships, mock the Nostrum API calls

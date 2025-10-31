@@ -85,7 +85,6 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       assert created_channel.discord_id == channel_id
       assert created_channel.name == "relationship-test"
 
-      # Verify both relationships are loaded and correct
       assert created_channel.guild.discord_id == guild_id
       assert String.contains?(created_channel.guild.name, "Test Guild")
 
@@ -211,20 +210,15 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       parent_guild_id = 999_888_777
       owner_id = 333_222_111
 
-      # Mock Guild API - will be called twice (once for parent's guild, once for channel's guild)
-      # TODO: we need a way to break cycles in our from_discord changes
-      # to avoid these double api calls/inserts
       Mimic.expect(Nostrum.Api.Guild, :get, 2, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild #{id}"})}
       end)
 
-      # Mock Parent Channel API - parent has its own guild
       Mimic.expect(Nostrum.Api.Channel, :get, fn ^parent_id ->
         {:ok,
          channel(%{id: parent_id, name: "Parent Channel", type: 4, guild_id: parent_guild_id})}
       end)
 
-      # Mock User API for owner
       Mimic.expect(Nostrum.Api.User, :get, fn ^owner_id ->
         {:ok,
          user(%{
@@ -254,13 +248,10 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       assert {:ok, created_channel} = result
       assert created_channel.discord_id == channel_id
       assert created_channel.name == "channel-with-all-relationships"
-
       assert created_channel.guild.discord_id == guild_id
       assert created_channel.guild.name == "Test Guild #{guild_id}"
-
       assert created_channel.parent.discord_id == parent_id
       assert created_channel.parent.name == "Parent Channel"
-
       assert created_channel.owner.discord_id == owner_id
       assert created_channel.owner.discord_username == "channel_owner"
     end
@@ -269,7 +260,6 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
     test "handles voice channel type" do
       guild_id = 111_222_333
 
-      # Mock Guild API
       Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
         {:ok, guild(%{id: guild_id, name: "Voice Guild"})}
       end)

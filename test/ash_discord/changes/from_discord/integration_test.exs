@@ -15,7 +15,7 @@ defmodule AshDiscord.Changes.FromDiscord.IntegrationTest do
     test "creates integration from discord struct with all attributes" do
       guild_id = 555_666_777
 
-      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
         {:ok, guild(%{id: guild_id, name: "Test Guild"})}
       end)
 
@@ -53,6 +53,7 @@ defmodule AshDiscord.Changes.FromDiscord.IntegrationTest do
       assert created_integration.name == integration_struct.name
       assert created_integration.type == "discord"
       assert created_integration.enabled == true
+      assert created_integration.guild_discord_id == guild_id
       assert created_integration.account_discord_id == "account123"
       assert created_integration.account_name == "Test Account"
       assert created_integration.application_discord_id == 999_888_777
@@ -64,7 +65,7 @@ defmodule AshDiscord.Changes.FromDiscord.IntegrationTest do
     test "handles integration without application (non-Discord type)" do
       guild_id = 555_666_777
 
-      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
         {:ok, guild(%{id: guild_id, name: "Test Guild"})}
       end)
 
@@ -92,6 +93,7 @@ defmodule AshDiscord.Changes.FromDiscord.IntegrationTest do
       assert created_integration.discord_id == integration_struct.id
       assert created_integration.name == "Twitch Stream"
       assert created_integration.type == "twitch"
+      assert created_integration.guild_discord_id == guild_id
       assert created_integration.account_discord_id == "twitch_account"
       assert created_integration.account_name == "Twitch User"
       assert created_integration.application_discord_id == nil
@@ -103,7 +105,7 @@ defmodule AshDiscord.Changes.FromDiscord.IntegrationTest do
     test "handles disabled integration" do
       guild_id = 555_666_777
 
-      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
         {:ok, guild(%{id: guild_id, name: "Test Guild"})}
       end)
 
@@ -124,8 +126,11 @@ defmodule AshDiscord.Changes.FromDiscord.IntegrationTest do
           load: [:guild]
         )
 
-      assert created_integration.enabled == false
+      assert created_integration.discord_id == integration_struct.id
+      assert created_integration.name == "Disabled Integration"
       assert created_integration.type == "youtube"
+      assert created_integration.enabled == false
+      assert created_integration.guild_discord_id == guild_id
       assert created_integration.guild.discord_id == guild_id
     end
   end
@@ -135,7 +140,7 @@ defmodule AshDiscord.Changes.FromDiscord.IntegrationTest do
     test "updates existing integration instead of creating duplicate" do
       guild_id = 555_666_777
 
-      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
         {:ok, guild(%{id: guild_id, name: "Test Guild"})}
       end)
 
@@ -143,6 +148,7 @@ defmodule AshDiscord.Changes.FromDiscord.IntegrationTest do
         integration(%{
           id: 123_456_789,
           name: "Original Name",
+          type: "discord",
           enabled: true,
           guild_id: guild_id
         })
@@ -155,6 +161,7 @@ defmodule AshDiscord.Changes.FromDiscord.IntegrationTest do
         integration(%{
           id: 123_456_789,
           name: "Updated Name",
+          type: "discord",
           enabled: false,
           guild_id: guild_id,
           account: integration_struct.account,
@@ -167,6 +174,7 @@ defmodule AshDiscord.Changes.FromDiscord.IntegrationTest do
 
       assert updated.id == original.id
       assert updated.discord_id == 123_456_789
+      assert updated.guild_discord_id == guild_id
       assert updated.name == "Updated Name"
       assert updated.enabled == false
     end

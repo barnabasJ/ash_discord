@@ -171,6 +171,44 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
       assert created_emoji.custom == false
       assert created_emoji.guild.discord_id == guild_id
     end
+
+    @tag :fixed
+    test "creates emoji with creator user relationship" do
+      guild_id = 444_555_666
+      user_id = 888_999_000
+
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
+      Mimic.expect(Nostrum.Api.User, :get, fn ^user_id ->
+        {:ok, user(%{id: user_id, username: "emoji_creator", discriminator: "0001"})}
+      end)
+
+      emoji_struct =
+        emoji(%{
+          id: 222_333_444,
+          name: "custom_with_creator",
+          animated: false,
+          managed: false,
+          require_colons: true,
+          user: %{id: user_id, username: "emoji_creator", discriminator: "0001"}
+        })
+
+      created_emoji =
+        TestApp.Discord.emoji_from_discord!(
+          %{
+            data: emoji_struct,
+            identity: %{guild_id: guild_id}
+          },
+          load: [:guild, :user]
+        )
+
+      assert created_emoji.discord_id == emoji_struct.id
+      assert created_emoji.name == "custom_with_creator"
+      assert created_emoji.guild.discord_id == guild_id
+      assert created_emoji.user.discord_id == user_id
+    end
   end
 
   describe "API fallback pattern" do

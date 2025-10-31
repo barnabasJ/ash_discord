@@ -30,6 +30,12 @@ defmodule TestApp.Discord.Emoji do
       description: "Discord guild ID that owns this emoji"
     )
 
+    attribute(:user_discord_id, :integer,
+      allow_nil?: true,
+      public?: true,
+      description: "Discord user ID of emoji creator"
+    )
+
     attribute(:name, :string,
       allow_nil?: false,
       public?: true
@@ -63,6 +69,12 @@ defmodule TestApp.Discord.Emoji do
   relationships do
     belongs_to :guild, TestApp.Discord.Guild do
       source_attribute(:guild_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+
+    belongs_to :user, TestApp.Discord.User do
+      source_attribute(:user_discord_id)
       destination_attribute(:discord_id)
       attribute_writable?(true)
     end

@@ -92,13 +92,8 @@ defmodule TestApp.Discord.Integration do
       primary?(true)
 
       argument(:data, AshDiscord.Consumer.Payloads.Integration,
-        allow_nil?: true,
-        description: "Discord integration TypedStruct data"
-      )
-
-      argument(:identity, :map,
-        allow_nil?: true,
-        description: "Map with guild_id and integration_id for API fallback"
+        allow_nil?: false,
+        description: "Discord integration TypedStruct data (required - no API fallback)"
       )
 
       change(AshDiscord.Changes.FromDiscord.Integration)

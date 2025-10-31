@@ -6,14 +6,12 @@ defmodule AshDiscord.Changes.FromDiscord.Integration do
 
   ## Arguments
 
-  - `:data` - TypedStruct `AshDiscord.Consumer.Payloads.Integration.t()` with Discord integration data
-  - `:identity` - Not used (integrations don't support API fallback; guild_id comes from data)
+  - `:data` - TypedStruct `AshDiscord.Consumer.Payloads.Integration.t()` with Discord integration data (required)
 
   ## Example
 
       create :from_discord do
-        argument :data, AshDiscord.Consumer.Payloads.Integration
-        argument :identity, :map
+        argument :data, AshDiscord.Consumer.Payloads.Integration, allow_nil?: false
 
         change AshDiscord.Changes.FromDiscord.Integration
       end
@@ -21,8 +19,9 @@ defmodule AshDiscord.Changes.FromDiscord.Integration do
   ## Note
 
   Unlike other from_discord implementations, Integration does not support API fallback since
-  integrations can only be retrieved via guild-level API calls. The guild_id is obtained
-  directly from the integration_data.guild_id field.
+  integrations can only be retrieved via guild-level API calls (`Nostrum.Api.Guild.integrations/1`).
+  Therefore, this action does not accept an `identity` argument. The guild_id is obtained
+  directly from the integration_data.guild_id field in the payload.
   """
 
   use Ash.Resource.Change
@@ -44,8 +43,7 @@ defmodule AshDiscord.Changes.FromDiscord.Integration do
 
         %Payloads.Integration{} = integration_data ->
           # Data provided directly, use it
-          identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
-          transform_integration(changeset, integration_data, identity)
+          transform_integration(changeset, integration_data)
 
         other ->
           Ash.Changeset.add_error(
@@ -56,7 +54,7 @@ defmodule AshDiscord.Changes.FromDiscord.Integration do
     end)
   end
 
-  defp transform_integration(changeset, integration_data, _identity) do
+  defp transform_integration(changeset, integration_data) do
     changeset
     |> maybe_set_attribute(:discord_id, integration_data.id)
     |> maybe_set_attribute(:name, integration_data.name)

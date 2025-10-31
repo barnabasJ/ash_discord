@@ -199,6 +199,31 @@ end
 - No Nostrum API endpoint exists for fetching the resource
 - The resource is only created through events, not fetchable directly
 
+**IMPORTANT - Resources Without API Fallback:**
+
+For resources that don't support API fallback (like Integration, which can only
+be fetched via `Nostrum.Api.Guild.integrations/1`):
+
+1. **Remove the `identity` argument** from the action definition entirely
+
+   - The identity argument is specifically for API fallback (fetching from
+     Discord when data is nil)
+   - If the resource doesn't support individual fetching, the identity serves no
+     purpose
+   - Example: `argument(:data, ..., allow_nil?: false)` (no identity argument)
+
+2. **Get IDs from the payload** instead of from identity
+
+   - Most payloads include necessary IDs like `guild_id` in the data structure
+   - Read these directly: `integration_data.guild_id`
+
+3. **Update documentation** to clarify no API fallback support
+
+   - Change implementation should document why identity isn't accepted
+   - Test module should explain the resource can't be fetched individually
+
+4. **Tests don't pass identity** - just `%{data: payload}`
+
 ### 5. Upsert Behavior Tests
 
 - Verify that calling `from_discord` twice with same identity updates the record

@@ -13,10 +13,7 @@ defmodule AshDiscord.Consumer.Handler.Integration do
     case Handler.invoke_configured_action(
            :INTEGRATION_CREATE,
            %{integration_id: integration.id, guild_id: integration.guild_id},
-           %{
-             data: integration,
-             identity: %{integration_id: integration.id, guild_id: integration.guild_id}
-           },
+           %{data: integration},
            context
          ) do
       {:ok, _} -> :ok
@@ -33,10 +30,7 @@ defmodule AshDiscord.Consumer.Handler.Integration do
     case Handler.invoke_configured_action(
            :INTEGRATION_UPDATE,
            %{integration_id: integration.id, guild_id: integration.guild_id},
-           %{
-             data: integration,
-             identity: %{integration_id: integration.id, guild_id: integration.guild_id}
-           },
+           %{data: integration},
            context
          ) do
       {:ok, _} -> :ok

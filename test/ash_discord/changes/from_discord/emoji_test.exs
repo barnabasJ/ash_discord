@@ -23,13 +23,12 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
           require_colons: true
         })
 
-      result =
-        TestApp.Discord.emoji_from_discord(%{
+      created_emoji =
+        TestApp.Discord.emoji_from_discord!(%{
           data: emoji_struct,
           identity: %{guild_id: guild_id}
         })
 
-      assert {:ok, created_emoji} = result
       assert created_emoji.discord_id == emoji_struct.id
       assert created_emoji.name == emoji_struct.name
       assert created_emoji.animated == false
@@ -51,13 +50,12 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
           require_colons: true
         })
 
-      result =
-        TestApp.Discord.emoji_from_discord(%{
+      created_emoji =
+        TestApp.Discord.emoji_from_discord!(%{
           data: emoji_struct,
           identity: %{guild_id: guild_id}
         })
 
-      assert {:ok, created_emoji} = result
       assert created_emoji.discord_id == emoji_struct.id
       assert created_emoji.name == emoji_struct.name
       assert created_emoji.animated == true
@@ -77,13 +75,12 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
           require_colons: true
         })
 
-      result =
-        TestApp.Discord.emoji_from_discord(%{
+      created_emoji =
+        TestApp.Discord.emoji_from_discord!(%{
           data: emoji_struct,
           identity: %{guild_id: guild_id}
         })
 
-      assert {:ok, created_emoji} = result
       assert created_emoji.discord_id == emoji_struct.id
       assert created_emoji.name == emoji_struct.name
       assert created_emoji.managed == true
@@ -103,13 +100,12 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
           require_colons: false
         })
 
-      result =
-        TestApp.Discord.emoji_from_discord(%{
+      created_emoji =
+        TestApp.Discord.emoji_from_discord!(%{
           data: emoji_struct,
           identity: %{guild_id: guild_id}
         })
 
-      assert {:ok, created_emoji} = result
       assert created_emoji.discord_id == emoji_struct.id
       assert created_emoji.name == emoji_struct.name
       assert created_emoji.require_colons == false
@@ -134,10 +130,11 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
          })}
       end)
 
-      result =
-        TestApp.Discord.emoji_from_discord(%{identity: %{guild_id: guild_id, emoji_id: emoji_id}})
+      created_emoji =
+        TestApp.Discord.emoji_from_discord!(%{
+          identity: %{guild_id: guild_id, emoji_id: emoji_id}
+        })
 
-      assert {:ok, created_emoji} = result
       assert created_emoji.discord_id == emoji_id
       assert created_emoji.guild_discord_id == guild_id
       assert created_emoji.name == "api_fetched_emoji"
@@ -162,8 +159,8 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
           managed: false
         })
 
-      {:ok, original_emoji} =
-        TestApp.Discord.emoji_from_discord(%{
+      original_emoji =
+        TestApp.Discord.emoji_from_discord!(%{
           data: initial_struct,
           identity: %{guild_id: guild_id}
         })
@@ -177,8 +174,8 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
           require_colons: false
         })
 
-      {:ok, updated_emoji} =
-        TestApp.Discord.emoji_from_discord(%{
+      updated_emoji =
+        TestApp.Discord.emoji_from_discord!(%{
           data: updated_struct,
           identity: %{guild_id: guild_id}
         })

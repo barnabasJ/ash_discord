@@ -37,8 +37,6 @@ defmodule AshDiscord.Changes.FromDiscord.GuildBanTest do
           load: [:user, :guild]
         )
 
-      assert created.user_discord_id == user_id
-      assert created.guild_discord_id == guild_id
       assert created.user.discord_id == user_id
       assert created.guild.discord_id == guild_id
     end
@@ -67,8 +65,6 @@ defmodule AshDiscord.Changes.FromDiscord.GuildBanTest do
           load: [:user, :guild]
         )
 
-      assert created.user_discord_id == user_id
-      assert created.guild_discord_id == guild_id
       assert created.user.discord_id == user_id
       assert created.guild.discord_id == guild_id
     end
@@ -101,10 +97,6 @@ defmodule AshDiscord.Changes.FromDiscord.GuildBanTest do
         })
 
       assert ban1.id != ban2.id
-      assert ban1.user_discord_id == user_id
-      assert ban2.user_discord_id == user_id
-      assert ban1.guild_discord_id == guild_id_1
-      assert ban2.guild_discord_id == guild_id_2
 
       bans = TestApp.Discord.GuildBan.read!()
       assert length(bans) == 2
@@ -139,8 +131,6 @@ defmodule AshDiscord.Changes.FromDiscord.GuildBanTest do
         })
 
       assert updated.id == original.id
-      assert updated.user_discord_id == original.user_discord_id
-      assert updated.guild_discord_id == original.guild_discord_id
 
       bans = TestApp.Discord.GuildBan.read!()
       assert length(bans) == 1

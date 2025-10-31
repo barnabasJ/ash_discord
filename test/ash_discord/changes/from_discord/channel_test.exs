@@ -268,7 +268,6 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
         channel(%{
           id: 777_888_999,
           name: "Voice Channel",
-          # Voice channel
           type: 2,
           position: 5,
           guild_id: guild_id
@@ -289,7 +288,6 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
         channel(%{
           id: 333_444_555,
           name: "Category",
-          # Category channel
           type: 4,
           position: 0,
           guild_id: nil
@@ -350,7 +348,6 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
 
       updated_struct =
         channel(%{
-          # Same ID
           id: discord_id,
           name: "updated-channel",
           type: 0,
@@ -363,11 +360,8 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       {:ok, updated_channel} =
         TestApp.Discord.channel_from_discord(%{data: updated_struct})
 
-      # Should be same record (same Ash ID)
       assert updated_channel.id == original_channel.id
       assert updated_channel.discord_id == original_channel.discord_id
-
-      # But with updated attributes
       assert updated_channel.name == "updated-channel"
       assert updated_channel.topic == "Updated topic"
       assert updated_channel.position == 5
@@ -378,7 +372,6 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
     test "upsert works with permission overwrites changes" do
       discord_id = 333_444_555
 
-      # Create initial channel with permissions
       initial_struct =
         channel(%{
           id: discord_id,
@@ -393,18 +386,14 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       {:ok, original_channel} =
         TestApp.Discord.channel_from_discord(%{data: initial_struct})
 
-      # Update with different permissions
       updated_struct =
         channel(%{
-          # Same ID
           id: discord_id,
           name: "permissions-channel",
           type: 0,
           guild_id: nil,
           permission_overwrites: [
-            # Updated permissions
             %{id: 123, type: 0, allow: 2048, deny: 1024},
-            # New member permission
             %{id: 456, type: 1, allow: 8, deny: 0}
           ]
         })
@@ -412,20 +401,16 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       {:ok, updated_channel} =
         TestApp.Discord.channel_from_discord(%{data: updated_struct})
 
-      # Should be same record
       assert updated_channel.id == original_channel.id
       assert updated_channel.discord_id == discord_id
 
-      # But with updated permissions
       overwrites = updated_channel.permission_overwrites
       assert length(overwrites) == 2
 
-      # Check updated role permission
       role_overwrite = Enum.find(overwrites, &(&1["id"] == 123))
       assert role_overwrite["allow"] == "2048"
       assert role_overwrite["deny"] == "1024"
 
-      # Check new member permission
       member_overwrite = Enum.find(overwrites, &(&1["id"] == 456))
       assert member_overwrite["type"] == 1
       assert member_overwrite["allow"] == "8"

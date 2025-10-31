@@ -10,6 +10,8 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
   describe "create/3" do
     @tag :fixed
     test "creates audit log entry record in database" do
+      user_data = user()
+
       entry =
         guild_audit_log_entry(%{
           action_type: 1,
@@ -17,8 +19,10 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
           options: %{"count" => "1"},
           reason: "Test reason",
           target_id: to_string(generate_snowflake()),
-          user_id: generate_snowflake()
+          user_id: user_data.id
         })
+
+      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -37,7 +41,10 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
                  context
                )
 
-      assert [created_entry] = TestApp.Discord.GuildAuditLogEntry.read!()
+      [created_entry] =
+        TestApp.Discord.GuildAuditLogEntry
+        |> Ash.Query.load([:user])
+        |> Ash.read!(authorize?: false)
 
       assert created_entry.discord_id == entry.id
       assert created_entry.action_type == 1
@@ -49,11 +56,13 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
       assert created_entry.options == %{"count" => "1"}
       assert created_entry.reason == "Test reason"
       assert created_entry.target_discord_id == entry.target_id
-      assert created_entry.user_discord_id == entry.user_id
+      assert created_entry.user.discord_id == entry.user_id
     end
 
     @tag :fixed
     test "upserts audit log entry if already exists" do
+      user_data = user()
+
       entry =
         guild_audit_log_entry(%{
           action_type: 1,
@@ -61,8 +70,10 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
           options: nil,
           reason: "First reason",
           target_id: nil,
-          user_id: generate_snowflake()
+          user_id: user_data.id
         })
+
+      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -91,8 +102,13 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
                  context
                )
 
-      assert [updated_record] = TestApp.Discord.GuildAuditLogEntry.read!()
+      [updated_record] =
+        TestApp.Discord.GuildAuditLogEntry
+        |> Ash.Query.load([:user])
+        |> Ash.read!(authorize?: false)
+
       assert updated_record.reason == "Updated reason"
+      assert updated_record.user.discord_id == entry.user_id
     end
 
     @tag :fixed
@@ -124,7 +140,10 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
                  context
                )
 
-      assert [created_entry] = TestApp.Discord.GuildAuditLogEntry.read!()
+      [created_entry] =
+        TestApp.Discord.GuildAuditLogEntry
+        |> Ash.Query.load([:user])
+        |> Ash.read!(authorize?: false)
 
       assert created_entry.discord_id == entry.id
       assert created_entry.action_type == 1
@@ -132,7 +151,7 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
       assert is_nil(created_entry.options)
       assert is_nil(created_entry.reason)
       assert is_nil(created_entry.target_discord_id)
-      assert is_nil(created_entry.user_discord_id)
+      assert is_nil(created_entry.user)
     end
 
     @tag :fixed
@@ -168,7 +187,11 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
                  )
       end
 
-      entries = TestApp.Discord.GuildAuditLogEntry.read!()
+      entries =
+        TestApp.Discord.GuildAuditLogEntry
+        |> Ash.Query.load([:user])
+        |> Ash.read!(authorize?: false)
+
       assert length(entries) == 4
 
       created_action_types = Enum.map(entries, & &1.action_type) |> Enum.sort()
@@ -179,6 +202,8 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
   describe "optional fields" do
     @tag :fixed
     test "handles changes field with complex structures" do
+      user_data = user()
+
       entry =
         guild_audit_log_entry(%{
           action_type: 11,
@@ -190,8 +215,10 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
           options: nil,
           reason: "Channel update",
           target_id: to_string(generate_snowflake()),
-          user_id: generate_snowflake()
+          user_id: user_data.id
         })
+
+      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -210,15 +237,22 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
                  context
                )
 
-      assert [created_entry] = TestApp.Discord.GuildAuditLogEntry.read!()
+      [created_entry] =
+        TestApp.Discord.GuildAuditLogEntry
+        |> Ash.Query.load([:user])
+        |> Ash.read!(authorize?: false)
+
       assert length(created_entry.changes) == 3
       assert Enum.any?(created_entry.changes, &(&1["key"] == "name"))
       assert Enum.any?(created_entry.changes, &(&1["key"] == "topic"))
       assert Enum.any?(created_entry.changes, &(&1["key"] == "nsfw"))
+      assert created_entry.user.discord_id == entry.user_id
     end
 
     @tag :fixed
     test "handles options field with metadata" do
+      user_data = user()
+
       entry =
         guild_audit_log_entry(%{
           action_type: 72,
@@ -230,8 +264,10 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
           },
           reason: "Bulk message delete",
           target_id: to_string(generate_snowflake()),
-          user_id: generate_snowflake()
+          user_id: user_data.id
         })
+
+      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -250,10 +286,15 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
                  context
                )
 
-      assert [created_entry] = TestApp.Discord.GuildAuditLogEntry.read!()
+      [created_entry] =
+        TestApp.Discord.GuildAuditLogEntry
+        |> Ash.Query.load([:user])
+        |> Ash.read!(authorize?: false)
+
       assert created_entry.options["count"] == "5"
       assert created_entry.options["delete_member_days"] == "7"
       assert is_binary(created_entry.options["channel_id"])
+      assert created_entry.user.discord_id == entry.user_id
     end
 
     @tag :fixed
@@ -276,6 +317,8 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
       }
 
       for reason <- reasons do
+        user_data = user()
+
         entry =
           guild_audit_log_entry(%{
             action_type: 1,
@@ -283,8 +326,10 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
             options: nil,
             reason: reason,
             target_id: nil,
-            user_id: generate_snowflake()
+            user_id: user_data.id
           })
+
+        TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
 
         audit_log_entry_event = Payloads.GuildAuditLogEntryCreateEvent.new!(entry)
 
@@ -296,7 +341,11 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
                  )
       end
 
-      entries = TestApp.Discord.GuildAuditLogEntry.read!()
+      entries =
+        TestApp.Discord.GuildAuditLogEntry
+        |> Ash.Query.load([:user])
+        |> Ash.read!(authorize?: false)
+
       assert length(entries) == 3
 
       saved_reasons = Enum.map(entries, & &1.reason) |> Enum.sort()
@@ -307,6 +356,8 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
   describe "action type categories" do
     @tag :fixed
     test "handles guild action types (1-2)" do
+      user_data = user()
+
       entry =
         guild_audit_log_entry(%{
           action_type: 1,
@@ -314,8 +365,10 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
           options: nil,
           reason: "Guild update",
           target_id: to_string(generate_snowflake()),
-          user_id: generate_snowflake()
+          user_id: user_data.id
         })
+
+      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -334,9 +387,14 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
                  context
                )
 
-      assert [created_entry] = TestApp.Discord.GuildAuditLogEntry.read!()
+      [created_entry] =
+        TestApp.Discord.GuildAuditLogEntry
+        |> Ash.Query.load([:user])
+        |> Ash.read!(authorize?: false)
+
       assert created_entry.action_type == 1
       assert created_entry.reason == "Guild update"
+      assert created_entry.user.discord_id == entry.user_id
     end
 
     @tag :fixed
@@ -356,6 +414,8 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
       }
 
       for {action_type, reason} <- channel_actions do
+        user_data = user()
+
         entry =
           guild_audit_log_entry(%{
             action_type: action_type,
@@ -363,8 +423,10 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
             options: nil,
             reason: reason,
             target_id: to_string(generate_snowflake()),
-            user_id: generate_snowflake()
+            user_id: user_data.id
           })
+
+        TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
 
         audit_log_entry_event = Payloads.GuildAuditLogEntryCreateEvent.new!(entry)
 
@@ -376,7 +438,11 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
                  )
       end
 
-      entries = TestApp.Discord.GuildAuditLogEntry.read!()
+      entries =
+        TestApp.Discord.GuildAuditLogEntry
+        |> Ash.Query.load([:user])
+        |> Ash.read!(authorize?: false)
+
       assert length(entries) == 3
 
       action_types = Enum.map(entries, & &1.action_type) |> Enum.sort()
@@ -400,6 +466,8 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
       }
 
       for {action_type, reason} <- member_actions do
+        user_data = user()
+
         entry =
           guild_audit_log_entry(%{
             action_type: action_type,
@@ -407,8 +475,10 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
             options: nil,
             reason: reason,
             target_id: to_string(generate_snowflake()),
-            user_id: generate_snowflake()
+            user_id: user_data.id
           })
+
+        TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
 
         audit_log_entry_event = Payloads.GuildAuditLogEntryCreateEvent.new!(entry)
 
@@ -420,7 +490,11 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
                  )
       end
 
-      entries = TestApp.Discord.GuildAuditLogEntry.read!()
+      entries =
+        TestApp.Discord.GuildAuditLogEntry
+        |> Ash.Query.load([:user])
+        |> Ash.read!(authorize?: false)
+
       assert length(entries) == 3
 
       action_types = Enum.map(entries, & &1.action_type) |> Enum.sort()
@@ -444,6 +518,8 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
       }
 
       for {action_type, reason} <- role_actions do
+        user_data = user()
+
         entry =
           guild_audit_log_entry(%{
             action_type: action_type,
@@ -451,8 +527,10 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
             options: nil,
             reason: reason,
             target_id: to_string(generate_snowflake()),
-            user_id: generate_snowflake()
+            user_id: user_data.id
           })
+
+        TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
 
         audit_log_entry_event = Payloads.GuildAuditLogEntryCreateEvent.new!(entry)
 
@@ -464,7 +542,11 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
                  )
       end
 
-      entries = TestApp.Discord.GuildAuditLogEntry.read!()
+      entries =
+        TestApp.Discord.GuildAuditLogEntry
+        |> Ash.Query.load([:user])
+        |> Ash.read!(authorize?: false)
+
       assert length(entries) == 3
 
       action_types = Enum.map(entries, & &1.action_type) |> Enum.sort()
@@ -473,6 +555,8 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
 
     @tag :fixed
     test "handles message action types (72-73)" do
+      user_data = user()
+
       entry =
         guild_audit_log_entry(%{
           action_type: 72,
@@ -480,8 +564,10 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
           options: %{"count" => "10"},
           reason: "Spam messages deleted",
           target_id: to_string(generate_snowflake()),
-          user_id: generate_snowflake()
+          user_id: user_data.id
         })
+
+      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
 
       context = %AshDiscord.Context{
         consumer: TestConsumer,
@@ -500,9 +586,14 @@ defmodule AshDiscord.Consumer.Handler.GuildAuditLogEntryTest do
                  context
                )
 
-      assert [created_entry] = TestApp.Discord.GuildAuditLogEntry.read!()
+      [created_entry] =
+        TestApp.Discord.GuildAuditLogEntry
+        |> Ash.Query.load([:user])
+        |> Ash.read!(authorize?: false)
+
       assert created_entry.action_type == 72
       assert created_entry.options["count"] == "10"
+      assert created_entry.user.discord_id == entry.user_id
     end
   end
 end

@@ -268,7 +268,22 @@ end
 - Add `use Mimic` at module level if any tests need mocking
 - Inline all mocks directly in tests - no helper functions
 
-### 7. Mimic Setup
+### 7. Comments
+
+**CRITICAL**: Do NOT add obvious comments that just repeat what the code shows.
+
+- ❌ BAD: `# Mock User API for owner` before
+  `Mimic.expect(Nostrum.Api.User, :get, ...)`
+- ❌ BAD: `# Should be same record` before `assert updated.id == original.id`
+- ❌ BAD: `# Voice channel` inline with `type: 2`
+- ❌ BAD: `# Create initial resource` before creating test data
+- ✅ GOOD: Inline comments explaining non-obvious test data structure (e.g.,
+  role vs member permission overwrites)
+
+Comments should only explain **WHY** something is done when it's not obvious
+from the code, not **WHAT** is being done.
+
+### 8. Mimic Setup
 
 - **DO NOT add `Mimic.copy` calls** - already handled in test_helper.exs
 - Only add `use Mimic` at module level if testing needs mocking

@@ -150,9 +150,20 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
     end
 
     @tag :fixed
-    test "sets owner_discord_id from channel data" do
+    test "creates channel with owner relationship" do
       channel_id = 123_456_789
       owner_id = 999_888_777
+
+      # Mock User API for owner
+      Mimic.expect(Nostrum.Api.User, :get, fn ^owner_id ->
+        {:ok,
+         user(%{
+           id: owner_id,
+           username: "channel_owner",
+           discriminator: "1234",
+           avatar: "avatar_hash"
+         })}
+      end)
 
       channel_struct =
         channel(%{
@@ -163,12 +174,14 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
           guild_id: nil
         })
 
-      result = TestApp.Discord.channel_from_discord(%{data: channel_struct})
+      result =
+        TestApp.Discord.channel_from_discord(%{data: channel_struct}, load: [:owner])
 
       assert {:ok, created_channel} = result
       assert created_channel.discord_id == channel_id
       assert created_channel.name == "channel-with-owner"
-      assert created_channel.owner_discord_id == owner_id
+      assert created_channel.owner.discord_id == owner_id
+      assert created_channel.owner.discord_username == "channel_owner"
     end
 
     @tag :fixed
@@ -193,7 +206,7 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
     end
 
     @tag :fixed
-    test "creates channel with guild and parent relationships plus owner ID" do
+    test "creates channel with guild, parent, and owner relationships" do
       channel_id = 123_456_789
       guild_id = 111_222_333
       parent_id = 444_555_666
@@ -211,10 +224,21 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
          channel(%{id: parent_id, name: "Parent Channel", type: 4, guild_id: parent_guild_id})}
       end)
 
+      # Mock User API for owner
+      Mimic.expect(Nostrum.Api.User, :get, fn ^owner_id ->
+        {:ok,
+         user(%{
+           id: owner_id,
+           username: "channel_owner",
+           discriminator: "5678",
+           avatar: "owner_avatar"
+         })}
+      end)
+
       channel_struct =
         channel(%{
           id: channel_id,
-          name: "channel-with-all-data",
+          name: "channel-with-all-relationships",
           type: 0,
           guild_id: guild_id,
           parent_id: parent_id,
@@ -224,21 +248,24 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
 
       result =
         TestApp.Discord.channel_from_discord(%{data: channel_struct},
-          load: [:guild, :parent]
+          load: [:guild, :parent, :owner]
         )
 
       assert {:ok, created_channel} = result
       assert created_channel.discord_id == channel_id
-      assert created_channel.name == "channel-with-all-data"
+      assert created_channel.name == "channel-with-all-relationships"
 
-      # Verify managed relationships (guild and parent)
+      # Verify guild relationship
       assert created_channel.guild.discord_id == guild_id
       assert String.contains?(created_channel.guild.name, "Test Guild")
+
+      # Verify parent relationship
       assert created_channel.parent.discord_id == parent_id
       assert created_channel.parent.name == "Parent Channel"
 
-      # Verify non-managed relationship ID (owner)
-      assert created_channel.owner_discord_id == owner_id
+      # Verify owner relationship
+      assert created_channel.owner.discord_id == owner_id
+      assert created_channel.owner.discord_username == "channel_owner"
     end
 
     @tag :fixed

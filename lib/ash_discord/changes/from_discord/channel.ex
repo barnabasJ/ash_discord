@@ -18,9 +18,9 @@ defmodule AshDiscord.Changes.FromDiscord.Channel do
   - Voice channel attributes: bitrate, user_limit, rtc_region, video_quality_mode
   - Thread attributes: thread_metadata, message_count, member_count, newly_created
   - Forum attributes: available_tags, applied_tags, default_reaction_emoji, default_sort_order, default_forum_layout
-  - DM attributes: recipients, icon, owner_discord_id
+  - DM attributes: recipients, icon
   - Timestamps: last_pin_timestamp
-  - Relationships: guild, parent channel, last_message
+  - Relationships: guild, parent channel, owner, last_message
 
   ## Example
 
@@ -82,7 +82,6 @@ defmodule AshDiscord.Changes.FromDiscord.Channel do
     |> maybe_set_attribute(:rate_limit_per_user, channel_data.rate_limit_per_user)
     |> maybe_set_attribute(:recipients, channel_data.recipients)
     |> maybe_set_attribute(:icon, channel_data.icon)
-    |> maybe_set_attribute(:owner_discord_id, channel_data.owner_id)
     |> maybe_set_attribute(:application_discord_id, channel_data.application_id)
     |> maybe_set_attribute(:rtc_region, channel_data.rtc_region)
     |> maybe_set_attribute(:video_quality_mode, channel_data.video_quality_mode)
@@ -112,6 +111,7 @@ defmodule AshDiscord.Changes.FromDiscord.Channel do
     |> maybe_set_datetime_attribute(:last_pin_timestamp, channel_data.last_pin_timestamp)
     |> maybe_manage_guild_relationship(channel_data.guild_id)
     |> maybe_manage_parent_relationship(channel_data.parent_id)
+    |> maybe_manage_owner_relationship(channel_data.owner_id)
     |> maybe_manage_last_message_relationship(channel_data.last_message_id, channel_data.id)
   end
 
@@ -161,6 +161,16 @@ defmodule AshDiscord.Changes.FromDiscord.Channel do
         use_identities: [:discord_id],
         on_no_match: {:create, :from_discord}
       )
+    else
+      changeset
+    end
+  end
+
+  defp maybe_manage_owner_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_owner_relationship(changeset, owner_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :owner) do
+      Transformations.manage_user_relationship(changeset, owner_id, :owner)
     else
       changeset
     end

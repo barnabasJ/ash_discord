@@ -47,7 +47,6 @@ defmodule AshDiscord.Changes.FromDiscord.GuildBan do
     |> maybe_manage_user_relationship(user_discord_id)
   end
 
-  # Manage guild relationship if exists on resource
   defp maybe_manage_guild_relationship(changeset, nil), do: changeset
 
   defp maybe_manage_guild_relationship(changeset, guild_discord_id) do
@@ -58,7 +57,6 @@ defmodule AshDiscord.Changes.FromDiscord.GuildBan do
     end
   end
 
-  # Manage user relationship if exists on resource
   defp maybe_manage_user_relationship(changeset, nil), do: changeset
 
   defp maybe_manage_user_relationship(changeset, user_discord_id) do

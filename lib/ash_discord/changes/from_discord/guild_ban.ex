@@ -20,6 +20,8 @@ defmodule AshDiscord.Changes.FromDiscord.GuildBan do
 
   use Ash.Resource.Change
 
+  alias AshDiscord.Changes.FromDiscord.Transformations
+
   @impl true
   def change(changeset, _opts, _context) do
     case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
@@ -38,18 +40,30 @@ defmodule AshDiscord.Changes.FromDiscord.GuildBan do
   end
 
   defp transform_ban(changeset, guild_id, user) do
+    user_discord_id = user.id
+
     changeset
-    |> maybe_set_attribute(:guild_discord_id, guild_id)
-    |> maybe_set_attribute(:user_discord_id, user.id)
+    |> maybe_manage_guild_relationship(guild_id)
+    |> maybe_manage_user_relationship(user_discord_id)
   end
 
-  defp maybe_set_attribute(changeset, _field, nil), do: changeset
+  # Manage guild relationship if exists on resource
+  defp maybe_manage_guild_relationship(changeset, nil), do: changeset
 
-  defp maybe_set_attribute(changeset, field, value) do
-    resource = changeset.resource
+  defp maybe_manage_guild_relationship(changeset, guild_discord_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :guild) do
+      Transformations.manage_guild_relationship(changeset, guild_discord_id)
+    else
+      changeset
+    end
+  end
 
-    if Ash.Resource.Info.attribute(resource, field) do
-      Ash.Changeset.force_change_attribute(changeset, field, value)
+  # Manage user relationship if exists on resource
+  defp maybe_manage_user_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_user_relationship(changeset, user_discord_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :user) do
+      Transformations.manage_user_relationship(changeset, user_discord_id)
     else
       changeset
     end

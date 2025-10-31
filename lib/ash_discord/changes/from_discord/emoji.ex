@@ -85,7 +85,6 @@ defmodule AshDiscord.Changes.FromDiscord.Emoji do
 
     changeset
     |> maybe_set_attribute(:discord_id, emoji_data.id)
-    |> maybe_set_attribute(:guild_discord_id, guild_id)
     |> maybe_set_attribute(:name, emoji_data.name)
     |> maybe_set_attribute(:animated, emoji_data.animated || false)
     |> maybe_set_attribute(:custom, custom)
@@ -93,6 +92,7 @@ defmodule AshDiscord.Changes.FromDiscord.Emoji do
     |> maybe_set_attribute(:require_colons, emoji_data.require_colons)
     |> maybe_set_attribute(:managed, emoji_data.managed)
     |> maybe_set_attribute(:roles, emoji_data.roles)
+    |> maybe_manage_guild_relationship(guild_id)
     |> maybe_manage_emoji_user_relationship(emoji_data.user)
   end
 
@@ -105,6 +105,20 @@ defmodule AshDiscord.Changes.FromDiscord.Emoji do
       changeset
     end
   end
+
+  # Manage guild relationship
+  defp maybe_manage_guild_relationship(changeset, guild_id) when not is_nil(guild_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :guild) do
+      AshDiscord.Changes.FromDiscord.Transformations.manage_guild_relationship(
+        changeset,
+        guild_id
+      )
+    else
+      changeset
+    end
+  end
+
+  defp maybe_manage_guild_relationship(changeset, _), do: changeset
 
   # Manage user relationship for emojis
   defp maybe_manage_emoji_user_relationship(changeset, %{id: user_id}) when not is_nil(user_id) do

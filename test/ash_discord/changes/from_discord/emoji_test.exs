@@ -14,6 +14,10 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
     test "creates emoji from discord struct with all attributes" do
       guild_id = 555_666_777
 
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
       emoji_struct =
         emoji(%{
           id: 123_456_789,
@@ -24,22 +28,29 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
         })
 
       created_emoji =
-        TestApp.Discord.emoji_from_discord!(%{
-          data: emoji_struct,
-          identity: %{guild_id: guild_id}
-        })
+        TestApp.Discord.emoji_from_discord!(
+          %{
+            data: emoji_struct,
+            identity: %{guild_id: guild_id}
+          },
+          load: [:guild]
+        )
 
       assert created_emoji.discord_id == emoji_struct.id
       assert created_emoji.name == emoji_struct.name
       assert created_emoji.animated == false
       assert created_emoji.managed == false
       assert created_emoji.require_colons == true
-      assert created_emoji.guild_discord_id == guild_id
+      assert created_emoji.guild.discord_id == guild_id
     end
 
     @tag :fixed
     test "handles animated emoji" do
       guild_id = 111_222_333
+
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
 
       emoji_struct =
         emoji(%{
@@ -51,20 +62,27 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
         })
 
       created_emoji =
-        TestApp.Discord.emoji_from_discord!(%{
-          data: emoji_struct,
-          identity: %{guild_id: guild_id}
-        })
+        TestApp.Discord.emoji_from_discord!(
+          %{
+            data: emoji_struct,
+            identity: %{guild_id: guild_id}
+          },
+          load: [:guild]
+        )
 
       assert created_emoji.discord_id == emoji_struct.id
       assert created_emoji.name == emoji_struct.name
       assert created_emoji.animated == true
-      assert created_emoji.guild_discord_id == guild_id
+      assert created_emoji.guild.discord_id == guild_id
     end
 
     @tag :fixed
     test "handles managed emoji (from integration)" do
       guild_id = 999_888_777
+
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
 
       emoji_struct =
         emoji(%{
@@ -76,20 +94,27 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
         })
 
       created_emoji =
-        TestApp.Discord.emoji_from_discord!(%{
-          data: emoji_struct,
-          identity: %{guild_id: guild_id}
-        })
+        TestApp.Discord.emoji_from_discord!(
+          %{
+            data: emoji_struct,
+            identity: %{guild_id: guild_id}
+          },
+          load: [:guild]
+        )
 
       assert created_emoji.discord_id == emoji_struct.id
       assert created_emoji.name == emoji_struct.name
       assert created_emoji.managed == true
-      assert created_emoji.guild_discord_id == guild_id
+      assert created_emoji.guild.discord_id == guild_id
     end
 
     @tag :fixed
     test "handles emoji without require_colons" do
       guild_id = 333_444_555
+
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
 
       emoji_struct =
         emoji(%{
@@ -101,15 +126,50 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
         })
 
       created_emoji =
-        TestApp.Discord.emoji_from_discord!(%{
-          data: emoji_struct,
-          identity: %{guild_id: guild_id}
-        })
+        TestApp.Discord.emoji_from_discord!(
+          %{
+            data: emoji_struct,
+            identity: %{guild_id: guild_id}
+          },
+          load: [:guild]
+        )
 
       assert created_emoji.discord_id == emoji_struct.id
       assert created_emoji.name == emoji_struct.name
       assert created_emoji.require_colons == false
-      assert created_emoji.guild_discord_id == guild_id
+      assert created_emoji.guild.discord_id == guild_id
+    end
+
+    @tag :fixed
+    test "handles Unicode emoji with nil discord_id" do
+      guild_id = 777_888_999
+
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
+      emoji_struct =
+        emoji(%{
+          id: nil,
+          name: "👍",
+          animated: false,
+          managed: false,
+          require_colons: false
+        })
+
+      created_emoji =
+        TestApp.Discord.emoji_from_discord!(
+          %{
+            data: emoji_struct,
+            identity: %{guild_id: guild_id}
+          },
+          load: [:guild]
+        )
+
+      assert created_emoji.discord_id == nil
+      assert created_emoji.name == "👍"
+      assert created_emoji.custom == false
+      assert created_emoji.guild.discord_id == guild_id
     end
   end
 
@@ -130,13 +190,20 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
          })}
       end)
 
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
       created_emoji =
-        TestApp.Discord.emoji_from_discord!(%{
-          identity: %{guild_id: guild_id, emoji_id: emoji_id}
-        })
+        TestApp.Discord.emoji_from_discord!(
+          %{
+            identity: %{guild_id: guild_id, emoji_id: emoji_id}
+          },
+          load: [:guild]
+        )
 
       assert created_emoji.discord_id == emoji_id
-      assert created_emoji.guild_discord_id == guild_id
+      assert created_emoji.guild.discord_id == guild_id
       assert created_emoji.name == "api_fetched_emoji"
       assert created_emoji.animated == true
       assert created_emoji.custom == true
@@ -150,6 +217,10 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
     test "updates existing emoji instead of creating duplicate" do
       discord_id = 555_666_777
       guild_id = 111_222_333
+
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
 
       initial_struct =
         emoji(%{
@@ -182,7 +253,6 @@ defmodule AshDiscord.Changes.FromDiscord.EmojiTest do
 
       assert updated_emoji.id == original_emoji.id
       assert updated_emoji.discord_id == original_emoji.discord_id
-      assert updated_emoji.guild_discord_id == original_emoji.guild_discord_id
 
       assert updated_emoji.name == "updated_emoji"
       assert updated_emoji.animated == true

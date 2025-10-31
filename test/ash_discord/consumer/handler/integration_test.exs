@@ -108,10 +108,7 @@ defmodule AshDiscord.Consumer.Handler.IntegrationTest do
 
       {:ok, _created} =
         TestApp.Discord.Integration
-        |> Ash.Changeset.for_create(:from_discord, %{
-          data: integration_payload,
-          identity: %{integration_id: integration_data.id, guild_id: integration_data.guild_id}
-        })
+        |> Ash.Changeset.for_create(:from_discord, %{data: integration_payload})
         |> Ash.create(authorize?: false)
 
       assert [_integration] = TestApp.Discord.Integration.read!(authorize?: false)

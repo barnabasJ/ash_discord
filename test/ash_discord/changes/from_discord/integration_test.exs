@@ -45,13 +45,7 @@ defmodule AshDiscord.Changes.FromDiscord.IntegrationTest do
 
       created_integration =
         TestApp.Discord.integration_from_discord!(
-          %{
-            data: payload,
-            identity: %{
-              integration_id: integration_struct.id,
-              guild_id: integration_struct.guild_id
-            }
-          },
+          %{data: payload},
           load: [:guild]
         )
 
@@ -91,13 +85,7 @@ defmodule AshDiscord.Changes.FromDiscord.IntegrationTest do
 
       created_integration =
         TestApp.Discord.integration_from_discord!(
-          %{
-            data: payload,
-            identity: %{
-              integration_id: integration_struct.id,
-              guild_id: integration_struct.guild_id
-            }
-          },
+          %{data: payload},
           load: [:guild]
         )
 
@@ -132,13 +120,7 @@ defmodule AshDiscord.Changes.FromDiscord.IntegrationTest do
 
       created_integration =
         TestApp.Discord.integration_from_discord!(
-          %{
-            data: payload,
-            identity: %{
-              integration_id: integration_struct.id,
-              guild_id: integration_struct.guild_id
-            }
-          },
+          %{data: payload},
           load: [:guild]
         )
 
@@ -167,14 +149,7 @@ defmodule AshDiscord.Changes.FromDiscord.IntegrationTest do
 
       {:ok, payload} = AshDiscord.Consumer.Payloads.Integration.new(integration_struct)
 
-      original =
-        TestApp.Discord.integration_from_discord!(%{
-          data: payload,
-          identity: %{
-            integration_id: integration_struct.id,
-            guild_id: integration_struct.guild_id
-          }
-        })
+      original = TestApp.Discord.integration_from_discord!(%{data: payload})
 
       updated_struct =
         integration(%{
@@ -188,11 +163,7 @@ defmodule AshDiscord.Changes.FromDiscord.IntegrationTest do
 
       {:ok, updated_payload} = AshDiscord.Consumer.Payloads.Integration.new(updated_struct)
 
-      updated =
-        TestApp.Discord.integration_from_discord!(%{
-          data: updated_payload,
-          identity: %{integration_id: updated_struct.id, guild_id: updated_struct.guild_id}
-        })
+      updated = TestApp.Discord.integration_from_discord!(%{data: updated_payload})
 
       assert updated.id == original.id
       assert updated.discord_id == 123_456_789

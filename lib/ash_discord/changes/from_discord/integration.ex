@@ -7,7 +7,7 @@ defmodule AshDiscord.Changes.FromDiscord.Integration do
   ## Arguments
 
   - `:data` - TypedStruct `AshDiscord.Consumer.Payloads.Integration.t()` with Discord integration data
-  - `:identity` - Map with `%{guild_id: integer, integration_id: integer}` for API fallback
+  - `:identity` - Not used (integrations don't support API fallback; guild_id comes from data)
 
   ## Example
 
@@ -17,6 +17,12 @@ defmodule AshDiscord.Changes.FromDiscord.Integration do
 
         change AshDiscord.Changes.FromDiscord.Integration
       end
+
+  ## Note
+
+  Unlike other from_discord implementations, Integration does not support API fallback since
+  integrations can only be retrieved via guild-level API calls. The guild_id is obtained
+  directly from the integration_data.guild_id field.
   """
 
   use Ash.Resource.Change
@@ -50,9 +56,7 @@ defmodule AshDiscord.Changes.FromDiscord.Integration do
     end)
   end
 
-  defp transform_integration(changeset, integration_data, identity) do
-    guild_discord_id = identity[:guild_id] || identity["guild_id"]
-
+  defp transform_integration(changeset, integration_data, _identity) do
     changeset
     |> maybe_set_attribute(:discord_id, integration_data.id)
     |> maybe_set_attribute(:name, integration_data.name)
@@ -68,7 +72,7 @@ defmodule AshDiscord.Changes.FromDiscord.Integration do
       :application_name,
       integration_data.application && integration_data.application.name
     )
-    |> maybe_manage_guild_relationship(guild_discord_id)
+    |> maybe_manage_guild_relationship(integration_data.guild_id)
   end
 
   defp maybe_set_attribute(changeset, _field, nil), do: changeset

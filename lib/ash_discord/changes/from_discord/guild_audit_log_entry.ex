@@ -20,6 +20,8 @@ defmodule AshDiscord.Changes.FromDiscord.GuildAuditLogEntry do
 
   use Ash.Resource.Change
 
+  alias AshDiscord.Changes.FromDiscord.Transformations
+
   @impl true
   def change(changeset, _opts, _context) do
     case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
@@ -71,7 +73,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildAuditLogEntry do
     |> maybe_set_attribute(:options, options)
     |> maybe_set_attribute(:reason, reason)
     |> maybe_set_attribute(:target_discord_id, target_id)
-    |> maybe_set_attribute(:user_discord_id, user_id)
+    |> maybe_manage_user_relationship(user_id)
   end
 
   defp maybe_set_attribute(changeset, _field, nil), do: changeset
@@ -81,6 +83,16 @@ defmodule AshDiscord.Changes.FromDiscord.GuildAuditLogEntry do
 
     if Ash.Resource.Info.attribute(resource, field) do
       Ash.Changeset.force_change_attribute(changeset, field, value)
+    else
+      changeset
+    end
+  end
+
+  defp maybe_manage_user_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_user_relationship(changeset, user_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :user) do
+      Transformations.manage_user_relationship(changeset, user_id)
     else
       changeset
     end

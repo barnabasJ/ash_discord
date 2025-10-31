@@ -98,8 +98,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildBanTest do
 
       assert ban1.id != ban2.id
 
-      bans = TestApp.Discord.GuildBan.read!()
-      assert length(bans) == 2
+      assert [_ban1, _ban2] = TestApp.Discord.GuildBan.read!()
     end
   end
 
@@ -132,8 +131,7 @@ defmodule AshDiscord.Changes.FromDiscord.GuildBanTest do
 
       assert updated.id == original.id
 
-      bans = TestApp.Discord.GuildBan.read!()
-      assert length(bans) == 1
+      assert [_bn] = TestApp.Discord.GuildBan.read!()
     end
   end
 end

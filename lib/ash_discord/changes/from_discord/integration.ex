@@ -58,10 +58,10 @@ defmodule AshDiscord.Changes.FromDiscord.Integration do
     |> maybe_set_attribute(:name, integration_data.name)
     |> maybe_set_attribute(:type, integration_data.type)
     |> maybe_set_attribute(:enabled, integration_data.enabled)
-    |> maybe_set_attribute(:account_id, integration_data.account.id)
+    |> maybe_set_attribute(:account_discord_id, integration_data.account.id)
     |> maybe_set_attribute(:account_name, integration_data.account.name)
     |> maybe_set_attribute(
-      :application_id,
+      :application_discord_id,
       integration_data.application && integration_data.application.id
     )
     |> maybe_set_attribute(

@@ -42,9 +42,9 @@ defmodule AshDiscord.Consumer.Handler.IntegrationTest do
       assert created_integration.type == integration_data.type
       assert created_integration.enabled == integration_data.enabled
       assert created_integration.guild.discord_id == integration_data.guild_id
-      assert created_integration.account_id == integration_data.account.id
+      assert created_integration.account_discord_id == integration_data.account.id
       assert created_integration.account_name == integration_data.account.name
-      assert created_integration.application_id == integration_data.application.id
+      assert created_integration.application_discord_id == integration_data.application.id
       assert created_integration.application_name == integration_data.application.name
     end
   end

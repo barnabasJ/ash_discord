@@ -59,9 +59,9 @@ defmodule AshDiscord.Changes.FromDiscord.IntegrationTest do
       assert created_integration.name == integration_struct.name
       assert created_integration.type == "discord"
       assert created_integration.enabled == true
-      assert created_integration.account_id == "account123"
+      assert created_integration.account_discord_id == "account123"
       assert created_integration.account_name == "Test Account"
-      assert created_integration.application_id == 999_888_777
+      assert created_integration.application_discord_id == 999_888_777
       assert created_integration.application_name == "Test Bot"
       assert created_integration.guild.discord_id == guild_id
     end
@@ -104,9 +104,9 @@ defmodule AshDiscord.Changes.FromDiscord.IntegrationTest do
       assert created_integration.discord_id == integration_struct.id
       assert created_integration.name == "Twitch Stream"
       assert created_integration.type == "twitch"
-      assert created_integration.account_id == "twitch_account"
+      assert created_integration.account_discord_id == "twitch_account"
       assert created_integration.account_name == "Twitch User"
-      assert created_integration.application_id == nil
+      assert created_integration.application_discord_id == nil
       assert created_integration.application_name == nil
       assert created_integration.guild.discord_id == guild_id
     end

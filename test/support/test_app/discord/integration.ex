@@ -45,7 +45,7 @@ defmodule TestApp.Discord.Integration do
       default: false
     )
 
-    attribute(:account_id, :string,
+    attribute(:account_discord_id, :string,
       allow_nil?: true,
       public?: true
     )
@@ -55,7 +55,7 @@ defmodule TestApp.Discord.Integration do
       public?: true
     )
 
-    attribute(:application_id, :integer,
+    attribute(:application_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
@@ -111,9 +111,9 @@ defmodule TestApp.Discord.Integration do
         :name,
         :type,
         :enabled,
-        :account_id,
+        :account_discord_id,
         :account_name,
-        :application_id,
+        :application_discord_id,
         :application_name
       ])
     end
@@ -126,9 +126,9 @@ defmodule TestApp.Discord.Integration do
         :name,
         :type,
         :enabled,
-        :account_id,
+        :account_discord_id,
         :account_name,
-        :application_id,
+        :application_discord_id,
         :application_name
       ])
     end

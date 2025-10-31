@@ -85,11 +85,18 @@ end
 - Inline mock related resource API calls at the start of each test
 - Test various attribute combinations and edge cases
 - No authorization bypass needed - these are action tests, not handler tests
-- **CRITICAL**: Load and assert on relationship records, not just IDs
-  - Pass `load: [:relationship_name]` to the `from_discord` call
-  - Assert on the loaded relationship records (e.g., `record.guild.discord_id`)
-  - This verifies relationships were created correctly via from_discord
-  - Do NOT assert on both IDs and relationships - relationships are sufficient
+- **CRITICAL**: Load and verify ALL relationships that exist on the resource
+  - After validating the resource (step 2), you know which `belongs_to`
+    relationships exist
+  - Pass `load: [:rel1, :rel2, :rel3]` to the `from_discord!` call for ALL
+    relationships
+  - Assert on EVERY loaded relationship: `record.relationship.discord_id`
+  - This verifies the from_discord change created related records correctly via
+    API mocks
+  - Do NOT assert on foreign key attributes (`*_discord_id`) - only assert on
+    loaded relationships
+  - Exception: Polymorphic fields without relationships - assert on attribute
+    value directly
 
 Example:
 
@@ -293,10 +300,32 @@ from the code, not **WHAT** is being done.
 ## Execution Steps
 
 1. **Read the test file** to understand current structure
-2. **Read the resource definition** to identify:
-   - Required vs optional attributes
-   - Foreign key relationships (to know which API calls to mock)
-   - Identity fields (for upsert behavior)
+
+2. **Read and validate the resource definition**:
+
+   - Find ALL attributes ending in `_id`
+   - **Verify naming convention**: ALL Discord IDs MUST be `*_discord_id`, not
+     `*_id`
+     - ❌ BAD: `guild_id`, `user_id`, `channel_id`
+     - ✅ GOOD: `guild_discord_id`, `user_discord_id`, `channel_discord_id`
+     - **If wrong naming found**: Fix the attribute name in the resource
+       definition
+   - **Verify relationships exist**: EVERY `*_discord_id` attribute MUST have a
+     matching `belongs_to` relationship
+     - **Exception**: Polymorphic fields (like `target_discord_id` with a type
+       indicator field)
+     - **If missing relationship found**: Add the `belongs_to` relationship to
+       the resource:
+       ```elixir
+       belongs_to :name, TestApp.Discord.ResourceName do
+         source_attribute(:name_discord_id)
+         destination_attribute(:discord_id)
+         attribute_writable?(true)
+       end
+       ```
+   - Identify required vs optional attributes
+   - Identify identity fields (for upsert behavior)
+
 3. **Research Nostrum API availability**:
    - Check if Nostrum.Api has endpoints to fetch this resource
    - Identify which related resource API calls need mocking

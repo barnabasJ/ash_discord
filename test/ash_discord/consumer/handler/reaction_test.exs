@@ -66,7 +66,7 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
 
     @tag :fixed
     test "creates reaction with custom emoji" do
-      channel_data = channel()
+      channel_data = channel(%{guild_id: nil, owner_id: nil, parent_id: nil})
       user_data = user()
       author_data = user()
       message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
@@ -114,7 +114,7 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
 
     @tag :fixed
     test "upserts existing reaction" do
-      channel_data = channel()
+      channel_data = channel(%{guild_id: nil, owner_id: nil, parent_id: nil})
       user_data = user()
       author_data = user()
       message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
@@ -164,7 +164,7 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
   describe "remove/3" do
     @tag :fixed
     test "removes reaction from database" do
-      channel_data = channel()
+      channel_data = channel(%{guild_id: nil, owner_id: nil, parent_id: nil})
       user_data = user()
       author_data = user()
       message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
@@ -215,7 +215,7 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
 
     @tag :fixed
     test "removes only matching custom emoji reaction" do
-      channel_data = channel()
+      channel_data = channel(%{guild_id: nil, owner_id: nil, parent_id: nil})
       user_data = user()
       author_data = user()
       message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
@@ -273,7 +273,7 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
 
     @tag :fixed
     test "handles missing reaction gracefully" do
-      channel_data = channel()
+      channel_data = channel(%{guild_id: nil, owner_id: nil, parent_id: nil})
       user_data = user()
       author_data = user()
       message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
@@ -311,7 +311,7 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
   describe "remove_all/3" do
     @tag :fixed
     test "removes all reactions from a message" do
-      channel_data = channel()
+      channel_data = channel(%{guild_id: nil, owner_id: nil, parent_id: nil})
       author_data = user()
       message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
       user1_data = user()
@@ -383,7 +383,7 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
 
     @tag :fixed
     test "only removes reactions from specified message" do
-      channel_data = channel()
+      channel_data = channel(%{guild_id: nil, owner_id: nil, parent_id: nil})
       author_data = user()
       message1_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
       message2_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
@@ -447,7 +447,7 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
 
     @tag :fixed
     test "handles empty message gracefully" do
-      channel_data = channel()
+      channel_data = channel(%{guild_id: nil, owner_id: nil, parent_id: nil})
       author_data = user()
       message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
 
@@ -480,7 +480,7 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
   describe "remove_emoji/3" do
     @tag :fixed
     test "removes all reactions with specific emoji from message" do
-      channel_data = channel()
+      channel_data = channel(%{guild_id: nil, owner_id: nil, parent_id: nil})
       author_data = user()
       message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
       user1_data = user()
@@ -554,7 +554,7 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
 
     @tag :fixed
     test "removes custom emoji reactions correctly" do
-      channel_data = channel()
+      channel_data = channel(%{guild_id: nil, owner_id: nil, parent_id: nil})
       author_data = user()
       message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
       user1_data = user()
@@ -626,7 +626,7 @@ defmodule AshDiscord.Consumer.Handler.ReactionTest do
 
     @tag :fixed
     test "handles missing emoji gracefully" do
-      channel_data = channel()
+      channel_data = channel(%{guild_id: nil, owner_id: nil, parent_id: nil})
       author_data = user()
       message_data = message(%{channel_id: channel_data.id, author: author_data, guild_id: nil})
       emoji_data = emoji(%{name: "👍", id: nil})

@@ -15,12 +15,13 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
     test "creates channel from discord struct with all attributes and relationships" do
       parent_data = channel(%{id: 987_654_321, name: "Parent Channel", type: 4, guild_id: nil})
       guild_id = 555_666_777
+      parent_id = parent_data.id
 
       Mimic.expect(Nostrum.Api.Guild, :get, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild #{id}"})}
       end)
 
-      Mimic.expect(Nostrum.Api.Channel, :get, fn 987_654_321 ->
+      Mimic.expect(Nostrum.Api.Channel, :get, fn ^parent_id ->
         {:ok, parent_data}
       end)
 
@@ -57,12 +58,10 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       parent_guild_id = 999_888_777
       channel_id = 123_456_789
 
-      # Mock Guild API - will be called twice (once for parent's guild, once for channel's guild)
       Mimic.expect(Nostrum.Api.Guild, :get, 2, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild #{id}"})}
       end)
 
-      # Mock Parent Channel API - parent has its own guild
       Mimic.expect(Nostrum.Api.Channel, :get, fn ^parent_id ->
         {:ok,
          channel(%{id: parent_id, name: "Parent Channel", type: 4, guild_id: parent_guild_id})}
@@ -154,7 +153,6 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       channel_id = 123_456_789
       owner_id = 999_888_777
 
-      # Mock User API for owner
       Mimic.expect(Nostrum.Api.User, :get, fn ^owner_id ->
         {:ok,
          user(%{
@@ -214,6 +212,8 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       owner_id = 333_222_111
 
       # Mock Guild API - will be called twice (once for parent's guild, once for channel's guild)
+      # TODO: we need a way to break cycles in our from_discord changes
+      # to avoid these double api calls/inserts
       Mimic.expect(Nostrum.Api.Guild, :get, 2, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild #{id}"})}
       end)
@@ -255,15 +255,12 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       assert created_channel.discord_id == channel_id
       assert created_channel.name == "channel-with-all-relationships"
 
-      # Verify guild relationship
       assert created_channel.guild.discord_id == guild_id
-      assert String.contains?(created_channel.guild.name, "Test Guild")
+      assert created_channel.guild.name == "Test Guild #{guild_id}"
 
-      # Verify parent relationship
       assert created_channel.parent.discord_id == parent_id
       assert created_channel.parent.name == "Parent Channel"
 
-      # Verify owner relationship
       assert created_channel.owner.discord_id == owner_id
       assert created_channel.owner.discord_username == "channel_owner"
     end

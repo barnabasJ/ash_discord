@@ -11,7 +11,7 @@ defmodule AshDiscord.Consumer.Handler.ChannelPinsTest do
     @tag :fixed
     test "creates channel pins update in database" do
       guild = guild()
-      channel = channel()
+      channel = channel(%{guild_id: nil, owner_id: nil, parent_id: nil})
 
       TestApp.Discord.guild_from_discord!(%{data: guild}, authorize?: false)
       TestApp.Discord.channel_from_discord!(%{data: channel}, authorize?: false)

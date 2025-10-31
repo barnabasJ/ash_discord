@@ -17,7 +17,14 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
       guild_id = 987_654_321
 
       Mimic.expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
-        {:ok, channel(%{id: channel_id, name: "test-channel"})}
+        {:ok,
+         channel(%{
+           id: channel_id,
+           name: "test-channel",
+           guild_id: guild_id,
+           owner_id: nil,
+           parent_id: nil
+         })}
       end)
 
       Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
@@ -72,7 +79,14 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
       guild_id = 777_888_999
 
       Mimic.expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
-        {:ok, channel(%{id: channel_id, name: "test-channel"})}
+        {:ok,
+         channel(%{
+           id: channel_id,
+           name: "test-channel",
+           guild_id: guild_id,
+           owner_id: nil,
+           parent_id: nil
+         })}
       end)
 
       Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
@@ -128,7 +142,14 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
       guild_id = 888_999_000
 
       Mimic.expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
-        {:ok, channel(%{id: channel_id, name: "test-channel"})}
+        {:ok,
+         channel(%{
+           id: channel_id,
+           name: "test-channel",
+           guild_id: guild_id,
+           owner_id: nil,
+           parent_id: nil
+         })}
       end)
 
       Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
@@ -171,7 +192,14 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
       new_guild_id = 222_222_222
 
       Mimic.stub(Nostrum.Api.Channel, :get, fn ^channel_id ->
-        {:ok, channel(%{id: channel_id, name: "test-channel"})}
+        {:ok,
+         channel(%{
+           id: channel_id,
+           name: "test-channel",
+           guild_id: nil,
+           owner_id: nil,
+           parent_id: nil
+         })}
       end)
 
       Mimic.stub(Nostrum.Api.Guild, :get, fn guild_id

@@ -8,7 +8,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessagePollVote do
   ## Arguments
 
   - `:data` - TypedStruct `AshDiscord.Consumer.Payloads.PollVoteChangeEvent.t()` with poll vote event data
-  - `:identity` - Map with `%{user_id: integer, message_id: integer, answer_id: integer}` for identification
+  - `:identity` - Map with `%{user_discord_id: integer, message_discord_id: integer, answer_id: integer}` for identification
 
   ## Example
 
@@ -54,22 +54,40 @@ defmodule AshDiscord.Changes.FromDiscord.MessagePollVote do
   end
 
   defp validate_identity(
-         %{user_id: user_id, message_id: message_id, answer_id: answer_id} = identity
+         %{
+           user_discord_id: user_discord_id,
+           message_discord_id: message_discord_id,
+           answer_id: answer_id
+         } = identity
        )
-       when not is_nil(user_id) and not is_nil(message_id) and not is_nil(answer_id) do
+       when not is_nil(user_discord_id) and not is_nil(message_discord_id) and
+              not is_nil(answer_id) do
     {:ok, identity}
   end
 
   defp validate_identity(_) do
-    {:error, "MessagePollVote requires identity with user_id, message_id, and answer_id"}
+    {:error,
+     "MessagePollVote requires identity with user_discord_id, message_discord_id, and answer_id"}
   end
 
   defp transform_poll_vote(changeset, poll_vote_data) do
     changeset
-    |> maybe_set_attribute(:user_id, Map.get(poll_vote_data, :user_id))
-    |> maybe_set_attribute(:message_id, Map.get(poll_vote_data, :message_id))
-    |> maybe_set_attribute(:channel_id, Map.get(poll_vote_data, :channel_id))
-    |> maybe_set_attribute(:guild_id, Map.get(poll_vote_data, :guild_id))
+    |> maybe_set_attribute(
+      :user_discord_id,
+      Map.get(poll_vote_data, :user_discord_id) || Map.get(poll_vote_data, :user_id)
+    )
+    |> maybe_set_attribute(
+      :message_discord_id,
+      Map.get(poll_vote_data, :message_discord_id) || Map.get(poll_vote_data, :message_id)
+    )
+    |> maybe_set_attribute(
+      :channel_discord_id,
+      Map.get(poll_vote_data, :channel_discord_id) || Map.get(poll_vote_data, :channel_id)
+    )
+    |> maybe_set_attribute(
+      :guild_discord_id,
+      Map.get(poll_vote_data, :guild_discord_id) || Map.get(poll_vote_data, :guild_id)
+    )
     |> maybe_set_attribute(:answer_id, Map.get(poll_vote_data, :answer_id))
   end
 

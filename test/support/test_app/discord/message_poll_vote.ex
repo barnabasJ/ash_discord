@@ -19,22 +19,22 @@ defmodule TestApp.Discord.MessagePollVote do
   attributes do
     uuid_primary_key(:id)
 
-    attribute(:user_id, :integer,
+    attribute(:user_discord_id, :integer,
       allow_nil?: false,
       public?: true
     )
 
-    attribute(:message_id, :integer,
+    attribute(:message_discord_id, :integer,
       allow_nil?: false,
       public?: true
     )
 
-    attribute(:channel_id, :integer,
+    attribute(:channel_discord_id, :integer,
       allow_nil?: false,
       public?: true
     )
 
-    attribute(:guild_id, :integer,
+    attribute(:guild_discord_id, :integer,
       allow_nil?: false,
       public?: true
     )
@@ -49,25 +49,25 @@ defmodule TestApp.Discord.MessagePollVote do
 
   relationships do
     belongs_to :user, TestApp.Discord.User do
-      source_attribute(:user_id)
+      source_attribute(:user_discord_id)
       destination_attribute(:discord_id)
       allow_nil?(true)
     end
 
     belongs_to :message, TestApp.Discord.Message do
-      source_attribute(:message_id)
+      source_attribute(:message_discord_id)
       destination_attribute(:discord_id)
       allow_nil?(true)
     end
 
     belongs_to :channel, TestApp.Discord.Channel do
-      source_attribute(:channel_id)
+      source_attribute(:channel_discord_id)
       destination_attribute(:discord_id)
       allow_nil?(true)
     end
 
     belongs_to :guild, TestApp.Discord.Guild do
-      source_attribute(:guild_id)
+      source_attribute(:guild_discord_id)
       destination_attribute(:discord_id)
       allow_nil?(true)
     end
@@ -75,13 +75,14 @@ defmodule TestApp.Discord.MessagePollVote do
 
   identities do
     # Unique combination of user, message, and answer
-    identity :unique_vote, [:user_id, :message_id, :answer_id] do
+    identity :unique_vote, [:user_discord_id, :message_discord_id, :answer_id] do
       pre_check_with(TestApp.Discord)
     end
   end
 
   code_interface do
     define(:read)
+    define(:message_poll_vote_from_discord, action: :from_discord)
   end
 
   actions do
@@ -98,7 +99,8 @@ defmodule TestApp.Discord.MessagePollVote do
 
       argument(:identity, :map,
         allow_nil?: true,
-        description: "Map with user_id, message_id, and answer_id for identification"
+        description:
+          "Map with user_discord_id, message_discord_id, and answer_id for identification"
       )
 
       change(AshDiscord.Changes.FromDiscord.MessagePollVote)
@@ -107,8 +109,8 @@ defmodule TestApp.Discord.MessagePollVote do
       upsert_identity(:unique_vote)
 
       upsert_fields([
-        :channel_id,
-        :guild_id
+        :channel_discord_id,
+        :guild_discord_id
       ])
     end
 
@@ -116,10 +118,10 @@ defmodule TestApp.Discord.MessagePollVote do
       primary?(true)
 
       accept([
-        :user_id,
-        :message_id,
-        :channel_id,
-        :guild_id,
+        :user_discord_id,
+        :message_discord_id,
+        :channel_discord_id,
+        :guild_discord_id,
         :answer_id
       ])
     end

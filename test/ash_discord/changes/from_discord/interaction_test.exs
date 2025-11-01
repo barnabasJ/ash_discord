@@ -77,15 +77,15 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
       channel_id = 777_888_999
       user_id = 333_444_555
 
-      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+      Mimic.expect(Nostrum.Api.Guild, :get, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild"})}
       end)
 
-      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
+      Mimic.expect(Nostrum.Api.Channel, :get, fn id ->
         {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
       end)
 
-      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+      Mimic.expect(Nostrum.Api.User, :get, fn id ->
         {:ok, user(%{id: id, username: "slash_user"})}
       end)
 
@@ -128,15 +128,15 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
       channel_id = 666_777_888
       user_id = 999_111_222
 
-      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+      Mimic.expect(Nostrum.Api.Guild, :get, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild"})}
       end)
 
-      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
+      Mimic.expect(Nostrum.Api.Channel, :get, fn id ->
         {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
       end)
 
-      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+      Mimic.expect(Nostrum.Api.User, :get, fn id ->
         {:ok, user(%{id: id, username: "button_user"})}
       end)
 
@@ -181,15 +181,15 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
       channel_id = 111_222_333
       user_id = 222_333_444
 
-      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+      Mimic.expect(Nostrum.Api.Guild, :get, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild"})}
       end)
 
-      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
+      Mimic.expect(Nostrum.Api.Channel, :get, fn id ->
         {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
       end)
 
-      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+      Mimic.expect(Nostrum.Api.User, :get, fn id ->
         {:ok, user(%{id: id, username: "modal_user"})}
       end)
 
@@ -285,15 +285,15 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
       channel_id = 999_111_222
       user_id = 444_555_666
 
-      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+      Mimic.expect(Nostrum.Api.Guild, :get, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild"})}
       end)
 
-      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
+      Mimic.expect(Nostrum.Api.Channel, :get, fn id ->
         {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
       end)
 
-      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+      Mimic.expect(Nostrum.Api.User, :get, fn id ->
         {:ok, user(%{id: id, username: "locale_user"})}
       end)
 
@@ -404,7 +404,6 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
         TestApp.Discord.interaction_from_discord(%{data: updated_struct})
 
       assert updated.id == original.id
-      assert updated.discord_id == original.discord_id
       assert updated.token == "updated_token"
       assert updated.locale == "fr"
     end

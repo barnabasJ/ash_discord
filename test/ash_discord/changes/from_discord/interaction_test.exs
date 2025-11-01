@@ -8,19 +8,28 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
   so API fallback pattern is not applicable.
   """
 
-  use TestApp.DataCase, async: true
+  use TestApp.DataCase, async: false
   import AshDiscord.Test.Generators
+  use Mimic
 
   describe "struct-first pattern" do
     @tag :fixed
     test "creates interaction from discord struct with all attributes" do
-      guild_data = guild(%{id: 111_222_333})
-      channel_data = channel(%{id: 444_555_666, guild_id: 111_222_333})
-      user_data = user(%{id: 777_888_999, username: "test_user"})
+      guild_id = 111_222_333
+      channel_id = 444_555_666
+      user_id = 777_888_999
 
-      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
-      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
-      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
+      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "test_user_#{id}"})}
+      end)
 
       interaction_struct =
         interaction(%{
@@ -32,10 +41,10 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
             name: "test_command",
             type: 1
           },
-          guild_id: 111_222_333,
-          channel_id: 444_555_666,
+          guild_id: guild_id,
+          channel_id: channel_id,
           member: %{
-            user: %{id: 777_888_999, username: "test_user"},
+            user: %{id: user_id, username: "test_user"},
             nick: "TestNick"
           },
           user: nil,
@@ -45,15 +54,11 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
           guild_locale: "en-US"
         })
 
-      TestApp.Discord.interaction_from_discord!(
-        %{data: interaction_struct},
-        authorize?: false
-      )
-
-      [created] =
-        TestApp.Discord.Interaction
-        |> Ash.Query.load([:guild, :channel, :user])
-        |> Ash.read!(authorize?: false)
+      created =
+        TestApp.Discord.interaction_from_discord!(
+          %{data: interaction_struct},
+          load: [:guild, :channel, :user]
+        )
 
       assert created.discord_id == interaction_struct.id
       assert created.application_id == interaction_struct.application_id
@@ -62,20 +67,27 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
       assert created.version == interaction_struct.version
       assert created.locale == interaction_struct.locale
       assert created.guild_locale == interaction_struct.guild_locale
-
-      assert created.guild.discord_id == 111_222_333
-      assert created.channel.discord_id == 444_555_666
-      assert created.user.discord_id == 777_888_999
+      assert created.guild.discord_id == guild_id
+      assert created.channel.discord_id == channel_id
+      assert created.user.discord_id == user_id
     end
 
     test "handles slash command interaction" do
-      guild_data = guild(%{id: 444_555_666})
-      channel_data = channel(%{id: 777_888_999, guild_id: 444_555_666})
-      user_data = user(%{id: 333_444_555, username: "slash_user"})
+      guild_id = 444_555_666
+      channel_id = 777_888_999
+      user_id = 333_444_555
 
-      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
-      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
-      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
+      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "slash_user"})}
+      end)
 
       interaction_struct =
         interaction(%{
@@ -88,41 +100,45 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
             type: 1,
             options: []
           },
-          guild_id: 444_555_666,
-          channel_id: 777_888_999,
+          guild_id: guild_id,
+          channel_id: channel_id,
           member: %{
-            user: %{id: 333_444_555, username: "slash_user"},
+            user: %{id: user_id, username: "slash_user"},
             nick: nil
           },
           token: "slash_token_def456",
           version: 1
         })
 
-      TestApp.Discord.interaction_from_discord!(
-        %{data: interaction_struct},
-        authorize?: false
-      )
-
-      [created] =
-        TestApp.Discord.Interaction
-        |> Ash.Query.load([:guild, :channel, :user])
-        |> Ash.read!(authorize?: false)
+      created =
+        TestApp.Discord.interaction_from_discord!(
+          %{data: interaction_struct},
+          load: [:guild, :channel, :user]
+        )
 
       assert created.discord_id == interaction_struct.id
       assert created.type == 2
-      assert created.guild.discord_id == 444_555_666
-      assert created.channel.discord_id == 777_888_999
-      assert created.user.discord_id == 333_444_555
+      assert created.guild.discord_id == guild_id
+      assert created.channel.discord_id == channel_id
+      assert created.user.discord_id == user_id
     end
 
     test "handles message component interaction" do
-      guild_data = guild(%{id: 333_444_555})
-      channel_data = channel(%{id: 666_777_888, guild_id: 333_444_555})
-      user_data = user(%{id: 999_111_222, username: "button_user"})
+      guild_id = 333_444_555
+      channel_id = 666_777_888
+      user_id = 999_111_222
 
-      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
-      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
-      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
+      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "button_user"})}
+      end)
 
       interaction_struct =
         interaction(%{
@@ -133,10 +149,10 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
             custom_id: "button_click",
             component_type: 2
           },
-          guild_id: 333_444_555,
-          channel_id: 666_777_888,
+          guild_id: guild_id,
+          channel_id: channel_id,
           member: %{
-            user: %{id: 999_111_222, username: "button_user"},
+            user: %{id: user_id, username: "button_user"},
             nick: "ButtonClicker"
           },
           token: "component_token_ghi789",
@@ -147,31 +163,35 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
           }
         })
 
-      TestApp.Discord.interaction_from_discord!(
-        %{data: interaction_struct},
-        authorize?: false
-      )
-
-      [created] =
-        TestApp.Discord.Interaction
-        |> Ash.Query.load([:guild, :channel, :user])
-        |> Ash.read!(authorize?: false)
+      created =
+        TestApp.Discord.interaction_from_discord!(
+          %{data: interaction_struct},
+          load: [:guild, :channel, :user]
+        )
 
       assert created.discord_id == interaction_struct.id
       assert created.type == 3
-      assert created.guild.discord_id == 333_444_555
-      assert created.channel.discord_id == 666_777_888
-      assert created.user.discord_id == 999_111_222
+      assert created.guild.discord_id == guild_id
+      assert created.channel.discord_id == channel_id
+      assert created.user.discord_id == user_id
     end
 
     test "handles modal submit interaction" do
-      guild_data = guild(%{id: 555_666_777})
-      channel_data = channel(%{id: 111_222_333, guild_id: 555_666_777})
-      user_data = user(%{id: 222_333_444, username: "modal_user"})
+      guild_id = 555_666_777
+      channel_id = 111_222_333
+      user_id = 222_333_444
 
-      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
-      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
-      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
+      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "modal_user"})}
+      end)
 
       interaction_struct =
         interaction(%{
@@ -193,40 +213,41 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
               }
             ]
           },
-          guild_id: 555_666_777,
-          channel_id: 111_222_333,
+          guild_id: guild_id,
+          channel_id: channel_id,
           member: %{
-            user: %{id: 222_333_444, username: "modal_user"},
+            user: %{id: user_id, username: "modal_user"},
             nick: nil
           },
           token: "modal_token_jkl012",
           version: 1
         })
 
-      TestApp.Discord.interaction_from_discord!(
-        %{data: interaction_struct},
-        authorize?: false
-      )
-
-      [created] =
-        TestApp.Discord.Interaction
-        |> Ash.Query.load([:guild, :channel, :user])
-        |> Ash.read!(authorize?: false)
+      created =
+        TestApp.Discord.interaction_from_discord!(
+          %{data: interaction_struct},
+          load: [:guild, :channel, :user]
+        )
 
       assert created.discord_id == interaction_struct.id
       assert created.type == 5
-      assert created.guild.discord_id == 555_666_777
-      assert created.channel.discord_id == 111_222_333
-      assert created.user.discord_id == 222_333_444
+      assert created.guild.discord_id == guild_id
+      assert created.channel.discord_id == channel_id
+      assert created.user.discord_id == user_id
     end
 
     @tag :fixed
     test "handles DM interaction without guild" do
-      channel_data = channel(%{id: 777_888_999, guild_id: nil})
-      user_data = user(%{id: 111_222_333, username: "dm_user"})
+      channel_id = 777_888_999
+      user_id = 111_222_333
 
-      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
-      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
+      Mimic.stub(Nostrum.Api.Channel, :get, fn ^channel_id ->
+        {:ok, channel(%{id: channel_id, guild_id: nil, name: "dm-channel"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "dm_user"})}
+      end)
 
       interaction_struct =
         interaction(%{
@@ -239,38 +260,42 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
             type: 1
           },
           guild_id: nil,
-          channel_id: 777_888_999,
-          user: %{id: 111_222_333, username: "dm_user"},
+          channel_id: channel_id,
+          user: %{id: user_id, username: "dm_user"},
           member: nil,
           token: "dm_token_mno345",
           version: 1,
           locale: "en-US"
         })
 
-      TestApp.Discord.interaction_from_discord!(
-        %{data: interaction_struct},
-        authorize?: false
-      )
-
-      [created] =
-        TestApp.Discord.Interaction
-        |> Ash.Query.load([:channel, :user])
-        |> Ash.read!(authorize?: false)
+      created =
+        TestApp.Discord.interaction_from_discord!(
+          %{data: interaction_struct},
+          load: [:channel, :user]
+        )
 
       assert created.discord_id == interaction_struct.id
       assert created.guild_discord_id == nil
-      assert created.channel.discord_id == 777_888_999
-      assert created.user.discord_id == 111_222_333
+      assert created.channel.discord_id == channel_id
+      assert created.user.discord_id == user_id
     end
 
     test "handles interaction with locale information" do
-      guild_data = guild(%{id: 333_444_555})
-      channel_data = channel(%{id: 999_111_222, guild_id: 333_444_555})
-      user_data = user(%{id: 444_555_666, username: "locale_user"})
+      guild_id = 333_444_555
+      channel_id = 999_111_222
+      user_id = 444_555_666
 
-      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
-      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
-      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
+      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "locale_user"})}
+      end)
 
       interaction_struct =
         interaction(%{
@@ -282,10 +307,10 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
             name: "locale_command",
             type: 1
           },
-          guild_id: 333_444_555,
-          channel_id: 999_111_222,
+          guild_id: guild_id,
+          channel_id: channel_id,
           member: %{
-            user: %{id: 444_555_666, username: "locale_user"},
+            user: %{id: user_id, username: "locale_user"},
             nick: nil
           },
           token: "locale_token_stu901",
@@ -294,35 +319,39 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
           guild_locale: "en-US"
         })
 
-      TestApp.Discord.interaction_from_discord!(
-        %{data: interaction_struct},
-        authorize?: false
-      )
-
-      [created] =
-        TestApp.Discord.Interaction
-        |> Ash.Query.load([:guild, :channel, :user])
-        |> Ash.read!(authorize?: false)
+      created =
+        TestApp.Discord.interaction_from_discord!(
+          %{data: interaction_struct},
+          load: [:guild, :channel, :user]
+        )
 
       assert created.discord_id == interaction_struct.id
       assert created.locale == "fr"
       assert created.guild_locale == "en-US"
-      assert created.guild.discord_id == 333_444_555
-      assert created.channel.discord_id == 999_111_222
-      assert created.user.discord_id == 444_555_666
+      assert created.guild.discord_id == guild_id
+      assert created.channel.discord_id == channel_id
+      assert created.user.discord_id == user_id
     end
   end
 
   describe "upsert behavior" do
     @tag :fixed
     test "updates existing interaction instead of creating duplicate" do
-      guild_data = guild(%{id: 444_555_666})
-      channel_data = channel(%{id: 777_888_999, guild_id: 444_555_666})
-      user_data = user(%{id: 987_654_321, username: "original_user"})
+      guild_id = 444_555_666
+      channel_id = 777_888_999
+      user_id = 987_654_321
 
-      TestApp.Discord.guild_from_discord!(%{data: guild_data}, authorize?: false)
-      TestApp.Discord.channel_from_discord!(%{data: channel_data}, authorize?: false)
-      TestApp.Discord.user_from_discord!(%{data: user_data}, authorize?: false)
+      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "test_user_#{id}"})}
+      end)
 
       discord_id = 555_666_777
 
@@ -336,10 +365,10 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
             name: "original_command",
             type: 1
           },
-          guild_id: 444_555_666,
-          channel_id: 777_888_999,
+          guild_id: guild_id,
+          channel_id: channel_id,
           member: %{
-            user: %{id: 987_654_321, username: "original_user"},
+            user: %{id: user_id, username: "original_user"},
             nick: "Original"
           },
           token: "original_token",
@@ -348,7 +377,7 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
         })
 
       {:ok, original} =
-        TestApp.Discord.interaction_from_discord(%{data: initial_struct}, authorize?: false)
+        TestApp.Discord.interaction_from_discord(%{data: initial_struct})
 
       updated_struct =
         interaction(%{
@@ -360,10 +389,10 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
             name: "updated_command",
             type: 1
           },
-          guild_id: 444_555_666,
-          channel_id: 777_888_999,
+          guild_id: guild_id,
+          channel_id: channel_id,
           member: %{
-            user: %{id: 987_654_321, username: "updated_user"},
+            user: %{id: user_id, username: "updated_user"},
             nick: "Updated"
           },
           token: "updated_token",
@@ -372,11 +401,10 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
         })
 
       {:ok, updated} =
-        TestApp.Discord.interaction_from_discord(%{data: updated_struct}, authorize?: false)
+        TestApp.Discord.interaction_from_discord(%{data: updated_struct})
 
       assert updated.id == original.id
       assert updated.discord_id == original.discord_id
-
       assert updated.token == "updated_token"
       assert updated.locale == "fr"
     end

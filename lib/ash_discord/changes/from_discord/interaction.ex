@@ -22,7 +22,7 @@ defmodule AshDiscord.Changes.FromDiscord.Interaction do
   alias AshDiscord.Changes.FromDiscord.Transformations
   alias AshDiscord.Consumer.Payloads
 
-  @impl true
+  @impl Ash.Resource.Change
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_transaction(changeset, fn changeset ->
       case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
@@ -98,21 +98,10 @@ defmodule AshDiscord.Changes.FromDiscord.Interaction do
     end
   end
 
-  defp maybe_manage_channel_relationship(changeset, %{channel_id: channel_id, guild_id: guild_id})
+  defp maybe_manage_channel_relationship(changeset, %{channel_id: channel_id, guild_id: _guild_id})
        when not is_nil(channel_id) do
     if Ash.Resource.Info.relationship(changeset.resource, :channel) do
-      Ash.Changeset.manage_relationship(
-        changeset,
-        :channel,
-        %{
-          discord_id: channel_id,
-          guild_discord_id: guild_id,
-          identity: %{discord_id: channel_id}
-        },
-        type: :append_and_remove,
-        use_identities: [:discord_id],
-        on_no_match: {:create, :from_discord}
-      )
+      Transformations.manage_channel_relationship(changeset, channel_id)
     else
       changeset
     end

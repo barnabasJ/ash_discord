@@ -13,8 +13,8 @@ defmodule AshDiscord.Consumer.Handler.MessagePollVote do
     case Handler.invoke_configured_action(
            :MESSAGE_POLL_VOTE_ADD,
            %{
-             user_id: poll_vote_add.user_id,
-             message_id: poll_vote_add.message_id,
+             user_discord_id: poll_vote_add.user_id,
+             message_discord_id: poll_vote_add.message_id,
              answer_id: poll_vote_add.answer_id
            },
            %{data: poll_vote_add},
@@ -41,8 +41,8 @@ defmodule AshDiscord.Consumer.Handler.MessagePollVote do
     case Handler.invoke_configured_action(
            :MESSAGE_POLL_VOTE_REMOVE,
            %{
-             user_id: poll_vote_remove.user_id,
-             message_id: poll_vote_remove.message_id,
+             user_discord_id: poll_vote_remove.user_id,
+             message_discord_id: poll_vote_remove.message_id,
              answer_id: poll_vote_remove.answer_id
            },
            %{},

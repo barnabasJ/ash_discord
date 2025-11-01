@@ -502,10 +502,24 @@ defmodule AshDiscord.Test.Generators do
       "hello"
   """
   def interaction(attrs \\ %{}) do
-    interaction_user = user()
+    # Extract user_id from member.user if provided in attrs, otherwise generate
+    interaction_user_id =
+      case attrs do
+        %{member: %{user: %{id: id}}} -> id
+        %{member: %{user_id: id}} -> id
+        %{user: %{id: id}} -> id
+        _ -> generate_snowflake()
+      end
 
-    # 20% DM interactions
-    has_guild = Faker.Util.pick([true, true, true, true, false])
+    interaction_user = user(%{id: interaction_user_id})
+
+    # 20% DM interactions (unless guild_id explicitly provided)
+    has_guild =
+      case attrs do
+        %{guild_id: nil} -> false
+        %{guild_id: _} -> true
+        _ -> Faker.Util.pick([true, true, true, true, false])
+      end
 
     # Vary interaction types: 60% commands, 20% components, 20% modals
     interaction_type = Faker.Util.pick([2, 2, 2, 3, 5])

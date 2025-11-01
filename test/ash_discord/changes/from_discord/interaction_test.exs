@@ -72,20 +72,21 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
       assert created.user.discord_id == user_id
     end
 
+    @tag :fixed
     test "handles slash command interaction" do
       guild_id = 444_555_666
       channel_id = 777_888_999
       user_id = 333_444_555
 
-      Mimic.expect(Nostrum.Api.Guild, :get, fn id ->
+      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild"})}
       end)
 
-      Mimic.expect(Nostrum.Api.Channel, :get, fn id ->
+      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
         {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
       end)
 
-      Mimic.expect(Nostrum.Api.User, :get, fn id ->
+      Mimic.stub(Nostrum.Api.User, :get, fn id ->
         {:ok, user(%{id: id, username: "slash_user"})}
       end)
 
@@ -123,20 +124,21 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
       assert created.user.discord_id == user_id
     end
 
+    @tag :fixed
     test "handles message component interaction" do
       guild_id = 333_444_555
       channel_id = 666_777_888
       user_id = 999_111_222
 
-      Mimic.expect(Nostrum.Api.Guild, :get, fn id ->
+      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild"})}
       end)
 
-      Mimic.expect(Nostrum.Api.Channel, :get, fn id ->
+      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
         {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
       end)
 
-      Mimic.expect(Nostrum.Api.User, :get, fn id ->
+      Mimic.stub(Nostrum.Api.User, :get, fn id ->
         {:ok, user(%{id: id, username: "button_user"})}
       end)
 
@@ -176,20 +178,21 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
       assert created.user.discord_id == user_id
     end
 
+    @tag :fixed
     test "handles modal submit interaction" do
       guild_id = 555_666_777
       channel_id = 111_222_333
       user_id = 222_333_444
 
-      Mimic.expect(Nostrum.Api.Guild, :get, fn id ->
+      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild"})}
       end)
 
-      Mimic.expect(Nostrum.Api.Channel, :get, fn id ->
+      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
         {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
       end)
 
-      Mimic.expect(Nostrum.Api.User, :get, fn id ->
+      Mimic.stub(Nostrum.Api.User, :get, fn id ->
         {:ok, user(%{id: id, username: "modal_user"})}
       end)
 
@@ -280,20 +283,21 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
       assert created.user.discord_id == user_id
     end
 
+    @tag :fixed
     test "handles interaction with locale information" do
       guild_id = 333_444_555
       channel_id = 999_111_222
       user_id = 444_555_666
 
-      Mimic.expect(Nostrum.Api.Guild, :get, fn id ->
+      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild"})}
       end)
 
-      Mimic.expect(Nostrum.Api.Channel, :get, fn id ->
+      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
         {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
       end)
 
-      Mimic.expect(Nostrum.Api.User, :get, fn id ->
+      Mimic.stub(Nostrum.Api.User, :get, fn id ->
         {:ok, user(%{id: id, username: "locale_user"})}
       end)
 

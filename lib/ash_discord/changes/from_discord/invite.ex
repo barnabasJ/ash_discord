@@ -26,7 +26,7 @@ defmodule AshDiscord.Changes.FromDiscord.Invite do
   alias AshDiscord.Changes.FromDiscord.Transformations
   alias AshDiscord.Consumer.Payloads
 
-  @impl true
+  @impl Ash.Resource.Change
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_transaction(changeset, fn changeset ->
       # API calls happen here, OUTSIDE transaction
@@ -147,15 +147,7 @@ defmodule AshDiscord.Changes.FromDiscord.Invite do
 
   defp maybe_manage_channel_relationship(changeset, channel_discord_id) do
     if Ash.Resource.Info.relationship(changeset.resource, :channel) do
-      # Pass both discord_id (for lookup) and identity (for API fetch if not found)
-      Ash.Changeset.manage_relationship(
-        changeset,
-        :channel,
-        %{discord_id: channel_discord_id, identity: channel_discord_id},
-        type: :append_and_remove,
-        use_identities: [:discord_id],
-        on_no_match: {:create, :from_discord}
-      )
+      Transformations.manage_channel_relationship(changeset, channel_discord_id)
     else
       changeset
     end

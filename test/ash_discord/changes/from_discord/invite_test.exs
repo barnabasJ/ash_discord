@@ -51,6 +51,7 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
       assert created_invite.code == invite_struct.code
       assert created_invite.guild.discord_id == guild_id
       assert created_invite.channel.discord_id == channel_id
+      assert created_invite.inviter.discord_id == inviter_id
       assert created_invite.target_user_type == nil
       assert created_invite.target_user == nil
       assert created_invite.uses == invite_struct.uses
@@ -188,7 +189,9 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
         )
 
       assert created_invite.code == invite_struct.code
+      assert created_invite.inviter.discord_id == inviter_id
       assert created_invite.target_user_type == 1
+      assert created_invite.target_user.discord_id == target_user_id
     end
 
     @tag :fixed
@@ -269,6 +272,94 @@ defmodule AshDiscord.Changes.FromDiscord.InviteTest do
 
       assert created_invite.code == invite_struct.code
       assert created_invite.inviter == nil
+    end
+
+    @tag :fixed
+    test "handles invite with expires_at" do
+      guild_id = 222_333_444
+      channel_id = 555_666_777
+      inviter_id = 888_999_111
+
+      stub(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      stub(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0})}
+      end)
+
+      stub(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "test_user"})}
+      end)
+
+      invite_payload = %AshDiscord.Consumer.Payloads.Invite{
+        code: "expires789",
+        guild: %{id: guild_id},
+        channel: %{id: channel_id},
+        inviter: %{id: inviter_id},
+        target_user_type: nil,
+        target_user: nil,
+        uses: 2,
+        max_uses: 10,
+        max_age: 86400,
+        temporary: false,
+        created_at: "2023-07-01T12:00:00Z",
+        expires_at: "2023-07-02T12:00:00Z"
+      }
+
+      created_invite =
+        TestApp.Discord.invite_from_discord!(%{data: invite_payload},
+          load: [:guild, :channel, :inviter]
+        )
+
+      assert created_invite.code == invite_payload.code
+      assert created_invite.created_at == ~U[2023-07-01 12:00:00Z]
+      assert created_invite.expires_at == ~U[2023-07-02 12:00:00Z]
+    end
+
+    @tag :fixed
+    test "handles invite with approximate counts" do
+      guild_id = 444_555_666
+      channel_id = 777_888_999
+      inviter_id = 111_222_333
+
+      stub(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      stub(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0})}
+      end)
+
+      stub(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "test_user"})}
+      end)
+
+      invite_struct =
+        invite(%{
+          code: "counts123",
+          guild: guild(%{id: guild_id}),
+          channel: channel(%{id: channel_id}),
+          inviter: user(%{id: inviter_id}),
+          target_user_type: nil,
+          target_user: nil,
+          uses: 0,
+          max_uses: 0,
+          max_age: 0,
+          temporary: false,
+          created_at: "2023-08-01T10:00:00Z",
+          approximate_presence_count: 1250,
+          approximate_member_count: 5000
+        })
+
+      created_invite =
+        TestApp.Discord.invite_from_discord!(%{data: invite_struct},
+          load: [:guild, :channel, :inviter]
+        )
+
+      assert created_invite.code == invite_struct.code
+      assert created_invite.approximate_presence_count == 1250
+      assert created_invite.approximate_member_count == 5000
     end
   end
 

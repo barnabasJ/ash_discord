@@ -82,6 +82,9 @@ defmodule AshDiscord.Changes.FromDiscord.Invite do
         channel_obj when is_map(channel_obj) -> get_nested_id(channel_obj)
       end
 
+    inviter_id = get_nested_id(invite_data.inviter)
+    target_user_id = get_nested_id(invite_data.target_user)
+
     changeset
     |> maybe_set_attribute(:code, invite_data.code)
     |> maybe_set_attribute(:guild_discord_id, guild_id)
@@ -90,10 +93,12 @@ defmodule AshDiscord.Changes.FromDiscord.Invite do
     |> maybe_set_attribute(:channel_id, channel_id)
     |> maybe_manage_guild_relationship(guild_id)
     |> maybe_manage_channel_relationship(channel_id)
-    |> maybe_set_attribute(:inviter_discord_id, get_nested_id(invite_data.inviter))
-    |> maybe_set_attribute(:inviter_id, get_nested_id(invite_data.inviter))
-    |> maybe_set_attribute(:target_user_discord_id, get_nested_id(invite_data.target_user))
-    |> maybe_set_attribute(:target_user_id, get_nested_id(invite_data.target_user))
+    |> maybe_set_attribute(:inviter_discord_id, inviter_id)
+    |> maybe_set_attribute(:inviter_id, inviter_id)
+    |> maybe_manage_inviter_relationship(inviter_id)
+    |> maybe_set_attribute(:target_user_discord_id, target_user_id)
+    |> maybe_set_attribute(:target_user_id, target_user_id)
+    |> maybe_manage_target_user_relationship(target_user_id)
     |> maybe_set_attribute(:target_type, invite_data.target_type)
     |> maybe_set_attribute(:target_user_type, invite_data.target_user_type)
     |> maybe_set_attribute(:approximate_presence_count, invite_data.approximate_presence_count)
@@ -151,6 +156,26 @@ defmodule AshDiscord.Changes.FromDiscord.Invite do
         use_identities: [:discord_id],
         on_no_match: {:create, :from_discord}
       )
+    else
+      changeset
+    end
+  end
+
+  defp maybe_manage_inviter_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_inviter_relationship(changeset, inviter_discord_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :inviter) do
+      Transformations.manage_user_relationship(changeset, inviter_discord_id, :inviter)
+    else
+      changeset
+    end
+  end
+
+  defp maybe_manage_target_user_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_target_user_relationship(changeset, target_user_discord_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :target_user) do
+      Transformations.manage_user_relationship(changeset, target_user_discord_id, :target_user)
     else
       changeset
     end

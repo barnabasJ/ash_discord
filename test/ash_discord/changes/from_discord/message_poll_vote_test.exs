@@ -1,142 +1,265 @@
 defmodule AshDiscord.Changes.FromDiscord.MessagePollVoteTest do
-  use TestApp.DataCase, async: true
+  @moduledoc """
+  Comprehensive tests for MessagePollVote entity from_discord transformation.
 
+  Tests struct-first pattern and upsert behavior.
+
+  Note: Poll votes are event-only data and cannot be fetched from Discord API,
+  so API fallback pattern is not applicable.
+  """
+
+  use TestApp.DataCase, async: true
   import AshDiscord.Test.Generators
 
-  alias TestApp.Discord.MessagePollVote
+  describe "struct-first pattern" do
+    @tag :fixed
+    test "creates poll vote from discord struct with all attributes" do
+      user_id = 111_222_333
+      message_id = 444_555_666
+      channel_id = 777_888_999
+      guild_id = 123_456_789
 
-  describe "from_discord change" do
-    test "transforms poll vote data correctly" do
       poll_vote_event =
         poll_vote_change_event(%{
-          user_id: generate_snowflake(),
-          message_id: generate_snowflake(),
-          channel_id: generate_snowflake(),
-          guild_id: generate_snowflake(),
-          answer_id: 2,
-          type: :add
-        })
-
-      {:ok, created} =
-        MessagePollVote
-        |> Ash.Changeset.for_create(:from_discord, %{
-          data: poll_vote_event
-        })
-        |> Ash.create()
-
-      assert created.user_id == poll_vote_event.user_id
-      assert created.message_id == poll_vote_event.message_id
-      assert created.channel_id == poll_vote_event.channel_id
-      assert created.guild_id == poll_vote_event.guild_id
-      assert created.answer_id == poll_vote_event.answer_id
-    end
-
-    test "upserts poll vote when same user votes for same answer" do
-      poll_vote_event =
-        poll_vote_change_event(%{
-          user_id: generate_snowflake(),
-          message_id: generate_snowflake(),
-          channel_id: generate_snowflake(),
-          guild_id: generate_snowflake(),
+          user_id: user_id,
+          message_id: message_id,
+          channel_id: channel_id,
+          guild_id: guild_id,
           answer_id: 1,
           type: :add
         })
 
-      {:ok, first} =
-        MessagePollVote
-        |> Ash.Changeset.for_create(:from_discord, %{
-          data: poll_vote_event
-        })
-        |> Ash.create()
+      created =
+        TestApp.Discord.message_poll_vote_from_discord!(%{data: poll_vote_event})
 
-      # Update with new guild_id (simulating upsert)
-      updated_event = %{poll_vote_event | guild_id: generate_snowflake()}
-
-      {:ok, second} =
-        MessagePollVote
-        |> Ash.Changeset.for_create(:from_discord, %{
-          data: updated_event
-        })
-        |> Ash.create()
-
-      # Should be the same record (upserted)
-      assert first.id == second.id
-      assert second.guild_id == updated_event.guild_id
+      assert created.user_discord_id == user_id
+      assert created.message_discord_id == message_id
+      assert created.channel_discord_id == channel_id
+      assert created.guild_discord_id == guild_id
+      assert created.answer_id == 1
     end
 
+    @tag :fixed
+    test "handles different answer IDs" do
+      user_id = 999_888_777
+      message_id = 555_444_333
+
+      poll_vote_event =
+        poll_vote_change_event(%{
+          user_id: user_id,
+          message_id: message_id,
+          channel_id: 111_111_111,
+          guild_id: 222_222_222,
+          answer_id: 5,
+          type: :add
+        })
+
+      created =
+        TestApp.Discord.message_poll_vote_from_discord!(%{data: poll_vote_event})
+
+      assert created.user_discord_id == user_id
+      assert created.message_discord_id == message_id
+      assert created.answer_id == 5
+    end
+
+    @tag :fixed
+    test "handles remove vote type" do
+      poll_vote_event =
+        poll_vote_change_event(%{
+          user_id: 111_111_111,
+          message_id: 222_222_222,
+          channel_id: 333_333_333,
+          guild_id: 444_444_444,
+          answer_id: 2,
+          type: :remove
+        })
+
+      created =
+        TestApp.Discord.message_poll_vote_from_discord!(%{data: poll_vote_event})
+
+      assert created.user_discord_id == 111_111_111
+      assert created.message_discord_id == 222_222_222
+      assert created.answer_id == 2
+    end
+  end
+
+  describe "identity-based creation" do
+    @tag :fixed
+    test "creates poll vote from identity map" do
+      user_id = 555_666_777
+      message_id = 888_999_000
+      answer_id = 3
+
+      identity = %{
+        user_discord_id: user_id,
+        message_discord_id: message_id,
+        answer_id: answer_id
+      }
+
+      created =
+        TestApp.Discord.message_poll_vote_from_discord!(%{identity: identity})
+
+      assert created.user_discord_id == user_id
+      assert created.message_discord_id == message_id
+      assert created.answer_id == answer_id
+    end
+
+    @tag :fixed
+    test "errors when identity missing required user_discord_id" do
+      incomplete_identity = %{
+        message_discord_id: 123_456_789,
+        answer_id: 1
+      }
+
+      assert {:error, %Ash.Error.Invalid{}} =
+               TestApp.Discord.message_poll_vote_from_discord(%{identity: incomplete_identity})
+    end
+
+    @tag :fixed
+    test "errors when identity missing required message_discord_id" do
+      incomplete_identity = %{
+        user_discord_id: 123_456_789,
+        answer_id: 1
+      }
+
+      assert {:error, %Ash.Error.Invalid{}} =
+               TestApp.Discord.message_poll_vote_from_discord(%{identity: incomplete_identity})
+    end
+
+    @tag :fixed
+    test "errors when identity missing required answer_id" do
+      incomplete_identity = %{
+        user_discord_id: 123_456_789,
+        message_discord_id: 987_654_321
+      }
+
+      assert {:error, %Ash.Error.Invalid{}} =
+               TestApp.Discord.message_poll_vote_from_discord(%{identity: incomplete_identity})
+    end
+
+    @tag :fixed
+    test "errors when neither data nor identity provided" do
+      assert {:error, %Ash.Error.Invalid{}} =
+               TestApp.Discord.message_poll_vote_from_discord(%{})
+    end
+  end
+
+  describe "upsert behavior" do
+    @tag :fixed
+    test "updates existing poll vote instead of creating duplicate" do
+      user_id = 111_222_333
+      message_id = 444_555_666
+      answer_id = 1
+
+      initial_event =
+        poll_vote_change_event(%{
+          user_id: user_id,
+          message_id: message_id,
+          channel_id: 777_777_777,
+          guild_id: 888_888_888,
+          answer_id: answer_id,
+          type: :add
+        })
+
+      original =
+        TestApp.Discord.message_poll_vote_from_discord!(%{data: initial_event})
+
+      updated_event =
+        poll_vote_change_event(%{
+          user_id: user_id,
+          message_id: message_id,
+          channel_id: 999_999_999,
+          guild_id: 111_111_111,
+          answer_id: answer_id,
+          type: :add
+        })
+
+      updated =
+        TestApp.Discord.message_poll_vote_from_discord!(%{data: updated_event})
+
+      assert updated.id == original.id
+      assert updated.user_discord_id == original.user_discord_id
+      assert updated.message_discord_id == original.message_discord_id
+      assert updated.answer_id == original.answer_id
+
+      assert updated.channel_discord_id == 999_999_999
+      assert updated.guild_discord_id == 111_111_111
+    end
+
+    @tag :fixed
     test "allows multiple votes from same user for different answers" do
-      user_id = generate_snowflake()
-      message_id = generate_snowflake()
+      user_id = 555_666_777
+      message_id = 888_999_000
 
       vote1 =
         poll_vote_change_event(%{
           user_id: user_id,
           message_id: message_id,
-          answer_id: 1
+          channel_id: 111_222_333,
+          guild_id: 444_555_666,
+          answer_id: 1,
+          type: :add
         })
 
       vote2 =
         poll_vote_change_event(%{
           user_id: user_id,
           message_id: message_id,
-          answer_id: 2
+          channel_id: 111_222_333,
+          guild_id: 444_555_666,
+          answer_id: 2,
+          type: :add
         })
 
-      {:ok, created1} =
-        MessagePollVote
-        |> Ash.Changeset.for_create(:from_discord, %{data: vote1})
-        |> Ash.create()
+      created1 =
+        TestApp.Discord.message_poll_vote_from_discord!(%{data: vote1})
 
-      {:ok, created2} =
-        MessagePollVote
-        |> Ash.Changeset.for_create(:from_discord, %{data: vote2})
-        |> Ash.create()
+      created2 =
+        TestApp.Discord.message_poll_vote_from_discord!(%{data: vote2})
 
-      # Should be different records
       assert created1.id != created2.id
+      assert created1.user_discord_id == user_id
+      assert created2.user_discord_id == user_id
       assert created1.answer_id == 1
       assert created2.answer_id == 2
     end
 
-    test "handles identity map for identification" do
-      identity = %{
-        user_id: generate_snowflake(),
-        message_id: generate_snowflake(),
-        answer_id: 3
-      }
+    @tag :fixed
+    test "allows multiple users to vote for same answer" do
+      message_id = 123_456_789
+      answer_id = 1
 
-      {:ok, created} =
-        MessagePollVote
-        |> Ash.Changeset.for_create(:from_discord, %{
-          identity: identity
+      vote1 =
+        poll_vote_change_event(%{
+          user_id: 111_111_111,
+          message_id: message_id,
+          channel_id: 777_888_999,
+          guild_id: 555_666_777,
+          answer_id: answer_id,
+          type: :add
         })
-        |> Ash.create()
 
-      assert created.user_id == identity.user_id
-      assert created.message_id == identity.message_id
-      assert created.answer_id == identity.answer_id
-    end
+      vote2 =
+        poll_vote_change_event(%{
+          user_id: 222_222_222,
+          message_id: message_id,
+          channel_id: 777_888_999,
+          guild_id: 555_666_777,
+          answer_id: answer_id,
+          type: :add
+        })
 
-    test "errors when required identity fields are missing" do
-      # Missing answer_id
-      incomplete_identity = %{
-        user_id: generate_snowflake(),
-        message_id: generate_snowflake()
-      }
+      created1 =
+        TestApp.Discord.message_poll_vote_from_discord!(%{data: vote1})
 
-      assert {:error, %Ash.Error.Invalid{}} =
-               MessagePollVote
-               |> Ash.Changeset.for_create(:from_discord, %{
-                 identity: incomplete_identity
-               })
-               |> Ash.create()
-    end
+      created2 =
+        TestApp.Discord.message_poll_vote_from_discord!(%{data: vote2})
 
-    test "errors when neither data nor identity provided" do
-      assert {:error, %Ash.Error.Invalid{}} =
-               MessagePollVote
-               |> Ash.Changeset.for_create(:from_discord, %{})
-               |> Ash.create()
+      assert created1.id != created2.id
+      assert created1.user_discord_id == 111_111_111
+      assert created2.user_discord_id == 222_222_222
+      assert created1.answer_id == answer_id
+      assert created2.answer_id == answer_id
     end
   end
 end

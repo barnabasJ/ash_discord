@@ -29,7 +29,7 @@ defmodule AshDiscord.Changes.FromDiscord.Integration do
   alias AshDiscord.Changes.FromDiscord.Transformations
   alias AshDiscord.Consumer.Payloads
 
-  @impl true
+  @impl Ash.Resource.Change
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_transaction(changeset, fn changeset ->
       # API calls happen here, OUTSIDE transaction

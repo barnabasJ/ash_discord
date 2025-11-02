@@ -8,34 +8,25 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
   use TestApp.DataCase, async: true
   import AshDiscord.Test.Generators
   use Mimic
-  import Mimic
 
   describe "struct-first pattern" do
-    setup do
-      Mimic.copy(Nostrum.Api.User)
-      Mimic.copy(Nostrum.Api.Channel)
-      Mimic.copy(Nostrum.Api.Guild)
-
-      stub(Nostrum.Api.User, :get, fn id ->
-        {:ok, user(%{id: id, username: "test_user_#{id}"})}
-      end)
-
-      stub(Nostrum.Api.Channel, :get, fn id ->
-        {:ok, channel(%{id: id, name: "test-channel"})}
-      end)
-
-      stub(Nostrum.Api.Guild, :get, fn id ->
-        {:ok, guild(%{id: id, name: "Test Guild"})}
-      end)
-
-      :ok
-    end
-
     @tag :fixed
     test "creates message reaction from discord struct with unicode emoji" do
       user_id = 111_222_333
       channel_id = 777_888_999
       guild_id = 333_444_555
+
+      expect(Nostrum.Api.User, :get, fn ^user_id ->
+        {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
+      end)
+
+      expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
+        {:ok, channel(%{id: channel_id, name: "test-channel", guild_id: guild_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
 
       reaction_event =
         message_reaction_add_event(%{
@@ -67,6 +58,18 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
       channel_id = 777_888_999
       guild_id = 333_444_555
 
+      expect(Nostrum.Api.User, :get, fn ^user_id ->
+        {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
+      end)
+
+      expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
+        {:ok, channel(%{id: channel_id, name: "test-channel", guild_id: guild_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
       reaction_event =
         message_reaction_add_event(%{
           emoji: %{id: 987_654_321, name: "custom_emoji", animated: false},
@@ -97,6 +100,18 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
       channel_id = 444_555_666
       guild_id = 999_111_222
 
+      expect(Nostrum.Api.User, :get, fn ^user_id ->
+        {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
+      end)
+
+      expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
+        {:ok, channel(%{id: channel_id, name: "test-channel", guild_id: guild_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
       reaction_event =
         message_reaction_add_event(%{
           emoji: %{id: 555_666_777, name: "animated_party", animated: true},
@@ -125,6 +140,18 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
       user_id = 333_444_555
       channel_id = 999_111_222
       guild_id = 222_333_444
+
+      expect(Nostrum.Api.User, :get, fn ^user_id ->
+        {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
+      end)
+
+      expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
+        {:ok, channel(%{id: channel_id, name: "test-channel", guild_id: guild_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
 
       reaction_event =
         message_reaction_add_event(%{
@@ -155,6 +182,18 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
       channel_id = 555_666_777
       guild_id = 111_222_333
 
+      expect(Nostrum.Api.User, :get, fn ^user_id ->
+        {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
+      end)
+
+      expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
+        {:ok, channel(%{id: channel_id, name: "test-channel", guild_id: guild_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
       reaction_event =
         message_reaction_add_event(%{
           emoji: %{id: nil, name: "🔥", animated: false},
@@ -182,6 +221,14 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
       user_id = 444_555_666
       channel_id = 111_222_333
 
+      expect(Nostrum.Api.User, :get, fn ^user_id ->
+        {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
+      end)
+
+      expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
+        {:ok, channel(%{id: channel_id, name: "test-channel", guild_id: nil})}
+      end)
+
       reaction_event =
         message_reaction_add_event(%{
           emoji: %{id: nil, name: "😊", animated: false},
@@ -205,39 +252,32 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
   end
 
   describe "API fallback pattern" do
-    setup do
-      Mimic.copy(Nostrum.Api.Message)
-      Mimic.copy(Nostrum.Api.User)
-      Mimic.copy(Nostrum.Api.Channel)
-      Mimic.copy(Nostrum.Api.Guild)
-
-      stub(Nostrum.Api.User, :get, fn id ->
-        {:ok, user(%{id: id, username: "test_user_#{id}"})}
-      end)
-
-      stub(Nostrum.Api.Channel, :get, fn id ->
-        {:ok, channel(%{id: id, name: "test-channel"})}
-      end)
-
-      stub(Nostrum.Api.Guild, :get, fn id ->
-        {:ok, guild(%{id: id, name: "Test Guild"})}
-      end)
-
-      :ok
-    end
-
     @tag :fixed
     test "fetches message reaction from API when data not provided" do
       channel_id = 555_666_777
       message_id = 999_888_777
       user_id = 123_456_789
+      guild_id = 111_222_333
       emoji_name = "👍"
 
-      Mimic.expect(Nostrum.Api.Message, :get, fn ^channel_id, ^message_id ->
+      expect(Nostrum.Api.User, :get, fn ^user_id ->
+        {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
+      end)
+
+      expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
+        {:ok, channel(%{id: channel_id, name: "test-channel", guild_id: guild_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
+      expect(Nostrum.Api.Message, :get, fn ^channel_id, ^message_id ->
         {:ok,
          message(%{
            id: message_id,
            channel_id: channel_id,
+           guild_id: guild_id,
            content: "Test message",
            reactions: [
              %{
@@ -272,14 +312,28 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
       channel_id = 555_666_777
       message_id = 999_888_777
       user_id = 123_456_789
+      guild_id = 222_333_444
       emoji_id = 987_654_321
       emoji_name = "custom_emoji"
 
-      Mimic.expect(Nostrum.Api.Message, :get, fn ^channel_id, ^message_id ->
+      expect(Nostrum.Api.User, :get, fn ^user_id ->
+        {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
+      end)
+
+      expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
+        {:ok, channel(%{id: channel_id, name: "test-channel", guild_id: guild_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
+      expect(Nostrum.Api.Message, :get, fn ^channel_id, ^message_id ->
         {:ok,
          message(%{
            id: message_id,
            channel_id: channel_id,
+           guild_id: guild_id,
            content: "Test message",
            reactions: [
              %{
@@ -310,26 +364,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
   end
 
   describe "upsert behavior" do
-    setup do
-      Mimic.copy(Nostrum.Api.User)
-      Mimic.copy(Nostrum.Api.Channel)
-      Mimic.copy(Nostrum.Api.Guild)
-
-      stub(Nostrum.Api.User, :get, fn id ->
-        {:ok, user(%{id: id, username: "test_user_#{id}"})}
-      end)
-
-      stub(Nostrum.Api.Channel, :get, fn id ->
-        {:ok, channel(%{id: id, name: "test-channel"})}
-      end)
-
-      stub(Nostrum.Api.Guild, :get, fn id ->
-        {:ok, guild(%{id: id, name: "Test Guild"})}
-      end)
-
-      :ok
-    end
-
     @tag :fixed
     test "updates existing message reaction instead of creating duplicate" do
       user_id = 555_666_777
@@ -338,6 +372,19 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
       guild_id = 777_888_999
       emoji_name = "👍"
       emoji_id = 123_456_789
+
+      # First set of expectations for initial creation
+      expect(Nostrum.Api.User, :get, fn ^user_id ->
+        {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
+      end)
+
+      expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
+        {:ok, channel(%{id: channel_id, name: "test-channel", guild_id: guild_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
 
       initial_event =
         message_reaction_add_event(%{
@@ -377,6 +424,19 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
       guild_id = 888_999_000
       emoji_name = "❤️"
 
+      # First set of expectations for initial creation
+      expect(Nostrum.Api.User, :get, fn ^user_id ->
+        {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
+      end)
+
+      expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
+        {:ok, channel(%{id: channel_id, name: "test-channel", guild_id: guild_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
       initial_event =
         message_reaction_add_event(%{
           emoji: %{id: nil, name: emoji_name, animated: false},
@@ -415,6 +475,19 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReactionTest do
       channel_id = 999_111_222
       guild_id = 222_333_444
       emoji_id = 123_456_789
+
+      # First set of expectations for initial creation
+      expect(Nostrum.Api.User, :get, fn ^user_id ->
+        {:ok, user(%{id: user_id, username: "test_user_#{user_id}"})}
+      end)
+
+      expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
+        {:ok, channel(%{id: channel_id, name: "test-channel", guild_id: guild_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
 
       initial_event =
         message_reaction_add_event(%{

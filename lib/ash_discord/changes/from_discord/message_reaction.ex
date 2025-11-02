@@ -127,10 +127,14 @@ defmodule AshDiscord.Changes.FromDiscord.MessageReaction do
     |> maybe_set_attribute(:guild_discord_id, reaction_data.guild_id)
     |> maybe_set_attribute(:emoji_discord_id, emoji.id)
     |> maybe_set_attribute(:emoji_name, emoji.name)
-    |> AshDiscord.Changes.FromDiscord.Transformations.manage_emoji_relationship(
-      emoji.id,
-      emoji.name,
-      emoji
+    |> AshDiscord.Changes.FromDiscord.Transformations.manage_user_relationship(
+      reaction_data.user_id
+    )
+    |> AshDiscord.Changes.FromDiscord.Transformations.manage_channel_relationship(
+      reaction_data.channel_id
+    )
+    |> AshDiscord.Changes.FromDiscord.Transformations.manage_guild_relationship(
+      reaction_data.guild_id
     )
   end
 

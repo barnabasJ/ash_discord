@@ -240,6 +240,7 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
   """
   def manage_channel_relationship(changeset, channel_id) when not is_nil(channel_id) do
     # Pass both discord_id (for lookup) and identity (for API fetch if not found)
+    # Note: Channel.from_discord expects identity as :integer, not :map
     Ash.Changeset.manage_relationship(
       changeset,
       :channel,
@@ -347,7 +348,7 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
       when not is_nil(emoji_id) or not is_nil(emoji) do
     # Pass both discord_id (for lookup) and identity (for API fetch if not found)
     discord_id = emoji_id || emoji.id
-    name = emoji_id || emoji.name
+    name = emoji_name || emoji.name
 
     Ash.Changeset.manage_relationship(
       changeset,
@@ -355,12 +356,11 @@ defmodule AshDiscord.Changes.FromDiscord.Transformations do
       %{
         discord_id: discord_id,
         name: name,
-        identity: %{discord_id: emoji_id, name: emoji_name},
         data: emoji
       },
       type: :append_and_remove,
-      use_identities: [:discord_id],
-      on_no_match: {:create, :from_discord}
+      on_no_match: {:create, :from_discord},
+      on_match: :ignore
     )
   end
 

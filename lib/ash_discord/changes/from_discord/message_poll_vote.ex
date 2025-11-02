@@ -2,19 +2,20 @@ defmodule AshDiscord.Changes.FromDiscord.MessagePollVote do
   @moduledoc """
   Transforms Discord MessagePollVote data into Ash resource attributes.
 
-  This change handles creating/updating MessagePollVote resources from Discord data.
+  This change handles creating/updating MessagePollVote resources from Discord event data.
   Poll votes are tracked per user, message, and answer combination.
+
+  Poll votes are event-only data and cannot be fetched from Discord API, so only
+  the `:data` argument is supported.
 
   ## Arguments
 
   - `:data` - TypedStruct `AshDiscord.Consumer.Payloads.PollVoteChangeEvent.t()` with poll vote event data
-  - `:identity` - Map with `%{user_discord_id: integer, message_discord_id: integer, answer_id: integer}` for identification
 
   ## Example
 
       create :from_discord do
-        argument :data, AshDiscord.Consumer.Payloads.PollVoteChangeEvent
-        argument :identity, :map
+        argument :data, AshDiscord.Consumer.Payloads.PollVoteChangeEvent, allow_nil?: false
 
         change AshDiscord.Changes.FromDiscord.MessagePollVote
       end
@@ -28,21 +29,14 @@ defmodule AshDiscord.Changes.FromDiscord.MessagePollVote do
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_transaction(changeset, fn changeset ->
       case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
-        nil ->
-          # No data provided, use identity to construct minimal data
-          identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
-
-          case validate_identity(identity) do
-            {:ok, validated_identity} ->
-              transform_poll_vote(changeset, validated_identity)
-
-            {:error, reason} ->
-              Ash.Changeset.add_error(changeset, reason)
-          end
-
         %Payloads.PollVoteChangeEvent{} = poll_vote_data ->
-          # Data provided directly, use it
           transform_poll_vote(changeset, poll_vote_data)
+
+        nil ->
+          Ash.Changeset.add_error(
+            changeset,
+            "MessagePollVote requires data argument - poll votes are event-only and not fetchable from API"
+          )
 
         other ->
           Ash.Changeset.add_error(
@@ -53,42 +47,13 @@ defmodule AshDiscord.Changes.FromDiscord.MessagePollVote do
     end)
   end
 
-  defp validate_identity(
-         %{
-           user_discord_id: user_discord_id,
-           message_discord_id: message_discord_id,
-           answer_id: answer_id
-         } = identity
-       )
-       when not is_nil(user_discord_id) and not is_nil(message_discord_id) and
-              not is_nil(answer_id) do
-    {:ok, identity}
-  end
-
-  defp validate_identity(_) do
-    {:error,
-     "MessagePollVote requires identity with user_discord_id, message_discord_id, and answer_id"}
-  end
-
   defp transform_poll_vote(changeset, poll_vote_data) do
     changeset
-    |> maybe_set_attribute(
-      :user_discord_id,
-      Map.get(poll_vote_data, :user_discord_id) || Map.get(poll_vote_data, :user_id)
-    )
-    |> maybe_set_attribute(
-      :message_discord_id,
-      Map.get(poll_vote_data, :message_discord_id) || Map.get(poll_vote_data, :message_id)
-    )
-    |> maybe_set_attribute(
-      :channel_discord_id,
-      Map.get(poll_vote_data, :channel_discord_id) || Map.get(poll_vote_data, :channel_id)
-    )
-    |> maybe_set_attribute(
-      :guild_discord_id,
-      Map.get(poll_vote_data, :guild_discord_id) || Map.get(poll_vote_data, :guild_id)
-    )
-    |> maybe_set_attribute(:answer_id, Map.get(poll_vote_data, :answer_id))
+    |> maybe_set_attribute(:user_discord_id, poll_vote_data.user_id)
+    |> maybe_set_attribute(:message_discord_id, poll_vote_data.message_id)
+    |> maybe_set_attribute(:channel_discord_id, poll_vote_data.channel_id)
+    |> maybe_set_attribute(:guild_discord_id, poll_vote_data.guild_id)
+    |> maybe_set_attribute(:answer_id, poll_vote_data.answer_id)
   end
 
   defp maybe_set_attribute(changeset, _field, nil), do: changeset

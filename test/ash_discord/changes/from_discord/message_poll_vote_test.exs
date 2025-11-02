@@ -2,16 +2,16 @@ defmodule AshDiscord.Changes.FromDiscord.MessagePollVoteTest do
   @moduledoc """
   Comprehensive tests for MessagePollVote entity from_discord transformation.
 
-  Tests struct-first pattern and upsert behavior.
+  Tests event-based creation pattern and upsert behavior.
 
-  Note: Poll votes are event-only data and cannot be fetched from Discord API,
-  so API fallback pattern is not applicable.
+  Note: Poll votes are event-only data and cannot be fetched from Discord API.
+  Only the data argument is supported - no identity-based creation or API fallback.
   """
 
   use TestApp.DataCase, async: true
   import AshDiscord.Test.Generators
 
-  describe "struct-first pattern" do
+  describe "event-based creation" do
     @tag :fixed
     test "creates poll vote from discord struct with all attributes" do
       user_id = 111_222_333
@@ -80,67 +80,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessagePollVoteTest do
       assert created.user_discord_id == 111_111_111
       assert created.message_discord_id == 222_222_222
       assert created.answer_id == 2
-    end
-  end
-
-  describe "identity-based creation" do
-    @tag :fixed
-    test "creates poll vote from identity map" do
-      user_id = 555_666_777
-      message_id = 888_999_000
-      answer_id = 3
-
-      identity = %{
-        user_discord_id: user_id,
-        message_discord_id: message_id,
-        answer_id: answer_id
-      }
-
-      created =
-        TestApp.Discord.message_poll_vote_from_discord!(%{identity: identity})
-
-      assert created.user_discord_id == user_id
-      assert created.message_discord_id == message_id
-      assert created.answer_id == answer_id
-    end
-
-    @tag :fixed
-    test "errors when identity missing required user_discord_id" do
-      incomplete_identity = %{
-        message_discord_id: 123_456_789,
-        answer_id: 1
-      }
-
-      assert {:error, %Ash.Error.Invalid{}} =
-               TestApp.Discord.message_poll_vote_from_discord(%{identity: incomplete_identity})
-    end
-
-    @tag :fixed
-    test "errors when identity missing required message_discord_id" do
-      incomplete_identity = %{
-        user_discord_id: 123_456_789,
-        answer_id: 1
-      }
-
-      assert {:error, %Ash.Error.Invalid{}} =
-               TestApp.Discord.message_poll_vote_from_discord(%{identity: incomplete_identity})
-    end
-
-    @tag :fixed
-    test "errors when identity missing required answer_id" do
-      incomplete_identity = %{
-        user_discord_id: 123_456_789,
-        message_discord_id: 987_654_321
-      }
-
-      assert {:error, %Ash.Error.Invalid{}} =
-               TestApp.Discord.message_poll_vote_from_discord(%{identity: incomplete_identity})
-    end
-
-    @tag :fixed
-    test "errors when neither data nor identity provided" do
-      assert {:error, %Ash.Error.Invalid{}} =
-               TestApp.Discord.message_poll_vote_from_discord(%{})
     end
   end
 

@@ -8,9 +8,10 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
   so API fallback pattern is not applicable.
   """
 
-  use TestApp.DataCase, async: false
-  import AshDiscord.Test.Generators
+  use TestApp.DataCase, async: true
   use Mimic
+
+  import AshDiscord.Test.Generators
 
   describe "struct-first pattern" do
     @tag :fixed

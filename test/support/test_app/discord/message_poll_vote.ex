@@ -93,14 +93,8 @@ defmodule TestApp.Discord.MessagePollVote do
       primary?(true)
 
       argument(:data, AshDiscord.Consumer.Payloads.PollVoteChangeEvent,
-        allow_nil?: true,
-        description: "Discord message poll vote TypedStruct data"
-      )
-
-      argument(:identity, :map,
-        allow_nil?: true,
-        description:
-          "Map with user_discord_id, message_discord_id, and answer_id for identification"
+        allow_nil?: false,
+        description: "Discord message poll vote event data"
       )
 
       change(AshDiscord.Changes.FromDiscord.MessagePollVote)

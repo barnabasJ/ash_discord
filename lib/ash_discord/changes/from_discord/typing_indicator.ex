@@ -20,6 +20,8 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicator do
 
   use Ash.Resource.Change
 
+  alias AshDiscord.Changes.FromDiscord.Transformations
+
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_transaction(changeset, fn changeset ->
@@ -44,11 +46,11 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicator do
 
   defp transform_typing_indicator(changeset, typing_data) do
     changeset
-    |> maybe_set_attribute(:user_discord_id, typing_data.user_id)
-    |> maybe_set_attribute(:channel_discord_id, typing_data.channel_id)
-    |> maybe_set_attribute(:guild_discord_id, typing_data.guild_id)
     |> set_typing_timestamp(typing_data)
     |> maybe_set_attribute(:member, convert_member_to_map(typing_data.member))
+    |> maybe_manage_user_relationship(typing_data.user_id)
+    |> maybe_manage_channel_relationship(typing_data.channel_id)
+    |> maybe_manage_guild_relationship(typing_data.guild_id)
   end
 
   defp convert_member_to_map(nil), do: nil
@@ -104,6 +106,36 @@ defmodule AshDiscord.Changes.FromDiscord.TypingIndicator do
   defp maybe_set_attribute(changeset, field, value) do
     if Ash.Resource.Info.attribute(changeset.resource, field) do
       Ash.Changeset.force_change_attribute(changeset, field, value)
+    else
+      changeset
+    end
+  end
+
+  defp maybe_manage_user_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_user_relationship(changeset, user_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :user) do
+      Transformations.manage_user_relationship(changeset, user_id)
+    else
+      changeset
+    end
+  end
+
+  defp maybe_manage_channel_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_channel_relationship(changeset, channel_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :channel) do
+      Transformations.manage_channel_relationship(changeset, channel_id)
+    else
+      changeset
+    end
+  end
+
+  defp maybe_manage_guild_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_guild_relationship(changeset, guild_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :guild) do
+      Transformations.manage_guild_relationship(changeset, guild_id)
     else
       changeset
     end

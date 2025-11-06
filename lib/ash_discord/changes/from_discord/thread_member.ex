@@ -48,11 +48,8 @@ defmodule AshDiscord.Changes.FromDiscord.ThreadMember do
   defp transform_thread_member(changeset, thread_member_data) do
     changeset
     |> maybe_set_attribute(:thread_discord_id, thread_member_data.id)
-    |> maybe_set_attribute(:thread_id, thread_member_data.id)
     |> maybe_set_attribute(:user_discord_id, thread_member_data.user_id)
-    |> maybe_set_attribute(:user_id, thread_member_data.user_id)
     |> maybe_set_attribute(:guild_discord_id, thread_member_data.guild_id)
-    |> maybe_set_attribute(:guild_id, thread_member_data.guild_id)
     |> maybe_set_attribute(:flags, thread_member_data.flags)
     |> maybe_set_datetime_field(:join_timestamp, thread_member_data.join_timestamp)
   end

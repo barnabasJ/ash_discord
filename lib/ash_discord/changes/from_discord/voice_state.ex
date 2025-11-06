@@ -52,11 +52,8 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceState do
   defp transform_voice_state(changeset, voice_state_data) do
     changeset
     |> maybe_set_attribute(:user_discord_id, voice_state_data.user_id)
-    |> maybe_set_attribute(:user_id, voice_state_data.user_id)
     |> maybe_set_attribute(:channel_discord_id, voice_state_data.channel_id)
-    |> maybe_set_attribute(:channel_id, voice_state_data.channel_id)
     |> maybe_set_attribute(:guild_discord_id, voice_state_data.guild_id)
-    |> maybe_set_attribute(:guild_id, voice_state_data.guild_id)
     |> maybe_set_attribute(:session_id, voice_state_data.session_id)
     |> maybe_set_attribute(:deaf, voice_state_data.deaf)
     |> maybe_set_attribute(:mute, voice_state_data.mute)

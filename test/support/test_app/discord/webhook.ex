@@ -49,6 +49,56 @@ defmodule TestApp.Discord.Webhook do
       allow_nil?: true,
       public?: true
     )
+
+    attribute(:user_discord_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:type, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:application_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:source_guild_discord_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:source_channel_discord_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:url, :string,
+      allow_nil?: true,
+      public?: true
+    )
+  end
+
+  relationships do
+    belongs_to :user, TestApp.Discord.User do
+      source_attribute(:user_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+
+    belongs_to :source_guild, TestApp.Discord.Guild do
+      source_attribute(:source_guild_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+
+    belongs_to :source_channel, TestApp.Discord.Channel do
+      source_attribute(:source_channel_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
   end
 
   identities do
@@ -78,12 +128,36 @@ defmodule TestApp.Discord.Webhook do
 
       upsert?(true)
       upsert_identity(:discord_id)
-      upsert_fields([:name, :avatar, :channel_discord_id, :guild_discord_id, :token])
+      upsert_fields([
+        :type,
+        :guild_discord_id,
+        :channel_discord_id,
+        :user_discord_id,
+        :source_guild_discord_id,
+        :source_channel_discord_id,
+        :name,
+        :avatar,
+        :token,
+        :application_id,
+        :url
+      ])
     end
 
     update :update do
       primary?(true)
-      accept([:name, :avatar, :channel_discord_id, :guild_discord_id, :token])
+      accept([
+        :type,
+        :guild_discord_id,
+        :channel_discord_id,
+        :user_discord_id,
+        :source_guild_discord_id,
+        :source_channel_discord_id,
+        :name,
+        :avatar,
+        :token,
+        :application_id,
+        :url
+      ])
     end
   end
 end

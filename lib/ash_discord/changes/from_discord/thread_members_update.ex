@@ -50,9 +50,7 @@ defmodule AshDiscord.Changes.FromDiscord.ThreadMembersUpdate do
   defp transform_members_update(changeset, update_data) do
     changeset
     |> maybe_set_attribute(:thread_discord_id, update_data.id)
-    |> maybe_set_attribute(:thread_id, update_data.id)
     |> maybe_set_attribute(:guild_discord_id, update_data.guild_id)
-    |> maybe_set_attribute(:guild_id, update_data.guild_id)
     |> maybe_set_attribute(:member_count, update_data.member_count)
     |> maybe_set_attribute(:added_members, update_data.added_members)
     |> maybe_set_attribute(:removed_member_ids, update_data.removed_member_ids)

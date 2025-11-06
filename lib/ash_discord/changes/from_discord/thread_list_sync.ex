@@ -51,7 +51,6 @@ defmodule AshDiscord.Changes.FromDiscord.ThreadListSync do
   defp transform_sync_event(changeset, sync_data) do
     changeset
     |> maybe_set_attribute(:guild_discord_id, sync_data.guild_id)
-    |> maybe_set_attribute(:guild_id, sync_data.guild_id)
     |> maybe_set_attribute(:channel_ids, sync_data.channel_ids)
     |> maybe_set_attribute(:threads, sync_data.threads)
     |> maybe_set_attribute(:members, sync_data.members)

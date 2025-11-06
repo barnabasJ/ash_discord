@@ -31,10 +31,11 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
         })
 
       created_role =
-        TestApp.Discord.role_from_discord!(%{
-          data: role_struct,
-          identity: %{guild_id: guild_id}
-        },
+        TestApp.Discord.role_from_discord!(
+          %{
+            data: role_struct,
+            identity: %{guild_id: guild_id}
+          },
           load: [:guild]
         )
 
@@ -70,10 +71,11 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
         })
 
       created_role =
-        TestApp.Discord.role_from_discord!(%{
-          data: role_struct,
-          identity: %{guild_id: guild_id}
-        },
+        TestApp.Discord.role_from_discord!(
+          %{
+            data: role_struct,
+            identity: %{guild_id: guild_id}
+          },
           load: [:guild]
         )
 
@@ -106,10 +108,11 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
         })
 
       created_role =
-        TestApp.Discord.role_from_discord!(%{
-          data: role_struct,
-          identity: %{guild_id: guild_id}
-        },
+        TestApp.Discord.role_from_discord!(
+          %{
+            data: role_struct,
+            identity: %{guild_id: guild_id}
+          },
           load: [:guild]
         )
 
@@ -141,10 +144,11 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
         })
 
       created_role =
-        TestApp.Discord.role_from_discord!(%{
-          data: role_struct,
-          identity: %{guild_id: guild_id}
-        },
+        TestApp.Discord.role_from_discord!(
+          %{
+            data: role_struct,
+            identity: %{guild_id: guild_id}
+          },
           load: [:guild]
         )
 
@@ -217,10 +221,11 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
         })
 
       original_role =
-        TestApp.Discord.role_from_discord!(%{
-          data: initial_struct,
-          identity: %{guild_id: guild_id}
-        },
+        TestApp.Discord.role_from_discord!(
+          %{
+            data: initial_struct,
+            identity: %{guild_id: guild_id}
+          },
           load: [:guild]
         )
 
@@ -236,10 +241,11 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
         })
 
       updated_role =
-        TestApp.Discord.role_from_discord!(%{
-          data: updated_struct,
-          identity: %{guild_id: guild_id}
-        },
+        TestApp.Discord.role_from_discord!(
+          %{
+            data: updated_struct,
+            identity: %{guild_id: guild_id}
+          },
           load: [:guild]
         )
 
@@ -273,10 +279,11 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
         })
 
       original_role =
-        TestApp.Discord.role_from_discord!(%{
-          data: initial_struct,
-          identity: %{guild_id: guild_id}
-        },
+        TestApp.Discord.role_from_discord!(
+          %{
+            data: initial_struct,
+            identity: %{guild_id: guild_id}
+          },
           load: [:guild]
         )
 
@@ -289,10 +296,11 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
         })
 
       updated_role =
-        TestApp.Discord.role_from_discord!(%{
-          data: updated_struct,
-          identity: %{guild_id: guild_id}
-        },
+        TestApp.Discord.role_from_discord!(
+          %{
+            data: updated_struct,
+            identity: %{guild_id: guild_id}
+          },
           load: [:guild]
         )
 

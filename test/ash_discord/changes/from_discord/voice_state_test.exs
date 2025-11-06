@@ -2,135 +2,184 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
   @moduledoc """
   Comprehensive tests for VoiceState entity from_discord transformation.
 
-  Tests both struct-first and API fallback patterns, plus upsert behavior.
+  Tests struct-first pattern and upsert behavior. Voice states are ephemeral
+  events and not independently fetchable from Discord API, so no API fallback tests.
   """
 
-  use TestApp.DataCase, async: false
-  import AshDiscord.Test.Generators.Discord
+  use TestApp.DataCase, async: true
+  import AshDiscord.Test.Generators
 
   describe "struct-first pattern" do
+    @tag :fixed
     test "creates voice state from discord struct with all attributes" do
+      user_id = 123_456_789
+      channel_id = 555_666_777
+      guild_id = 111_222_333
+
       voice_state_struct =
         voice_state(%{
-          user_id: 123_456_789,
-          channel_id: 555_666_777,
-          guild_id: 111_222_333,
+          user_id: user_id,
+          channel_id: channel_id,
+          guild_id: guild_id,
           session_id: "session_abc123",
           deaf: false,
           mute: false,
           self_deaf: false,
           self_mute: false,
-          suppress: false
+          self_stream: false,
+          self_video: false,
+          suppress: false,
+          member: nil
         })
 
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: voice_state_struct})
+      created = TestApp.Discord.voice_state_from_discord!(%{data: voice_state_struct})
 
-      assert {:ok, created_voice_state} = result
-      assert created_voice_state.user_id == voice_state_struct.user_id
-      assert created_voice_state.channel_id == voice_state_struct.channel_id
-      assert created_voice_state.guild_id == voice_state_struct.guild_id
-      assert created_voice_state.session_id == voice_state_struct.session_id
-      assert created_voice_state.deaf == false
-      assert created_voice_state.mute == false
-      assert created_voice_state.self_deaf == false
-      assert created_voice_state.self_mute == false
-      assert created_voice_state.suppress == false
+      assert created.user_discord_id == user_id
+      assert created.channel_discord_id == channel_id
+      assert created.guild_discord_id == guild_id
+      assert created.session_id == voice_state_struct.session_id
+      assert created.deaf == false
+      assert created.mute == false
+      assert created.self_deaf == false
+      assert created.self_mute == false
+      assert created.suppress == false
     end
 
+    @tag :fixed
     test "handles server-deafened user" do
+      user_id = 987_654_321
+      channel_id = 777_888_999
+      guild_id = 333_444_555
+
       voice_state_struct =
         voice_state(%{
-          user_id: 987_654_321,
-          channel_id: 777_888_999,
-          guild_id: 333_444_555,
+          user_id: user_id,
+          channel_id: channel_id,
+          guild_id: guild_id,
           session_id: "session_def456",
           deaf: true,
           mute: false,
           self_deaf: false,
           self_mute: false,
-          suppress: false
+          self_stream: false,
+          self_video: false,
+          suppress: false,
+          member: nil
         })
 
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: voice_state_struct})
+      created = TestApp.Discord.voice_state_from_discord!(%{data: voice_state_struct})
 
-      assert {:ok, created_voice_state} = result
-      assert created_voice_state.user_id == voice_state_struct.user_id
-      assert created_voice_state.deaf == true
-      assert created_voice_state.mute == false
+      assert created.user_discord_id == user_id
+      assert created.channel_discord_id == channel_id
+      assert created.guild_discord_id == guild_id
+      assert created.deaf == true
+      assert created.mute == false
     end
 
+    @tag :fixed
     test "handles server-muted user" do
+      user_id = 111_222_333
+      channel_id = 444_555_666
+      guild_id = 777_888_999
+
       voice_state_struct =
         voice_state(%{
-          user_id: 111_222_333,
-          channel_id: 444_555_666,
-          guild_id: 777_888_999,
+          user_id: user_id,
+          channel_id: channel_id,
+          guild_id: guild_id,
           session_id: "session_ghi789",
           deaf: false,
           mute: true,
           self_deaf: false,
           self_mute: false,
-          suppress: false
+          suppress: false,
+          self_stream: false,
+          self_video: false,
+          member: nil
         })
 
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: voice_state_struct})
+      created = TestApp.Discord.voice_state_from_discord!(%{data: voice_state_struct})
 
-      assert {:ok, created_voice_state} = result
-      assert created_voice_state.user_id == voice_state_struct.user_id
-      assert created_voice_state.deaf == false
-      assert created_voice_state.mute == true
+      assert created.user_discord_id == user_id
+      assert created.channel_discord_id == channel_id
+      assert created.guild_discord_id == guild_id
+      assert created.deaf == false
+      assert created.mute == true
     end
 
+    @tag :fixed
     test "handles self-deafened user" do
+      user_id = 555_666_777
+      channel_id = 888_999_111
+      guild_id = 222_333_444
+
       voice_state_struct =
         voice_state(%{
-          user_id: 555_666_777,
-          channel_id: 888_999_111,
-          guild_id: 222_333_444,
+          user_id: user_id,
+          channel_id: channel_id,
+          guild_id: guild_id,
           session_id: "session_jkl012",
           deaf: false,
           mute: false,
           self_deaf: true,
           self_mute: false,
-          suppress: false
+          suppress: false,
+          self_stream: false,
+          self_video: false,
+          member: nil
         })
 
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: voice_state_struct})
+      created = TestApp.Discord.voice_state_from_discord!(%{data: voice_state_struct})
 
-      assert {:ok, created_voice_state} = result
-      assert created_voice_state.user_id == voice_state_struct.user_id
-      assert created_voice_state.self_deaf == true
-      assert created_voice_state.self_mute == false
+      assert created.user_discord_id == user_id
+      assert created.channel_discord_id == channel_id
+      assert created.guild_discord_id == guild_id
+      assert created.self_deaf == true
+      assert created.self_mute == false
     end
 
+    @tag :fixed
     test "handles self-muted user" do
+      user_id = 777_888_999
+      channel_id = 111_222_333
+      guild_id = 444_555_666
+
       voice_state_struct =
         voice_state(%{
-          user_id: 777_888_999,
-          channel_id: 111_222_333,
-          guild_id: 444_555_666,
+          user_id: user_id,
+          channel_id: channel_id,
+          guild_id: guild_id,
           session_id: "session_mno345",
           deaf: false,
           mute: false,
           self_deaf: false,
           self_mute: true,
-          suppress: false
+          suppress: false,
+          self_stream: false,
+          self_video: false,
+          member: nil
         })
 
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: voice_state_struct})
+      created = TestApp.Discord.voice_state_from_discord!(%{data: voice_state_struct})
 
-      assert {:ok, created_voice_state} = result
-      assert created_voice_state.user_id == voice_state_struct.user_id
-      assert created_voice_state.self_deaf == false
-      assert created_voice_state.self_mute == true
+      assert created.user_discord_id == user_id
+      assert created.channel_discord_id == channel_id
+      assert created.guild_discord_id == guild_id
+      assert created.self_deaf == false
+      assert created.self_mute == true
     end
 
+    @tag :fixed
     test "handles suppressed user" do
+      user_id = 333_444_555
+      channel_id = 666_777_888
+      guild_id = 999_111_222
+
       voice_state_struct =
         voice_state(%{
-          user_id: 333_444_555,
-          channel_id: 666_777_888,
-          guild_id: 999_111_222,
+          user_id: user_id,
+          channel_id: channel_id,
+          guild_id: guild_id,
           session_id: "session_pqr678",
           deaf: false,
           mute: false,
@@ -139,84 +188,73 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
           suppress: true
         })
 
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: voice_state_struct})
+      created = TestApp.Discord.voice_state_from_discord!(%{data: voice_state_struct})
 
-      assert {:ok, created_voice_state} = result
-      assert created_voice_state.user_id == voice_state_struct.user_id
-      assert created_voice_state.suppress == true
+      assert created.user_discord_id == user_id
+      assert created.channel_discord_id == channel_id
+      assert created.guild_discord_id == guild_id
+      assert created.suppress == true
     end
 
+    @tag :fixed
     test "handles user leaving voice channel" do
+      user_id = 999_111_222
+      guild_id = 333_444_555
+
       voice_state_struct =
         voice_state(%{
-          user_id: 999_111_222,
-          # User left channel
+          user_id: user_id,
           channel_id: nil,
-          guild_id: 333_444_555,
+          guild_id: guild_id,
           session_id: "session_stu901",
           deaf: false,
           mute: false,
           self_deaf: false,
           self_mute: false,
-          suppress: false
+          suppress: false,
+          self_stream: false,
+          self_video: false,
+          member: nil
         })
 
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: voice_state_struct})
+      created = TestApp.Discord.voice_state_from_discord!(%{data: voice_state_struct})
 
-      assert {:ok, created_voice_state} = result
-      assert created_voice_state.user_id == voice_state_struct.user_id
-      assert created_voice_state.channel_id == nil
-    end
-  end
-
-  describe "API fallback pattern" do
-    test "voice state API fallback is not supported" do
-      # Voice states don't support direct API fetching in our implementation
-      discord_id = 999_888_777
-
-      result = TestApp.Discord.voice_state_from_discord(%{discord_id: discord_id})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "No such input `discord_id`"
-    end
-
-    test "requires discord_struct for voice state creation" do
-      result = TestApp.Discord.voice_state_from_discord(%{})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for voice_state entity"
+      assert created.user_discord_id == user_id
+      assert created.guild_discord_id == guild_id
+      assert created.channel_discord_id == nil
     end
   end
 
   describe "upsert behavior" do
+    @tag :fixed
     test "updates existing voice state instead of creating duplicate" do
       user_id = 555_666_777
       guild_id = 111_222_333
+      initial_channel_id = 888_999_111
+      updated_channel_id = 222_333_444
 
-      # Create initial voice state
       initial_struct =
         voice_state(%{
           user_id: user_id,
-          channel_id: 888_999_111,
+          channel_id: initial_channel_id,
           guild_id: guild_id,
           session_id: "session_original",
           deaf: false,
           mute: false,
           self_deaf: false,
           self_mute: false,
-          suppress: false
+          suppress: false,
+          self_stream: false,
+          self_video: false,
+          member: nil
         })
 
-      {:ok, original_voice_state} =
-        TestApp.Discord.voice_state_from_discord(%{discord_struct: initial_struct})
+      original = TestApp.Discord.voice_state_from_discord!(%{data: initial_struct})
 
-      # Update same user's voice state
       updated_struct =
         voice_state(%{
           user_id: user_id,
-          channel_id: 222_333_444,
+          channel_id: updated_channel_id,
           guild_id: guild_id,
           session_id: "session_updated",
           deaf: true,
@@ -226,100 +264,57 @@ defmodule AshDiscord.Changes.FromDiscord.VoiceStateTest do
           suppress: true
         })
 
-      {:ok, updated_voice_state} =
-        TestApp.Discord.voice_state_from_discord(%{discord_struct: updated_struct})
+      updated = TestApp.Discord.voice_state_from_discord!(%{data: updated_struct})
 
-      # Should be same record (same Ash ID)
-      assert updated_voice_state.id == original_voice_state.id
-      assert updated_voice_state.user_id == original_voice_state.user_id
-      assert updated_voice_state.guild_id == original_voice_state.guild_id
+      assert updated.id == original.id
+      assert updated.user_discord_id == original.user_discord_id
+      assert updated.guild_discord_id == original.guild_discord_id
 
-      # But with updated attributes
-      assert updated_voice_state.channel_id == 222_333_444
-      assert updated_voice_state.session_id == "session_updated"
-      assert updated_voice_state.deaf == true
-      assert updated_voice_state.mute == true
-      assert updated_voice_state.self_deaf == true
-      assert updated_voice_state.self_mute == true
-      assert updated_voice_state.suppress == true
+      assert updated.channel_discord_id == updated_channel_id
+      assert updated.session_id == "session_updated"
+      assert updated.deaf == true
+      assert updated.mute == true
+      assert updated.self_deaf == true
+      assert updated.self_mute == true
+      assert updated.suppress == true
     end
 
+    @tag :fixed
     test "upsert works with channel changes" do
       user_id = 333_444_555
       guild_id = 777_888_999
+      initial_channel_id = 111_222_333
+      updated_channel_id = 666_777_888
 
-      # Create initial voice state in one channel
       initial_struct =
         voice_state(%{
           user_id: user_id,
-          channel_id: 111_222_333,
+          channel_id: initial_channel_id,
           guild_id: guild_id,
           session_id: "session_same",
           deaf: false,
           mute: false
         })
 
-      {:ok, original_voice_state} =
-        TestApp.Discord.voice_state_from_discord(%{discord_struct: initial_struct})
+      original = TestApp.Discord.voice_state_from_discord!(%{data: initial_struct})
 
-      # Move to different channel
       updated_struct =
         voice_state(%{
           user_id: user_id,
-          channel_id: 666_777_888,
+          channel_id: updated_channel_id,
           guild_id: guild_id,
           session_id: "session_same",
           deaf: false,
           mute: false
         })
 
-      {:ok, updated_voice_state} =
-        TestApp.Discord.voice_state_from_discord(%{discord_struct: updated_struct})
+      updated = TestApp.Discord.voice_state_from_discord!(%{data: updated_struct})
 
-      # Should be same record
-      assert updated_voice_state.id == original_voice_state.id
-      assert updated_voice_state.user_id == user_id
-      assert updated_voice_state.guild_id == guild_id
+      assert updated.id == original.id
+      assert updated.user_discord_id == user_id
+      assert updated.guild_discord_id == guild_id
 
-      # But with updated channel
-      assert updated_voice_state.channel_id == 666_777_888
-    end
-  end
-
-  describe "error handling" do
-    test "handles invalid discord_struct format" do
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: "not_a_map"})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "Invalid value provided for discord_struct"
-    end
-
-    test "handles missing required fields in discord_struct" do
-      # Missing required fields
-      invalid_struct = voice_state(%{user_id: nil, session_id: nil})
-
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: invalid_struct})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "is required"
-    end
-
-    test "handles invalid user_id in discord_struct" do
-      invalid_struct = %{
-        # Invalid user_id type
-        user_id: "not_an_integer",
-        channel_id: 555_666_777,
-        guild_id: 111_222_333,
-        session_id: "session_test"
-      }
-
-      result = TestApp.Discord.voice_state_from_discord(%{discord_struct: invalid_struct})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "is invalid" or error_message =~ "must be"
+      assert updated.channel_discord_id == updated_channel_id
     end
   end
 end

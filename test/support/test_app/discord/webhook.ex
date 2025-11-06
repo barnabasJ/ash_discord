@@ -4,8 +4,13 @@ defmodule TestApp.Discord.Webhook do
   """
 
   use Ash.Resource,
+    extensions: [AshDiscord.Resource],
     domain: TestApp.Discord,
     data_layer: Ash.DataLayer.Ets
+
+  ash_discord do
+    discord_entity(:webhook)
+  end
 
   ets do
     private?(true)
@@ -29,20 +34,71 @@ defmodule TestApp.Discord.Webhook do
       public?: true
     )
 
-    attribute(:channel_id, :integer,
+    attribute(:channel_discord_id, :integer,
       allow_nil?: false,
       public?: true
     )
 
     attribute(:token, :string,
       allow_nil?: true,
-      public?: true
+      public?: true,
+      sensitive?: true
     )
 
-    attribute(:guild_id, :integer,
+    attribute(:guild_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
+
+    attribute(:user_discord_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:type, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:application_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:source_guild_discord_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:source_channel_discord_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:url, :string,
+      allow_nil?: true,
+      public?: true
+    )
+  end
+
+  relationships do
+    belongs_to :user, TestApp.Discord.User do
+      source_attribute(:user_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+
+    belongs_to :source_guild, TestApp.Discord.Guild do
+      source_attribute(:source_guild_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+
+    belongs_to :source_channel, TestApp.Discord.Channel do
+      source_attribute(:source_channel_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
   end
 
   identities do
@@ -58,26 +114,52 @@ defmodule TestApp.Discord.Webhook do
       description("Create webhook from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :struct,
+      argument(:data, AshDiscord.Consumer.Payloads.Webhook,
         allow_nil?: true,
-        description: "Discord webhook struct to transform"
+        description: "Discord webhook TypedStruct data"
       )
 
-      argument(:discord_id, :integer,
+      argument(:identity, :integer,
         allow_nil?: true,
         description: "Discord webhook ID for API fallback"
       )
 
-      change({AshDiscord.Changes.FromDiscord, type: :webhook})
+      change(AshDiscord.Changes.FromDiscord.Webhook)
 
       upsert?(true)
       upsert_identity(:discord_id)
-      upsert_fields([:name, :avatar, :channel_id, :guild_id, :token])
+
+      upsert_fields([
+        :type,
+        :guild_discord_id,
+        :channel_discord_id,
+        :user_discord_id,
+        :source_guild_discord_id,
+        :source_channel_discord_id,
+        :name,
+        :avatar,
+        :token,
+        :application_id,
+        :url
+      ])
     end
 
     update :update do
       primary?(true)
-      accept([:name, :avatar, :channel_id, :guild_id, :token])
+
+      accept([
+        :type,
+        :guild_discord_id,
+        :channel_discord_id,
+        :user_discord_id,
+        :source_guild_discord_id,
+        :source_channel_discord_id,
+        :name,
+        :avatar,
+        :token,
+        :application_id,
+        :url
+      ])
     end
   end
 end

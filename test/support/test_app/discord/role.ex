@@ -4,8 +4,13 @@ defmodule TestApp.Discord.Role do
   """
 
   use Ash.Resource,
+    extensions: [AshDiscord.Resource],
     domain: TestApp.Discord,
     data_layer: Ash.DataLayer.Ets
+
+  ash_discord do
+    discord_entity(:role)
+  end
 
   ets do
     private?(true)
@@ -19,7 +24,7 @@ defmodule TestApp.Discord.Role do
       public?: true
     )
 
-    attribute(:guild_id, :integer,
+    attribute(:guild_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
@@ -61,12 +66,34 @@ defmodule TestApp.Discord.Role do
       public?: true,
       default: true
     )
+
+    attribute(:icon, :string,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:unicode_emoji, :string,
+      allow_nil?: true,
+      public?: true
+    )
   end
 
   identities do
     identity :discord_id, [:discord_id] do
       pre_check_with(TestApp.Discord)
     end
+  end
+
+  relationships do
+    belongs_to :guild, TestApp.Discord.Guild do
+      source_attribute(:guild_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+  end
+
+  code_interface do
+    define(:read)
   end
 
   actions do
@@ -76,22 +103,39 @@ defmodule TestApp.Discord.Role do
       description("Create role from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :struct,
-        allow_nil?: false,
-        description: "Discord role struct to transform"
+      argument(:data, AshDiscord.Consumer.Payloads.Role,
+        allow_nil?: true,
+        description: "Discord role TypedStruct data"
       )
 
-      change({AshDiscord.Changes.FromDiscord, type: :role})
+      argument(:identity, :map,
+        allow_nil?: true,
+        description: "Map with guild_id and role_id for API fallback"
+      )
+
+      change(fn changeset, _context ->
+        case Ash.Changeset.get_argument(changeset, :identity) do
+          %{guild_id: guild_id} ->
+            Ash.Changeset.force_change_attribute(changeset, :guild_discord_id, guild_id)
+
+          _ ->
+            changeset
+        end
+      end)
+
+      change(AshDiscord.Changes.FromDiscord.Role)
 
       upsert?(true)
       upsert_identity(:discord_id)
 
       upsert_fields([
-        :guild_id,
+        :guild_discord_id,
         :name,
         :color,
         :permissions,
         :hoist,
+        :icon,
+        :unicode_emoji,
         :position,
         :managed,
         :mentionable
@@ -100,7 +144,19 @@ defmodule TestApp.Discord.Role do
 
     update :update do
       primary?(true)
-      accept([:guild_id, :name, :color, :permissions, :hoist, :position, :managed, :mentionable])
+
+      accept([
+        :guild_discord_id,
+        :name,
+        :color,
+        :permissions,
+        :hoist,
+        :icon,
+        :unicode_emoji,
+        :position,
+        :managed,
+        :mentionable
+      ])
     end
   end
 end

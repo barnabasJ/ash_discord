@@ -4,8 +4,13 @@ defmodule TestApp.Discord.MessageReaction do
   """
 
   use Ash.Resource,
+    extensions: [AshDiscord.Resource],
     domain: TestApp.Discord,
     data_layer: Ash.DataLayer.Ets
+
+  ash_discord do
+    discord_entity(:message_reaction)
+  end
 
   ets do
     private?(true)
@@ -13,16 +18,6 @@ defmodule TestApp.Discord.MessageReaction do
 
   attributes do
     uuid_primary_key(:id)
-
-    attribute(:emoji_id, :integer,
-      allow_nil?: true,
-      public?: true
-    )
-
-    attribute(:emoji_name, :string,
-      allow_nil?: true,
-      public?: true
-    )
 
     attribute(:count, :integer,
       allow_nil?: false,
@@ -36,64 +31,87 @@ defmodule TestApp.Discord.MessageReaction do
       default: false
     )
 
-    attribute(:emoji_animated, :boolean,
-      allow_nil?: true,
-      public?: true,
-      default: false
-    )
-
     # Foreign key attributes for relationships
-    attribute(:user_id, :integer,
+    attribute(:emoji_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
 
-    attribute(:message_id, :integer,
+    attribute(:emoji_name, :string,
       allow_nil?: true,
       public?: true
     )
 
-    attribute(:channel_id, :integer,
+    attribute(:user_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
 
-    attribute(:guild_id, :integer,
+    attribute(:message_discord_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:channel_discord_id, :integer,
+      allow_nil?: true,
+      public?: true
+    )
+
+    attribute(:guild_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
   end
 
   relationships do
+    has_one :emoji, TestApp.Discord.Emoji do
+      no_attributes?(true)
+      filter(expr(discord_id == ^parent(:emoji_discord_id) and name == ^parent(:emoji_name)))
+    end
+
     belongs_to :user, TestApp.Discord.User do
-      source_attribute(:user_id)
+      source_attribute(:user_discord_id)
       destination_attribute(:discord_id)
       allow_nil?(true)
     end
 
     belongs_to :message, TestApp.Discord.Message do
-      source_attribute(:message_id)
+      source_attribute(:message_discord_id)
       destination_attribute(:discord_id)
       allow_nil?(true)
     end
 
     belongs_to :channel, TestApp.Discord.Channel do
-      source_attribute(:channel_id)
+      source_attribute(:channel_discord_id)
       destination_attribute(:discord_id)
       allow_nil?(true)
     end
 
     belongs_to :guild, TestApp.Discord.Guild do
-      source_attribute(:guild_id)
+      source_attribute(:guild_discord_id)
       destination_attribute(:discord_id)
       allow_nil?(true)
     end
   end
 
   identities do
-    identity :reaction_identity, [:message_id, :emoji_name] do
+    # Use user_discord_id, message_discord_id, guild_discord_id, and emoji_name for identity
+    # emoji_id is excluded because it's nil for Unicode emojis but not for custom emojis
+    # emoji_name is sufficient to identify the emoji uniquely
+    identity :discord_id, [
+      :user_discord_id,
+      :message_discord_id,
+      :guild_discord_id,
+      :channel_discord_id,
+      :emoji_name,
+      :emoji_discord_id
+    ] do
       pre_check_with(TestApp.Discord)
     end
+  end
+
+  code_interface do
+    define(:read)
   end
 
   actions do
@@ -102,57 +120,46 @@ defmodule TestApp.Discord.MessageReaction do
     create :from_discord do
       description("Create message reaction from Discord data")
       primary?(true)
-
-      argument(:discord_struct, :struct,
-        allow_nil?: false,
-        description: "Discord message reaction struct to transform"
-      )
-
-      argument(:discord_id, :integer,
-        allow_nil?: true,
-        description: "Discord message reaction ID for API fallback"
-      )
-
-      argument(:user_id, :integer,
-        allow_nil?: true,
-        description: "ID of user who reacted"
-      )
-
-      argument(:message_id, :integer,
-        allow_nil?: true,
-        description: "ID of message that was reacted to"
-      )
-
-      argument(:channel_id, :integer,
-        allow_nil?: true,
-        description: "ID of channel containing the message"
-      )
-
-      argument(:guild_id, :integer,
-        allow_nil?: true,
-        description: "ID of guild (null for DM reactions)"
-      )
-
-      change({AshDiscord.Changes.FromDiscord, type: :message_reaction})
-
       upsert?(true)
-      upsert_identity(:reaction_identity)
-      upsert_fields([:count, :me, :emoji_animated, :user_id, :message_id, :channel_id, :guild_id])
+      upsert_identity(:discord_id)
+
+      upsert_fields([
+        :emoji_discord_id,
+        :emoji_name,
+        :count,
+        :me,
+        :user_discord_id,
+        :message_discord_id,
+        :channel_discord_id,
+        :guild_discord_id
+      ])
+
+      argument(:data, AshDiscord.Consumer.Payloads.MessageReactionAddEvent,
+        allow_nil?: true,
+        description: "Discord message reaction TypedStruct data"
+      )
+
+      argument(:identity, :map,
+        allow_nil?: true,
+        description:
+          "Map with channel_id, message_id, emoji_name, emoji_id (optional), and user_discord_id for API fallback"
+      )
+
+      change(AshDiscord.Changes.FromDiscord.MessageReaction)
     end
 
     update :update do
       primary?(true)
 
       accept([
-        :emoji_id,
+        :emoji_discord_id,
         :emoji_name,
         :count,
         :me,
-        :emoji_animated,
-        :user_id,
-        :message_id,
-        :channel_id,
-        :guild_id
+        :user_discord_id,
+        :message_discord_id,
+        :channel_discord_id,
+        :guild_discord_id
       ])
     end
   end

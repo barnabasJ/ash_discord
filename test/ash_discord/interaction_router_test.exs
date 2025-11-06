@@ -1,14 +1,23 @@
 defmodule AshDiscord.InteractionRouterTest do
   use TestApp.DataCase
+  use Mimic
 
-  import AshDiscord.Test.Generators.Discord
+  import AshDiscord.Test.Generators
 
-  alias AshDiscord.InteractionRouter
   alias AshDiscord.Info
+  alias AshDiscord.InteractionRouter
   alias TestApp.Discord
 
   setup do
-    TestHelper.setup_mocks()
+    copy(Nostrum.Api.Interaction)
+    :ok
+  end
+
+  # Helper to mock interaction response
+  defp expect_interaction_response do
+    expect(Nostrum.Api.Interaction, :create_response, fn _id, _token, _response ->
+      {:ok}
+    end)
   end
 
   # Helper function to find commands for testing
@@ -19,10 +28,12 @@ defmodule AshDiscord.InteractionRouterTest do
 
   describe "interaction routing" do
     test "routes hello command to message action" do
+      expect_interaction_response()
+
       interaction =
         interaction(%{
           data: %{name: "hello", options: []},
-          member: %{user: user()}
+          member: %{user_id: user().id}
         })
 
       result =
@@ -37,16 +48,19 @@ defmodule AshDiscord.InteractionRouterTest do
     end
 
     test "routes create_message command with options" do
+      expect_interaction_response()
+
       interaction =
         interaction(%{
           data: %{
             name: "create_message",
             options: [
+              option(%{name: "discord_id", type: 3, value: "#{generate_snowflake()}"}),
               option(%{name: "message", type: 3, value: "Hello world"}),
               option(%{name: "channel", type: 3, value: "#{generate_snowflake()}"})
             ]
           },
-          member: %{user: user()}
+          member: %{user_id: user().id}
         })
 
       result =
@@ -61,6 +75,8 @@ defmodule AshDiscord.InteractionRouterTest do
     end
 
     test "routes search command with arguments" do
+      expect_interaction_response()
+
       interaction =
         interaction(%{
           data: %{
@@ -70,7 +86,7 @@ defmodule AshDiscord.InteractionRouterTest do
               option(%{name: "limit", type: 4, value: 5})
             ]
           },
-          member: %{user: user()}
+          member: %{user_id: user().id}
         })
 
       result =
@@ -85,6 +101,7 @@ defmodule AshDiscord.InteractionRouterTest do
     end
 
     test "routes configure command with arguments" do
+      expect_interaction_response()
       # First create a guild for the configure command
       guild_id = generate_snowflake()
 
@@ -104,7 +121,7 @@ defmodule AshDiscord.InteractionRouterTest do
             ]
           },
           guild_id: guild_id,
-          member: %{user: user()}
+          member: %{user_id: user().id}
         })
 
       result =
@@ -126,10 +143,12 @@ defmodule AshDiscord.InteractionRouterTest do
     end
 
     test "handles unknown command gracefully" do
+      expect_interaction_response()
+
       interaction =
         interaction(%{
           data: %{name: "unknown_command", options: []},
-          member: %{user: user()}
+          member: %{user_id: user().id}
         })
 
       result =
@@ -180,11 +199,12 @@ defmodule AshDiscord.InteractionRouterTest do
 
   describe "domain resolution (Task 18)" do
     test "router works with configured domains without hardcoded references" do
+      expect_interaction_response()
       # Verify no hardcoded Steward references exist in the router
       interaction =
         interaction(%{
           data: %{name: "hello", options: []},
-          member: %{user: user()}
+          member: %{user_id: user().id}
         })
 
       command = find_command_for_test(TestApp.Discord, "hello")
@@ -206,6 +226,7 @@ defmodule AshDiscord.InteractionRouterTest do
 
   describe "automatic user resolution system (Task 19)" do
     test "automatic user resolution creates actors from Discord data" do
+      expect_interaction_response()
       discord_user = user(%{username: "testuser", avatar: "avatarhash"})
 
       interaction =
@@ -229,6 +250,7 @@ defmodule AshDiscord.InteractionRouterTest do
     end
 
     test "user resolution falls back to basic struct when no user_resource configured" do
+      expect_interaction_response()
       discord_user = user(%{username: "fallbackuser"})
 
       interaction =
@@ -248,6 +270,7 @@ defmodule AshDiscord.InteractionRouterTest do
 
   describe "discord context setting (Task 20)" do
     test "discord context sets actor only" do
+      expect_interaction_response()
       discord_user = user(%{username: "contextuser"})
 
       interaction =
@@ -273,12 +296,13 @@ defmodule AshDiscord.InteractionRouterTest do
     end
 
     test "generic Discord context management supports multiple context patterns" do
+      expect_interaction_response()
       # Test that context can be passed in different patterns
       interaction =
         interaction(%{
           data: %{name: "hello", options: []},
           # Member pattern instead of direct user
-          member: %{user: user()}
+          member: %{user_id: user().id}
         })
 
       command = find_command_for_test(TestApp.Discord, "hello")

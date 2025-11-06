@@ -1,4 +1,8 @@
 ExUnit.start()
 # Start Mimic for test mocking
 Application.ensure_all_started(:mimic)
-Mimic.copy(Nostrum.Api.Interaction)
+
+# Automatically copy all Nostrum API modules for mocking
+Application.spec(:nostrum, :modules)
+|> Enum.filter(&match?("Elixir.Nostrum.Api" <> _, Atom.to_string(&1)))
+|> Enum.each(&Mimic.copy/1)

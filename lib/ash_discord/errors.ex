@@ -49,9 +49,7 @@ defmodule AshDiscord.Errors do
 
     defp format_context(context) do
       context_info =
-        context
-        |> Enum.map(fn {key, value} -> "  #{key}: #{inspect(value)}" end)
-        |> Enum.join("\n")
+        Enum.map_join(context, "\n", fn {key, value} -> "  #{key}: #{inspect(value)}" end)
 
       """
 
@@ -67,8 +65,7 @@ defmodule AshDiscord.Errors do
       formatted_suggestions =
         suggestions
         |> Enum.with_index(1)
-        |> Enum.map(fn {suggestion, index} -> "  #{index}. #{suggestion}" end)
-        |> Enum.join("\n")
+        |> Enum.map_join("\n", fn {suggestion, index} -> "  #{index}. #{suggestion}" end)
 
       """
       💡 Suggested Fixes:
@@ -83,8 +80,7 @@ defmodule AshDiscord.Errors do
       formatted_examples =
         examples
         |> Enum.with_index(1)
-        |> Enum.map(fn {example, index} -> "  #{index}. #{example}" end)
-        |> Enum.join("\n")
+        |> Enum.map_join("\n", fn {example, index} -> "  #{index}. #{example}" end)
 
       """
       📋 Examples:
@@ -131,11 +127,11 @@ defmodule AshDiscord.Errors do
       context = context_parts |> Enum.filter(& &1) |> Enum.join(" | ")
 
       recovery_section =
-        if not Enum.empty?(error.recovery_actions) do
+        if Enum.empty?(error.recovery_actions) do
+          ""
+        else
           actions = Enum.join(error.recovery_actions, "; ")
           "\nRecovery: #{actions}"
-        else
-          ""
         end
 
       "#{base_message} (#{context})#{recovery_section}"

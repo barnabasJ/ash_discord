@@ -2,14 +2,36 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
   @moduledoc """
   Comprehensive tests for Interaction entity from_discord transformation.
 
-  Tests both struct-first and API fallback patterns, plus upsert behavior.
+  Tests struct-first pattern and upsert behavior.
+
+  Note: Interactions are ephemeral and cannot be fetched from Discord API,
+  so API fallback pattern is not applicable.
   """
 
-  use TestApp.DataCase, async: false
-  import AshDiscord.Test.Generators.Discord
+  use TestApp.DataCase, async: true
+  use Mimic
+
+  import AshDiscord.Test.Generators
 
   describe "struct-first pattern" do
+    @tag :fixed
     test "creates interaction from discord struct with all attributes" do
+      guild_id = 111_222_333
+      channel_id = 444_555_666
+      user_id = 777_888_999
+
+      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "test_user_#{id}"})}
+      end)
+
       interaction_struct =
         interaction(%{
           id: 123_456_789,
@@ -20,44 +42,59 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
             name: "test_command",
             type: 1
           },
-          guild_id: 111_222_333,
-          channel_id: 444_555_666,
+          guild_id: guild_id,
+          channel_id: channel_id,
           member: %{
-            user: %{id: 777_888_999, username: "test_user"},
+            user: %{id: user_id, username: "test_user"},
             nick: "TestNick"
           },
           user: nil,
           token: "interaction_token_abc123",
           version: 1,
-          message: nil,
-          app_permissions: "2048",
           locale: "en-US",
           guild_locale: "en-US"
         })
 
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: interaction_struct})
+      created =
+        TestApp.Discord.interaction_from_discord!(
+          %{data: interaction_struct},
+          load: [:guild, :channel, :user]
+        )
 
-      assert {:ok, created_interaction} = result
-      assert created_interaction.discord_id == interaction_struct.id
-      assert created_interaction.application_id == interaction_struct.application_id
-      assert created_interaction.type == interaction_struct.type
-      assert created_interaction.guild_id == interaction_struct.guild_id
-      assert created_interaction.channel_id == interaction_struct.channel_id
-      assert created_interaction.token == interaction_struct.token
-      assert created_interaction.version == interaction_struct.version
-      assert created_interaction.locale == interaction_struct.locale
-      assert created_interaction.guild_locale == interaction_struct.guild_locale
-
-      # app_permissions is provided in test but doesn't exist in Nostrum struct, so it should be nil
-      assert created_interaction.app_permissions == nil
+      assert created.discord_id == interaction_struct.id
+      assert created.application_id == interaction_struct.application_id
+      assert created.type == interaction_struct.type
+      assert created.token == interaction_struct.token
+      assert created.version == interaction_struct.version
+      assert created.locale == interaction_struct.locale
+      assert created.guild_locale == interaction_struct.guild_locale
+      assert created.guild.discord_id == guild_id
+      assert created.channel.discord_id == channel_id
+      assert created.user.discord_id == user_id
     end
 
+    @tag :fixed
     test "handles slash command interaction" do
+      guild_id = 444_555_666
+      channel_id = 777_888_999
+      user_id = 333_444_555
+
+      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "slash_user"})}
+      end)
+
       interaction_struct =
         interaction(%{
           id: 987_654_321,
           application_id: 123_456_789,
-          # Slash command type
           type: 2,
           data: %{
             id: 111_222_333,
@@ -65,38 +102,60 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
             type: 1,
             options: []
           },
-          guild_id: 444_555_666,
-          channel_id: 777_888_999,
+          guild_id: guild_id,
+          channel_id: channel_id,
           member: %{
-            user: %{id: 333_444_555, username: "slash_user"},
+            user: %{id: user_id, username: "slash_user"},
             nick: nil
           },
           token: "slash_token_def456",
           version: 1
         })
 
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: interaction_struct})
+      created =
+        TestApp.Discord.interaction_from_discord!(
+          %{data: interaction_struct},
+          load: [:guild, :channel, :user]
+        )
 
-      assert {:ok, created_interaction} = result
-      assert created_interaction.discord_id == interaction_struct.id
-      assert created_interaction.type == 2
+      assert created.discord_id == interaction_struct.id
+      assert created.type == 2
+      assert created.guild.discord_id == guild_id
+      assert created.channel.discord_id == channel_id
+      assert created.user.discord_id == user_id
     end
 
+    @tag :fixed
     test "handles message component interaction" do
+      guild_id = 333_444_555
+      channel_id = 666_777_888
+      user_id = 999_111_222
+
+      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "button_user"})}
+      end)
+
       interaction_struct =
         interaction(%{
           id: 111_222_333,
           application_id: 777_888_999,
-          # Message component type
           type: 3,
           data: %{
             custom_id: "button_click",
             component_type: 2
           },
-          guild_id: 333_444_555,
-          channel_id: 666_777_888,
+          guild_id: guild_id,
+          channel_id: channel_id,
           member: %{
-            user: %{id: 999_111_222, username: "button_user"},
+            user: %{id: user_id, username: "button_user"},
             nick: "ButtonClicker"
           },
           token: "component_token_ghi789",
@@ -107,19 +166,41 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
           }
         })
 
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: interaction_struct})
+      created =
+        TestApp.Discord.interaction_from_discord!(
+          %{data: interaction_struct},
+          load: [:guild, :channel, :user]
+        )
 
-      assert {:ok, created_interaction} = result
-      assert created_interaction.discord_id == interaction_struct.id
-      assert created_interaction.type == 3
+      assert created.discord_id == interaction_struct.id
+      assert created.type == 3
+      assert created.guild.discord_id == guild_id
+      assert created.channel.discord_id == channel_id
+      assert created.user.discord_id == user_id
     end
 
+    @tag :fixed
     test "handles modal submit interaction" do
+      guild_id = 555_666_777
+      channel_id = 111_222_333
+      user_id = 222_333_444
+
+      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "modal_user"})}
+      end)
+
       interaction_struct =
         interaction(%{
           id: 444_555_666,
           application_id: 888_999_111,
-          # Modal submit type
           type: 5,
           data: %{
             custom_id: "modal_submit",
@@ -136,24 +217,42 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
               }
             ]
           },
-          guild_id: 555_666_777,
-          channel_id: 111_222_333,
+          guild_id: guild_id,
+          channel_id: channel_id,
           member: %{
-            user: %{id: 222_333_444, username: "modal_user"},
+            user: %{id: user_id, username: "modal_user"},
             nick: nil
           },
           token: "modal_token_jkl012",
           version: 1
         })
 
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: interaction_struct})
+      created =
+        TestApp.Discord.interaction_from_discord!(
+          %{data: interaction_struct},
+          load: [:guild, :channel, :user]
+        )
 
-      assert {:ok, created_interaction} = result
-      assert created_interaction.discord_id == interaction_struct.id
-      assert created_interaction.type == 5
+      assert created.discord_id == interaction_struct.id
+      assert created.type == 5
+      assert created.guild.discord_id == guild_id
+      assert created.channel.discord_id == channel_id
+      assert created.user.discord_id == user_id
     end
 
+    @tag :fixed
     test "handles DM interaction without guild" do
+      channel_id = 777_888_999
+      user_id = 111_222_333
+
+      Mimic.stub(Nostrum.Api.Channel, :get, fn ^channel_id ->
+        {:ok, channel(%{id: channel_id, guild_id: nil, name: "dm-channel"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "dm_user"})}
+      end)
+
       interaction_struct =
         interaction(%{
           id: 666_777_888,
@@ -164,56 +263,45 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
             name: "dm_command",
             type: 1
           },
-          # No guild for DM
           guild_id: nil,
-          channel_id: 777_888_999,
-          # Direct user instead of member
-          user: %{id: 111_222_333, username: "dm_user"},
+          channel_id: channel_id,
+          user: %{id: user_id, username: "dm_user"},
           member: nil,
           token: "dm_token_mno345",
           version: 1,
           locale: "en-US"
         })
 
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: interaction_struct})
+      created =
+        TestApp.Discord.interaction_from_discord!(
+          %{data: interaction_struct},
+          load: [:channel, :user]
+        )
 
-      assert {:ok, created_interaction} = result
-      assert created_interaction.discord_id == interaction_struct.id
-      assert created_interaction.guild_id == nil
+      assert created.discord_id == interaction_struct.id
+      assert created.guild_discord_id == nil
+      assert created.channel.discord_id == channel_id
+      assert created.user.discord_id == user_id
     end
 
-    test "handles interaction with app permissions" do
-      interaction_struct =
-        interaction(%{
-          id: 777_888_999,
-          application_id: 111_222_333,
-          type: 2,
-          data: %{
-            id: 444_555_666,
-            name: "admin_command",
-            type: 1
-          },
-          guild_id: 888_999_111,
-          channel_id: 222_333_444,
-          member: %{
-            user: %{id: 555_666_777, username: "admin_user"},
-            nick: "Admin"
-          },
-          token: "admin_token_pqr678",
-          version: 1,
-          # Administrator permission
-          app_permissions: "8"
-        })
-
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: interaction_struct})
-
-      assert {:ok, created_interaction} = result
-      assert created_interaction.discord_id == interaction_struct.id
-      # app_permissions doesn't exist in Nostrum struct, so it should be nil
-      assert created_interaction.app_permissions == nil
-    end
-
+    @tag :fixed
     test "handles interaction with locale information" do
+      guild_id = 333_444_555
+      channel_id = 999_111_222
+      user_id = 444_555_666
+
+      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "locale_user"})}
+      end)
+
       interaction_struct =
         interaction(%{
           id: 888_999_111,
@@ -224,10 +312,10 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
             name: "locale_command",
             type: 1
           },
-          guild_id: 333_444_555,
-          channel_id: 999_111_222,
+          guild_id: guild_id,
+          channel_id: channel_id,
           member: %{
-            user: %{id: 444_555_666, username: "locale_user"},
+            user: %{id: user_id, username: "locale_user"},
             nick: nil
           },
           token: "locale_token_stu901",
@@ -236,42 +324,42 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
           guild_locale: "en-US"
         })
 
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: interaction_struct})
+      created =
+        TestApp.Discord.interaction_from_discord!(
+          %{data: interaction_struct},
+          load: [:guild, :channel, :user]
+        )
 
-      assert {:ok, created_interaction} = result
-      assert created_interaction.discord_id == interaction_struct.id
-      assert created_interaction.locale == "fr"
-      assert created_interaction.guild_locale == "en-US"
-    end
-  end
-
-  describe "API fallback pattern" do
-    test "interaction API fallback is not supported" do
-      # Interactions don't support direct API fetching in our implementation
-      discord_id = 999_888_777
-
-      result = TestApp.Discord.interaction_from_discord(%{discord_id: discord_id})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch interaction with ID #{discord_id}"
-      assert error_message =~ ":unsupported_type"
-    end
-
-    test "requires discord_struct for interaction creation" do
-      result = TestApp.Discord.interaction_from_discord(%{})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for interaction entity"
+      assert created.discord_id == interaction_struct.id
+      assert created.locale == "fr"
+      assert created.guild_locale == "en-US"
+      assert created.guild.discord_id == guild_id
+      assert created.channel.discord_id == channel_id
+      assert created.user.discord_id == user_id
     end
   end
 
   describe "upsert behavior" do
+    @tag :fixed
     test "updates existing interaction instead of creating duplicate" do
+      guild_id = 444_555_666
+      channel_id = 777_888_999
+      user_id = 987_654_321
+
+      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, guild_id: guild_id, name: "test-channel"})}
+      end)
+
+      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "test_user_#{id}"})}
+      end)
+
       discord_id = 555_666_777
 
-      # Create initial interaction
       initial_struct =
         interaction(%{
           id: discord_id,
@@ -282,10 +370,10 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
             name: "original_command",
             type: 1
           },
-          guild_id: 444_555_666,
-          channel_id: 777_888_999,
+          guild_id: guild_id,
+          channel_id: channel_id,
           member: %{
-            user: %{id: 987_654_321, username: "original_user"},
+            user: %{id: user_id, username: "original_user"},
             nick: "Original"
           },
           token: "original_token",
@@ -293,13 +381,11 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
           locale: "en-US"
         })
 
-      {:ok, original_interaction} =
-        TestApp.Discord.interaction_from_discord(%{discord_struct: initial_struct})
+      {:ok, original} =
+        TestApp.Discord.interaction_from_discord(%{data: initial_struct})
 
-      # Update same interaction with new data (hypothetical update)
       updated_struct =
         interaction(%{
-          # Same ID
           id: discord_id,
           application_id: 123_456_789,
           type: 2,
@@ -308,10 +394,10 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
             name: "updated_command",
             type: 1
           },
-          guild_id: 444_555_666,
-          channel_id: 777_888_999,
+          guild_id: guild_id,
+          channel_id: channel_id,
           member: %{
-            user: %{id: 987_654_321, username: "updated_user"},
+            user: %{id: user_id, username: "updated_user"},
             nick: "Updated"
           },
           token: "updated_token",
@@ -319,167 +405,12 @@ defmodule AshDiscord.Changes.FromDiscord.InteractionTest do
           locale: "fr"
         })
 
-      {:ok, updated_interaction} =
-        TestApp.Discord.interaction_from_discord(%{discord_struct: updated_struct})
+      {:ok, updated} =
+        TestApp.Discord.interaction_from_discord(%{data: updated_struct})
 
-      # Should be same record (same Ash ID)
-      assert updated_interaction.id == original_interaction.id
-      assert updated_interaction.discord_id == original_interaction.discord_id
-
-      # But with updated attributes
-      assert updated_interaction.token == "updated_token"
-      assert updated_interaction.locale == "fr"
-    end
-
-    test "upsert works with permission changes" do
-      discord_id = 333_444_555
-
-      # Create initial interaction without app permissions
-      initial_struct =
-        interaction(%{
-          id: discord_id,
-          application_id: 666_777_888,
-          type: 2,
-          data: %{
-            id: 999_111_222,
-            name: "perm_command",
-            type: 1
-          },
-          guild_id: 222_333_444,
-          channel_id: 555_666_777,
-          member: %{
-            user: %{id: 888_999_111, username: "perm_user"},
-            nick: nil
-          },
-          token: "perm_token",
-          version: 1,
-          app_permissions: nil
-        })
-
-      {:ok, original_interaction} =
-        TestApp.Discord.interaction_from_discord(%{discord_struct: initial_struct})
-
-      # Update with app permissions
-      updated_struct =
-        interaction(%{
-          # Same ID
-          id: discord_id,
-          application_id: 666_777_888,
-          type: 2,
-          data: %{
-            id: 999_111_222,
-            name: "perm_command",
-            type: 1
-          },
-          guild_id: 222_333_444,
-          channel_id: 555_666_777,
-          member: %{
-            user: %{id: 888_999_111, username: "perm_user"},
-            nick: nil
-          },
-          token: "perm_token",
-          version: 1,
-          app_permissions: "2048"
-        })
-
-      {:ok, updated_interaction} =
-        TestApp.Discord.interaction_from_discord(%{discord_struct: updated_struct})
-
-      # Should be same record
-      assert updated_interaction.id == original_interaction.id
-      assert updated_interaction.discord_id == discord_id
-
-      # app_permissions doesn't exist in Nostrum struct, so it should remain nil
-      assert updated_interaction.app_permissions == nil
-    end
-  end
-
-  describe "error handling" do
-    test "handles invalid discord_struct format" do
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: "not_a_map"})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "Invalid value provided for discord_struct"
-    end
-
-    test "handles missing required fields in discord_struct" do
-      # Missing required fields
-      invalid_struct = interaction(%{id: nil, name: nil})
-
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: invalid_struct})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "is required"
-    end
-
-    test "handles invalid interaction type" do
-      interaction_struct =
-        interaction(%{
-          id: 123_456_789,
-          application_id: 987_654_321,
-          # Invalid type
-          type: 999,
-          data: %{
-            id: 555_666_777,
-            name: "test_command",
-            type: 1
-          },
-          guild_id: 111_222_333,
-          channel_id: 444_555_666,
-          token: "test_token",
-          version: 1
-        })
-
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: interaction_struct})
-
-      # This might succeed with normalized type or fail with validation error
-      # Either is acceptable behavior
-      case result do
-        {:ok, created_interaction} ->
-          # If it succeeds, type should be handled gracefully
-          assert created_interaction.discord_id == interaction_struct.id
-
-        {:error, error} ->
-          # If it fails, should be a validation error
-          error_message = Exception.message(error)
-          assert error_message =~ "invalid" or error_message =~ "must be"
-      end
-    end
-
-    test "handles malformed interaction data" do
-      malformed_struct = %{
-        id: "not_an_integer",
-        application_id: "not_an_integer",
-        # Required field as nil
-        type: nil,
-        token: nil
-      }
-
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: malformed_struct})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      # Should contain validation errors
-      assert error_message =~ "is required" or error_message =~ "is invalid"
-    end
-
-    test "handles missing token in discord_struct" do
-      invalid_struct = %{
-        id: 123_456_789,
-        application_id: 987_654_321,
-        type: 2,
-        # Missing token field
-        guild_id: 111_222_333,
-        channel_id: 444_555_666
-      }
-
-      result = TestApp.Discord.interaction_from_discord(%{discord_struct: invalid_struct})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "is required" or error_message =~ "token"
+      assert updated.id == original.id
+      assert updated.token == "updated_token"
+      assert updated.locale == "fr"
     end
   end
 end

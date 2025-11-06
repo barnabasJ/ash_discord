@@ -1,5 +1,5 @@
 defmodule AshDiscord.CommandTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias AshDiscord.{Command, Option}
 

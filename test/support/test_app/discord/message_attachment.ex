@@ -4,8 +4,13 @@ defmodule TestApp.Discord.MessageAttachment do
   """
 
   use Ash.Resource,
+    extensions: [AshDiscord.Resource],
     domain: TestApp.Discord,
     data_layer: Ash.DataLayer.Ets
+
+  ash_discord do
+    discord_entity(:message_attachment)
+  end
 
   ets do
     private?(true)
@@ -63,17 +68,17 @@ defmodule TestApp.Discord.MessageAttachment do
       description("Create message attachment from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :struct,
+      argument(:data, AshDiscord.Consumer.Payloads.MessageAttachment,
         allow_nil?: true,
-        description: "Discord message attachment struct to transform"
+        description: "Discord message attachment TypedStruct data"
       )
 
-      argument(:discord_id, :integer,
+      argument(:identity, :map,
         allow_nil?: true,
-        description: "Discord message attachment ID for API fallback"
+        description: "Map with channel_id, message_id, and attachment_id for API fallback"
       )
 
-      change({AshDiscord.Changes.FromDiscord, type: :message_attachment})
+      change(AshDiscord.Changes.FromDiscord.MessageAttachment)
 
       upsert?(true)
       upsert_identity(:discord_id)

@@ -6,39 +6,24 @@ defmodule TestApp.TestConsumer do
   use AshDiscord.Consumer
 
   ash_discord_consumer do
+    # Resources auto-discovered from domain via AshDiscord.Resource extension
     domains([TestApp.Discord])
-    user_resource(TestApp.Discord.User)
-    guild_resource(TestApp.Discord.Guild)
-    guild_member_resource(TestApp.Discord.Guild)
-    message_resource(TestApp.Discord.Message)
   end
 
   @doc """
   Override interaction create for Discord command testing.
-  """
-  @impl true
-  def handle_interaction_create(interaction) do
-    # Let parent handle routing to actions
-    result = super(interaction)
 
-    # Log for testing verification
+  This callback gets called by the handler when INTERACTION_CREATE event is received.
+  The signature is: handle_interaction_create(payload, ws_state, context) - 3 args
+  """
+  @impl AshDiscord.Consumer
+  def handle_interaction_create(interaction, ws_state, context) do
+    # Log for testing verification before calling handler
     Process.put(:last_interaction, interaction)
+
+    result = AshDiscord.Consumer.Handler.Interaction.create(interaction, ws_state, context)
+
     Process.put(:last_interaction_result, result)
-
-    result
-  end
-
-  @doc """
-  Override application command handling for testing.
-  """
-  @impl true
-  def handle_application_command(interaction) do
-    # Route through AshDiscord system
-    result = super(interaction)
-
-    # Store for test verification  
-    Process.put(:last_command, interaction)
-    Process.put(:last_command_result, result)
 
     result
   end

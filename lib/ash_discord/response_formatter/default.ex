@@ -98,9 +98,7 @@ defmodule AshDiscord.ResponseFormatter.Default do
   end
 
   defp format_validation_errors_content(errors) when is_list(errors) do
-    errors
-    |> Enum.map(&format_single_validation_error/1)
-    |> Enum.join("\n")
+    Enum.map_join(errors, "\n", &format_single_validation_error/1)
   end
 
   defp format_validation_errors_content(_), do: "Invalid input provided"

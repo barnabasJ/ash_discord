@@ -1,8 +1,8 @@
 defmodule AshDiscord.ResponseFormatter.DefaultTest do
   use ExUnit.Case, async: true
 
-  alias AshDiscord.ResponseFormatter.Default
   alias AshDiscord.Command
+  alias AshDiscord.ResponseFormatter.Default
 
   # Helper struct for testing
   defmodule TestStruct do

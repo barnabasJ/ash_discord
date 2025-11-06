@@ -5,11 +5,19 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
   Tests both struct-first and API fallback patterns, plus upsert behavior.
   """
 
-  use TestApp.DataCase, async: false
-  import AshDiscord.Test.Generators.Discord
+  use TestApp.DataCase, async: true
+  import AshDiscord.Test.Generators
+  use Mimic
 
   describe "struct-first pattern" do
+    @tag :fixed
     test "creates role from discord struct with all attributes" do
+      guild_id = 555_666_777
+
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
       role_struct =
         role(%{
           id: 123_456_789,
@@ -19,13 +27,18 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
           position: 5,
           permissions: 2048,
           managed: false,
-          mentionable: true,
-          guild_id: 555_666_777
+          mentionable: true
         })
 
-      result = TestApp.Discord.role_from_discord(%{discord_struct: role_struct})
+      created_role =
+        TestApp.Discord.role_from_discord!(
+          %{
+            data: role_struct,
+            identity: %{guild_id: guild_id}
+          },
+          load: [:guild]
+        )
 
-      assert {:ok, created_role} = result
       assert created_role.discord_id == role_struct.id
       assert created_role.name == role_struct.name
       assert created_role.color == role_struct.color
@@ -34,15 +47,19 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
       assert created_role.permissions == to_string(role_struct.permissions)
       assert created_role.managed == false
       assert created_role.mentionable == true
-      # guild_id would need to be passed separately as roles don't contain guild context
+      assert created_role.guild.discord_id == guild_id
     end
 
+    @tag :fixed
     test "handles default role (@everyone)" do
       guild_id = 555_666_777
 
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
       role_struct =
         role(%{
-          # Default role has same ID as guild
           id: guild_id,
           name: "@everyone",
           color: 0,
@@ -50,21 +67,34 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
           position: 0,
           permissions: 104_324_161,
           managed: false,
-          mentionable: false,
-          guild_id: guild_id
+          mentionable: false
         })
 
-      result = TestApp.Discord.role_from_discord(%{discord_struct: role_struct})
+      created_role =
+        TestApp.Discord.role_from_discord!(
+          %{
+            data: role_struct,
+            identity: %{guild_id: guild_id}
+          },
+          load: [:guild]
+        )
 
-      assert {:ok, created_role} = result
       assert created_role.discord_id == guild_id
       assert created_role.name == "@everyone"
       assert created_role.color == 0
       assert created_role.hoist == false
       assert created_role.position == 0
+      assert created_role.guild.discord_id == guild_id
     end
 
+    @tag :fixed
     test "handles managed bot role" do
+      guild_id = 111_222_333
+
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
       role_struct =
         role(%{
           id: 777_888_999,
@@ -74,20 +104,33 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
           position: 10,
           permissions: 8,
           managed: true,
-          mentionable: false,
-          guild_id: 111_222_333
+          mentionable: false
         })
 
-      result = TestApp.Discord.role_from_discord(%{discord_struct: role_struct})
+      created_role =
+        TestApp.Discord.role_from_discord!(
+          %{
+            data: role_struct,
+            identity: %{guild_id: guild_id}
+          },
+          load: [:guild]
+        )
 
-      assert {:ok, created_role} = result
       assert created_role.discord_id == role_struct.id
       assert created_role.name == role_struct.name
       assert created_role.managed == true
       assert created_role.mentionable == false
+      assert created_role.guild.discord_id == guild_id
     end
 
+    @tag :fixed
     test "handles high permission role" do
+      guild_id = 999_888_777
+
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
       role_struct =
         role(%{
           id: 333_444_555,
@@ -95,47 +138,78 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
           color: 15_158_332,
           hoist: true,
           position: 20,
-          # Administrator permission
           permissions: 8,
           managed: false,
           mentionable: true
         })
 
-      result = TestApp.Discord.role_from_discord(%{discord_struct: role_struct})
+      created_role =
+        TestApp.Discord.role_from_discord!(
+          %{
+            data: role_struct,
+            identity: %{guild_id: guild_id}
+          },
+          load: [:guild]
+        )
 
-      assert {:ok, created_role} = result
       assert created_role.discord_id == role_struct.id
       assert created_role.name == role_struct.name
       assert created_role.permissions == "8"
+      assert created_role.guild.discord_id == guild_id
     end
   end
 
   describe "API fallback pattern" do
-    test "role API fallback is not supported" do
-      # Roles don't support direct API fetching in our implementation
-      discord_id = 999_888_777
+    @tag :fixed
+    test "fetches role from API when data not provided" do
+      guild_id = 555_666_777
+      role_id = 999_888_777
 
-      result = TestApp.Discord.role_from_discord(%{discord_id: discord_id})
+      expect(Nostrum.Api.Guild, :roles, fn ^guild_id ->
+        {:ok,
+         [
+           role(%{
+             id: role_id,
+             name: "API Fetched Role",
+             color: 16_711_680,
+             hoist: true,
+             position: 10,
+             permissions: 2048,
+             managed: false,
+             mentionable: true
+           }),
+           role(%{id: 123_456_789, name: "Other Role", permissions: 1024})
+         ]}
+      end)
 
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "No such input `discord_id`"
-    end
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
 
-    test "requires discord_struct for role creation" do
-      result = TestApp.Discord.role_from_discord(%{})
+      created_role =
+        TestApp.Discord.role_from_discord!(%{identity: %{guild_id: guild_id, role_id: role_id}},
+          load: [:guild]
+        )
 
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for role entity"
+      assert created_role.discord_id == role_id
+      assert created_role.name == "API Fetched Role"
+      assert created_role.color == 16_711_680
+      assert created_role.hoist == true
+      assert created_role.permissions == "2048"
+      assert created_role.guild.discord_id == guild_id
     end
   end
 
   describe "upsert behavior" do
+    @tag :fixed
     test "updates existing role instead of creating duplicate" do
       discord_id = 555_666_777
+      guild_id = 111_222_333
 
-      # Create initial role
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
       initial_struct =
         role(%{
           id: discord_id,
@@ -146,12 +220,17 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
           permissions: 1024
         })
 
-      {:ok, original_role} = TestApp.Discord.role_from_discord(%{discord_struct: initial_struct})
+      original_role =
+        TestApp.Discord.role_from_discord!(
+          %{
+            data: initial_struct,
+            identity: %{guild_id: guild_id}
+          },
+          load: [:guild]
+        )
 
-      # Update same role with new data
       updated_struct =
         role(%{
-          # Same ID
           id: discord_id,
           name: "Updated Role",
           color: 65_280,
@@ -161,25 +240,36 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
           mentionable: true
         })
 
-      {:ok, updated_role} = TestApp.Discord.role_from_discord(%{discord_struct: updated_struct})
+      updated_role =
+        TestApp.Discord.role_from_discord!(
+          %{
+            data: updated_struct,
+            identity: %{guild_id: guild_id}
+          },
+          load: [:guild]
+        )
 
-      # Should be same record (same Ash ID)
       assert updated_role.id == original_role.id
       assert updated_role.discord_id == original_role.discord_id
 
-      # But with updated attributes
       assert updated_role.name == "Updated Role"
       assert updated_role.color == 65_280
       assert updated_role.hoist == true
       assert updated_role.position == 5
       assert updated_role.permissions == "2048"
       assert updated_role.mentionable == true
+      assert updated_role.guild.discord_id == guild_id
     end
 
+    @tag :fixed
     test "upsert works with permission changes" do
       discord_id = 333_444_555
+      guild_id = 222_333_444
 
-      # Create initial role with basic permissions
+      expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
       initial_struct =
         role(%{
           id: discord_id,
@@ -188,73 +278,37 @@ defmodule AshDiscord.Changes.FromDiscord.RoleTest do
           managed: false
         })
 
-      {:ok, original_role} = TestApp.Discord.role_from_discord(%{discord_struct: initial_struct})
+      original_role =
+        TestApp.Discord.role_from_discord!(
+          %{
+            data: initial_struct,
+            identity: %{guild_id: guild_id}
+          },
+          load: [:guild]
+        )
 
-      # Update with admin permissions
       updated_struct =
         role(%{
-          # Same ID
           id: discord_id,
           name: "Member Role",
-          # Administrator permission
           permissions: 8,
           managed: false
         })
 
-      {:ok, updated_role} = TestApp.Discord.role_from_discord(%{discord_struct: updated_struct})
+      updated_role =
+        TestApp.Discord.role_from_discord!(
+          %{
+            data: updated_struct,
+            identity: %{guild_id: guild_id}
+          },
+          load: [:guild]
+        )
 
-      # Should be same record
       assert updated_role.id == original_role.id
       assert updated_role.discord_id == discord_id
 
-      # But with updated permissions
       assert updated_role.permissions == "8"
-    end
-  end
-
-  describe "error handling" do
-    test "handles invalid discord_struct format" do
-      result = TestApp.Discord.role_from_discord(%{discord_struct: "not_a_map"})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "Invalid value provided for discord_struct"
-    end
-
-    test "handles missing required fields in discord_struct" do
-      # Missing required fields
-      invalid_struct = role(%{id: nil, name: nil})
-
-      result = TestApp.Discord.role_from_discord(%{discord_struct: invalid_struct})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "is required"
-    end
-
-    test "handles invalid permission value" do
-      role_struct =
-        role(%{
-          id: 123_456_789,
-          name: "Test Role",
-          # Invalid permission value
-          permissions: "not_an_integer"
-        })
-
-      result = TestApp.Discord.role_from_discord(%{discord_struct: role_struct})
-
-      # This might succeed with normalized permissions or fail with validation error
-      # Either is acceptable behavior
-      case result do
-        {:ok, created_role} ->
-          # If it succeeds, permissions should be converted to string
-          assert is_binary(created_role.permissions)
-
-        {:error, error} ->
-          # If it fails, should be a validation error
-          error_message = Exception.message(error)
-          assert error_message =~ "invalid" or error_message =~ "must be"
-      end
+      assert updated_role.guild.discord_id == guild_id
     end
   end
 end

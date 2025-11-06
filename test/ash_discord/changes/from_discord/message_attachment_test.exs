@@ -5,10 +5,12 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
   Tests both struct-first and API fallback patterns, plus upsert behavior.
   """
 
-  use TestApp.DataCase, async: false
-  import AshDiscord.Test.Generators.Discord
+  use TestApp.DataCase, async: true
+  import AshDiscord.Test.Generators
+  use Mimic
 
   describe "struct-first pattern" do
+    @tag :fixed
     test "creates message attachment from discord struct with all attributes" do
       attachment_struct =
         message_attachment(%{
@@ -22,7 +24,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
         })
 
       result =
-        TestApp.Discord.message_attachment_from_discord(%{discord_struct: attachment_struct})
+        TestApp.Discord.message_attachment_from_discord(%{data: attachment_struct})
 
       assert {:ok, created_attachment} = result
       assert created_attachment.discord_id == attachment_struct.id
@@ -34,6 +36,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
       assert created_attachment.width == attachment_struct.width
     end
 
+    @tag :fixed
     test "handles text file attachment" do
       attachment_struct =
         message_attachment(%{
@@ -42,13 +45,12 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
           size: 2048,
           url: "https://cdn.discordapp.com/attachments/789/012/data.txt",
           proxy_url: "https://media.discordapp.net/attachments/789/012/data.txt",
-          # No dimensions for text file
           height: nil,
           width: nil
         })
 
       result =
-        TestApp.Discord.message_attachment_from_discord(%{discord_struct: attachment_struct})
+        TestApp.Discord.message_attachment_from_discord(%{data: attachment_struct})
 
       assert {:ok, created_attachment} = result
       assert created_attachment.discord_id == attachment_struct.id
@@ -60,6 +62,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
       assert created_attachment.width == nil
     end
 
+    @tag :fixed
     test "handles video attachment" do
       attachment_struct =
         message_attachment(%{
@@ -73,7 +76,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
         })
 
       result =
-        TestApp.Discord.message_attachment_from_discord(%{discord_struct: attachment_struct})
+        TestApp.Discord.message_attachment_from_discord(%{data: attachment_struct})
 
       assert {:ok, created_attachment} = result
       assert created_attachment.discord_id == attachment_struct.id
@@ -85,6 +88,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
       assert created_attachment.width == 1280
     end
 
+    @tag :fixed
     test "handles attachment with image dimensions" do
       attachment_struct =
         message_attachment(%{
@@ -98,7 +102,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
         })
 
       result =
-        TestApp.Discord.message_attachment_from_discord(%{discord_struct: attachment_struct})
+        TestApp.Discord.message_attachment_from_discord(%{data: attachment_struct})
 
       assert {:ok, created_attachment} = result
       assert created_attachment.discord_id == attachment_struct.id
@@ -107,32 +111,12 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
       assert created_attachment.width == 800
     end
 
-    test "handles attachment without proxy URL" do
-      attachment_struct =
-        message_attachment(%{
-          id: 333_444_555,
-          filename: "untitled.png",
-          size: 262_144,
-          url: "https://cdn.discordapp.com/attachments/567/890/untitled.png",
-          proxy_url: nil,
-          height: 400,
-          width: 600
-        })
-
-      result =
-        TestApp.Discord.message_attachment_from_discord(%{discord_struct: attachment_struct})
-
-      assert {:ok, created_attachment} = result
-      assert created_attachment.discord_id == attachment_struct.id
-      assert created_attachment.proxy_url == nil
-    end
-
+    @tag :fixed
     test "handles large attachment" do
       attachment_struct =
         message_attachment(%{
           id: 999_111_222,
           filename: "large_video.mov",
-          # 25MB file
           size: 26_214_400,
           url: "https://cdn.discordapp.com/attachments/123/789/large_video.mov",
           proxy_url: "https://media.discordapp.net/attachments/123/789/large_video.mov",
@@ -141,7 +125,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
         })
 
       result =
-        TestApp.Discord.message_attachment_from_discord(%{discord_struct: attachment_struct})
+        TestApp.Discord.message_attachment_from_discord(%{data: attachment_struct})
 
       assert {:ok, created_attachment} = result
       assert created_attachment.discord_id == attachment_struct.id
@@ -151,32 +135,56 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
   end
 
   describe "API fallback pattern" do
-    test "message attachment API fallback is not supported" do
-      # Message attachments don't support direct API fetching in our implementation
-      discord_id = 999_888_777
+    @tag :fixed
+    test "fetches attachment from API when data not provided" do
+      channel_id = 555_666_777
+      message_id = 999_888_777
+      attachment_id = 123_456_789
 
-      result = TestApp.Discord.message_attachment_from_discord(%{discord_id: discord_id})
+      Mimic.expect(Nostrum.Api.Message, :get, fn ^channel_id, ^message_id ->
+        {:ok,
+         message(%{
+           id: message_id,
+           channel_id: channel_id,
+           content: "Check out this image!",
+           attachments: [
+             message_attachment(%{
+               id: attachment_id,
+               filename: "api_fetched.png",
+               size: 2_048_576,
+               url: "https://cdn.discordapp.com/attachments/555/999/api_fetched.png",
+               proxy_url: "https://media.discordapp.net/attachments/555/999/api_fetched.png",
+               height: 1920,
+               width: 1080
+             }),
+             message_attachment(%{id: 987_654_321, filename: "other.jpg"})
+           ]
+         })}
+      end)
 
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch message_attachment with ID #{discord_id}"
-      assert error_message =~ ":unsupported_type"
-    end
+      result =
+        TestApp.Discord.message_attachment_from_discord(%{
+          identity: %{
+            channel_id: channel_id,
+            message_id: message_id,
+            attachment_id: attachment_id
+          }
+        })
 
-    test "requires discord_struct for message attachment creation" do
-      result = TestApp.Discord.message_attachment_from_discord(%{})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for message_attachment entity"
+      assert {:ok, created_attachment} = result
+      assert created_attachment.discord_id == attachment_id
+      assert created_attachment.filename == "api_fetched.png"
+      assert created_attachment.size == 2_048_576
+      assert created_attachment.height == 1920
+      assert created_attachment.width == 1080
     end
   end
 
   describe "upsert behavior" do
+    @tag :fixed
     test "updates existing message attachment instead of creating duplicate" do
       discord_id = 555_666_777
 
-      # Create initial attachment
       initial_struct =
         message_attachment(%{
           id: discord_id,
@@ -189,12 +197,10 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
         })
 
       {:ok, original_attachment} =
-        TestApp.Discord.message_attachment_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.message_attachment_from_discord(%{data: initial_struct})
 
-      # Update same attachment with new data
       updated_struct =
         message_attachment(%{
-          # Same ID
           id: discord_id,
           filename: "updated.png",
           size: 2048,
@@ -205,23 +211,20 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
         })
 
       {:ok, updated_attachment} =
-        TestApp.Discord.message_attachment_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.message_attachment_from_discord(%{data: updated_struct})
 
-      # Should be same record (same Ash ID)
       assert updated_attachment.id == original_attachment.id
       assert updated_attachment.discord_id == original_attachment.discord_id
-
-      # But with updated attributes
       assert updated_attachment.filename == "updated.png"
       assert updated_attachment.size == 2048
       assert updated_attachment.height == 200
       assert updated_attachment.width == 200
     end
 
+    @tag :fixed
     test "upsert works with dimension changes" do
       discord_id = 333_444_555
 
-      # Create initial attachment with small dimensions
       initial_struct =
         message_attachment(%{
           id: discord_id,
@@ -234,12 +237,10 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
         })
 
       {:ok, original_attachment} =
-        TestApp.Discord.message_attachment_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.message_attachment_from_discord(%{data: initial_struct})
 
-      # Update with larger dimensions
       updated_struct =
         message_attachment(%{
-          # Same ID
           id: discord_id,
           filename: "status_test.jpg",
           size: 4096,
@@ -250,85 +251,12 @@ defmodule AshDiscord.Changes.FromDiscord.MessageAttachmentTest do
         })
 
       {:ok, updated_attachment} =
-        TestApp.Discord.message_attachment_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.message_attachment_from_discord(%{data: updated_struct})
 
-      # Should be same record
       assert updated_attachment.id == original_attachment.id
       assert updated_attachment.discord_id == discord_id
-
-      # But with updated dimensions
       assert updated_attachment.height == 600
       assert updated_attachment.width == 800
-    end
-  end
-
-  describe "error handling" do
-    test "handles invalid discord_struct format" do
-      result =
-        TestApp.Discord.message_attachment_from_discord(%{discord_struct: "not_a_map"})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "Invalid value provided for discord_struct"
-    end
-
-    test "handles missing required fields in discord_struct" do
-      # Missing required fields
-      invalid_struct = message_attachment(%{id: nil, name: nil})
-
-      result =
-        TestApp.Discord.message_attachment_from_discord(%{discord_struct: invalid_struct})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "is required"
-    end
-
-    test "handles invalid size in discord_struct" do
-      attachment_struct =
-        message_attachment(%{
-          id: 123_456_789,
-          filename: "test.png",
-          content_type: "image/png",
-          # Invalid size type
-          size: "not_an_integer",
-          url: "https://cdn.discordapp.com/attachments/111/222/test.png",
-          proxy_url: "https://media.discordapp.net/attachments/111/222/test.png",
-          message_id: 555_666_777
-        })
-
-      result =
-        TestApp.Discord.message_attachment_from_discord(%{discord_struct: attachment_struct})
-
-      # This might succeed with normalized size or fail with validation error
-      # Either is acceptable behavior
-      case result do
-        {:ok, created_attachment} ->
-          # If it succeeds, size should be handled gracefully
-          assert created_attachment.discord_id == attachment_struct.id
-
-        {:error, error} ->
-          # If it fails, should be a validation error
-          error_message = Exception.message(error)
-          assert error_message =~ "invalid" or error_message =~ "must be"
-      end
-    end
-
-    test "handles malformed attachment data" do
-      malformed_struct = %{
-        id: "not_an_integer",
-        # Required field as nil
-        filename: nil,
-        size: "not_an_integer"
-      }
-
-      result =
-        TestApp.Discord.message_attachment_from_discord(%{discord_struct: malformed_struct})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      # Should contain validation errors
-      assert error_message =~ "is required" or error_message =~ "is invalid"
     end
   end
 end

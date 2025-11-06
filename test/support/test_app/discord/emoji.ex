@@ -4,8 +4,13 @@ defmodule TestApp.Discord.Emoji do
   """
 
   use Ash.Resource,
+    extensions: [AshDiscord.Resource],
     domain: TestApp.Discord,
     data_layer: Ash.DataLayer.Ets
+
+  ash_discord do
+    discord_entity(:emoji)
+  end
 
   ets do
     private?(true)
@@ -15,8 +20,20 @@ defmodule TestApp.Discord.Emoji do
     uuid_primary_key(:id)
 
     attribute(:discord_id, :integer,
-      allow_nil?: false,
+      allow_nil?: true,
       public?: true
+    )
+
+    attribute(:guild_discord_id, :integer,
+      allow_nil?: false,
+      public?: true,
+      description: "Discord guild ID that owns this emoji"
+    )
+
+    attribute(:user_discord_id, :integer,
+      allow_nil?: true,
+      public?: true,
+      description: "Discord user ID of emoji creator"
     )
 
     attribute(:name, :string,
@@ -25,6 +42,12 @@ defmodule TestApp.Discord.Emoji do
     )
 
     attribute(:animated, :boolean,
+      allow_nil?: true,
+      public?: true,
+      default: false
+    )
+
+    attribute(:custom, :boolean,
       allow_nil?: true,
       public?: true,
       default: false
@@ -43,10 +66,29 @@ defmodule TestApp.Discord.Emoji do
     )
   end
 
+  relationships do
+    belongs_to :guild, TestApp.Discord.Guild do
+      source_attribute(:guild_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+
+    belongs_to :user, TestApp.Discord.User do
+      source_attribute(:user_discord_id)
+      destination_attribute(:discord_id)
+      attribute_writable?(true)
+    end
+  end
+
   identities do
-    identity :discord_id, [:discord_id] do
+    identity :discord_id, [:discord_id, :guild_discord_id] do
       pre_check_with(TestApp.Discord)
     end
+  end
+
+  code_interface do
+    define(:read)
+    define(:from_discord)
   end
 
   actions do
@@ -56,21 +98,26 @@ defmodule TestApp.Discord.Emoji do
       description("Create emoji from Discord data")
       primary?(true)
 
-      argument(:discord_struct, :struct,
-        allow_nil?: false,
-        description: "Discord emoji struct to transform"
+      argument(:data, AshDiscord.Consumer.Payloads.Emoji,
+        allow_nil?: true,
+        description: "Discord emoji TypedStruct data"
       )
 
-      change({AshDiscord.Changes.FromDiscord, type: :emoji})
+      argument(:identity, :map,
+        allow_nil?: true,
+        description: "A map with either discord_id or name for API fallback"
+      )
+
+      change(AshDiscord.Changes.FromDiscord.Emoji)
 
       upsert?(true)
       upsert_identity(:discord_id)
-      upsert_fields([:name, :animated, :managed, :require_colons])
+      upsert_fields([:guild_discord_id, :name, :animated, :custom, :managed, :require_colons])
     end
 
     update :update do
       primary?(true)
-      accept([:name, :animated, :managed, :require_colons])
+      accept([:name, :animated, :custom, :managed, :require_colons])
     end
   end
 end

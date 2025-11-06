@@ -35,12 +35,32 @@ defmodule TestApp.Discord do
       define(:channel_from_discord, action: :from_discord)
     end
 
+    resource TestApp.Discord.ChannelPinsUpdate do
+      define(:channel_pins_update_from_discord, action: :from_discord)
+    end
+
     resource TestApp.Discord.VoiceState do
       define(:voice_state_from_discord, action: :from_discord)
     end
 
+    resource TestApp.Discord.VoiceReady do
+      define(:voice_ready_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.VoiceServerUpdate do
+      define(:voice_server_update_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.VoiceSpeakingUpdate do
+      define(:voice_speaking_update_from_discord, action: :from_discord)
+    end
+
     resource TestApp.Discord.Webhook do
       define(:webhook_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.WebhooksUpdate do
+      define(:webhooks_update_from_discord, action: :from_discord)
     end
 
     resource TestApp.Discord.Invite do
@@ -55,6 +75,10 @@ defmodule TestApp.Discord do
       define(:message_reaction_from_discord, action: :from_discord)
     end
 
+    resource TestApp.Discord.MessagePollVote do
+      define(:message_poll_vote_from_discord, action: :from_discord)
+    end
+
     resource TestApp.Discord.TypingIndicator do
       define(:typing_indicator_from_discord, action: :from_discord)
     end
@@ -66,6 +90,52 @@ defmodule TestApp.Discord do
     resource TestApp.Discord.Interaction do
       define(:interaction_from_discord, action: :from_discord)
     end
+
+    resource TestApp.Discord.AutoModerationRule do
+      define(:auto_moderation_rule_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.AutoModerationRuleExecute do
+      define(:auto_moderation_rule_execute_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.GuildBan do
+      define(:guild_ban_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.GuildAuditLogEntry do
+      define(:guild_audit_log_entry_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.GuildScheduledEvent do
+      define(:guild_scheduled_event_from_discord, action: :from_discord)
+    end
+
+    resource(TestApp.Discord.GuildScheduledEventUser)
+
+    resource(TestApp.Discord.VoiceIncoming)
+
+    resource TestApp.Discord.Integration do
+      define(:integration_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.Thread do
+      define(:thread_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.ThreadListSync do
+      define(:thread_list_sync_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.ThreadMember do
+      define(:thread_member_from_discord, action: :from_discord)
+    end
+
+    resource TestApp.Discord.ThreadMembersUpdate do
+      define(:thread_members_update_from_discord, action: :from_discord)
+    end
+
+    resource(TestApp.Discord.Event)
   end
 
   discord do
@@ -79,7 +149,7 @@ defmodule TestApp.Discord do
       description("Test ping command")
     end
 
-    # Echo command with options for integration tests  
+    # Echo command with options for integration tests
     command :echo, TestApp.Discord.Message, :create do
       description("Echo back a message")
 
@@ -92,7 +162,7 @@ defmodule TestApp.Discord do
       # Options auto-detected from action inputs
     end
 
-    # Command with manual options override  
+    # Command with manual options override
     command :search, TestApp.Discord.Message, :search do
       description("Search messages")
 

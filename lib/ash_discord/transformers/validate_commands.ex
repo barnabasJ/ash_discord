@@ -14,9 +14,9 @@ defmodule AshDiscord.Transformers.ValidateCommands do
 
   use Spark.Dsl.Transformer
 
+  alias AshDiscord.Errors
   alias Spark.Dsl.{Extension, Transformer}
   alias Spark.Error.DslError
-  alias AshDiscord.Errors
 
   require Logger
 
@@ -43,53 +43,69 @@ defmodule AshDiscord.Transformers.ValidateCommands do
   end
 
   defp validate_command(command, module, index) do
-    issues = []
-
-    issues =
-      case validate_command_name_enhanced(command.name) do
-        :ok -> issues
-        {:error, issue} -> [issue | issues]
-      end
-
-    issues =
-      if command.type in [:user, :message] do
-        issues
-      else
-        case validate_command_description_enhanced(command.description) do
-          :ok -> issues
-          {:error, issue} -> [issue | issues]
-        end
-      end
-
-    issues =
-      if command.type in [:user, :message] do
-        issues
-      else
-        case validate_command_options_enhanced(command.options) do
-          :ok -> issues
-          {:error, issues_list} when is_list(issues_list) -> issues_list ++ issues
-          {:error, issue} -> [issue | issues]
-        end
-      end
-
-    issues =
-      case validate_command_resource_exists(command, module) do
-        :ok -> issues
-        {:error, issue} -> [issue | issues]
-      end
+    issues = collect_validation_issues(command, module)
 
     if Enum.empty?(issues) do
       :ok
     else
-      error = Errors.invalid_command_error(command.name, module, Enum.reverse(issues))
-
-      {:error,
-       DslError.exception(
-         message: Exception.message(error),
-         path: [:discord, :command, index],
-         module: module
-       )}
+      build_validation_error(command.name, module, index, issues)
     end
+  end
+
+  defp collect_validation_issues(command, module) do
+    []
+    |> add_name_validation_issue(command.name)
+    |> add_description_validation_issue(command)
+    |> add_options_validation_issues(command)
+    |> add_resource_validation_issue(command, module)
+  end
+
+  defp add_name_validation_issue(issues, name) do
+    case validate_command_name_enhanced(name) do
+      :ok -> issues
+      {:error, issue} -> [issue | issues]
+    end
+  end
+
+  defp add_description_validation_issue(issues, command) do
+    if command.type in [:user, :message] do
+      issues
+    else
+      case validate_command_description_enhanced(command.description) do
+        :ok -> issues
+        {:error, issue} -> [issue | issues]
+      end
+    end
+  end
+
+  defp add_options_validation_issues(issues, command) do
+    if command.type in [:user, :message] do
+      issues
+    else
+      case validate_command_options_enhanced(command.options) do
+        :ok -> issues
+        {:error, issues_list} when is_list(issues_list) -> issues_list ++ issues
+        {:error, issue} -> [issue | issues]
+      end
+    end
+  end
+
+  defp add_resource_validation_issue(issues, command, module) do
+    case validate_command_resource_exists(command, module) do
+      :ok -> issues
+      {:error, issue} -> [issue | issues]
+    end
+  end
+
+  defp build_validation_error(command_name, module, index, issues) do
+    error = Errors.invalid_command_error(command_name, module, Enum.reverse(issues))
+
+    {:error,
+     DslError.exception(
+       message: Exception.message(error),
+       path: [:discord, :command, index],
+       module: module
+     )}
   end
 
   # Enhanced validation functions with detailed error reporting
@@ -126,12 +142,10 @@ defmodule AshDiscord.Transformers.ValidateCommands do
   end
 
   defp validate_command_options_enhanced(options) do
-    cond do
-      length(options) > 25 ->
-        {:error, :too_many_options}
-
-      true ->
-        validate_each_option_enhanced(options)
+    if length(options) > 25 do
+      {:error, :too_many_options}
+    else
+      validate_each_option_enhanced(options)
     end
   end
 

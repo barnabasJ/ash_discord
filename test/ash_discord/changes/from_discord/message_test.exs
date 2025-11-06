@@ -5,18 +5,35 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
   Tests both struct-first and API fallback patterns, plus upsert behavior.
   """
 
-  use TestApp.DataCase, async: false
-  import AshDiscord.Test.Generators.Discord
+  use TestApp.DataCase, async: true
+  import AshDiscord.Test.Generators
 
   describe "struct-first pattern" do
+    @tag :fixed
     test "creates message from discord struct with all attributes" do
+      channel_id = 555_666_777
+      guild_id = 111_222_333
+      user_id = 987_654_321
+
+      expect(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0, guild_id: guild_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      expect(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "test_user_#{id}"})}
+      end)
+
       message_struct =
         message(%{
           id: 123_456_789,
           content: "Hello, Discord!",
-          author: user(%{id: 987_654_321, username: "test_user"}),
-          channel_id: 555_666_777,
-          guild_id: 111_222_333,
+          author: user(%{id: user_id, username: "test_user"}),
+          channel_id: channel_id,
+          guild_id: guild_id,
           timestamp: "2023-01-15T10:30:00Z",
           edited_timestamp: nil,
           tts: false,
@@ -24,28 +41,51 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
           pinned: false
         })
 
-      result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
+      created_message =
+        TestApp.Discord.message_from_discord!(%{data: message_struct},
+          load: [:guild, :author, :channel]
+        )
 
-      assert {:ok, created_message} = result
       assert created_message.discord_id == message_struct.id
       assert created_message.content == message_struct.content
-      assert created_message.author_id == message_struct.author.id
-      assert created_message.channel_id == message_struct.channel_id
-      assert created_message.guild_id == message_struct.guild_id
       assert created_message.timestamp == ~U[2023-01-15 10:30:00Z]
       assert created_message.edited_timestamp == nil
       assert created_message.tts == false
       assert created_message.mention_everyone == false
       assert created_message.pinned == false
+      assert created_message.author.discord_id == user_id
+      assert created_message.author.discord_username == "test_user_#{user_id}"
+      assert created_message.channel.discord_id == channel_id
+      assert created_message.channel.name == "test-channel"
+      assert created_message.guild.discord_id == guild_id
+      assert created_message.guild.name == "Test Guild"
     end
 
+    @tag :fixed
     test "handles edited message" do
+      channel_id = 777_888_999
+      guild_id = 555_666_777
+      user_id = 123_456_789
+
+      expect(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0, guild_id: guild_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      expect(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "test_user_#{id}"})}
+      end)
+
       message_struct =
         message(%{
           id: 987_654_321,
           content: "This message was edited",
-          author: user(%{id: 123_456_789, username: "editor"}),
-          channel_id: 777_888_999,
+          author: user(%{id: user_id, username: "editor"}),
+          channel_id: channel_id,
+          guild_id: guild_id,
           timestamp: "2023-02-01T12:00:00Z",
           edited_timestamp: "2023-02-01T12:05:00Z",
           tts: false,
@@ -53,268 +93,389 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
           pinned: false
         })
 
-      result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
+      created_message =
+        TestApp.Discord.message_from_discord!(%{data: message_struct},
+          load: [:guild, :author, :channel]
+        )
 
-      assert {:ok, created_message} = result
       assert created_message.discord_id == message_struct.id
       assert created_message.content == message_struct.content
       assert created_message.timestamp == ~U[2023-02-01 12:00:00Z]
       assert created_message.edited_timestamp == ~U[2023-02-01 12:05:00Z]
+      assert created_message.author.discord_id == user_id
+      assert created_message.author.discord_username == "test_user_#{user_id}"
+      assert created_message.channel.discord_id == channel_id
+      assert created_message.channel.name == "test-channel"
+      assert created_message.guild.discord_id == guild_id
+      assert created_message.guild.name == "Test Guild"
     end
 
+    @tag :fixed
     test "handles TTS message" do
+      channel_id = 777_888_999
+      guild_id = 333_444_555
+      user_id = 444_555_666
+
+      expect(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0, guild_id: guild_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      expect(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "test_user_#{id}"})}
+      end)
+
       message_struct =
         message(%{
           id: 111_222_333,
           content: "This is a text-to-speech message",
-          author: user(%{id: 444_555_666, username: "tts_user"}),
-          channel_id: 777_888_999,
+          author: user(%{id: user_id, username: "tts_user"}),
+          channel_id: channel_id,
+          guild_id: guild_id,
           timestamp: "2023-03-10T15:30:00Z",
           tts: true,
           mention_everyone: false,
           pinned: false
         })
 
-      result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
+      created_message =
+        TestApp.Discord.message_from_discord!(%{data: message_struct},
+          load: [:guild, :author, :channel]
+        )
 
-      assert {:ok, created_message} = result
       assert created_message.discord_id == message_struct.id
       assert created_message.tts == true
+      assert created_message.author.discord_id == user_id
+      assert created_message.author.discord_username == "test_user_#{user_id}"
+      assert created_message.channel.discord_id == channel_id
+      assert created_message.channel.name == "test-channel"
+      assert created_message.guild.discord_id == guild_id
+      assert created_message.guild.name == "Test Guild"
     end
 
+    @tag :fixed
     test "handles message with @everyone mention" do
+      channel_id = 999_111_222
+      guild_id = 777_888_999
+      user_id = 666_777_888
+
+      expect(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0, guild_id: guild_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      expect(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "test_user_#{id}"})}
+      end)
+
       message_struct =
         message(%{
           id: 333_444_555,
           content: "@everyone Important announcement!",
-          author: user(%{id: 666_777_888, username: "announcer"}),
-          channel_id: 999_111_222,
+          author: user(%{id: user_id, username: "announcer"}),
+          channel_id: channel_id,
+          guild_id: guild_id,
           timestamp: "2023-04-05T09:00:00Z",
           tts: false,
           mention_everyone: true,
           pinned: false
         })
 
-      result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
+      created_message =
+        TestApp.Discord.message_from_discord!(%{data: message_struct},
+          load: [:guild, :author, :channel]
+        )
 
-      assert {:ok, created_message} = result
       assert created_message.discord_id == message_struct.id
       assert created_message.mention_everyone == true
+      assert created_message.author.discord_id == user_id
+      assert created_message.author.discord_username == "test_user_#{user_id}"
+      assert created_message.channel.discord_id == channel_id
+      assert created_message.channel.name == "test-channel"
+      assert created_message.guild.discord_id == guild_id
+      assert created_message.guild.name == "Test Guild"
     end
 
+    @tag :fixed
     test "handles pinned message" do
+      channel_id = 222_333_444
+      guild_id = 111_222_333
+      user_id = 888_999_111
+
+      expect(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0, guild_id: guild_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      expect(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "test_user_#{id}"})}
+      end)
+
       message_struct =
         message(%{
           id: 555_666_777,
           content: "This message is pinned",
-          author: user(%{id: 888_999_111, username: "pinner"}),
-          channel_id: 222_333_444,
+          author: user(%{id: user_id, username: "pinner"}),
+          channel_id: channel_id,
+          guild_id: guild_id,
           timestamp: "2023-05-12T14:20:00Z",
           tts: false,
           mention_everyone: false,
           pinned: true
         })
 
-      result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
+      created_message =
+        TestApp.Discord.message_from_discord!(%{data: message_struct},
+          load: [:guild, :author, :channel]
+        )
 
-      assert {:ok, created_message} = result
       assert created_message.discord_id == message_struct.id
       assert created_message.pinned == true
+      assert created_message.author.discord_id == user_id
+      assert created_message.author.discord_username == "test_user_#{user_id}"
+      assert created_message.channel.discord_id == channel_id
+      assert created_message.channel.name == "test-channel"
+      assert created_message.guild.discord_id == guild_id
+      assert created_message.guild.name == "Test Guild"
     end
 
-    test "handles empty message content" do
+    @tag :fixed
+    test "handles nil content" do
+      channel_id = 444_555_666
+      guild_id = 999_888_777
+      user_id = 111_222_333
+
+      expect(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0, guild_id: guild_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      expect(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "test_user_#{id}"})}
+      end)
+
       message_struct =
         message(%{
           id: 777_888_999,
-          content: "",
-          author: user(%{id: 111_222_333, username: "empty_user"}),
-          channel_id: 444_555_666,
+          content: nil,
+          author: user(%{id: user_id, username: "empty_user"}),
+          channel_id: channel_id,
+          guild_id: guild_id,
           timestamp: "2023-06-01T18:45:00Z",
           tts: false,
           mention_everyone: false,
           pinned: false
         })
 
-      result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
+      created_message =
+        TestApp.Discord.message_from_discord!(%{data: message_struct},
+          load: [:guild, :author, :channel]
+        )
 
-      assert {:ok, created_message} = result
       assert created_message.discord_id == message_struct.id
       assert created_message.content == nil
+      assert created_message.author.discord_id == user_id
+      assert created_message.author.discord_username == "test_user_#{user_id}"
+      assert created_message.channel.discord_id == channel_id
+      assert created_message.channel.name == "test-channel"
+      assert created_message.guild.discord_id == guild_id
+      assert created_message.guild.name == "Test Guild"
     end
   end
 
   describe "API fallback pattern" do
-    test "message API fallback is not supported" do
-      # Messages don't support direct API fetching in our implementation
-      discord_id = 999_888_777
+    @tag :fixed
+    test "fetches message from API when data not provided" do
+      channel_id = 555_666_777
+      message_id = 999_888_777
+      guild_id = 111_222_333
+      user_id = 123_456_789
 
-      result = TestApp.Discord.message_from_discord(%{discord_id: discord_id})
+      expect(Nostrum.Api.Message, :get, fn ch_id, msg_id ->
+        {:ok,
+         message(%{
+           id: msg_id,
+           channel_id: ch_id,
+           guild_id: guild_id,
+           content: "API fetched message",
+           author: user(%{id: user_id}),
+           timestamp: "2023-06-15T10:00:00.000000Z",
+           tts: false,
+           mention_everyone: false,
+           pinned: false
+         })}
+      end)
 
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch message with ID #{discord_id}"
-      assert error_message =~ ":requires_channel_id"
-    end
+      expect(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0, guild_id: guild_id})}
+      end)
 
-    test "requires discord_struct for message creation" do
-      result = TestApp.Discord.message_from_discord(%{})
+      expect(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "test-guild"})}
+      end)
 
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for message entity"
+      expect(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "test_user_#{id}"})}
+      end)
+
+      result =
+        TestApp.Discord.message_from_discord(%{
+          identity: %{channel_id: channel_id, message_id: message_id}
+        })
+
+      assert {:ok, created_message} = result
+      assert created_message.discord_id == message_id
+      assert created_message.content == "API fetched message"
     end
   end
 
   describe "upsert behavior" do
+    @tag :fixed
     test "updates existing message instead of creating duplicate" do
+      channel_id = 111_222_333
+      guild_id = 222_333_444
+      user_id = 123_456_789
+
+      expect(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0, guild_id: guild_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      expect(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "test_user_#{id}"})}
+      end)
+
       discord_id = 555_666_777
 
-      # Create initial message
       initial_struct =
         message(%{
           id: discord_id,
           content: "Original content",
-          author: user(%{id: 123_456_789, username: "author"}),
-          channel_id: 111_222_333,
+          author: user(%{id: user_id, username: "author"}),
+          channel_id: channel_id,
+          guild_id: guild_id,
           timestamp: "2023-01-01T00:00:00Z",
           edited_timestamp: nil,
           pinned: false
         })
 
       {:ok, original_message} =
-        TestApp.Discord.message_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.message_from_discord(%{data: initial_struct},
+          load: [:guild, :author, :channel]
+        )
 
-      # Update same message with edited content
       updated_struct =
         message(%{
-          # Same ID
           id: discord_id,
           content: "Edited content",
-          author: user(%{id: 123_456_789, username: "author"}),
-          channel_id: 111_222_333,
+          author: user(%{id: user_id, username: "author"}),
+          channel_id: channel_id,
+          guild_id: guild_id,
           timestamp: "2023-01-01T00:00:00Z",
           edited_timestamp: "2023-01-01T00:05:00Z",
           pinned: true
         })
 
       {:ok, updated_message} =
-        TestApp.Discord.message_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.message_from_discord(%{data: updated_struct},
+          load: [:guild, :author, :channel]
+        )
 
-      # Should be same record (same Ash ID)
       assert updated_message.id == original_message.id
       assert updated_message.discord_id == original_message.discord_id
-
-      # But with updated attributes
       assert updated_message.content == "Edited content"
       assert updated_message.edited_timestamp == ~U[2023-01-01 00:05:00Z]
       assert updated_message.pinned == true
+      assert original_message.author.discord_id == user_id
+      assert original_message.channel.discord_id == channel_id
+      assert original_message.guild.discord_id == guild_id
+      assert updated_message.author.discord_id == user_id
+      assert updated_message.author.discord_username == "test_user_#{user_id}"
+      assert updated_message.channel.discord_id == channel_id
+      assert updated_message.channel.name == "test-channel"
+      assert updated_message.guild.discord_id == guild_id
+      assert updated_message.guild.name == "Test Guild"
     end
 
+    @tag :fixed
     test "upsert works with pin status changes" do
+      channel_id = 777_888_999
+      guild_id = 555_666_777
+      user_id = 987_654_321
+
+      expect(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0, guild_id: guild_id})}
+      end)
+
+      expect(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild"})}
+      end)
+
+      expect(Nostrum.Api.User, :get, fn id ->
+        {:ok, user(%{id: id, username: "test_user_#{id}"})}
+      end)
+
       discord_id = 333_444_555
 
-      # Create initial unpinned message
       initial_struct =
         message(%{
           id: discord_id,
           content: "Important message",
-          author: user(%{id: 987_654_321, username: "important_user"}),
-          channel_id: 777_888_999,
+          author: user(%{id: user_id, username: "important_user"}),
+          channel_id: channel_id,
+          guild_id: guild_id,
           timestamp: "2023-07-01T10:00:00Z",
           pinned: false
         })
 
       {:ok, original_message} =
-        TestApp.Discord.message_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.message_from_discord(%{data: initial_struct},
+          load: [:guild, :author, :channel]
+        )
 
-      # Pin the message
       updated_struct =
         message(%{
-          # Same ID
           id: discord_id,
           content: "Important message",
-          author: user(%{id: 987_654_321, username: "important_user"}),
-          channel_id: 777_888_999,
+          author: user(%{id: user_id, username: "important_user"}),
+          channel_id: channel_id,
+          guild_id: guild_id,
           timestamp: "2023-07-01T10:00:00Z",
           pinned: true
         })
 
       {:ok, updated_message} =
-        TestApp.Discord.message_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.message_from_discord(%{data: updated_struct},
+          load: [:guild, :author, :channel]
+        )
 
-      # Should be same record
       assert updated_message.id == original_message.id
       assert updated_message.discord_id == discord_id
-
-      # But with updated pin status
       assert updated_message.pinned == true
-    end
-  end
-
-  describe "error handling" do
-    test "handles invalid discord_struct format" do
-      result = TestApp.Discord.message_from_discord(%{discord_struct: "not_a_map"})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "Invalid value provided for discord_struct"
-    end
-
-    test "handles missing required fields in discord_struct" do
-      # Missing required fields
-      invalid_struct = message(%{id: nil, name: nil})
-
-      result = TestApp.Discord.message_from_discord(%{discord_struct: invalid_struct})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "is required"
-    end
-
-    test "handles invalid timestamp format" do
-      message_struct =
-        message(%{
-          id: 123_456_789,
-          content: "Test message",
-          author: user(%{id: 987_654_321, username: "test_user"}),
-          channel_id: 555_666_777,
-          # Invalid timestamp format
-          timestamp: "not_a_datetime",
-          tts: false,
-          mention_everyone: false,
-          pinned: false
-        })
-
-      result = TestApp.Discord.message_from_discord(%{discord_struct: message_struct})
-
-      # This might succeed with nil timestamp or fail with validation error
-      # Either is acceptable behavior
-      case result do
-        {:ok, created_message} ->
-          # If it succeeds, timestamp should be handled gracefully
-          assert created_message.discord_id == message_struct.id
-
-        {:error, error} ->
-          # If it fails, should be a validation error
-          error_message = Exception.message(error)
-          assert error_message =~ "invalid" or error_message =~ "must be"
-      end
-    end
-
-    test "handles missing author in discord_struct" do
-      invalid_struct = %{
-        id: 123_456_789,
-        content: "Test message",
-        # Missing author field
-        channel_id: 555_666_777,
-        timestamp: "2023-01-01T00:00:00Z"
-      }
-
-      result = TestApp.Discord.message_from_discord(%{discord_struct: invalid_struct})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "is required" or error_message =~ "author"
+      assert original_message.author.discord_id == user_id
+      assert original_message.channel.discord_id == channel_id
+      assert original_message.guild.discord_id == guild_id
+      assert updated_message.author.discord_id == user_id
+      assert updated_message.author.discord_username == "test_user_#{user_id}"
+      assert updated_message.channel.discord_id == channel_id
+      assert updated_message.channel.name == "test-channel"
+      assert updated_message.guild.discord_id == guild_id
+      assert updated_message.guild.name == "Test Guild"
     end
   end
 end

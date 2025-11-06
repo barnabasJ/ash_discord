@@ -8,10 +8,6 @@ defmodule AshDiscord.ConsumerConfigurationTest do
 
   use TestApp.DataCase
 
-  setup do
-    TestHelper.setup_mocks()
-  end
-
   describe "automatic user resolution system (Task 19)" do
     test "consumer can be configured with user_resource for automatic resolution" do
       # Define a test consumer with user_resource configuration
@@ -172,7 +168,7 @@ defmodule AshDiscord.ConsumerConfigurationTest do
   describe "configuration validation" do
     test "consumer with invalid user creator can be compiled" do
       # Consumer creation should be successful at compile time
-      # Runtime errors from user creation are handled by InteractionRouter  
+      # Runtime errors from user creation are handled by InteractionRouter
       defmodule InvalidUserCreatorConsumer do
         use AshDiscord.Consumer
 

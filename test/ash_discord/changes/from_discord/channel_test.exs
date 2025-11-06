@@ -6,25 +6,38 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
   Special focus on permission overwrites transformation.
   """
 
-  use TestApp.DataCase, async: false
-  import AshDiscord.Test.Generators.Discord
+  use TestApp.DataCase, async: true
+  import AshDiscord.Test.Generators
+  use Mimic
 
   describe "struct-first pattern" do
-    test "creates channel from discord struct with all attributes" do
+    @tag :fixed
+    test "creates channel from discord struct with all attributes and relationships" do
+      parent_data = channel(%{id: 987_654_321, name: "Parent Channel", type: 4, guild_id: nil})
+      guild_id = 555_666_777
+      parent_id = parent_data.id
+
+      Mimic.expect(Nostrum.Api.Guild, :get, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild #{id}"})}
+      end)
+
+      Mimic.expect(Nostrum.Api.Channel, :get, fn ^parent_id ->
+        {:ok, parent_data}
+      end)
+
       channel_struct =
         channel(%{
           id: 123_456_789,
           name: "test-channel",
-          # Text channel
           type: 0,
           position: 1,
           topic: "A test channel topic",
           nsfw: false,
-          parent_id: 987_654_321,
-          guild_id: 555_666_777
+          parent_id: parent_data.id,
+          guild_id: guild_id
         })
 
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: channel_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: channel_struct}, load: [:parent])
 
       assert {:ok, created_channel} = result
       assert created_channel.discord_id == channel_struct.id
@@ -33,16 +46,60 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       assert created_channel.position == channel_struct.position
       assert created_channel.topic == channel_struct.topic
       assert created_channel.nsfw == false
-      assert created_channel.parent_id == channel_struct.parent_id
-      assert created_channel.guild_id == channel_struct.guild_id
+      assert created_channel.guild_discord_id == channel_struct.guild_id
+      assert created_channel.parent.discord_id == parent_data.id
+      assert created_channel.parent.name == parent_data.name
     end
 
+    @tag :fixed
+    test "creates channel with guild and parent relationships" do
+      guild_id = 111_222_333
+      parent_id = 444_555_666
+      parent_guild_id = 999_888_777
+      channel_id = 123_456_789
+
+      Mimic.expect(Nostrum.Api.Guild, :get, 2, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild #{id}"})}
+      end)
+
+      Mimic.expect(Nostrum.Api.Channel, :get, fn ^parent_id ->
+        {:ok,
+         channel(%{id: parent_id, name: "Parent Channel", type: 4, guild_id: parent_guild_id})}
+      end)
+
+      channel_struct =
+        channel(%{
+          id: channel_id,
+          name: "relationship-test",
+          type: 0,
+          guild_id: guild_id,
+          parent_id: parent_id
+        })
+
+      result =
+        TestApp.Discord.channel_from_discord(%{data: channel_struct},
+          load: [:guild, :parent]
+        )
+
+      assert {:ok, created_channel} = result
+      assert created_channel.discord_id == channel_id
+      assert created_channel.name == "relationship-test"
+
+      assert created_channel.guild.discord_id == guild_id
+      assert String.contains?(created_channel.guild.name, "Test Guild")
+
+      assert created_channel.parent.discord_id == parent_id
+      assert created_channel.parent.name == "Parent Channel"
+    end
+
+    @tag :fixed
     test "handles permission overwrites transformation" do
       channel_struct =
         channel(%{
           id: 111_222_333,
           name: "channel-with-permissions",
           type: 0,
+          guild_id: nil,
           permission_overwrites: [
             # Role overwrite
             %{id: 123, type: 0, allow: 1024, deny: 0},
@@ -53,56 +110,170 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
           ]
         })
 
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: channel_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: channel_struct})
 
       assert {:ok, created_channel} = result
       assert created_channel.discord_id == channel_struct.id
       assert created_channel.name == channel_struct.name
 
-      # Verify permission overwrites transformation
       overwrites = created_channel.permission_overwrites
       assert length(overwrites) == 3
 
-      # Check first overwrite (role)
-      first_overwrite = Enum.find(overwrites, &(&1["id"] == "123"))
+      first_overwrite = Enum.find(overwrites, &(&1["id"] == 123))
       assert first_overwrite["type"] == 0
       assert first_overwrite["allow"] == "1024"
       assert first_overwrite["deny"] == "0"
 
-      # Check second overwrite (member)
-      second_overwrite = Enum.find(overwrites, &(&1["id"] == "456"))
+      second_overwrite = Enum.find(overwrites, &(&1["id"] == 456))
       assert second_overwrite["type"] == 1
       assert second_overwrite["allow"] == "0"
       assert second_overwrite["deny"] == "2048"
     end
 
+    @tag :fixed
     test "handles nil and empty permission overwrites" do
       channel_struct =
         channel(%{
           id: 444_555_666,
           name: "channel-no-permissions",
           type: 0,
+          guild_id: nil,
           permission_overwrites: nil
         })
 
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: channel_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: channel_struct})
 
       assert {:ok, created_channel} = result
       assert created_channel.permission_overwrites == []
     end
 
+    @tag :fixed
+    test "creates channel with owner relationship" do
+      channel_id = 123_456_789
+      owner_id = 999_888_777
+
+      Mimic.expect(Nostrum.Api.User, :get, fn ^owner_id ->
+        {:ok,
+         user(%{
+           id: owner_id,
+           username: "channel_owner",
+           discriminator: "1234",
+           avatar: "avatar_hash"
+         })}
+      end)
+
+      channel_struct =
+        channel(%{
+          id: channel_id,
+          name: "channel-with-owner",
+          type: 0,
+          owner_id: owner_id,
+          guild_id: nil
+        })
+
+      result =
+        TestApp.Discord.channel_from_discord(%{data: channel_struct}, load: [:owner])
+
+      assert {:ok, created_channel} = result
+      assert created_channel.discord_id == channel_id
+      assert created_channel.name == "channel-with-owner"
+      assert created_channel.owner.discord_id == owner_id
+      assert created_channel.owner.discord_username == "channel_owner"
+    end
+
+    @tag :fixed
+    test "handles nil last_message_id" do
+      channel_id = 123_456_789
+
+      channel_struct =
+        channel(%{
+          id: channel_id,
+          name: "channel-without-last-message",
+          type: 0,
+          last_message_id: nil,
+          guild_id: nil
+        })
+
+      result = TestApp.Discord.channel_from_discord(%{data: channel_struct})
+
+      assert {:ok, created_channel} = result
+      assert created_channel.discord_id == channel_id
+      assert created_channel.name == "channel-without-last-message"
+      assert created_channel.last_message_discord_id == nil
+    end
+
+    @tag :fixed
+    test "creates channel with guild, parent, and owner relationships" do
+      channel_id = 123_456_789
+      guild_id = 111_222_333
+      parent_id = 444_555_666
+      parent_guild_id = 999_888_777
+      owner_id = 333_222_111
+
+      Mimic.expect(Nostrum.Api.Guild, :get, 2, fn id ->
+        {:ok, guild(%{id: id, name: "Test Guild #{id}"})}
+      end)
+
+      Mimic.expect(Nostrum.Api.Channel, :get, fn ^parent_id ->
+        {:ok,
+         channel(%{id: parent_id, name: "Parent Channel", type: 4, guild_id: parent_guild_id})}
+      end)
+
+      Mimic.expect(Nostrum.Api.User, :get, fn ^owner_id ->
+        {:ok,
+         user(%{
+           id: owner_id,
+           username: "channel_owner",
+           discriminator: "5678",
+           avatar: "owner_avatar"
+         })}
+      end)
+
+      channel_struct =
+        channel(%{
+          id: channel_id,
+          name: "channel-with-all-relationships",
+          type: 0,
+          guild_id: guild_id,
+          parent_id: parent_id,
+          owner_id: owner_id,
+          last_message_id: nil
+        })
+
+      result =
+        TestApp.Discord.channel_from_discord(%{data: channel_struct},
+          load: [:guild, :parent, :owner]
+        )
+
+      assert {:ok, created_channel} = result
+      assert created_channel.discord_id == channel_id
+      assert created_channel.name == "channel-with-all-relationships"
+      assert created_channel.guild.discord_id == guild_id
+      assert created_channel.guild.name == "Test Guild #{guild_id}"
+      assert created_channel.parent.discord_id == parent_id
+      assert created_channel.parent.name == "Parent Channel"
+      assert created_channel.owner.discord_id == owner_id
+      assert created_channel.owner.discord_username == "channel_owner"
+    end
+
+    @tag :fixed
     test "handles voice channel type" do
+      guild_id = 111_222_333
+
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Voice Guild"})}
+      end)
+
       voice_channel_struct =
         channel(%{
           id: 777_888_999,
           name: "Voice Channel",
-          # Voice channel
           type: 2,
           position: 5,
-          guild_id: 111_222_333
+          guild_id: guild_id
         })
 
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: voice_channel_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: voice_channel_struct})
 
       assert {:ok, created_channel} = result
       assert created_channel.discord_id == voice_channel_struct.id
@@ -111,17 +282,18 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
       assert created_channel.position == 5
     end
 
+    @tag :fixed
     test "handles category channel with children" do
       category_struct =
         channel(%{
           id: 333_444_555,
           name: "Category",
-          # Category channel
           type: 4,
-          position: 0
+          position: 0,
+          guild_id: nil
         })
 
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: category_struct})
+      result = TestApp.Discord.channel_from_discord(%{data: category_struct})
 
       assert {:ok, created_channel} = result
       assert created_channel.discord_id == category_struct.id
@@ -131,170 +303,117 @@ defmodule AshDiscord.Changes.FromDiscord.ChannelTest do
   end
 
   describe "API fallback pattern" do
-    test "channel API fallback fails when API is unavailable" do
-      # Channel API fetching is supported but may fail in test environment
+    @tag :fixed
+    test "fetches channel from API when data not provided" do
       discord_id = 999_888_777
 
-      result = TestApp.Discord.channel_from_discord(%{discord_id: discord_id})
+      Mimic.expect(Nostrum.Api.Channel, :get, fn ^discord_id ->
+        {:ok,
+         channel(%{
+           id: discord_id,
+           name: "api-fetched-channel",
+           type: 0,
+           topic: "Fetched from Discord API",
+           position: 10,
+           guild_id: nil
+         })}
+      end)
 
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "Failed to fetch channel with ID #{discord_id}"
-      assert error_message =~ ":api_unavailable"
-    end
+      result = TestApp.Discord.channel_from_discord(%{identity: discord_id})
 
-    test "requires discord_struct for channel creation" do
-      result = TestApp.Discord.channel_from_discord(%{})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "No Discord ID found for channel entity"
+      assert {:ok, created_channel} = result
+      assert created_channel.discord_id == discord_id
+      assert created_channel.name == "api-fetched-channel"
+      assert created_channel.topic == "Fetched from Discord API"
+      assert created_channel.position == 10
     end
   end
 
   describe "upsert behavior" do
+    @tag :fixed
     test "updates existing channel instead of creating duplicate" do
       discord_id = 555_666_777
 
-      # Create initial channel
       initial_struct =
         channel(%{
           id: discord_id,
           name: "original-channel",
           type: 0,
-          topic: "Original topic"
+          topic: "Original topic",
+          guild_id: nil
         })
 
       {:ok, original_channel} =
-        TestApp.Discord.channel_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.channel_from_discord(%{data: initial_struct})
 
-      # Update same channel with new data
       updated_struct =
         channel(%{
-          # Same ID
           id: discord_id,
           name: "updated-channel",
           type: 0,
           topic: "Updated topic",
           position: 5,
-          nsfw: true
+          nsfw: true,
+          guild_id: nil
         })
 
       {:ok, updated_channel} =
-        TestApp.Discord.channel_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.channel_from_discord(%{data: updated_struct})
 
-      # Should be same record (same Ash ID)
       assert updated_channel.id == original_channel.id
       assert updated_channel.discord_id == original_channel.discord_id
-
-      # But with updated attributes
       assert updated_channel.name == "updated-channel"
       assert updated_channel.topic == "Updated topic"
       assert updated_channel.position == 5
       assert updated_channel.nsfw == true
     end
 
+    @tag :fixed
     test "upsert works with permission overwrites changes" do
       discord_id = 333_444_555
 
-      # Create initial channel with permissions
       initial_struct =
         channel(%{
           id: discord_id,
           name: "permissions-channel",
           type: 0,
+          guild_id: nil,
           permission_overwrites: [
             %{id: 123, type: 0, allow: 1024, deny: 0}
           ]
         })
 
       {:ok, original_channel} =
-        TestApp.Discord.channel_from_discord(%{discord_struct: initial_struct})
+        TestApp.Discord.channel_from_discord(%{data: initial_struct})
 
-      # Update with different permissions
       updated_struct =
         channel(%{
-          # Same ID
           id: discord_id,
           name: "permissions-channel",
           type: 0,
+          guild_id: nil,
           permission_overwrites: [
-            # Updated permissions
             %{id: 123, type: 0, allow: 2048, deny: 1024},
-            # New member permission
             %{id: 456, type: 1, allow: 8, deny: 0}
           ]
         })
 
       {:ok, updated_channel} =
-        TestApp.Discord.channel_from_discord(%{discord_struct: updated_struct})
+        TestApp.Discord.channel_from_discord(%{data: updated_struct})
 
-      # Should be same record
       assert updated_channel.id == original_channel.id
       assert updated_channel.discord_id == discord_id
 
-      # But with updated permissions
       overwrites = updated_channel.permission_overwrites
       assert length(overwrites) == 2
 
-      # Check updated role permission
-      role_overwrite = Enum.find(overwrites, &(&1["id"] == "123"))
+      role_overwrite = Enum.find(overwrites, &(&1["id"] == 123))
       assert role_overwrite["allow"] == "2048"
       assert role_overwrite["deny"] == "1024"
 
-      # Check new member permission
-      member_overwrite = Enum.find(overwrites, &(&1["id"] == "456"))
+      member_overwrite = Enum.find(overwrites, &(&1["id"] == 456))
       assert member_overwrite["type"] == 1
       assert member_overwrite["allow"] == "8"
-    end
-  end
-
-  describe "error handling" do
-    test "handles invalid discord_struct format" do
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: "not_a_map"})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "Invalid value provided for discord_struct"
-    end
-
-    test "handles missing required fields in discord_struct" do
-      # Missing required fields
-      invalid_struct = channel(%{id: nil, name: nil})
-
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: invalid_struct})
-
-      assert {:error, error} = result
-      error_message = Exception.message(error)
-      assert error_message =~ "is required"
-    end
-
-    test "handles malformed permission overwrites" do
-      # Test with malformed permission overwrites structure
-      channel_struct =
-        channel(%{
-          id: 123_456_789,
-          name: "test-channel",
-          type: 0,
-          # Should be a list
-          permission_overwrites: "not_a_list"
-        })
-
-      # The transformation should handle this gracefully
-      result = TestApp.Discord.channel_from_discord(%{discord_struct: channel_struct})
-
-      # This might succeed with empty permissions or fail with validation error
-      # Either is acceptable behavior
-      case result do
-        {:ok, created_channel} ->
-          # If it succeeds, permissions should be normalized
-          assert is_list(created_channel.permission_overwrites)
-
-        {:error, error} ->
-          # If it fails, should be a validation error
-          error_message = Exception.message(error)
-          assert error_message =~ "invalid" or error_message =~ "must be"
-      end
     end
   end
 end

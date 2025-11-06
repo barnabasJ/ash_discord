@@ -4,8 +4,17 @@ defmodule TestApp.Discord.Guild do
   """
 
   use Ash.Resource,
+    extensions: [AshDiscord.Resource],
     domain: TestApp.Discord,
     data_layer: Ash.DataLayer.Ets
+
+  ash_discord do
+    discord_entity(:guild)
+  end
+
+  ets do
+    private?(true)
+  end
 
   attributes do
     uuid_primary_key(:id)
@@ -19,7 +28,7 @@ defmodule TestApp.Discord.Guild do
   end
 
   identities do
-    identity(:unique_discord_id, [:discord_id], pre_check_with: TestApp.Domain)
+    identity(:discord_id, [:discord_id], pre_check_with: TestApp.Discord)
   end
 
   actions do
@@ -31,22 +40,21 @@ defmodule TestApp.Discord.Guild do
     end
 
     create :from_discord do
-      accept([:discord_id, :name, :description, :icon])
       upsert?(true)
-      upsert_identity(:unique_discord_id)
+      upsert_identity(:discord_id)
       upsert_fields([:name, :description, :icon])
 
-      argument(:discord_struct, :map,
+      argument(:data, AshDiscord.Consumer.Payloads.Guild,
         allow_nil?: true,
-        description: "Discord guild data to transform"
+        description: "Discord guild TypedStruct payload"
       )
 
-      argument(:discord_id, :integer,
+      argument(:identity, :term,
         allow_nil?: true,
-        description: "Discord guild ID for API fallback"
+        description: "Discord guild ID for API fallback (integer or map with discord_id)"
       )
 
-      change({AshDiscord.Changes.FromDiscord, type: :guild})
+      change(AshDiscord.Changes.FromDiscord.Guild)
     end
 
     update :update do

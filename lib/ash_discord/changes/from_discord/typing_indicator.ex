@@ -1,0 +1,143 @@
+defmodule AshDiscord.Changes.FromDiscord.TypingIndicator do
+  @moduledoc """
+  Transforms Discord TypingIndicator data into Ash resource attributes.
+
+  Typing indicators are ephemeral events and not fetchable from API, so only the
+  `:data` argument is supported (no `:identity` fallback).
+
+  ## Arguments
+
+  - `:data` - Map with typing event data (user_id, channel_id, guild_id, timestamp)
+
+  ## Example
+
+      create :from_discord do
+        argument :data, :map
+
+        change AshDiscord.Changes.FromDiscord.TypingIndicator
+      end
+  """
+
+  use Ash.Resource.Change
+
+  alias AshDiscord.Changes.FromDiscord.Transformations
+
+  @impl true
+  def change(changeset, _opts, _context) do
+    Ash.Changeset.before_transaction(changeset, fn changeset ->
+      case Ash.Changeset.get_argument_or_attribute(changeset, :data) do
+        data when is_map(data) ->
+          transform_typing_indicator(changeset, data)
+
+        nil ->
+          Ash.Changeset.add_error(
+            changeset,
+            "TypingIndicator requires data argument - typing events are not fetchable from API"
+          )
+
+        other ->
+          Ash.Changeset.add_error(
+            changeset,
+            "Invalid data argument: expected map, got: #{inspect(other)}"
+          )
+      end
+    end)
+  end
+
+  defp transform_typing_indicator(changeset, typing_data) do
+    changeset
+    |> set_typing_timestamp(typing_data)
+    |> maybe_set_attribute(:member, convert_member_to_map(typing_data.member))
+    |> maybe_manage_user_relationship(typing_data.user_id)
+    |> maybe_manage_channel_relationship(typing_data.channel_id)
+    |> maybe_manage_guild_relationship(typing_data.guild_id)
+  end
+
+  defp convert_member_to_map(nil), do: nil
+
+  defp convert_member_to_map(%AshDiscord.Consumer.Payloads.Member{} = member) do
+    Map.from_struct(member)
+  end
+
+  defp convert_member_to_map(member) when is_map(member), do: member
+
+  # Handle timestamp setting for typing indicators
+  defp set_typing_timestamp(changeset, %{timestamp: timestamp}) when not is_nil(timestamp) do
+    parsed_timestamp = parse_timestamp(timestamp)
+    maybe_set_attribute(changeset, :timestamp, parsed_timestamp)
+  end
+
+  defp set_typing_timestamp(changeset, data) when is_map(data) do
+    case data["timestamp"] do
+      nil ->
+        # Default to current timestamp if none provided
+        maybe_set_attribute(changeset, :timestamp, DateTime.utc_now())
+
+      timestamp ->
+        parsed_timestamp = parse_timestamp(timestamp)
+        maybe_set_attribute(changeset, :timestamp, parsed_timestamp)
+    end
+  end
+
+  defp set_typing_timestamp(changeset, _) do
+    # Default to current timestamp if none provided
+    maybe_set_attribute(changeset, :timestamp, DateTime.utc_now())
+  end
+
+  defp parse_timestamp(timestamp) when is_integer(timestamp) do
+    case DateTime.from_unix(timestamp) do
+      {:ok, dt} -> dt
+      _ -> DateTime.utc_now()
+    end
+  end
+
+  defp parse_timestamp(timestamp) when is_binary(timestamp) do
+    case DateTime.from_iso8601(timestamp) do
+      {:ok, dt, _} -> dt
+      _ -> DateTime.utc_now()
+    end
+  end
+
+  defp parse_timestamp(%DateTime{} = dt), do: dt
+  defp parse_timestamp(_), do: DateTime.utc_now()
+
+  defp maybe_set_attribute(changeset, _field, nil), do: changeset
+
+  defp maybe_set_attribute(changeset, field, value) do
+    if Ash.Resource.Info.attribute(changeset.resource, field) do
+      Ash.Changeset.force_change_attribute(changeset, field, value)
+    else
+      changeset
+    end
+  end
+
+  defp maybe_manage_user_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_user_relationship(changeset, user_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :user) do
+      Transformations.manage_user_relationship(changeset, user_id)
+    else
+      changeset
+    end
+  end
+
+  defp maybe_manage_channel_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_channel_relationship(changeset, channel_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :channel) do
+      Transformations.manage_channel_relationship(changeset, channel_id)
+    else
+      changeset
+    end
+  end
+
+  defp maybe_manage_guild_relationship(changeset, nil), do: changeset
+
+  defp maybe_manage_guild_relationship(changeset, guild_id) do
+    if Ash.Resource.Info.relationship(changeset.resource, :guild) do
+      Transformations.manage_guild_relationship(changeset, guild_id)
+    else
+      changeset
+    end
+  end
+end

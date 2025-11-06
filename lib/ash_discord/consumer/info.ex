@@ -17,6 +17,8 @@ defmodule AshDiscord.Consumer.Info do
   - `ash_discord_consumer_voice_state_resource/1` - Returns voice state resource
   - `ash_discord_consumer_typing_indicator_resource/1` - Returns typing indicator resource
   - `ash_discord_consumer_invite_resource/1` - Returns invite resource
+  - `ash_discord_consumer_interaction_resource/1` - Returns interaction resource
+  - `ash_discord_consumer_presence_resource/1` - Returns presence resource
   - `ash_discord_consumer_store_bot_messages/1` - Returns store_bot_messages setting
   - `ash_discord_consumer_debug_logging/1` - Returns debug_logging setting
   """

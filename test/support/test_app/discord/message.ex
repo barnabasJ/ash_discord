@@ -4,28 +4,43 @@ defmodule TestApp.Discord.Message do
   """
 
   use Ash.Resource,
+    extensions: [AshDiscord.Resource],
     domain: TestApp.Discord,
     data_layer: Ash.DataLayer.Ets
+
+  require Logger
+
+  ash_discord do
+    discord_entity(:message)
+
+    events do
+      on(:MESSAGE_ACK, :log_ack)
+    end
+  end
+
+  ets do
+    private?(true)
+  end
 
   attributes do
     uuid_primary_key(:id)
 
     attribute(:discord_id, :integer, allow_nil?: false, public?: true)
     attribute(:content, :string, allow_nil?: true, public?: true)
-    attribute(:channel_id, :integer, public?: true)
-    attribute(:author_id, :integer, public?: true)
-    attribute(:guild_id, :integer, public?: true)
     attribute(:timestamp, :utc_datetime, public?: true)
     attribute(:edited_timestamp, :utc_datetime, public?: true)
     attribute(:tts, :boolean, public?: true, default: false)
     attribute(:mention_everyone, :boolean, public?: true, default: false)
     attribute(:pinned, :boolean, public?: true, default: false)
+    attribute(:channel_discord_id, :integer, public?: true)
+    attribute(:author_discord_id, :integer, public?: true)
+    attribute(:guild_discord_id, :integer, public?: true)
 
     timestamps()
   end
 
   identities do
-    identity(:unique_discord_id, [:discord_id], pre_check_with: TestApp.Domain)
+    identity(:discord_id, [:discord_id], pre_check_with: TestApp.Discord)
   end
 
   actions do
@@ -33,51 +48,18 @@ defmodule TestApp.Discord.Message do
 
     create :create do
       primary?(true)
-      accept([:discord_id, :content, :channel_id, :author_id, :guild_id])
-
-      argument(:message, :string)
-      argument(:channel, :string)
-
-      change(fn changeset, _context ->
-        message = Ash.Changeset.get_argument(changeset, :message)
-        channel = Ash.Changeset.get_argument(changeset, :channel)
-
-        changeset =
-          if message,
-            do: Ash.Changeset.change_attribute(changeset, :content, message),
-            else: changeset
-
-        changeset =
-          if channel,
-            do: Ash.Changeset.change_attribute(changeset, :channel_id, channel),
-            else: changeset
-
-        changeset
-      end)
+      accept([:discord_id, :content, :channel_discord_id, :author_discord_id, :guild_discord_id])
     end
 
     create :from_discord do
-      accept([
-        :discord_id,
-        :content,
-        :channel_id,
-        :author_id,
-        :guild_id,
-        :timestamp,
-        :edited_timestamp,
-        :tts,
-        :mention_everyone,
-        :pinned
-      ])
-
       upsert?(true)
-      upsert_identity(:unique_discord_id)
+      upsert_identity(:discord_id)
 
       upsert_fields([
         :content,
-        :channel_id,
-        :author_id,
-        :guild_id,
+        :channel_discord_id,
+        :author_discord_id,
+        :guild_discord_id,
         :timestamp,
         :edited_timestamp,
         :tts,
@@ -85,9 +67,17 @@ defmodule TestApp.Discord.Message do
         :pinned
       ])
 
-      argument(:discord_struct, :struct, description: "Discord message data to transform")
+      argument(:data, AshDiscord.Consumer.Payloads.Message,
+        allow_nil?: true,
+        description: "Discord message TypedStruct data"
+      )
 
-      change({AshDiscord.Changes.FromDiscord, type: :message})
+      argument(:identity, :map,
+        allow_nil?: true,
+        description: "Map with channel_id and message_id for API fallback"
+      )
+
+      change(AshDiscord.Changes.FromDiscord.Message)
     end
 
     read :search do
@@ -109,8 +99,17 @@ defmodule TestApp.Discord.Message do
         changeset
         |> Ash.Changeset.change_attribute(:content, "Hello from AshDiscord!")
         |> Ash.Changeset.change_attribute(:discord_id, System.system_time(:nanosecond))
-        |> Ash.Changeset.change_attribute(:channel_id, 123_456_789)
-        |> Ash.Changeset.change_attribute(:author_id, 987_654_321)
+        |> Ash.Changeset.change_attribute(:channel_discord_id, 123_456_789)
+        |> Ash.Changeset.change_attribute(:author_discord_id, 987_654_321)
+      end)
+    end
+
+    action :log_ack do
+      argument(:data, :term, allow_nil?: false)
+
+      run(fn input, _context ->
+        Logger.info("Message acknowledgement received: #{inspect(input.arguments.data)}")
+        :ok
       end)
     end
   end
@@ -118,12 +117,17 @@ defmodule TestApp.Discord.Message do
   relationships do
     belongs_to(:guild, TestApp.Discord.Guild,
       destination_attribute: :discord_id,
-      source_attribute: :guild_id
+      source_attribute: :guild_discord_id
     )
 
-    belongs_to(:user, TestApp.Discord.User,
+    belongs_to(:author, TestApp.Discord.User,
       destination_attribute: :discord_id,
-      source_attribute: :author_id
+      source_attribute: :author_discord_id
+    )
+
+    belongs_to(:channel, TestApp.Discord.Channel,
+      destination_attribute: :discord_id,
+      source_attribute: :channel_discord_id
     )
   end
 

@@ -1,0 +1,239 @@
+defmodule AshDiscord.Changes.FromDiscord.ChannelPinsUpdateTest do
+  @moduledoc """
+  Comprehensive tests for ChannelPinsUpdate entity from_discord transformation.
+
+  ChannelPinsUpdate is an ephemeral event and does NOT support API fallback.
+  Tests focus on struct-first pattern and error handling.
+  """
+
+  use TestApp.DataCase, async: true
+  import AshDiscord.Test.Generators
+  use Mimic
+
+  describe "struct-first pattern" do
+    @tag :fixed
+    test "creates channel pins update from discord struct with all attributes" do
+      channel_id = 123_456_789
+      guild_id = 987_654_321
+
+      Mimic.expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
+        {:ok,
+         channel(%{
+           id: channel_id,
+           name: "test-channel",
+           guild_id: guild_id,
+           owner_id: nil,
+           parent_id: nil
+         })}
+      end)
+
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
+      pins_struct =
+        channel_pins_update(%{
+          channel_id: channel_id,
+          guild_id: guild_id,
+          last_pin_timestamp: ~U[2025-01-15 10:30:00Z]
+        })
+
+      created_pins =
+        TestApp.Discord.channel_pins_update_from_discord!(%{data: pins_struct},
+          load: [:guild, :channel]
+        )
+
+      assert created_pins.last_pin_timestamp == pins_struct.last_pin_timestamp
+      assert created_pins.guild.discord_id == guild_id
+      assert created_pins.channel.discord_id == channel_id
+    end
+
+    @tag :fixed
+    test "handles channel pins update without guild_id (DM channels)" do
+      channel_id = 111_222_333
+
+      Mimic.expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
+        {:ok, channel(%{id: channel_id, name: "dm-channel", guild_id: nil})}
+      end)
+
+      pins_struct =
+        channel_pins_update(%{
+          channel_id: channel_id,
+          guild_id: nil,
+          last_pin_timestamp: ~U[2025-01-15 11:00:00Z]
+        })
+
+      created_pins =
+        TestApp.Discord.channel_pins_update_from_discord!(%{data: pins_struct},
+          load: [:guild, :channel]
+        )
+
+      assert created_pins.last_pin_timestamp == pins_struct.last_pin_timestamp
+      assert created_pins.guild == nil
+      assert created_pins.channel.discord_id == channel_id
+    end
+
+    @tag :fixed
+    test "handles nil last_pin_timestamp (all pins removed)" do
+      channel_id = 444_555_666
+      guild_id = 777_888_999
+
+      Mimic.expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
+        {:ok,
+         channel(%{
+           id: channel_id,
+           name: "test-channel",
+           guild_id: guild_id,
+           owner_id: nil,
+           parent_id: nil
+         })}
+      end)
+
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
+      pins_struct =
+        channel_pins_update(%{
+          channel_id: channel_id,
+          guild_id: guild_id,
+          last_pin_timestamp: nil
+        })
+
+      created_pins =
+        TestApp.Discord.channel_pins_update_from_discord!(%{data: pins_struct},
+          load: [:guild, :channel]
+        )
+
+      assert created_pins.last_pin_timestamp == nil
+      assert created_pins.guild.discord_id == guild_id
+      assert created_pins.channel.discord_id == channel_id
+    end
+  end
+
+  describe "data requirement (no API fallback)" do
+    @tag :fixed
+    test "requires data argument - API fallback not supported for ephemeral events" do
+      result = TestApp.Discord.channel_pins_update_from_discord(%{})
+
+      assert {:error, error} = result
+      error_message = Exception.message(error)
+
+      assert error_message =~
+               "ChannelPinsUpdate requires data argument - pins update events are not fetchable from API"
+    end
+
+    @tag :fixed
+    test "requires non-nil data argument" do
+      result = TestApp.Discord.channel_pins_update_from_discord(%{data: nil})
+
+      assert {:error, error} = result
+      error_message = Exception.message(error)
+
+      assert error_message =~
+               "ChannelPinsUpdate requires data argument - pins update events are not fetchable from API"
+    end
+  end
+
+  describe "upsert behavior" do
+    @tag :fixed
+    test "updates existing channel pins update instead of creating duplicate" do
+      channel_id = 555_666_777
+      guild_id = 888_999_000
+
+      Mimic.expect(Nostrum.Api.Channel, :get, fn ^channel_id ->
+        {:ok,
+         channel(%{
+           id: channel_id,
+           name: "test-channel",
+           guild_id: guild_id,
+           owner_id: nil,
+           parent_id: nil
+         })}
+      end)
+
+      Mimic.expect(Nostrum.Api.Guild, :get, fn ^guild_id ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild"})}
+      end)
+
+      # Create initial pins update
+      initial_struct =
+        channel_pins_update(%{
+          channel_id: channel_id,
+          guild_id: guild_id,
+          last_pin_timestamp: ~U[2025-01-15 10:00:00Z]
+        })
+
+      {:ok, original_pins} =
+        TestApp.Discord.channel_pins_update_from_discord(%{data: initial_struct})
+
+      updated_struct =
+        channel_pins_update(%{
+          channel_id: channel_id,
+          guild_id: guild_id,
+          last_pin_timestamp: ~U[2025-01-15 12:00:00Z]
+        })
+
+      updated_pins =
+        TestApp.Discord.channel_pins_update_from_discord!(%{data: updated_struct},
+          load: [:guild, :channel]
+        )
+
+      assert updated_pins.id == original_pins.id
+      assert updated_pins.last_pin_timestamp == ~U[2025-01-15 12:00:00Z]
+      assert updated_pins.guild.discord_id == guild_id
+      assert updated_pins.channel.discord_id == channel_id
+    end
+
+    @tag :fixed
+    test "upsert works when guild_id changes (channel moved)" do
+      channel_id = 333_444_555
+      initial_guild_id = 111_111_111
+      new_guild_id = 222_222_222
+
+      Mimic.stub(Nostrum.Api.Channel, :get, fn ^channel_id ->
+        {:ok,
+         channel(%{
+           id: channel_id,
+           name: "test-channel",
+           guild_id: nil,
+           owner_id: nil,
+           parent_id: nil
+         })}
+      end)
+
+      Mimic.stub(Nostrum.Api.Guild, :get, fn guild_id
+                                             when guild_id in [initial_guild_id, new_guild_id] ->
+        {:ok, guild(%{id: guild_id, name: "Test Guild #{guild_id}"})}
+      end)
+
+      # Create initial pins update in guild A
+      initial_struct =
+        channel_pins_update(%{
+          channel_id: channel_id,
+          guild_id: initial_guild_id,
+          last_pin_timestamp: ~U[2025-01-15 10:00:00Z]
+        })
+
+      {:ok, original_pins} =
+        TestApp.Discord.channel_pins_update_from_discord(%{data: initial_struct})
+
+      updated_struct =
+        channel_pins_update(%{
+          channel_id: channel_id,
+          guild_id: new_guild_id,
+          last_pin_timestamp: ~U[2025-01-15 11:00:00Z]
+        })
+
+      updated_pins =
+        TestApp.Discord.channel_pins_update_from_discord!(%{data: updated_struct},
+          load: [:guild, :channel]
+        )
+
+      assert updated_pins.id == original_pins.id
+      assert updated_pins.last_pin_timestamp == ~U[2025-01-15 11:00:00Z]
+      assert updated_pins.guild.discord_id == new_guild_id
+      assert updated_pins.channel.discord_id == channel_id
+    end
+  end
+end

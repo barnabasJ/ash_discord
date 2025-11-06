@@ -39,13 +39,13 @@ defmodule AshDiscord.MixProject do
   defp deps do
     [
       # Core dependencies
-      {:ash, "~> 3.0"},
+      {:ash, path: "../ash", overrride: true},
       {:spark, "~> 2.0"},
       {:nostrum, "~> 0.10", runtime: Mix.env() != :test},
 
       # Development and testing
       {:usage_rules, "~> 0.1", only: [:dev]},
-      {:faker, "~> 0.18", only: [:test]},
+      {:faker, "~> 0.18", only: [:dev, :test]},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test]},
       {:igniter, "~> 0.6", only: [:dev, :test]},
       {:sourceror, "~> 1.0", only: [:dev, :test], runtime: false},

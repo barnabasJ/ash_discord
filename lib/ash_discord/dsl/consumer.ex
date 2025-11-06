@@ -2,8 +2,9 @@ defmodule AshDiscord.Dsl.Consumer do
   @moduledoc """
   DSL entities and sections for consumer configuration.
 
-  Provides the `ash_discord_consumer do` block for configuring AshDiscord consumers
-  with granular resource and behavior settings.
+  Provides the `ash_discord_consumer do` block for configuring AshDiscord consumers.
+  Resources with the AshDiscord.Resource extension are automatically discovered from
+  the configured domains.
   """
 
   alias Spark.Dsl.Section
@@ -11,19 +12,25 @@ defmodule AshDiscord.Dsl.Consumer do
   @ash_discord_consumer %Section{
     name: :ash_discord_consumer,
     describe: """
-    Configure AshDiscord consumer behavior and resource mappings.
+    Configure AshDiscord consumer behavior with automatic resource discovery.
 
-    Use this section to define domain mappings, resource configurations, and
-    behavioral settings for the Discord consumer.
+    Resources with the AshDiscord.Resource extension are automatically discovered
+    from the configured domains, eliminating the need for manual resource configuration.
+
+    Simply specify your domains and the consumer will find all resources that handle
+    Discord events.
     """,
     examples: [
       """
+      # Simple configuration - resources auto-discovered from domains
+      ash_discord_consumer do
+        domains [MyApp.Discord]
+      end
+      """,
+      """
+      # With consumer-level options
       ash_discord_consumer do
         domains [MyApp.Chat, MyApp.Discord]
-        guild_resource MyApp.Discord.Guild
-        message_resource MyApp.Discord.Message
-        user_resource MyApp.Accounts.User
-        channel_resource MyApp.Discord.Channel
         store_bot_messages false
         debug_logging false
       end
@@ -33,52 +40,17 @@ defmodule AshDiscord.Dsl.Consumer do
       domains: [
         type: {:list, :atom},
         required: true,
-        doc: "List of Ash domains containing Discord commands"
+        doc: """
+        List of Ash domains containing Discord commands and resources.
+
+        Resources with the AshDiscord.Resource extension will be automatically
+        discovered from these domains and used for Discord event handling.
+        """
       ],
       command_filter: [
         type: :atom,
         doc:
           "Command filter module implementing AshDiscord.CommandFilter behavior for guild-scoped command filtering"
-      ],
-      guild_resource: [
-        type: :atom,
-        doc: "Ash resource for Discord guilds"
-      ],
-      message_resource: [
-        type: :atom,
-        doc: "Ash resource for Discord messages"
-      ],
-      user_resource: [
-        type: :atom,
-        doc: "Ash resource for user accounts"
-      ],
-      channel_resource: [
-        type: :atom,
-        doc: "Ash resource for Discord channels"
-      ],
-      role_resource: [
-        type: :atom,
-        doc: "Ash resource for Discord roles"
-      ],
-      guild_member_resource: [
-        type: :atom,
-        doc: "Ash resource for Discord guild members"
-      ],
-      message_reaction_resource: [
-        type: :atom,
-        doc: "Ash resource for Discord message reactions"
-      ],
-      voice_state_resource: [
-        type: :atom,
-        doc: "Ash resource for Discord voice states"
-      ],
-      typing_indicator_resource: [
-        type: :atom,
-        doc: "Ash resource for Discord typing indicators"
-      ],
-      invite_resource: [
-        type: :atom,
-        doc: "Ash resource for Discord invites"
       ],
       store_bot_messages: [
         type: :boolean,

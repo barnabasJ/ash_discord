@@ -49,7 +49,7 @@ if Code.ensure_loaded?(Igniter) do
 
     use Igniter.Mix.Task
 
-    alias Igniter.Project.{Config, Deps}
+    alias Igniter.Project.Config
     alias Igniter.Project.Module, as: ProjectModule
 
     @impl Igniter.Mix.Task
@@ -265,7 +265,6 @@ if Code.ensure_loaded?(Igniter) do
     end
 
     defp setup_test_config(igniter) do
-      # Test environment should not require a real Discord token
       Config.configure_new(
         igniter,
         "test.exs",

@@ -140,7 +140,6 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
       assert created_webhook.avatar == "api_avatar_hash"
       assert created_webhook.token == "api_token_secret"
     end
-
   end
 
   describe "upsert behavior" do
@@ -216,5 +215,4 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
       assert updated_webhook.token == nil
     end
   end
-
 end

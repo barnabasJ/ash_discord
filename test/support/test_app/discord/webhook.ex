@@ -128,6 +128,7 @@ defmodule TestApp.Discord.Webhook do
 
       upsert?(true)
       upsert_identity(:discord_id)
+
       upsert_fields([
         :type,
         :guild_discord_id,
@@ -145,6 +146,7 @@ defmodule TestApp.Discord.Webhook do
 
     update :update do
       primary?(true)
+
       accept([
         :type,
         :guild_discord_id,

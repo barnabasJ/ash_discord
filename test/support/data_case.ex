@@ -17,6 +17,10 @@ defmodule TestApp.DataCase do
   use ExUnit.CaseTemplate
 
   using do
+    quote do
+      use Mimic
+      import Mimic
+    end
   end
 
   setup _ do

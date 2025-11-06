@@ -7,7 +7,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
 
   use TestApp.DataCase, async: true
   import AshDiscord.Test.Generators
-  use Mimic
 
   describe "struct-first pattern" do
     @tag :fixed
@@ -54,8 +53,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       assert created_message.tts == false
       assert created_message.mention_everyone == false
       assert created_message.pinned == false
-
-      # Verify relationships were loaded and created correctly
       assert created_message.author.discord_id == user_id
       assert created_message.author.discord_username == "test_user_#{user_id}"
       assert created_message.channel.discord_id == channel_id
@@ -105,8 +102,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       assert created_message.content == message_struct.content
       assert created_message.timestamp == ~U[2023-02-01 12:00:00Z]
       assert created_message.edited_timestamp == ~U[2023-02-01 12:05:00Z]
-
-      # Verify relationships were loaded and created correctly
       assert created_message.author.discord_id == user_id
       assert created_message.author.discord_username == "test_user_#{user_id}"
       assert created_message.channel.discord_id == channel_id
@@ -153,8 +148,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
 
       assert created_message.discord_id == message_struct.id
       assert created_message.tts == true
-
-      # Verify relationships were loaded and created correctly
       assert created_message.author.discord_id == user_id
       assert created_message.author.discord_username == "test_user_#{user_id}"
       assert created_message.channel.discord_id == channel_id
@@ -201,8 +194,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
 
       assert created_message.discord_id == message_struct.id
       assert created_message.mention_everyone == true
-
-      # Verify relationships were loaded and created correctly
       assert created_message.author.discord_id == user_id
       assert created_message.author.discord_username == "test_user_#{user_id}"
       assert created_message.channel.discord_id == channel_id
@@ -249,8 +240,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
 
       assert created_message.discord_id == message_struct.id
       assert created_message.pinned == true
-
-      # Verify relationships were loaded and created correctly
       assert created_message.author.discord_id == user_id
       assert created_message.author.discord_username == "test_user_#{user_id}"
       assert created_message.channel.discord_id == channel_id
@@ -297,8 +286,6 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
 
       assert created_message.discord_id == message_struct.id
       assert created_message.content == nil
-
-      # Verify relationships were loaded and created correctly
       assert created_message.author.discord_id == user_id
       assert created_message.author.discord_username == "test_user_#{user_id}"
       assert created_message.channel.discord_id == channel_id
@@ -411,16 +398,12 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
 
       assert updated_message.id == original_message.id
       assert updated_message.discord_id == original_message.discord_id
-
       assert updated_message.content == "Edited content"
       assert updated_message.edited_timestamp == ~U[2023-01-01 00:05:00Z]
       assert updated_message.pinned == true
-
-      # Verify relationships were loaded and persisted correctly through upsert
       assert original_message.author.discord_id == user_id
       assert original_message.channel.discord_id == channel_id
       assert original_message.guild.discord_id == guild_id
-
       assert updated_message.author.discord_id == user_id
       assert updated_message.author.discord_username == "test_user_#{user_id}"
       assert updated_message.channel.discord_id == channel_id
@@ -483,14 +466,10 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
 
       assert updated_message.id == original_message.id
       assert updated_message.discord_id == discord_id
-
       assert updated_message.pinned == true
-
-      # Verify relationships were loaded and persisted correctly through upsert
       assert original_message.author.discord_id == user_id
       assert original_message.channel.discord_id == channel_id
       assert original_message.guild.discord_id == guild_id
-
       assert updated_message.author.discord_id == user_id
       assert updated_message.author.discord_username == "test_user_#{user_id}"
       assert updated_message.channel.discord_id == channel_id

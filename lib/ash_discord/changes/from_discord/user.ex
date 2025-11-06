@@ -33,7 +33,10 @@ defmodule AshDiscord.Changes.FromDiscord.User do
         Ash.Changeset.before_transaction(changeset, fn changeset ->
           identity = Ash.Changeset.get_argument_or_attribute(changeset, :identity)
 
-          case ApiFetchers.fetch_user(identity.discord_id) do
+          # Extract discord_id from identity (can be integer or map with discord_id key)
+          discord_id = if is_map(identity), do: identity.discord_id, else: identity
+
+          case ApiFetchers.fetch_user(discord_id) do
             {:ok, %Payloads.User{} = user_data} ->
               transform_user(changeset, user_data)
 

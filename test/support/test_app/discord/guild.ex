@@ -49,9 +49,9 @@ defmodule TestApp.Discord.Guild do
         description: "Discord guild TypedStruct payload"
       )
 
-      argument(:identity, :map,
+      argument(:identity, :term,
         allow_nil?: true,
-        description: "Discord guild ID for API fallback"
+        description: "Discord guild ID for API fallback (integer or map with discord_id)"
       )
 
       change(AshDiscord.Changes.FromDiscord.Guild)

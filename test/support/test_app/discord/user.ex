@@ -51,9 +51,9 @@ defmodule TestApp.Discord.User do
         description: "Discord user TypedStruct payload"
       )
 
-      argument(:identity, :map,
+      argument(:identity, :term,
         allow_nil?: true,
-        description: "Discord user ID for API fallback"
+        description: "Discord user ID for API fallback (integer or map with discord_id)"
       )
 
       upsert?(true)

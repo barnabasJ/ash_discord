@@ -74,9 +74,7 @@ defmodule AshDiscord.Changes.FromDiscord.Webhook do
     |> maybe_set_attribute(:avatar, webhook_data.avatar)
     |> maybe_set_attribute(:token, webhook_data.token)
     |> maybe_set_attribute(:channel_discord_id, webhook_data.channel_id)
-    |> maybe_set_attribute(:channel_id, webhook_data.channel_id)
     |> maybe_set_attribute(:guild_discord_id, webhook_data.guild_id)
-    |> maybe_set_attribute(:guild_id, webhook_data.guild_id)
     |> maybe_set_attribute(:type, webhook_data.type)
     |> maybe_set_attribute(
       :source_guild_discord_id,

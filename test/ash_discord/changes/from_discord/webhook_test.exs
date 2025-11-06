@@ -27,8 +27,8 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
       assert {:ok, created_webhook} = result
       assert created_webhook.discord_id == webhook_struct.id
       assert created_webhook.name == webhook_struct.name
-      assert created_webhook.channel_id == webhook_struct.channel_id
-      assert created_webhook.guild_id == webhook_struct.guild_id
+      assert created_webhook.channel_discord_id == webhook_struct.channel_id
+      assert created_webhook.guild_discord_id == webhook_struct.guild_id
       assert created_webhook.avatar == webhook_struct.avatar
       assert created_webhook.token == webhook_struct.token
     end
@@ -109,7 +109,7 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
       assert {:ok, created_webhook} = result
       assert created_webhook.discord_id == webhook_struct.id
       assert created_webhook.name == webhook_struct.name
-      assert created_webhook.guild_id == nil
+      assert created_webhook.guild_discord_id == nil
     end
   end
 
@@ -135,8 +135,8 @@ defmodule AshDiscord.Changes.FromDiscord.WebhookTest do
       assert {:ok, created_webhook} = result
       assert created_webhook.discord_id == webhook_id
       assert created_webhook.name == "API Fetched Webhook"
-      assert created_webhook.channel_id == 555_666_777
-      assert created_webhook.guild_id == 111_222_333
+      assert created_webhook.channel_discord_id == 555_666_777
+      assert created_webhook.guild_discord_id == 111_222_333
       assert created_webhook.avatar == "api_avatar_hash"
       assert created_webhook.token == "api_token_secret"
     end

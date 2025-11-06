@@ -34,17 +34,18 @@ defmodule TestApp.Discord.Webhook do
       public?: true
     )
 
-    attribute(:channel_id, :integer,
+    attribute(:channel_discord_id, :integer,
       allow_nil?: false,
       public?: true
     )
 
     attribute(:token, :string,
       allow_nil?: true,
-      public?: true
+      public?: true,
+      sensitive?: true
     )
 
-    attribute(:guild_id, :integer,
+    attribute(:guild_discord_id, :integer,
       allow_nil?: true,
       public?: true
     )
@@ -77,12 +78,12 @@ defmodule TestApp.Discord.Webhook do
 
       upsert?(true)
       upsert_identity(:discord_id)
-      upsert_fields([:name, :avatar, :channel_id, :guild_id, :token])
+      upsert_fields([:name, :avatar, :channel_discord_id, :guild_discord_id, :token])
     end
 
     update :update do
       primary?(true)
-      accept([:name, :avatar, :channel_id, :guild_id, :token])
+      accept([:name, :avatar, :channel_discord_id, :guild_discord_id, :token])
     end
   end
 end

@@ -15,15 +15,15 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       guild_id = 111_222_333
       user_id = 987_654_321
 
-      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
-        {:ok, channel(%{id: id, name: "test-channel", type: 0})}
+      expect(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0, guild_id: guild_id})}
       end)
 
-      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+      expect(Nostrum.Api.Guild, :get, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild"})}
       end)
 
-      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+      expect(Nostrum.Api.User, :get, fn id ->
         {:ok, user(%{id: id, username: "test_user_#{id}"})}
       end)
 
@@ -67,15 +67,15 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       guild_id = 555_666_777
       user_id = 123_456_789
 
-      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
-        {:ok, channel(%{id: id, name: "test-channel", type: 0})}
+      expect(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0, guild_id: guild_id})}
       end)
 
-      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+      expect(Nostrum.Api.Guild, :get, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild"})}
       end)
 
-      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+      expect(Nostrum.Api.User, :get, fn id ->
         {:ok, user(%{id: id, username: "test_user_#{id}"})}
       end)
 
@@ -116,15 +116,15 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       guild_id = 333_444_555
       user_id = 444_555_666
 
-      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
-        {:ok, channel(%{id: id, name: "test-channel", type: 0})}
+      expect(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0, guild_id: guild_id})}
       end)
 
-      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+      expect(Nostrum.Api.Guild, :get, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild"})}
       end)
 
-      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+      expect(Nostrum.Api.User, :get, fn id ->
         {:ok, user(%{id: id, username: "test_user_#{id}"})}
       end)
 
@@ -162,15 +162,15 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       guild_id = 777_888_999
       user_id = 666_777_888
 
-      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
-        {:ok, channel(%{id: id, name: "test-channel", type: 0})}
+      expect(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0, guild_id: guild_id})}
       end)
 
-      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+      expect(Nostrum.Api.Guild, :get, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild"})}
       end)
 
-      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+      expect(Nostrum.Api.User, :get, fn id ->
         {:ok, user(%{id: id, username: "test_user_#{id}"})}
       end)
 
@@ -208,15 +208,15 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       guild_id = 111_222_333
       user_id = 888_999_111
 
-      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
-        {:ok, channel(%{id: id, name: "test-channel", type: 0})}
+      expect(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0, guild_id: guild_id})}
       end)
 
-      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+      expect(Nostrum.Api.Guild, :get, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild"})}
       end)
 
-      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+      expect(Nostrum.Api.User, :get, fn id ->
         {:ok, user(%{id: id, username: "test_user_#{id}"})}
       end)
 
@@ -254,15 +254,15 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       guild_id = 999_888_777
       user_id = 111_222_333
 
-      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
-        {:ok, channel(%{id: id, name: "test-channel", type: 0})}
+      expect(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0, guild_id: guild_id})}
       end)
 
-      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+      expect(Nostrum.Api.Guild, :get, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild"})}
       end)
 
-      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+      expect(Nostrum.Api.User, :get, fn id ->
         {:ok, user(%{id: id, username: "test_user_#{id}"})}
       end)
 
@@ -303,7 +303,7 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       guild_id = 111_222_333
       user_id = 123_456_789
 
-      Mimic.stub(Nostrum.Api.Message, :get, fn ch_id, msg_id ->
+      expect(Nostrum.Api.Message, :get, fn ch_id, msg_id ->
         {:ok,
          message(%{
            id: msg_id,
@@ -318,15 +318,15 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
          })}
       end)
 
-      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
-        {:ok, channel(%{id: id, name: "test-channel", type: 0})}
+      expect(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0, guild_id: guild_id})}
       end)
 
-      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+      expect(Nostrum.Api.Guild, :get, fn id ->
         {:ok, guild(%{id: id, name: "test-guild"})}
       end)
 
-      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+      expect(Nostrum.Api.User, :get, fn id ->
         {:ok, user(%{id: id, username: "test_user_#{id}"})}
       end)
 
@@ -348,15 +348,15 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       guild_id = 222_333_444
       user_id = 123_456_789
 
-      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
-        {:ok, channel(%{id: id, name: "test-channel", type: 0})}
+      expect(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0, guild_id: guild_id})}
       end)
 
-      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+      expect(Nostrum.Api.Guild, :get, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild"})}
       end)
 
-      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+      expect(Nostrum.Api.User, :get, fn id ->
         {:ok, user(%{id: id, username: "test_user_#{id}"})}
       end)
 
@@ -418,15 +418,15 @@ defmodule AshDiscord.Changes.FromDiscord.MessageTest do
       guild_id = 555_666_777
       user_id = 987_654_321
 
-      Mimic.stub(Nostrum.Api.Channel, :get, fn id ->
-        {:ok, channel(%{id: id, name: "test-channel", type: 0})}
+      expect(Nostrum.Api.Channel, :get, fn id ->
+        {:ok, channel(%{id: id, name: "test-channel", type: 0, guild_id: guild_id})}
       end)
 
-      Mimic.stub(Nostrum.Api.Guild, :get, fn id ->
+      expect(Nostrum.Api.Guild, :get, fn id ->
         {:ok, guild(%{id: id, name: "Test Guild"})}
       end)
 
-      Mimic.stub(Nostrum.Api.User, :get, fn id ->
+      expect(Nostrum.Api.User, :get, fn id ->
         {:ok, user(%{id: id, username: "test_user_#{id}"})}
       end)
 

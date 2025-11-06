@@ -78,6 +78,42 @@ test "creates guild member from discord struct with all attributes" do
 end
 ```
 
+### 2.1. CRITICAL: Override Generator Relationship IDs in Mocks
+
+**IMPORTANT**: When mocking Nostrum API calls that return generated structs, you MUST explicitly override ALL relationship IDs (like `guild_id`, `channel_id`, `user_id`, etc.) to match your test's IDs. Otherwise, generators will create random IDs for relationships, causing multiple from_discord calls and exhausting your mocks.
+
+**Problem**: Generators often default relationship IDs to `generate_snowflake()`, creating random IDs. When a related resource is created with a random relationship ID, it triggers from_discord for that relationship. Then when your main resource tries to create the relationship with your test ID, it triggers from_discord again, but the mock is already exhausted (expect defaults to 1 call).
+
+**Solution**: Always override relationship IDs in generator mocks to match your test IDs:
+
+```elixir
+# ❌ WRONG - channel will have random guild_id, triggering unexpected Guild creation
+expect(Nostrum.Api.Channel, :get, fn id ->
+  {:ok, channel(%{id: id, name: "test-channel", type: 0})}
+end)
+
+# ✅ CORRECT - channel uses your test guild_id
+guild_id = 111_222_333
+
+expect(Nostrum.Api.Channel, :get, fn id ->
+  {:ok, channel(%{id: id, name: "test-channel", type: 0, guild_id: guild_id})}
+end)
+
+# Another example: member with user relationship
+user_id = 987_654_321
+
+expect(Nostrum.Api.Guild, :member, fn ^guild_id, ^user_id ->
+  {:ok, guild_member(%{user_id: user_id, nick: "Test"})}  # ✅ user_id matches test
+end)
+```
+
+**When to do this**: Override relationship IDs whenever:
+- The generator has `guild_id`, `channel_id`, `user_id`, or any other `*_id` field
+- The mocked struct will be used to create related resources via from_discord
+- You're getting `:api_unavailable` errors despite setting up mocks
+
+**Debugging tip**: Add temporary IO.inspect to the from_discord change to see which IDs are being passed. Unexpected IDs indicate a generator is creating random relationship IDs.
+
 ### 3. Struct-First Pattern Tests
 
 - Test creating resources from Discord struct data
